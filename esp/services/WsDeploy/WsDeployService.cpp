@@ -974,6 +974,15 @@ bool CWsDeployFileInfo::saveSetting(IEspContext &context, IEspSaveSettingRequest
       const char* pszOnChange = pSetting->queryProp("@onChange");
       const char* pszViewType = pSetting->queryProp("@viewType");
 
+      if (!strcmp(pszAttrName, "wuQueueName") && strlen(pszNewValue))
+      {
+        char *pValue = const_cast<char *>(pszNewValue);
+        char *end = pValue + strlen(pValue) - 1;
+        while(end > pValue && isspace((unsigned char)*end))
+          end--;
+        *(end+1) = 0;
+      }
+
       StringBuffer xpath;
       xpath.clear().appendf("%s[@name='%s']", pszCompType, pszCompName);
 
