@@ -48,7 +48,8 @@ CConfigSchemaHelper* CConfigSchemaHelper::getInstance(const char* pDefaultDirOve
     // not thread safe!!!
     if (s_pCConfigSchemaHelper == nullptr)
     {
-        s_pCConfigSchemaHelper = new CConfigSchemaHelper();
+        s_pCConfigSchemaHelper = new CConfigSchemaHelper("buildsettest.xml");
+        // s_pCConfigSchemaHelper = new CConfigSchemaHelper();
         s_pCConfigSchemaHelper->m_nTables = 0;
 
         if (pDefaultDirOverride != nullptr && pDefaultDirOverride[0] != 0)

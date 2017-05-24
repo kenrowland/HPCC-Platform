@@ -111,7 +111,7 @@ IF ("${COMMONSETUP_DONE}" STREQUAL "")
   option(LOGGING_SERVICE "Configure use of logging service" ON)
 
   option(MAKE_CONFIGURATOR "Build Configurator" ON)
-  option(CONFIGURATOR_LIB "Build Configurator static library (.a)" OFF)
+  option(CONFIGURATOR_LIB "Build Configurator static library (.a)" ON)
 
   if ( CONFIGURATOR_LIB )
         set( MAKE_CONFIGURATOR ON )
