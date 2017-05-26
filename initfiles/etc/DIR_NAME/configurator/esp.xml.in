@@ -16,19 +16,17 @@
 #    limitations under the License.
 ################################################################################
 -->
-
 <Environment>
-<Software>
-<EspProcess build="${CPACK_RPM_PACKAGE_VERSION}_${CPACK_RPM_PACKAGE_RELEASE}" description="ESP server" componentfilesDir="${COMPONENTFILES_PATH}" enableSEHMapping="true" enableSNMP="false" formOptionsAccess="false" httpConfigAccess="true" logDir="${LOG_PATH}/configurator" logLevel="10" logRequests="true" logResponses="true" txSummaryLevel="1" txSummaryResourceReq="false" maxBacklogQueueSize="200" maxConcurrentThreads="0" name="configurator" perfReportDelay="60" computer="localhost" directory="${PID_PATH}/configurator">
-<Environment/>
-<EspProtocol name="http" type="http_protocol" plugin="esphttp" maxRequestEntityLength="8000000"/>
-<EspService name="ws_configurator_esp" type="WsConfigurator" plugin="WsConfigurator">
-  <LocalEnvFile>${CONFIG_DIR}/${ENV_XML_FILE}</LocalEnvFile>
-  <LocalConfFile>${INSTALL_DIR}/etc/${DIR_NAME}/configurator/configurator.conf</LocalConfFile>
-  <LocalEnvConfFile>${CONFIG_DIR}/${ENV_CONF_FILE}</LocalEnvConfFile>
-</EspService>
-<EspBinding name="ws_configurator_esp" service="ws_configurator_esp" protocol="http" type="WsConfiguratorSoapBinding" plugin="WsConfigurator" netAddress="0.0.0.0" port="8015" defaultBinding="true">
-</EspBinding>
-</EspProcess>
-</Software>
+  <Software>
+    <EspProcess build="${CPACK_RPM_PACKAGE_VERSION}_${CPACK_RPM_PACKAGE_RELEASE}" description="ESP server" componentfilesDir="${COMPONENTFILES_PATH}" enableSEHMapping="true" enableSNMP="false" formOptionsAccess="false" httpConfigAccess="true" logDir="${LOG_PATH}/configurator" logLevel="10" logRequests="true" logResponses="true" txSummaryLevel="1" txSummaryResourceReq="false" maxBacklogQueueSize="200" maxConcurrentThreads="0" name="configurator" perfReportDelay="60" computer="localhost" directory="${PID_PATH}/configurator">
+      <Environment/>
+      <EspProtocol name="http" type="http_protocol" plugin="esphttp" maxRequestEntityLength="8000000"/>
+      <EspService name="ws_configurator_esp" type="ws_configurator" plugin="libws_configurator.so">
+        <LocalEnvFile>${CONFIG_DIR}/${ENV_XML_FILE}</LocalEnvFile>
+        <LocalConfFile>${INSTALL_DIR}/etc/${DIR_NAME}/configurator/configurator.conf</LocalConfFile>
+        <LocalEnvConfFile>${CONFIG_DIR}/${ENV_CONF_FILE}</LocalEnvConfFile>
+      </EspService>
+      <EspBinding name="ws_configurator_binding" service="ws_configurator_esp" protocol="http" type="ws_configuratorSoapBinding" plugin="libws_configurator.so" netAddress="0.0.0.0" port="8020" defaultBinding="true"></EspBinding>
+    </EspProcess>
+  </Software>
 </Environment>
