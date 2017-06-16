@@ -60,9 +60,13 @@ interface IRemoteFileServer : extends IInterface
     virtual StringBuffer &getStats(StringBuffer &stats, bool reset) = 0;
 };
 
-#define FILESRV_VERSION 19 // don't forget VERSTRING in sockfile.cpp
+#define FILESRV_VERSION 20 // don't forget VERSTRING in sockfile.cpp
 
-extern REMOTE_API IFile * createRemoteFile(SocketEndpoint &ep,const char * _filename); // takes ownershop of socket
+interface IKeyManager;
+interface IDelayedFile;
+extern REMOTE_API IFile * createRemoteFile(SocketEndpoint &ep,const char * _filename);
+extern REMOTE_API IKeyManager *createKeyManager(const char *filename, unsigned keySize, unsigned crc, IDelayedFile *delayedFile, bool allowRemote, bool forceRemote);
+extern REMOTE_API IKeyManager * createRemoteKeyManager(const char *filename, unsigned keySize, unsigned crc, IDelayedFile *delayedFile);
 extern REMOTE_API unsigned getRemoteVersion(ISocket * _socket, StringBuffer &ver);
 extern REMOTE_API unsigned stopRemoteServer(ISocket * _socket);
 extern REMOTE_API const char *remoteServerVersionString();

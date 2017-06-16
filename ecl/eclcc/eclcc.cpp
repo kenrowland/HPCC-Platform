@@ -397,6 +397,7 @@ protected:
     bool optGenerateHeader = false;
     bool optShowPaths = false;
     bool optNoSourcePath = false;
+    bool optFastSyntax = false;
     mutable bool daliConnected = false;
     mutable bool disconnectReported = false;
     int argc;
@@ -1129,6 +1130,7 @@ void EclCC::processSingleQuery(EclCompileInstance & instance,
 
     size32_t prevErrs = errorProcessor.errCount();
     cycle_t startCycles = get_cycles_now();
+    addTimeStamp(instance.wu, SSTcompilestage, "compile", StWhenStarted);
     const char * sourcePathname = queryContents ? str(queryContents->querySourcePath()) : NULL;
     const char * defaultErrorPathname = sourcePathname ? sourcePathname : queryAttributePath;
 
@@ -1139,6 +1141,8 @@ void EclCC::processSingleQuery(EclCompileInstance & instance,
     {
         //Minimize the scope of the parse context to reduce lifetime of cached items.
         HqlParseContext parseCtx(instance.dataServer, this, instance.archive);
+        if (optFastSyntax)
+            parseCtx.setFastSyntax();
         if (optMaxErrors > 0)
             parseCtx.maxErrors = optMaxErrors;
         parseCtx.unsuppressImmediateSyntaxErrors = optUnsuppressImmediateSyntaxErrors;
@@ -1171,6 +1175,7 @@ void EclCC::processSingleQuery(EclCompileInstance & instance,
         if (exportDependencies)
             parseCtx.nestedDependTree.setown(createPTree("Dependencies"));
 
+        addTimeStamp(instance.wu, SSTcompilestage, "compile:parse", StWhenStarted);
         try
         {
             HqlLookupContext ctx(parseCtx, &errorProcessor);
@@ -1228,7 +1233,7 @@ void EclCC::processSingleQuery(EclCompileInstance & instance,
             unsigned __int64 parseTimeNs = cycle_to_nanosec(get_cycles_now() - startCycles);
             instance.stats.parseTime = (unsigned)nanoToMilli(parseTimeNs);
 
-            updateWorkunitTimeStat(instance.wu, SSTcompilestage, "compile:parseTime", StTimeElapsed, NULL, parseTimeNs);
+            updateWorkunitTimeStat(instance.wu, SSTcompilestage, "compile:parse", StTimeElapsed, NULL, parseTimeNs);
 
             if (exportDependencies)
             {
@@ -1486,6 +1491,8 @@ void EclCC::processXmlFile(EclCompileInstance & instance, const char *archiveXML
 
 void EclCC::processFile(EclCompileInstance & instance)
 {
+    clearTransformStats();
+
     const char * curFilename = instance.inputFile->queryFilename();
     assertex(curFilename);
 
@@ -1589,10 +1596,15 @@ void EclCC::processFile(EclCompileInstance & instance)
         processSingleQuery(instance, queryText, attributePath.str());
     }
 
-    if (instance.reportErrorSummary() && !instance.archive && !(optGenerateMeta && instance.generatedMeta))
-        return;
+    if (!instance.reportErrorSummary() || instance.archive || (optGenerateMeta && instance.generatedMeta))
+        generateOutput(instance);
 
-    generateOutput(instance);
+    //Transform stats are gathered in static global variables.  Revisit if the code generator is multi threaded.
+    if (instance.wu->getDebugValueBool("timeTransforms", false))
+    {
+        WuStatisticTarget statsTarget(instance.wu, "eclcc");
+        gatherTransformStats(statsTarget);
+    }
 }
 
 
@@ -2183,6 +2195,9 @@ int EclCC::parseCommandLineOptions(int argc, const char* argv[])
         {
             debugOptions.append(tempArg);
         }
+        else if (iter.matchFlag(optFastSyntax, "--fastsyntax"))
+        {
+        }
         else if (iter.matchFlag(tempBool, "-g") || iter.matchFlag(tempBool, "--debug"))
         {
             if (tempBool)
@@ -2508,7 +2523,6 @@ void EclCC::processBatchedFile(IFile & file, bool multiThreaded)
 
                 resetUniqueId();
                 resetLexerUniqueNames();
-                clearTransformStats();
             }
 
             Owned<IErrorReceiver> localErrs = createFileErrorReceiver(logFile);
@@ -2517,8 +2531,6 @@ void EclCC::processBatchedFile(IFile & file, bool multiThreaded)
             if (info.wu &&
                 (info.wu->getDebugValueBool("generatePartialOutputOnError", false) || info.queryErrorProcessor().errCount() == 0))
             {
-                WuStatisticTarget statsTarget(info.wu, "eclcc");
-                gatherTransformStats(statsTarget);
                 exportWorkUnitToXMLFile(info.wu, xmlFilename, XML_NoBinaryEncode64, true, false, false, true);
                 Owned<IFile> xml = createIFile(xmlFilename);
                 info.stats.xmlSize = xml->size();

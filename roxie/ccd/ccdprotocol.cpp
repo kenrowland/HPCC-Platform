@@ -22,10 +22,11 @@
 #include "roxie.hpp"
 #include "roxiehelper.hpp"
 #include "ccdprotocol.hpp"
+#include "securesocket.hpp"
 
 //================================================================================================================================
 
-IHpccProtocolListener *createProtocolListener(const char *protocol, IHpccProtocolMsgSink *sink, unsigned port, unsigned listenQueue);
+IHpccProtocolListener *createProtocolListener(const char *protocol, IHpccProtocolMsgSink *sink, unsigned port, unsigned listenQueue, const char *certFile, const char *keyFile, const char *passPhrase);
 
 class CHpccProtocolPlugin : implements IHpccProtocolPlugin, public CInterface
 {
@@ -54,9 +55,9 @@ public:
         trapTooManyActiveQueries = ctx.ctxGetPropBool("@trapTooManyActiveQueries", true);
         numRequestArrayThreads = ctx.ctxGetPropInt("@requestArrayThreads", 5);
     }
-    IHpccProtocolListener *createListener(const char *protocol, IHpccProtocolMsgSink *sink, unsigned port, unsigned listenQueue, const char *config)
+    IHpccProtocolListener *createListener(const char *protocol, IHpccProtocolMsgSink *sink, unsigned port, unsigned listenQueue, const char *config, const char *certFile=nullptr, const char *keyFile=nullptr, const char *passPhrase=nullptr)
     {
-        return createProtocolListener(protocol, sink, port, listenQueue);
+        return createProtocolListener(protocol, sink, port, listenQueue, certFile, keyFile, passPhrase);
     }
 public:
     StringArray targetNames;
@@ -218,14 +219,23 @@ class ProtocolSocketListener : public ProtocolListener
     unsigned listenQueue;
     Owned<ISocket> socket;
     SocketEndpoint ep;
+    StringAttr protocol;
+    StringAttr certFile;
+    StringAttr keyFile;
+    StringAttr passPhrase;
+    Owned<ISecureSocketContext> secureContext;
 
 public:
-    ProtocolSocketListener(IHpccProtocolMsgSink *_sink, unsigned _port, unsigned _listenQueue)
+    ProtocolSocketListener(IHpccProtocolMsgSink *_sink, unsigned _port, unsigned _listenQueue, const char *_protocol, const char *_certFile, const char *_keyFile, const char *_passPhrase)
       : ProtocolListener(_sink)
     {
         port = _port;
         listenQueue = _listenQueue;
         ep.set(port, queryHostIP());
+        protocol.set(_protocol);
+        certFile.set(_certFile);
+        keyFile.set(_keyFile);
+        passPhrase.set(_passPhrase);
     }
 
     IHpccProtocolMsgSink *queryMsgSink()
@@ -269,11 +279,48 @@ public:
         started.signal();
         while (running)
         {
-            ISocket *client = socket->accept(true);
+            Owned<ISocket> client = socket->accept(true);
+            Owned<ISecureSocket> ssock;
             if (client)
             {
+                if (streq(protocol.str(), "ssl"))
+                {
+#ifdef _USE_OPENSSL
+                    try
+                    {
+                        if (!secureContext)
+                            secureContext.setown(createSecureSocketContextEx(certFile.get(), keyFile.get(), passPhrase.get(), ServerSocket));
+                        ssock.setown(secureContext->createSecureSocket(client.getClear()));
+                        int status = ssock->secure_accept();
+                        if (status < 0)
+                        {
+                            // secure_accept may also DBGLOG() errors ...
+                            WARNLOG("ProtocolSocketListener failure to establish secure connection");
+                            continue;
+                        }
+                    }
+                    catch (IException *E)
+                    {
+                        StringBuffer s;
+                        E->errorMessage(s);
+                        WARNLOG("%s", s.str());
+                        E->Release();
+                        continue;
+                    }
+                    catch (...)
+                    {
+                        StringBuffer s;
+                        WARNLOG("ProtocolSocketListener failure to establish secure connection");
+                        continue;
+                    }
+                    client.setown(ssock.getClear());
+#else
+                    WARNLOG("ProtocolSocketListener failure to establish secure connection: OpenSSL disabled in build");
+                    continue;
+#endif
+                }
                 client->set_linger(-1);
-                pool->start(client);
+                pool->start(client.getClear());
             }
         }
         DBGLOG("ProtocolSocketListener closed query socket");
@@ -816,7 +863,7 @@ public:
             return;
         if (fmt==MarkupFmt_JSON)
         {
-            Owned<IPropertyTree> convertPT = createPTreeFromXMLString(content);
+            Owned<IPropertyTree> convertPT = createPTreeFromXMLString(content, ipt_fast);
             if (name && *name)
                 appendXMLOpenTag(xml, name);
             toXML(convertPT, xml, 0, 0);
@@ -1068,7 +1115,7 @@ public:
         StringBuffer json;
         if (mlFmt==MarkupFmt_XML)
         {
-            Owned<IPropertyTree> convertPT = createPTreeFromXMLString(StringBuffer("<Control>").append(content).append("</Control>"));
+            Owned<IPropertyTree> convertPT = createPTreeFromXMLString(StringBuffer("<Control>").append(content).append("</Control>"), ipt_fast);
             toJSON(convertPT, json, 0, 0);
             content = json.str();
         }
@@ -1091,10 +1138,8 @@ public:
         Owned<IXmlWriter> xmlwriter = createIXmlWriterExt(XWFnoindent, 1, content, WTJSON);
         return xmlwriter.getClear();
     }
-    virtual void outputContent()
+    void outputContent()
     {
-        CriticalBlock b1(client->queryCrit());
-
         bool needDelimiter = false;
         ForEachItemIn(seq, contentsMap)
         {
@@ -1130,6 +1175,7 @@ public:
         }
 
         CriticalBlock b(contentsCrit);
+        CriticalBlock b1(client->queryCrit());
 
         StringBuffer responseHead, responseTail;
         if (!resultFilter.ordinality() && !(protocolFlags & HPCC_PROTOCOL_CONTROL))
@@ -1179,7 +1225,7 @@ public:
         StringBuffer xml;
         if (mlFmt==MarkupFmt_JSON)
         {
-            Owned<IPropertyTree> convertPT = createPTreeFromJSONString(content);
+            Owned<IPropertyTree> convertPT = createPTreeFromJSONString(content, ipt_fast);
             toXML(convertPT, xml, 0, 0);
             content = xml.str();
         }
@@ -1208,10 +1254,8 @@ public:
         Owned<IXmlWriter> xmlwriter = createIXmlWriterExt(0, 1, content, WTStandard);
         return xmlwriter.getClear();
     }
-    virtual void outputContent()
+    void outputContent()
     {
-        CriticalBlock b1(client->queryCrit());
-
         bool needDelimiter = false;
         ForEachItemIn(seq, contentsMap)
         {
@@ -1240,6 +1284,7 @@ public:
             return;
         }
         CriticalBlock b(contentsCrit);
+        CriticalBlock b1(client->queryCrit());
 
         StringBuffer responseHead, responseTail;
         if (!resultFilter.ordinality() && !(protocolFlags & HPCC_PROTOCOL_CONTROL))
@@ -1723,7 +1768,7 @@ readAnother:
                     client->setHttpMode(queryName, false, httpHelper);
 
                 bool aclupdate = strieq(queryName, "aclupdate"); //ugly
-                byte iptFlags = aclupdate ? ipt_caseInsensitive : 0;
+                byte iptFlags = aclupdate ? ipt_caseInsensitive|ipt_fast : ipt_fast;
 
                 createQueryPTree(queryPT, httpHelper, rawText, iptFlags, (PTreeReaderOptions)(ptr_ignoreWhiteSpace|ptr_ignoreNameSpaces), queryName);
 
@@ -1768,7 +1813,7 @@ readAnother:
                 readFlags |= (whitespace == WhiteSpaceHandling::Strip ? ptr_ignoreWhiteSpace : ptr_none);
                 try
                 {
-                    createQueryPTree(queryPT, httpHelper, rawText.str(), ipt_caseInsensitive, (PTreeReaderOptions)readFlags, queryName);
+                    createQueryPTree(queryPT, httpHelper, rawText.str(), ipt_caseInsensitive|ipt_fast, (PTreeReaderOptions)readFlags, queryName);
                 }
                 catch (IException *E)
                 {
@@ -1840,7 +1885,7 @@ readAnother:
                             Owned<IPropertyTreeIterator> reqIter = queryPT->getElements(reqIterString.str());
                             ForEach(*reqIter)
                             {
-                                IPropertyTree *fixedreq = createPTree(queryName, ipt_caseInsensitive);
+                                IPropertyTree *fixedreq = createPTree(queryName, ipt_caseInsensitive|ipt_fast);
                                 Owned<IPropertyTreeIterator> iter = reqIter->query().getElements("*");
                                 ForEach(*iter)
                                 {
@@ -1851,7 +1896,7 @@ readAnother:
                         }
                         else
                         {
-                            IPropertyTree *fixedreq = createPTree(queryName, ipt_caseInsensitive);
+                            IPropertyTree *fixedreq = createPTree(queryName, ipt_caseInsensitive|ipt_fast);
                             Owned<IPropertyTreeIterator> iter = queryPT->getElements("*");
                             ForEach(*iter)
                             {
@@ -2022,11 +2067,11 @@ void ProtocolSocketListener::runOnce(const char *query)
     p->runOnce(query);
 }
 
-IHpccProtocolListener *createProtocolListener(const char *protocol, IHpccProtocolMsgSink *sink, unsigned port, unsigned listenQueue)
+IHpccProtocolListener *createProtocolListener(const char *protocol, IHpccProtocolMsgSink *sink, unsigned port, unsigned listenQueue, const char *certFile=nullptr, const char *keyFile=nullptr, const char *passPhrase=nullptr)
 {
     if (traceLevel)
         DBGLOG("Creating Roxie socket listener, protocol %s, pool size %d, listen queue %d%s", protocol, sink->getPoolSize(), listenQueue, sink->getIsSuspended() ? " SUSPENDED":"");
-    return new ProtocolSocketListener(sink, port, listenQueue);
+    return new ProtocolSocketListener(sink, port, listenQueue, protocol, certFile, keyFile, passPhrase);
 }
 
 extern IHpccProtocolPlugin *loadHpccProtocolPlugin(IHpccProtocolPluginContext *ctx, IActiveQueryLimiterFactory *_limiterFactory)

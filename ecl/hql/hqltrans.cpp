@@ -170,7 +170,8 @@ void HqlTransformStats::gatherTransformStats(IStatisticTarget & target, const ch
 {
 #ifdef TRANSFORM_STATS_TIME
     target.addStatistic(SSTcompilestage, scope, StTimeTotalExecute, nullptr, cycle_to_nanosec(totalTime), 1, 0, StatsMergeSum);
-    target.addStatistic(SSTcompilestage, scope, StTimeLocalExecute, nullptr, cycle_to_nanosec(totalTime-(childTime-recursiveTime)), 1, 0, StatsMergeSum);
+    if ((childTime-recursiveTime) != 0)
+        target.addStatistic(SSTcompilestage, scope, StTimeLocalExecute, nullptr, cycle_to_nanosec(totalTime-(childTime-recursiveTime)), 1, 0, StatsMergeSum);
 #endif
 }
 
@@ -241,7 +242,7 @@ void HqlTransformerInfo::gatherTransformStats(IStatisticTarget & target) const
     {
         StringBuffer scope;
         scope.append("compile:transform:").append(name);
-        target.addStatistic(SSTcompilestage, scope, StNumStarted, nullptr, numInstances, 1, 0, StatsMergeSum);
+        target.addStatistic(SSTcompilestage, scope, StNumStarts, nullptr, numInstances, 1, 0, StatsMergeSum);
         stats.gatherTransformStats(target, scope);
     }
 #endif
@@ -319,7 +320,7 @@ unsigned activityHidesSelectorGetNumNonHidden(IHqlExpression * expr, IHqlExpress
         case childdataset_dataset:
         case childdataset_datasetleft:
         case childdataset_top_left_right:
-            if (expr->queryChild(0)->queryBody() == selector)
+            if (expr->queryChild(0)->queryNormalizedSelector() == selector)
                 return 1;
             break;
         }
@@ -1060,6 +1061,7 @@ QuickExpressionReplacer::QuickExpressionReplacer()
 
 void QuickExpressionReplacer::setMapping(IHqlExpression * oldValue, IHqlExpression * newValue)
 {
+    assertex(oldValue);
     for (;;)
     {
         oldValue->setTransformExtra(newValue);
@@ -1970,7 +1972,7 @@ IHqlExpression * NewHqlTransformer::transformCall(IHqlExpression * expr)
     bool same = transformChildren(body, args);
     if (same && (oldFuncdef == newFuncdef))
         return LINK(expr);
-    OwnedHqlExpr newCall = createBoundFunction(NULL, newFuncdef, args, NULL, DEFAULT_EXPAND_CALL);
+    OwnedHqlExpr newCall = createBoundFunction(NULL, newFuncdef, args, NULL, false);
     return expr->cloneAllAnnotations(newCall);
 }
 

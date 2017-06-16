@@ -30,8 +30,8 @@
 
 interface jhtree_decl IDelayedFile : public IInterface
 {
-    virtual IMemoryMappedFile *queryMappedFile() = 0;
-    virtual IFileIO *queryFileIO() = 0;
+    virtual IMemoryMappedFile *getMappedFile() = 0;
+    virtual IFileIO *getFileIO() = 0;
 };
 
 interface jhtree_decl IKeyCursor : public IInterface
@@ -162,9 +162,11 @@ class jhtree_decl SegMonitorList : implements IInterface, implements IIndexReadC
     bool modified;
 public:
     IMPLEMENT_IINTERFACE;
-    inline SegMonitorList() { modified = true; mergeBarrier = 0; }
+    inline SegMonitorList() { reset(); }
     IArrayOf<IKeySegmentMonitor> segMonitors;
 
+    void reset();
+    void swapWith(SegMonitorList &other);
     void setLow(unsigned segno, void *keyBuffer) const;
     unsigned setLowAfter(size32_t offset, void *keyBuffer) const;
     bool incrementKey(unsigned segno, void *keyBuffer) const;
@@ -178,6 +180,8 @@ public:
     void checkSize(size32_t keyedSize, char const * keyname);
     void recalculateCache();
     void finish();
+    void deserialize(MemoryBuffer &mb);
+    void serialize(MemoryBuffer &mb) const;
 
     // interface IIndexReadContext
     virtual void append(IKeySegmentMonitor *segment);
@@ -201,6 +205,7 @@ interface IKeyManager : public IInterface, extends IIndexReadContext
     virtual unsigned __int64 getCurrentRangeCount(unsigned groupSegCount) = 0;
     virtual bool nextRange(unsigned groupSegCount) = 0;
     virtual void setKey(IKeyIndexBase * _key) = 0;
+    virtual void setChooseNLimit(unsigned __int64 _rowLimit) = 0; // for choosen type functionality
     virtual unsigned __int64 checkCount(unsigned __int64 limit) = 0;
     virtual void serializeCursorPos(MemoryBuffer &mb) = 0;
     virtual void deserializeCursorPos(MemoryBuffer &mb) = 0;
@@ -213,12 +218,14 @@ interface IKeyManager : public IInterface, extends IIndexReadContext
     virtual void resetCounts() = 0;
 
     virtual void setLayoutTranslator(IRecordLayoutTranslator * trans) = 0;
+    virtual void setSegmentMonitors(SegMonitorList &segmentMonitors) = 0;
+    virtual void deserializeSegmentMonitors(MemoryBuffer &mb) = 0;
     virtual void finishSegmentMonitors() = 0;
 
     virtual bool lookupSkip(const void *seek, size32_t seekGEOffset, size32_t seeklen) = 0;
 };
 
-extern jhtree_decl IKeyManager *createKeyManager(IKeyIndex * _key, unsigned rawSize, IContextLogger *ctx);
+extern jhtree_decl IKeyManager *createLocalKeyManager(IKeyIndex * _key, unsigned rawSize, IContextLogger *ctx);
 extern jhtree_decl IKeyManager *createKeyMerger(IKeyIndexSet * _key, unsigned rawSize, unsigned sortFieldOffset, IContextLogger *ctx);
 extern jhtree_decl IKeyManager *createSingleKeyMerger(IKeyIndex * _onekey, unsigned rawSize, unsigned sortFieldOffset, IContextLogger *ctx);
 

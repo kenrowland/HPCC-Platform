@@ -260,6 +260,33 @@ void SegMonitorList::recalculateCache()
     cachedLRS = _lastRealSeg();
 }
 
+void SegMonitorList::reset()
+{
+    segMonitors.kill();
+    modified = true; mergeBarrier = 0;
+}
+
+void SegMonitorList::swapWith(SegMonitorList &other)
+{
+    reset();
+    other.segMonitors.swapWith(segMonitors);
+}
+
+void SegMonitorList::deserialize(MemoryBuffer &mb)
+{
+    unsigned num;
+    mb.read(num);
+    while (num--)
+        append(deserializeKeySegmentMonitor(mb));
+}
+
+void SegMonitorList::serialize(MemoryBuffer &mb) const
+{
+    mb.append((unsigned) ordinality());
+    ForEachItemIn(idx, segMonitors)
+        segMonitors.item(idx).serialize(mb);
+}
+
 // interface IIndexReadContext
 void SegMonitorList::append(IKeySegmentMonitor *segment)
 {
@@ -620,6 +647,11 @@ public:
         }
     }
 
+    virtual void setChooseNLimit(unsigned __int64 _rowLimit) override
+    {
+        // TODO ?
+    }
+
     virtual void reset(bool crappyHack)
     {
         if (keyCursor)
@@ -627,8 +659,9 @@ public:
             if (!started)
             {
                 started = true;
-                segs.checkSize(keyedSize, keyName.get());
-                numsegs = segs.segMonitors.length();
+                numsegs = segs.ordinality();
+                if (numsegs)
+                    segs.checkSize(keyedSize, keyName.get());
             }
             if (!crappyHack)
             {
@@ -933,6 +966,16 @@ public:
     virtual void setMergeBarrier(unsigned offset)
     {
         activitySegs->setMergeBarrier(offset); 
+    }
+
+    virtual void setSegmentMonitors(SegMonitorList &segmentMonitors) override
+    {
+        segs.swapWith(segmentMonitors);
+    }
+
+    virtual void deserializeSegmentMonitors(MemoryBuffer &mb) override
+    {
+        segs.deserialize(mb);
     }
 
     virtual void finishSegmentMonitors()
@@ -1975,7 +2018,8 @@ class CLazyKeyIndex : implements IKeyIndex, public CInterface
 {
     StringAttr keyfile;
     unsigned crc; 
-    Linked<IDelayedFile> iFileIO;
+    Linked<IDelayedFile> delayedFile;
+    Owned<IFileIO> iFileIO;
     Owned<IKeyIndex> realKey;
     CriticalSection c;
     bool isTLK;
@@ -1986,11 +2030,14 @@ class CLazyKeyIndex : implements IKeyIndex, public CInterface
         CriticalBlock b(c);
         if (!realKey)
         {
-            IMemoryMappedFile *mapped = useMemoryMappedIndexes ? iFileIO->queryMappedFile() : 0;
+            Owned<IMemoryMappedFile> mapped = useMemoryMappedIndexes ? delayedFile->getMappedFile() : nullptr;
             if (mapped)
                 realKey.setown(queryKeyStore()->load(keyfile, crc, mapped, isTLK, preloadAllowed));
             else
-                realKey.setown(queryKeyStore()->load(keyfile, crc, iFileIO->queryFileIO(), isTLK, preloadAllowed));
+            {
+                iFileIO.setown(delayedFile->getFileIO());
+                realKey.setown(queryKeyStore()->load(keyfile, crc, iFileIO, isTLK, preloadAllowed));
+            }
             if (!realKey)
             {
                 DBGLOG("Lazy key file %s could not be opened", keyfile.get());
@@ -2002,8 +2049,8 @@ class CLazyKeyIndex : implements IKeyIndex, public CInterface
 
 public:
     IMPLEMENT_IINTERFACE;
-    CLazyKeyIndex(const char *_keyfile, unsigned _crc, IDelayedFile *_iFileIO, bool _isTLK, bool _preloadAllowed)
-        : keyfile(_keyfile), crc(_crc), iFileIO(_iFileIO), isTLK(_isTLK), preloadAllowed(_preloadAllowed)
+    CLazyKeyIndex(const char *_keyfile, unsigned _crc, IDelayedFile *_delayedFile, bool _isTLK, bool _preloadAllowed)
+        : keyfile(_keyfile), crc(_crc), delayedFile(_delayedFile), isTLK(_isTLK), preloadAllowed(_preloadAllowed)
     {}
 
     virtual bool IsShared() const { return CInterface::IsShared(); }
@@ -2027,7 +2074,7 @@ public:
     virtual offset_t queryMetadataHead() { return checkOpen().queryMetadataHead(); }
     virtual IPropertyTree * getMetadata() { return checkOpen().getMetadata(); }
     virtual unsigned getNodeSize() { return checkOpen().getNodeSize(); }
-    virtual const IFileIO *queryFileIO() const override { return iFileIO->queryFileIO(); }
+    virtual const IFileIO *queryFileIO() const override { return iFileIO; } // NB: if not yet opened, will be null
 };
 
 extern jhtree_decl IKeyIndex *createKeyIndex(const char *keyfile, unsigned crc, IFileIO &iFileIO, bool isTLK, bool preloadAllowed)
@@ -2933,7 +2980,7 @@ extern jhtree_decl IKeyIndexSet *createKeyIndexSet()
     return new CKeyIndexSet;
 }
 
-extern jhtree_decl IKeyManager *createKeyManager(IKeyIndex *key, unsigned _rawSize, IContextLogger *_ctx)
+extern jhtree_decl IKeyManager *createLocalKeyManager(IKeyIndex *key, unsigned _rawSize, IContextLogger *_ctx)
 {
     return new CKeyLevelManager(key, _rawSize, _ctx);
 }
@@ -3177,14 +3224,14 @@ protected:
         {
             unsigned maxSize = (variable && blobby) ? 18 : 10;
             Owned <IKeyIndex> index1 = createKeyIndex("keyfile1.$$$", 0, false, false);
-            Owned <IKeyManager> tlk1 = createKeyManager(index1, maxSize, NULL);
+            Owned <IKeyManager> tlk1 = createLocalKeyManager(index1, maxSize, NULL);
             Owned<IStringSet> sset1 = createStringSet(10);
             sset1->addRange("0000000001", "0000000100");
             tlk1->append(createKeySegmentMonitor(false, sset1.getClear(), 0, 10));
             tlk1->finishSegmentMonitors();
             tlk1->reset();
 
-            Owned <IKeyManager> tlk1a = createKeyManager(index1, maxSize, NULL);
+            Owned <IKeyManager> tlk1a = createLocalKeyManager(index1, maxSize, NULL);
             Owned<IStringSet> sset1a = createStringSet(8);
             sset1a->addRange("00000000", "00000001");
             tlk1a->append(createKeySegmentMonitor(false, sset1a.getClear(), 0, 8));
@@ -3217,7 +3264,7 @@ protected:
 
 
             Owned <IKeyIndex> index2 = createKeyIndex("keyfile2.$$$", 0, false, false);
-            Owned <IKeyManager> tlk2 = createKeyManager(index2, maxSize, NULL);
+            Owned <IKeyManager> tlk2 = createLocalKeyManager(index2, maxSize, NULL);
             Owned<IStringSet> sset2 = createStringSet(10);
             sset2->addRange("0000000001", "0000000100");
             ASSERT(sset2->numValues() == 65536);
@@ -3240,7 +3287,7 @@ protected:
                 tlk3->reset();
             }
 
-            Owned <IKeyManager> tlk2a = createKeyManager(index2, maxSize, NULL);
+            Owned <IKeyManager> tlk2a = createLocalKeyManager(index2, maxSize, NULL);
             Owned<IStringSet> sset2a = createStringSet(10);
             sset2a->addRange("0000000048", "0000000048");
             ASSERT(sset2a->numValues() == 1);
@@ -3248,7 +3295,7 @@ protected:
             tlk2a->finishSegmentMonitors();
             tlk2a->reset();
 
-            Owned <IKeyManager> tlk2b = createKeyManager(index2, maxSize, NULL);
+            Owned <IKeyManager> tlk2b = createLocalKeyManager(index2, maxSize, NULL);
             Owned<IStringSet> sset2b = createStringSet(10);
             sset2b->addRange("0000000047", "0000000049");
             ASSERT(sset2b->numValues() == 3);
@@ -3256,7 +3303,7 @@ protected:
             tlk2b->finishSegmentMonitors();
             tlk2b->reset();
 
-            Owned <IKeyManager> tlk2c = createKeyManager(index2, maxSize, NULL);
+            Owned <IKeyManager> tlk2c = createLocalKeyManager(index2, maxSize, NULL);
             Owned<IStringSet> sset2c = createStringSet(10);
             sset2c->addRange("0000000047", "0000000047");
             tlk2c->append(createKeySegmentMonitor(false, sset2c.getClear(), 0, 10));

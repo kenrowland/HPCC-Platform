@@ -159,6 +159,9 @@ WsWUExceptions::WsWUExceptions(IConstWorkUnit& wu): numerr(0), numwrn(0), numinf
         e->setColumn(cur.getExceptionColumn());
         if (cur.getActivityId())
             e->setActivity(cur.getActivityId());
+        if (cur.getPriority())
+            e->setPriority(cur.getPriority());
+        e->setScope(cur.queryScope());
 
         const char * label = "";
         switch (cur.getSeverity())
@@ -392,7 +395,7 @@ void WsWuInfo::doGetTimers(IArrayOf<IEspECLTimer>& timers)
             cur.getScope(scope);
 
             bool isThorTiming = false;//Should it be renamed as isClusterTiming?
-            if ((cur.getCreatorType() == SCTsummary) && (cur.getKind() == StTimeElapsed) && streq(scope.str(), GLOBAL_SCOPE))
+            if ((cur.getCreatorType() == SCTsummary) && (cur.getKind() == StTimeElapsed) && isGlobalScope(scope.str()))
             {
                 SCMStringBuffer creator;
                 cur.getCreator(creator);
@@ -757,8 +760,13 @@ void WsWuInfo::doGetGraphs(IArrayOf<IEspECLGraph>& graphs)
         if (version >= 1.53)
         {
             SCMStringBuffer s;
-            Owned<IConstWUStatistic> whenGraphStarted = cw->getStatistic(NULL, name.str(), StWhenGraphStarted);
-            Owned<IConstWUStatistic> whenGraphFinished = cw->getStatistic(NULL, name.str(), StWhenGraphFinished);
+            Owned<IConstWUStatistic> whenGraphStarted = cw->getStatistic(NULL, name.str(), StWhenStarted);
+            if (!whenGraphStarted) // 6.x backward compatibility
+                whenGraphStarted.setown(cw->getStatistic(NULL, name.str(), StWhenGraphStarted));
+            Owned<IConstWUStatistic> whenGraphFinished = cw->getStatistic(NULL, name.str(), StWhenFinished);
+            if (!whenGraphFinished) // 6.x backward compatibility
+                whenGraphFinished.setown(cw->getStatistic(NULL, name.str(), StWhenGraphFinished));
+
             if (whenGraphStarted)
                 g->setWhenStarted(whenGraphStarted->getFormattedValue(s).str());
             if (whenGraphFinished)
@@ -915,11 +923,11 @@ void WsWuInfo::getEventScheduleFlag(IEspECLWorkunit &info)
     }
 }
 
-unsigned WsWuInfo::getTotalThorTime()
+unsigned WsWuInfo::getTotalThorTime(const char * scope)
 {
     StatisticsFilter filter;
     filter.setCreatorType(SCTsummary);
-    filter.setScope(GLOBAL_SCOPE);
+    filter.setScope(scope);
     filter.setKind(StTimeElapsed);
 
     //Should only be a single value
@@ -931,6 +939,11 @@ unsigned WsWuInfo::getTotalThorTime()
     }
 
     return totalThorTimeMS;
+}
+
+unsigned WsWuInfo::getTotalThorTime()
+{
+    return getTotalThorTime(GLOBAL_SCOPE) + getTotalThorTime(LEGACY_GLOBAL_SCOPE);
 }
 
 unsigned WsWuInfo::getLegacyTotalThorTime()

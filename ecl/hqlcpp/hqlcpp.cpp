@@ -1477,6 +1477,13 @@ void HqlCppTranslator::setTargetClusterType(ClusterType clusterType)
     targetClusterType = clusterType;
 }
 
+void HqlCppTranslator::ensureDiskAccessAllowed(IHqlExpression * expr)
+{
+    bool isSigned = expr->hasAttribute(_signed_Atom);
+    if (!queryCallback()->allowAccess("datafile", isSigned))
+        reportErrorNoAbort(expr, HQLERR_DatafileRequiresSigned, "You do not have permission to directly access datafiles");
+}
+
 void HqlCppTranslator::checkAbort()
 {
     if (wu() && wu()->aborting())
@@ -1797,6 +1804,7 @@ void HqlCppTranslator::cacheOptions()
         DebugOption(options.addLikelihoodToGraph,"addLikelihoodToGraph", true),
         DebugOption(options.varFieldAccessorThreshold,"varFieldAccessorThreshold",3),   // Generate accessor classes for rows with #variable width fields >= threshold
         DebugOption(options.translateDFSlayouts,"translateDFSlayouts", false),
+        DebugOption(options.timeTransforms,"timeTransforms", false),
         DebugOption(options.reportDFSinfo,"reportDFSinfo", 0),
     };
 
@@ -2107,14 +2115,26 @@ void HqlCppTranslator::doReportWarning(WarnErrorCategory category, ErrorSeverity
     if (!location)
         location = queryActiveActivityLocation();
     unsigned activity = 0;
+    const char * scope = nullptr;
+    StringBuffer scopeText;
     if (activeActivities.ordinality())
-        activity = activeActivities.tos().queryActivityId();
+    {
+        ABoundActivity & top = activeActivities.tos();
+        activity = top.queryActivityId();
+        ActivityInstance * active = top.queryActive();
+        dbgassertex(active);
+        if (active)
+        {
+            active->getScope(scopeText);
+            scope = scopeText;
+        }
+    }
 
     ErrorSeverity severity = (explicitSeverity == SeverityUnknown) ? queryDefaultSeverity(category) : explicitSeverity;
     if (location)
-        warnError.setown(createError(category, severity, id, msg, str(location->querySourcePath()), location->getStartLine(), location->getStartColumn(), 0, activity));
+        warnError.setown(createError(category, severity, id, msg, str(location->querySourcePath()), location->getStartLine(), location->getStartColumn(), 0, activity, scope));
     else
-        warnError.setown(createError(category, severity, id, msg, activity));
+        warnError.setown(createError(category, severity, id, msg, activity, scope));
 
     errorProcessor->report(warnError);
 }
@@ -2237,6 +2257,17 @@ void HqlCppTranslator::reportError(IHqlExpression * location, int code,const cha
     va_end(args);
 
     reportErrorDirect(location, code, errorMsg.str(), true);
+}
+
+void HqlCppTranslator::reportErrorNoAbort(IHqlExpression * location, int code,const char *format, ...)
+{
+    StringBuffer errorMsg;
+    va_list args;
+    va_start(args, format);
+    errorMsg.valist_appendf(format, args);
+    va_end(args);
+
+    reportErrorDirect(location, code, errorMsg.str(), false);
 }
 
 //---------------------------------------------------------------------------

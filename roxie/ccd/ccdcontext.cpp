@@ -1143,6 +1143,7 @@ protected:
     unsigned lastWuAbortCheck;
     unsigned startTime;
     unsigned totSlavesReplyLen;
+    CCycleTimer elapsedTimer;
 
     QueryOptions options;
     Owned<IConstWorkUnit> workUnit;
@@ -1437,7 +1438,7 @@ public:
             graphStats.setown(workUnit->updateStats(graph->queryName(), SCTroxie, queryStatisticsComponentName(), 0));
     }
 
-    virtual void endGraph(cycle_t startCycles, bool aborting)
+    virtual void endGraph(unsigned __int64 startTimeStamp, cycle_t startCycles, bool aborting)
     {
         if (graph)
         {
@@ -1460,6 +1461,7 @@ public:
                     StringBuffer graphDesc;
                     formatGraphTimerLabel(graphDesc, graphName);
                     WorkunitUpdate progressWorkUnit(&workUnit->lock());
+                    progressWorkUnit->setStatistic(queryStatisticsComponentType(), queryStatisticsComponentName(), SSTgraph, graphName, StWhenStarted, NULL, startTimeStamp, 1, 0, StatsMergeAppend);
                     updateWorkunitTimeStat(progressWorkUnit, SSTgraph, graphName, StTimeElapsed, graphDesc, elapsedTime);
                     updateWorkunitTimeStat(progressWorkUnit, SSTglobal, GLOBAL_SCOPE, StTimeElapsed, NULL, totalThisTimeNs+elapsedTime);
                     progressWorkUnit->setStatistic(SCTsummary, "roxie", SSTglobal, GLOBAL_SCOPE, StTimeElapsed, totalTimeStr, totalTimeNs+elapsedTime, 1, 0, StatsMergeReplace);
@@ -1515,6 +1517,7 @@ public:
         {
             bool created = false;
             cycle_t startCycles = get_cycles_now();
+            unsigned __int64 startTimeStamp = getTimeStampNowValue();
             try
             {
                 beginGraph(name);
@@ -1531,7 +1534,7 @@ public:
                     CTXLOG("Exception thrown in query - cleaning up: %d: %s", e->errorCode(), e->errorMessage(s).str());
                 }
                 if (created)  // Partially-created graphs are liable to crash if you call abort() on them...
-                    endGraph(startCycles, true);
+                    endGraph(startTimeStamp, startCycles, true);
                 else
                 {
                     // Bit of a hack... needed to avoid pure virtual calls if these are left to the CRoxieContextBase destructor
@@ -1544,7 +1547,7 @@ public:
             {
                 CTXLOG("Exception thrown in query - cleaning up");
                 if (created)
-                    endGraph(startCycles, true);
+                    endGraph(startTimeStamp, startCycles, true);
                 else
                 {
                     // Bit of a hack... needed to avoid pure virtual calls if these are left to the CRoxieContextBase destructor
@@ -1553,7 +1556,7 @@ public:
                 CTXLOG("Done cleaning up");
                 throw;
             }
-            endGraph(startCycles, false);
+            endGraph(startTimeStamp, startCycles, false);
         }
     }
 
@@ -2021,7 +2024,7 @@ protected:
             {
                 CriticalBlock b(contextCrit);
                 if (!persists)
-                    persists = createPTree();
+                    persists = createPTree(ipt_fast);
                 return *persists;
             }
         case ResultSequenceOnce:
@@ -2034,14 +2037,14 @@ protected:
             {
                 CriticalBlock b(contextCrit);
                 if (!temporaries)
-                    temporaries = createPTree();
+                    temporaries = createPTree(ipt_fast);
                 return *temporaries;
             }
         default:
             {
                 CriticalBlock b(contextCrit);
                 if (!rereadResults)
-                    rereadResults = createPTree();
+                    rereadResults = createPTree(ipt_fast);
                 return *rereadResults;
             }
         }
@@ -2682,7 +2685,7 @@ protected:
     {
         WorkunitUpdate wu(&workUnit->lock());
         wu->subscribe(SubscribeOptionAbort);
-        addTimeStamp(wu, SSTglobal, NULL, StWhenQueryStarted);
+        addTimeStamp(wu, SSTglobal, NULL, StWhenStarted);
         if (!context->getPropBool("@outputToSocket", false))
             protocol = NULL;
         updateSuppliedXmlParams(wu);
@@ -2690,8 +2693,8 @@ protected:
         if (workUnit->getXmlParams(wuParams, false).length())
         {
             // Merge in params from WU. Ones on command line take precedence though...
-            Owned<IPropertyTree> wuParamTree = createPTreeFromXMLString(wuParams.str(), ipt_caseInsensitive);
-            Owned<IPropertyTreeIterator> params = wuParamTree ->getElements("*");
+            Owned<IPropertyTree> wuParamTree = createPTreeFromXMLString(wuParams.str(), ipt_caseInsensitive|ipt_fast);
+            Owned<IPropertyTreeIterator> params = wuParamTree->getElements("*");
             ForEach(*params)
             {
                 IPropertyTree &param = params->query();
@@ -2738,7 +2741,7 @@ public:
         init();
         rowManager->setMemoryLimit(options.memoryLimit);
         workflow.setown(_factory->createWorkflowMachine(workUnit, true, logctx));
-        context.setown(createPTree(ipt_caseInsensitive));
+        context.setown(createPTree(ipt_caseInsensitive|ipt_fast));
     }
 
     CRoxieServerContext(IConstWorkUnit *_workUnit, const IQueryFactory *_factory, const ContextLogger &_logctx)
@@ -2748,7 +2751,7 @@ public:
         workUnit.set(_workUnit);
         rowManager->setMemoryLimit(options.memoryLimit);
         workflow.setown(_factory->createWorkflowMachine(workUnit, false, logctx));
-        context.setown(createPTree(ipt_caseInsensitive));
+        context.setown(createPTree(ipt_caseInsensitive|ipt_fast));
 
         //MORE: Use various debug settings to override settings:
         rowManager->setActivityTracking(workUnit->getDebugValueBool("traceRoxiePeakMemory", false));
@@ -2815,8 +2818,8 @@ public:
                 if (_strands)
                     builder.addStatistic(StNumStrands, _strands);
                 builder.addStatistic(StNumRowsProcessed, _processed);
-                builder.addStatistic(StNumStarted, 1);
-                builder.addStatistic(StNumStopped, 1);
+                builder.addStatistic(StNumStarts, 1);
+                builder.addStatistic(StNumStops, 1);
                 builder.addStatistic(StNumSlaves, 1);  // Arguable
             }
             logctx.noteStatistic(StNumRowsProcessed, _processed);
@@ -3011,12 +3014,15 @@ public:
             }
             while (clusterNames.ordinality())
                 restoreCluster();
-            addTimeStamp(w, SSTglobal, NULL, StWhenQueryFinished);
+            addTimeStamp(w, SSTglobal, NULL, StWhenFinished);
             updateWorkunitTimings(w, myTimer);
             Owned<IStatisticGatherer> gatherer = createGlobalStatisticGatherer(w);
             CRuntimeStatisticCollection merged(allStatistics);
             logctx.gatherStats(merged);
             merged.recordStatistics(*gatherer);
+
+            //MORE: If executed more than once (e.g., scheduled), then TimeElapsed isn't particularly correct.
+            gatherer->updateStatistic(StTimeElapsed, elapsedTimer.elapsedNs(), StatsMergeReplace);
 
             WuStatisticTarget statsTarget(w, "roxie");
             rowManager->reportPeakStatistics(statsTarget, 0);
@@ -3207,7 +3213,7 @@ public:
         else
         {
             if (!val)
-                val = ctx.addPropTree(name, createPTree());
+                val = ctx.addPropTree(name, createPTree(ipt_fast));
             val->setProp("@format", "deserialized");
             val->setPropInt("@id", resultStore.addResult(count, data, meta));
         }
@@ -3318,7 +3324,7 @@ public:
     virtual void setResultXml(const char *name, unsigned sequence, const char *xml)
     {
         CriticalBlock b(contextCrit);
-        useContext(sequence).setPropTree(name, createPTreeFromXMLString(xml, ipt_caseInsensitive));
+        useContext(sequence).setPropTree(name, createPTreeFromXMLString(xml, ipt_caseInsensitive|ipt_fast));
     }
 
     virtual void setResultDecimal(const char *name, unsigned sequence, int len, int precision, bool isSigned, const void *val)
@@ -3583,10 +3589,10 @@ public:
         return factory->queryPackage().createFileName(filename, overwrite, extend, clusters, workUnit);
     }
 
-    virtual void endGraph(cycle_t startCycles, bool aborting)
+    virtual void endGraph(unsigned __int64 startTimeStamp, cycle_t startCycles, bool aborting) override
     {
         fileCache.kill();
-        CRoxieContextBase::endGraph(startCycles, aborting);
+        CRoxieContextBase::endGraph(startTimeStamp, startCycles, aborting);
     }
 
     virtual void onFileCallback(const RoxiePacketHeader &header, const char *lfn, bool isOpt, bool isLocal)

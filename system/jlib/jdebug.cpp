@@ -565,7 +565,7 @@ public:
     }
     virtual StatisticKind getTimerType(unsigned idx __attribute__((unused)))
     {
-        return StTimeElapsed;
+        return StTimeTotalExecute;
     }
     virtual StatisticScopeType getScopeType(unsigned idx __attribute__((unused)))
     {
@@ -2612,6 +2612,8 @@ public:
         if(!mode) return;
         unsigned memused=0;
         unsigned memtot=0;
+        str.appendf("LPT=%u ", queryNumLocalTrees());
+        str.appendf("APT=%u ", queryNumAtomTrees());
         if(mode & PerfMonProcMem)
         {
             if (!outofhandles)

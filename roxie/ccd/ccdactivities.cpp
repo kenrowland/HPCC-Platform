@@ -81,7 +81,7 @@ extern void putStatsValue(IPropertyTree *node, const char *statName, const char 
         IPropertyTree *att = node->queryPropTree(xpath.str());
         if (!att)
         {
-            att = node->addPropTree("att", createPTree());
+            att = node->addPropTree("att");
             att->setProp("@name", statName);
         }
         att->setProp("@type", statType);
@@ -245,15 +245,13 @@ protected:
             const char *id = strchr(levelx, '[');
             if (!id)
             {
-                child = createPTree(levelx);
-                parent->addPropTree(levelx, child);
+                child = parent->addPropTree(levelx);
             }
             else
             {
                 StringBuffer elem;
                 elem.append(id-levelx, levelx);
-                child = createPTree(elem);
-                parent->addPropTree(elem, child);
+                child = parent->addPropTree(elem);
                 for (;;)
                 {
                     StringBuffer attr, val;
@@ -3194,7 +3192,7 @@ protected:
             IKeyIndex *k = kib->queryPart(lastPartNo.fileNo);
             if (filechanged)
             {
-                tlk.setown(createKeyManager(k, 0, &logctx));
+                tlk.setown(createLocalKeyManager(k, 0, &logctx));
                 createSegmentMonitorsPending = true;
             }
             else

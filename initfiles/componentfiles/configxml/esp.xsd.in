@@ -452,6 +452,7 @@
                             <xs:annotation>
                                 <xs:appinfo>
                                     <viewType>password</viewType>
+                                    <tooltip>The passphrase used to generate the private key.</tooltip>
                                 </xs:appinfo>
                             </xs:annotation>
                         </xs:attribute>
@@ -859,6 +860,13 @@
                 <xs:annotation>
                     <xs:appinfo>
                         <tooltip>Log TxSummary for Resource Requests</tooltip>
+                    </xs:appinfo>
+                </xs:annotation>
+            </xs:attribute>
+            <xs:attribute name="memCachedOptionString" type="xs:string" use="optional">
+                <xs:annotation>
+                    <xs:appinfo>
+                        <tooltip>Option string used by ESP memcached client.</tooltip>
                     </xs:appinfo>
                 </xs:annotation>
             </xs:attribute>

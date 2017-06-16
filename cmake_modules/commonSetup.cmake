@@ -146,6 +146,7 @@ IF ("${COMMONSETUP_DONE}" STREQUAL "")
     PY2EMBED
     PY3EMBED
     REDIS
+    SQS
     MYSQLEMBED
     JAVAEMBED
     SQLITE3EMBED
@@ -166,6 +167,13 @@ IF ("${COMMONSETUP_DONE}" STREQUAL "")
         endif()
     endforeach()
     #"cmake -DEXAMPLEPLUGIN=ON <path-to/HPCC-Platform/>" will configure the plugin makefiles to be built with "make".
+
+  set(LIBMEMCACHED_MINVERSION "1.0.10")
+  find_package(LIBMEMCACHED ${LIBMEMCACHED_MINVERSION})
+  if(LIBMEMCACHED_FOUND)
+      add_definitions(-DUSE_LIBMEMCACHED)
+      include_directories(${LIBMEMCACHED_INCLUDE_DIR})
+  endif()
 
   if (SIGN_MODULES)
       message(STATUS "GPG signing check")

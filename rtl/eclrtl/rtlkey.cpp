@@ -213,9 +213,9 @@ public:
     {
         lastCompareResult = false;
         hasCompareResult = false;
-        lastCompareValue = NULL;
         set.setown(deserializeStringSet(mb));
         mb.read(optional);
+        lastCompareValue = new char[size];
     }
     ~CSetKeySegmentMonitor();
 
@@ -533,9 +533,9 @@ public:
     virtual IKeySegmentMonitor *combine(const IKeySegmentMonitor *with) const { throwUnexpected(); };
     virtual bool isSimple() const { return true; }
 
-    virtual MemoryBuffer &serialize(MemoryBuffer &mb)
+    virtual MemoryBuffer &serialize(MemoryBuffer &mb) const override
     {
-        return CKeySegmentMonitor::serialize(mb);
+        CKeySegmentMonitor::serialize(mb);
         if (val) 
             mb.append((bool)true).append(size,val);
         else

@@ -25,6 +25,7 @@
 #include <jlog.hpp>
 #include <jprop.hpp>
 #include <jfile.hpp>
+#include <jencrypt.hpp>
 #include "jutil.hpp"
 #include <build-config.h>
 
@@ -282,9 +283,7 @@ void getAccessList(const char *aclName, const IPropertyTree *topology, IProperty
     xpath.append("ACL[@name='").append(aclName).append("']");
     if (aclInfo->queryPropTree(xpath))
         throw MakeStringException(MSGAUD_operator, ROXIE_INVALID_TOPOLOGY, "Invalid topology file - recursive ACL definition of %s", aclName);
-    Owned<IPropertyTree> X = createPTree("ACL");
-    X->setProp("@name", aclName);
-    aclInfo->addPropTree("ACL", X.getClear());
+    aclInfo->addPropTree("ACL")->setProp("@name", aclName);
 
     Owned<IPropertyTree> acl = topology->getPropTree(xpath.str());
     if (!acl)
@@ -314,10 +313,9 @@ void addSlaveChannel(unsigned channel, unsigned level)
     xpath.appendf("RoxieSlaveProcess[@channel=\"%d\"]", channel);
     if (ccdChannels->hasProp(xpath.str()))
         throw MakeStringException(MSGAUD_operator, ROXIE_INVALID_TOPOLOGY, "Invalid topology file - channel %d repeated", channel);
-    IPropertyTree *ci = createPTree("RoxieSlaveProcess");
+    IPropertyTree *ci = ccdChannels->addPropTree("RoxieSlaveProcess");
     ci->setPropInt("@channel", channel);
     ci->setPropInt("@subChannel", numSlaves[channel]);
-    ccdChannels->addPropTree("RoxieSlaveProcess", ci);
 }
 
 void addChannel(unsigned nodeNumber, unsigned channel, unsigned level)
@@ -499,7 +497,7 @@ int STARTQUERY_API start_query(int argc, const char *argv[])
     Thread::setDefaultStackSize(0x10000);   // NB under windows requires linker setting (/stack:)
 #endif
     srand( (unsigned)time( NULL ) );
-    ccdChannels = createPTree("Channels");
+    ccdChannels = createPTree("Channels", ipt_lowmem);
 
     char currentDirectory[_MAX_DIR];
     if (!getcwd(currentDirectory, sizeof(currentDirectory)))
@@ -524,7 +522,7 @@ int STARTQUERY_API start_query(int argc, const char *argv[])
         if (checkFileExists(topologyFile.str()))
         {
             DBGLOG("Loading topology file %s", topologyFile.str());
-            topology = createPTreeFromXMLFile(topologyFile.str());
+            topology = createPTreeFromXMLFile(topologyFile.str(), ipt_lowmem);
             saveTopology();
         }
         else
@@ -539,6 +537,7 @@ int STARTQUERY_API start_query(int argc, const char *argv[])
                 " <RoxieFarmProcess/>"
                 " <RoxieServerProcess netAddress='.'/>"
                 "</RoxieTopology>"
+                , ipt_lowmem
                 );
             int port = globals->getPropInt("--port", 9876);
             topology->setPropInt("RoxieFarmProcess/@port", port);
@@ -1118,6 +1117,7 @@ int STARTQUERY_API start_query(int argc, const char *argv[])
                 unsigned numThreads = roxieFarm.getPropInt("@numThreads", numServerThreads);
                 unsigned port = roxieFarm.getPropInt("@port", ROXIE_SERVER_PORT);
                 unsigned requestArrayThreads = roxieFarm.getPropInt("@requestArrayThreads", 5);
+                // NOTE: farmer name [@name=] is not copied into topology
                 const IpAddress &ip = getNodeAddress(myNodeIndex);
                 if (!roxiePort)
                 {
@@ -1129,10 +1129,44 @@ int STARTQUERY_API start_query(int argc, const char *argv[])
                 if (port)
                 {
                     const char *protocol = roxieFarm.queryProp("@protocol");
+                    StringBuffer certFileName;
+                    StringBuffer keyFileName;
+                    StringBuffer passPhraseStr;
+                    if (protocol && streq(protocol, "ssl"))
+                    {
+#ifdef _USE_OPENSSL
+                        const char *certFile = roxieFarm.queryProp("@certificateFileName");
+                        if (!certFile)
+                            throw MakeStringException(ROXIE_FILE_ERROR, "Roxie SSL Farm Listener on port %d missing certificateFileName tag", port);
+                        if (isAbsolutePath(certFile))
+                            certFileName.append(certFile);
+                        else
+                            certFileName.append(codeDirectory.str()).append(certFile);
+                        if (!checkFileExists(certFileName.str()))
+                            throw MakeStringException(ROXIE_FILE_ERROR, "Roxie SSL Farm Listener on port %d missing certificateFile (%s)", port, certFileName.str());
+
+                        const char *keyFile = roxieFarm.queryProp("@privateKeyFileName");
+                        if (!keyFile)
+                            throw MakeStringException(ROXIE_FILE_ERROR, "Roxie SSL Farm Listener on port %d missing privateKeyFileName tag", port);
+                        if (isAbsolutePath(keyFile))
+                            keyFileName.append(keyFile);
+                        else
+                            keyFileName.append(codeDirectory.str()).append(keyFile);
+                        if (!checkFileExists(keyFileName.str()))
+                            throw MakeStringException(ROXIE_FILE_ERROR, "Roxie SSL Farm Listener on port %d missing privateKeyFile (%s)", port, keyFileName.str());
+
+                        const char *passPhrase = roxieFarm.queryProp("@passphrase");
+                        if (!isEmptyString(passPhrase))
+                            decrypt(passPhraseStr, passPhrase);
+#else
+                        WARNLOG("Skipping Roxie SSL Farm Listener on port %d : OpenSSL disabled in build", port);
+                        continue;
+#endif
+                    }
                     const char *soname =  roxieFarm.queryProp("@so");
                     const char *config  = roxieFarm.queryProp("@config");
                     Owned<IHpccProtocolPlugin> protocolPlugin = ensureProtocolPlugin(*protocolCtx, soname);
-                    roxieServer.setown(protocolPlugin->createListener(protocol ? protocol : "native", createRoxieProtocolMsgSink(ip, port, numThreads, suspended), port, listenQueue, config));
+                    roxieServer.setown(protocolPlugin->createListener(protocol ? protocol : "native", createRoxieProtocolMsgSink(ip, port, numThreads, suspended), port, listenQueue, config, certFileName.str(), keyFileName.str(), passPhraseStr.str()));
                 }
                 else
                     roxieServer.setown(createRoxieWorkUnitListener(numThreads, suspended));
@@ -1141,7 +1175,7 @@ int STARTQUERY_API start_query(int argc, const char *argv[])
                 const char *aclName = roxieFarm.queryProp("@aclName");
                 if (aclName && *aclName)
                 {
-                    Owned<IPropertyTree> aclInfo = createPTree("AccessInfo");
+                    Owned<IPropertyTree> aclInfo = createPTree("AccessInfo", ipt_lowmem);
                     getAccessList(aclName, topology, aclInfo);
                     Owned<IPropertyTreeIterator> accesses = aclInfo->getElements("Access");
                     ForEach(*accesses)
@@ -1166,6 +1200,7 @@ int STARTQUERY_API start_query(int argc, const char *argv[])
                 roxieServer->start();
             }
             writeSentinelFile(sentinelFile);
+            DBGLOG("Startup completed - LPT=%u APT=%u", queryNumLocalTrees(), queryNumAtomTrees());
             DBGLOG("Waiting for queries");
             if (pingInterval)
                 startPingTimer();

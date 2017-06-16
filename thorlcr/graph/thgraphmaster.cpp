@@ -1232,6 +1232,8 @@ public:
     {
         Owned<IWorkUnitFactory> factory = getWorkUnitFactory();
         Owned<IConstWorkUnit> externalWU = factory->openWorkUnit(wuid);
+        if (!externalWU)
+            throw MakeStringException(TE_FailedToRetrieveWorkunitValue, "workunit %s not found, retrieving value %s", wuid, name);
         externalWU->remoteCheckAccess(userDesc, false);
         return getWorkUnitResult(externalWU, name, sequence);
     }
@@ -2910,8 +2912,8 @@ void ProgressInfo::getStats(IStatisticGatherer & stats)
     CThorStats::getStats(stats, true);
     stats.addStatistic(kind, tot);
     stats.addStatistic(StNumSlaves, counts.ordinality());
-    stats.addStatistic(StNumStarted, startcount);
-    stats.addStatistic(StNumStopped, stopcount);
+    stats.addStatistic(StNumStarts, startcount);
+    stats.addStatistic(StNumStops, stopcount);
 }
 
 

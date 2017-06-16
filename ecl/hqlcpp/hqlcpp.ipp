@@ -789,6 +789,7 @@ struct HqlCppOptions
     bool                optimizeCriticalFunctions;
     bool                addLikelihoodToGraph;
     bool                translateDFSlayouts;
+    bool                timeTransforms;
 };
 
 //Any information gathered while processing the query should be moved into here, rather than cluttering up the translator class
@@ -976,6 +977,7 @@ public:
     void reportWarning(WarnErrorCategory category, unsigned id, const char * msg, ...) __attribute__((format(printf, 4, 5)));
     void reportWarning(WarnErrorCategory category, ErrorSeverity explicitSeverity, IHqlExpression * location, unsigned id, const char * msg, ...) __attribute__((format(printf, 6, 7)));
     void reportError(IHqlExpression * location, int code, const char *format, ...) __attribute__((format(printf, 4, 5)));
+    void reportErrorNoAbort(IHqlExpression * location, int code, const char *format, ...) __attribute__((format(printf, 4, 5)));
     void reportErrorDirect(IHqlExpression * location, int code,const char *msg, bool alwaysAbort);
     void addWorkunitException(ErrorSeverity severity, unsigned code, const char * msg, IHqlExpression * location);
     void useFunction(IHqlExpression * funcdef);
@@ -1101,7 +1103,6 @@ public:
 
     HqlCppOptions const & queryOptions() const { return options; }
     bool needToSerializeToSlave(IHqlExpression * expr) const;
-    ITimeReporter * queryTimeReporter() const { return timeReporter; }
     void noteFinishedTiming(const char * name, cycle_t startCycles)
     {
         timeReporter->addTiming(name, get_cycles_now()-startCycles);
@@ -1121,6 +1122,7 @@ public:
     }
 
     void setTargetClusterType(ClusterType clusterType);
+    void ensureDiskAccessAllowed(IHqlExpression * expr);
     void checkAbort();
 
 public:
