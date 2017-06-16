@@ -83,10 +83,10 @@ CConfigSchemaHelper::CConfigSchemaHelper(const char* pBuildSetFile, const char* 
 
 CConfigSchemaHelper::~CConfigSchemaHelper()
 {
-    delete[] m_pBasePath;
-    delete CConfigSchemaHelper::m_pSchemaMapManager;
-    CConfigSchemaHelper::m_pSchemaMapManager = nullptr;
-    CConfigSchemaHelper::s_pCConfigSchemaHelper = nullptr;
+    // delete[] m_pBasePath;
+    // delete CConfigSchemaHelper::m_pSchemaMapManager;
+    // CConfigSchemaHelper::m_pSchemaMapManager = nullptr;
+    //CConfigSchemaHelper::s_pCConfigSchemaHelper = nullptr;
 }
 
 bool CConfigSchemaHelper::populateSchema()
@@ -857,12 +857,13 @@ void CConfigSchemaHelper::clearLF(::StringBuffer& strToClear)
 
 CConfigSchemaHelper* CConfigSchemaHelper::getNewInstance(const char* pDefaultDirOverride)
 {
-    if (CConfigSchemaHelper::s_pCConfigSchemaHelper != nullptr)
-    {
-        delete CConfigSchemaHelper::s_pCConfigSchemaHelper;
-        CConfigSchemaHelper::s_pCConfigSchemaHelper = nullptr;
-    }
+    //if (CConfigSchemaHelper::s_pCConfigSchemaHelper != nullptr)
+    //{
+    //    delete CConfigSchemaHelper::s_pCConfigSchemaHelper;
+    //    CConfigSchemaHelper::s_pCConfigSchemaHelper = nullptr;
+    //}
 
+    s_pCConfigSchemaHelper = nullptr;
     CConfigSchemaHelper::getInstance(pDefaultDirOverride);
     CConfigSchemaHelper::getInstance()->populateSchema();
 
