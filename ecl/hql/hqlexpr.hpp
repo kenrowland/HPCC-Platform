@@ -726,6 +726,7 @@ enum node_operator : unsigned short {
         no_getenv,
         no_fromjson,
         no_tojson,
+        no_matched_injoin,
         no_last_op,
 
 //These never get created as IHqlExpressions....
@@ -819,6 +820,7 @@ public:
     virtual size32_t length() = 0;
     virtual bool isImplicitlySigned() = 0;
     virtual IHqlExpression * queryGpgSignature() = 0;
+    virtual timestamp_type getTimeStamp() = 0;
 };
 
 //This class ensures that the pointer to the owner is cleared before both links are released, which allows
@@ -857,6 +859,7 @@ public:
         bool includeImports;            // gather imports
         bool includeLocations;          // include information about source locations
         bool includeJavadoc;
+        StringAttr cacheLocation;
     };
 
     HqlParseContext(IEclRepository * _eclRepository, ICodegenContextCallback *_codegenCtx, IPropertyTree * _archive)
@@ -873,9 +876,9 @@ public:
     void noteBeginAttribute(IHqlScope * scope, IFileContents * contents, IIdAtom * name);
     void noteBeginModule(IHqlScope * scope, IFileContents * contents);
     void noteBeginQuery(IHqlScope * scope, IFileContents * contents);
-    void noteEndAttribute();
-    void noteEndModule();
-    void noteEndQuery();
+    void noteEndAttribute(bool success);
+    void noteEndModule(bool success);
+    void noteEndQuery(bool success);
     void noteFinishedParse(IHqlScope * scope);
     void notePrivateSymbols(IHqlScope * scope);
     IPropertyTree * queryEnsureArchiveModule(const char * name, IHqlScope * scope);
@@ -909,13 +912,14 @@ public:
 private:
     bool checkBeginMeta();
     bool checkEndMeta();
-    void finishMeta();
+    void finishMeta(bool isSeparateFile, bool success);
+    IPropertyTree * beginMetaSource(IFileContents * contents);
 
     MetaOptions metaOptions;
 
     struct {
         bool gatherNow;
-        PointerArrayOf<IPropertyTree> nesting;
+        IArrayOf<IPropertyTree> nesting;
     } metaState;
 };
 
@@ -945,9 +949,9 @@ public:
     void noteBeginAttribute(IHqlScope * scope, IFileContents * contents, IIdAtom * name);
     void noteBeginModule(IHqlScope * scope, IFileContents * contents);
     void noteBeginQuery(IHqlScope * scope, IFileContents * contents);
-    inline void noteEndAttribute() { parseCtx.noteEndAttribute(); }
-    inline void noteEndModule() { parseCtx.noteEndAttribute(); }
-    inline void noteEndQuery() { parseCtx.noteEndQuery(); }
+    inline void noteEndAttribute(bool success) { parseCtx.noteEndAttribute(success); }
+    inline void noteEndModule(bool success) { parseCtx.noteEndModule(success); }
+    inline void noteEndQuery(bool success) { parseCtx.noteEndQuery(success); }
     inline void noteFinishedParse(IHqlScope * scope) { parseCtx.noteFinishedParse(scope); }
     void noteExternalLookup(IHqlScope * parentScope, IHqlExpression * expr);
     inline void notePrivateSymbols(IHqlScope * scope) { parseCtx.notePrivateSymbols(scope); }
@@ -1394,7 +1398,7 @@ extern HQL_API IHqlExpression * getCastExpr(IHqlExpression * expr, ITypeInfo * t
 
 extern HQL_API void parseModule(IHqlScope *scope, IFileContents * contents, HqlLookupContext & ctx, IXmlScope *xmlScope, bool loadImplicit);
 extern HQL_API IHqlExpression *parseQuery(IHqlScope *scope, IFileContents * contents, 
-                                          HqlLookupContext & ctx, IXmlScope *xmlScope, IProperties * macroParams, bool loadImplicit);
+                                          HqlLookupContext & ctx, IXmlScope *xmlScope, IProperties * macroParams, bool loadImplicit, bool isRoot);
 extern HQL_API IHqlExpression *parseQuery(const char *in, IErrorReceiver * errs);
 
 extern HQL_API IPropertyTree * gatherAttributeDependencies(IEclRepository * dataServer, const char * items = NULL);

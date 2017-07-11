@@ -12045,12 +12045,13 @@ IHqlExpression * PseudoPatternScope::lookupSymbol(IIdAtom * name, unsigned looku
 
 //---------------------------------------------------------------------------------------------------------------------
 
-extern HQL_API IHqlExpression * parseQuery(IHqlScope *scope, IFileContents * contents, HqlLookupContext & ctx, IXmlScope *xmlScope, IProperties * macroParams, bool loadImplicit)
+extern HQL_API IHqlExpression * parseQuery(IHqlScope *scope, IFileContents * contents, HqlLookupContext & ctx, IXmlScope *xmlScope, IProperties * macroParams, bool loadImplicit, bool isRoot)
 {
     assertex(scope);
     try
     {
-        ctx.noteBeginQuery(scope, contents);
+        if (isRoot)
+            ctx.noteBeginQuery(scope, contents);
 
         HqlGram parser(scope, scope, contents, ctx, xmlScope, false, loadImplicit);
         parser.setQuery(true);
@@ -12058,11 +12059,14 @@ extern HQL_API IHqlExpression * parseQuery(IHqlScope *scope, IFileContents * con
         parser.getLexer()->set_yyColumn(1);
         parser.getLexer()->setMacroParams(macroParams);
         OwnedHqlExpr ret = parser.yyParse(false, true);
-        ctx.noteEndQuery();
+        if (isRoot)
+            ctx.noteEndQuery(true);
         return parser.clearFieldMap(ret.getClear());
     }
     catch (IException *E)
     {
+        if (isRoot)
+            ctx.noteEndQuery(false);
         if (ctx.errs)
         {
             ISourcePath * sourcePath = contents->querySourcePath();
@@ -12087,16 +12091,17 @@ extern HQL_API IHqlExpression * parseQuery(IHqlScope *scope, IFileContents * con
 extern HQL_API void parseModule(IHqlScope *scope, IFileContents * contents, HqlLookupContext & ctx, IXmlScope *xmlScope, bool loadImplicit)
 {
     assertex(scope);
+    HqlLookupContext moduleCtx(ctx);
+    bool success = false;
     try
     {
-        HqlLookupContext moduleCtx(ctx);
         moduleCtx.noteBeginModule(scope, contents);
 
         HqlGram parser(scope, scope, contents, moduleCtx, xmlScope, false, loadImplicit);
         parser.getLexer()->set_yyLineNo(1);
         parser.getLexer()->set_yyColumn(1);
         OwnedHqlExpr ret = parser.yyParse(false, true);
-        moduleCtx.noteEndModule();
+        success = true;
     }
     catch (IException *E)
     {
@@ -12117,6 +12122,7 @@ extern HQL_API void parseModule(IHqlScope *scope, IFileContents * contents, HqlL
         }
         E->Release();
     }
+    moduleCtx.noteEndModule(success);
 }
 
 
@@ -12125,7 +12131,7 @@ extern HQL_API IHqlExpression * parseQuery(const char * text, IErrorReceiver * e
     Owned<IHqlScope> scope = createScope();
     HqlDummyLookupContext ctx(errs);
     Owned<IFileContents> contents = createFileContentsFromText(text, NULL, false, NULL);
-    return parseQuery(scope, contents, ctx, NULL, NULL, true);
+    return parseQuery(scope, contents, ctx, NULL, NULL, true, true);
 }
 
 
@@ -12149,18 +12155,26 @@ void parseAttribute(IHqlScope * scope, IFileContents * contents, HqlLookupContex
     HqlLookupContext attrCtx(ctx);
     attrCtx.noteBeginAttribute(scope, contents, name);
 
-    //The attribute will be added to the current scope as a side-effect of parsing the attribute.
-    const char * moduleName = scope->queryFullName();
+    try
+    {
+        //The attribute will be added to the current scope as a side-effect of parsing the attribute.
+        const char * moduleName = scope->queryFullName();
 
-    //NOTE: The container scope needs to be re-resolved globally so merged file trees are supported
-    Owned<IHqlScope> globalScope = getResolveDottedScope(moduleName, LSFpublic, ctx);
-    HqlGram parser(globalScope, scope, contents, attrCtx, NULL, false, true);
-    parser.setExpectedAttribute(name);
-    parser.setAssociateWarnings(true);
-    parser.getLexer()->set_yyLineNo(1);
-    parser.getLexer()->set_yyColumn(1);
-    ::Release(parser.yyParse(false, false));
-    attrCtx.noteEndAttribute();
+        //NOTE: The container scope needs to be re-resolved globally so merged file trees are supported
+        Owned<IHqlScope> globalScope = getResolveDottedScope(moduleName, LSFpublic, ctx);
+        HqlGram parser(globalScope, scope, contents, attrCtx, NULL, false, true);
+        parser.setExpectedAttribute(name);
+        parser.setAssociateWarnings(true);
+        parser.getLexer()->set_yyLineNo(1);
+        parser.getLexer()->set_yyColumn(1);
+        ::Release(parser.yyParse(false, false));
+    }
+    catch (...)
+    {
+        attrCtx.noteEndAttribute(false);
+        throw;
+    }
+    attrCtx.noteEndAttribute(true);
 }
 
 int testHqlInternals()

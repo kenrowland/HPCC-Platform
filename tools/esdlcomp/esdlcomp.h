@@ -621,6 +621,23 @@ public:
         out.append("/>\n");
     };
 
+    bool checkDup(StringArray& ErrMsgs, ParamInfo* attrlist)
+    {
+        bool hasDup = false;
+        ParamInfo* attr = attrlist;
+        while(attr)
+        {
+            if(strcmp(name, attr->name) == 0)
+            {
+                VStringBuffer msg("\"%s\" conflicts with \"%s\"", name, attr->name);
+                ErrMsgs.append(msg.str());
+                hasDup = true;
+            }
+            attr = attr->next;
+        }
+        return hasDup;
+    }
+
     type_kind kind;
     char      *name;
     char      *templ;

@@ -6495,6 +6495,14 @@ primexpr1
                         {
                             $$.setExpr(createValue(no_matched, makeBoolType(), $3.getExpr())); //, parser->createUniqueId()));
                         }
+    | MATCHED '(' dataRow ')'
+                        {
+                            $$.setExpr(createValue(no_matched_injoin, makeBoolType(), $3.getExpr()), $1);
+                        }
+    | MATCHED '(' dataSet ')'
+                        {
+                            $$.setExpr(createValue(no_matched_injoin, makeBoolType(), $3.getExpr()), $1);
+                        }
     | MATCHTEXT '(' patternReference ')'
                         {
                             $$.setExpr(createValue(no_matchtext, makeStringType(UNKNOWN_LENGTH, NULL, NULL), $3.getExpr())); //, parser->createUniqueId()));
@@ -8212,7 +8220,8 @@ simpleDataSet
                             IHqlExpression *join = createDataset(no_join, left, createComma(right, cond, createComma(transform.getClear(), flags.getClear(), $12.getExpr())));
 
                             bool isLocal = join->hasAttribute(localAtom);
-                            parser->checkDistribution($3, left, isLocal, true);
+                            if (!join->hasAttribute(lookupAtom) && !isKeyedJoin(join))
+                                parser->checkDistribution($3, left, isLocal, true);
                             parser->checkDistribution($5, right, isLocal, true);
                             parser->checkJoinFlags($1, join);
                             parser->checkOnFailRecord(join, $1);

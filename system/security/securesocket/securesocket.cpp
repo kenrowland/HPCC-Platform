@@ -147,8 +147,8 @@ public:
     CSecureSocket(int sockfd, SSL_CTX* ctx, bool verify = false, bool addres_match = false, CStringSet* m_peers = NULL, int loglevel=SSLogNormal);
     ~CSecureSocket();
 
-    virtual int secure_accept();
-    virtual int secure_connect();
+    virtual int secure_accept(int logLevel);
+    virtual int secure_connect(int logLevel);
 
     virtual void logPollError(unsigned revents, const char *rwstr);
     virtual int wait_read(unsigned timeoutms);
@@ -377,7 +377,7 @@ public:
 
     virtual bool check_connection()
     {
-        throw MakeStringException(-1, "CSecureSocket::check_connection: not implemented");
+        return m_socket->check_connection();
     }
 
     virtual bool isSecure() const override
@@ -562,15 +562,24 @@ bool CSecureSocket::verify_cert(X509* cert)
     }
 }
 
-int CSecureSocket::secure_accept()
+int CSecureSocket::secure_accept(int logLevel)
 {
     int err;
     err = SSL_accept(m_ssl);
     if(err == 0)
     {
-        char errbuf[512];
-        ERR_error_string_n(ERR_get_error(), errbuf, 512);
-        DBGLOG("SSL_accept returned 0, error - %s", errbuf);
+        int ret = SSL_get_error(m_ssl, err);
+        // if err == 0 && ret == SSL_ERROR_SYSCALL
+        // then client closed connection gracefully before ssl neg
+        // which can happen with port scan / VIP ...
+        // NOTE: ret could also be SSL_ERROR_ZERO_RETURN if client closed
+        // gracefully after ssl neg initiated ...
+        if ( (logLevel >= 5) || (ret != SSL_ERROR_SYSCALL) )
+        {
+            char errbuf[512];
+            ERR_error_string_n(ERR_get_error(), errbuf, 512);
+            DBGLOG("SSL_accept returned 0, error - %s", errbuf);
+        }
         return -1;
     }
     else if(err < 0)
@@ -588,7 +597,8 @@ int CSecureSocket::secure_accept()
         return err;
     }
 
-    DBGLOG("SSL connection using %s", SSL_get_cipher(m_ssl));
+    if (logLevel)
+        DBGLOG("SSL connection using %s", SSL_get_cipher(m_ssl));
 
     if(m_verify)
     {
@@ -612,7 +622,7 @@ int CSecureSocket::secure_accept()
     return 0;
 }
 
-int CSecureSocket::secure_connect()
+int CSecureSocket::secure_connect(int logLevel)
 {
     int err = SSL_connect (m_ssl);                     
     if(err <= 0)
@@ -634,7 +644,8 @@ int CSecureSocket::secure_connect()
         // data exchange to be successful.
         
         // Get the cipher - opt
-        DBGLOG("SSL connection using %s\n", SSL_get_cipher (m_ssl));
+        if (logLevel)
+            DBGLOG("SSL connection using %s\n", SSL_get_cipher (m_ssl));
 
         // Get server's certificate (note: beware of dynamic allocation) - opt
         X509* server_cert = SSL_get_peer_certificate (m_ssl);
@@ -1060,12 +1071,12 @@ public:
 
     ISecureSocket* createSecureSocket(ISocket* sock, int loglevel)
     {
-        return new CSecureSocket(sock, m_ctx, m_verify, m_address_match, m_peers);
+        return new CSecureSocket(sock, m_ctx, m_verify, m_address_match, m_peers, loglevel);
     }
 
     ISecureSocket* createSecureSocket(int sockfd, int loglevel)
     {
-        return new CSecureSocket(sockfd, m_ctx, m_verify, m_address_match, m_peers);
+        return new CSecureSocket(sockfd, m_ctx, m_verify, m_address_match, m_peers, loglevel);
     }
 };
 

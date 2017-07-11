@@ -94,6 +94,7 @@ const char * const helpText[] = {
     "!   -legacywhen   Use legacy when/side-effects semantics (deprecated)",
     "    --logfile <file> Write log to specified file",
     "!   --logdetail=n Set the level of detail in the log file",
+    "    --metacache=x Specify directory to store distributed meta information",
     "!   --nologfile   Do not write any logfile",
 #ifdef _WIN32
     "!   -m            Enable leak checking",
@@ -122,6 +123,7 @@ const char * const helpText[] = {
     "?!  -fcheckAsserts          Check ASSERT() statements",
     "?!  -fexportDependencies    Generate information about inter-definition dependencies",
     "?!  -fmaxCompileThreads     Number of compiler instances to compile the c++",
+    "?!  -fmaxErrors             Maximum number of errors to report",
     "?!  -fnoteRecordSizeInGraph Add estimates of record sizes to the graph",
     "?!  -fpickBestEngine        Allow simple thor queries to be passed to thor",
     "?!  -fobfuscateOutput       Remove details of the original ECL from output",

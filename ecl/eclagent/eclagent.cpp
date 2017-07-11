@@ -3138,7 +3138,7 @@ void EclAgent::fatalAbort(bool userabort,const char *excepttext)
         if (userabort) 
             w->setState(WUStateAborted);
         if (excepttext&&*excepttext)
-            addException(SeverityError, "ECLAGENT", 1000, excepttext, NULL, 0, 0, true, false);
+            addException(SeverityError, "eclagent", 1000, excepttext, NULL, 0, 0, true, false);
         w->deleteTempFiles(NULL, false, true);
         wuRead.clear(); 
         w->commit();        // needed because we can't unlock the workunit in this thread
@@ -3426,7 +3426,7 @@ extern int HTHOR_API eclagent_main(int argc, const char *argv[], StringBuffer * 
                 Owned<IWorkUnitFactory> factory = getWorkUnitFactory();
                 Owned<IWorkUnit> daliWu = factory->createWorkUnit("eclagent", "eclagent");
                 IExtendedWUInterface * extendedWu = queryExtendedWU(daliWu);
-                extendedWu->copyWorkUnit(standAloneWorkUnit, true);
+                extendedWu->copyWorkUnit(standAloneWorkUnit, true, true);
                 wuid.set(daliWu->queryWuid());
                 globals->setProp("WUID", wuid.str());
 

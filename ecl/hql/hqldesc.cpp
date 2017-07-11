@@ -88,7 +88,7 @@ static void expandRecordSymbolsMeta(IPropertyTree * metaTree, IHqlExpression * r
             break;
         case no_field:
             {
-                IPropertyTree * field = metaTree->addPropTree("Field", createPTree("Field"));
+                IPropertyTree * field = metaTree->addPropTree("Field");
                 field->setProp("@name", str(cur->queryId()));
                 StringBuffer ecltype;
                 cur->queryType()->getECLType(ecltype);
@@ -97,7 +97,7 @@ static void expandRecordSymbolsMeta(IPropertyTree * metaTree, IHqlExpression * r
             }
         case no_ifblock:
             {
-                IPropertyTree * block = metaTree->addPropTree("IfBlock", createPTree("IfBlock"));
+                IPropertyTree * block = metaTree->addPropTree("IfBlock");
                 expandRecordSymbolsMeta(block, cur->queryChild(1));
                 break;
             }
@@ -105,7 +105,7 @@ static void expandRecordSymbolsMeta(IPropertyTree * metaTree, IHqlExpression * r
         case no_attr_link:
         case no_attr_expr:
             {
-                IPropertyTree * attr = metaTree->addPropTree("Attr", createPTree("Attr"));
+                IPropertyTree * attr = metaTree->addPropTree("Attr");
                 attr->setProp("@name", str(cur->queryName()));
                 break;
             }
@@ -119,13 +119,13 @@ void expandSymbolMeta(IPropertyTree * metaTree, IHqlExpression * expr)
     IPropertyTree * def = NULL;
     if (isImport(expr))
     {
-        def = metaTree->addPropTree("Import", createPTree("Import"));
+        def = metaTree->addPropTree("Import");
         IHqlExpression * original = expr->queryBody(true);
         setFullNameProp(def, "@ref", original);
     }
     else
     {
-        def = metaTree->addPropTree("Definition", createPTree("Definition"));
+        def = metaTree->addPropTree("Definition");
     }
 
     if (def)
@@ -150,6 +150,7 @@ void expandSymbolMeta(IPropertyTree * metaTree, IHqlExpression * expr)
 
         if (expr->isScope() && !isImport(expr))
         {
+            def->setProp("@type", "module");
             expandScopeSymbolsMeta(def, expr->queryScope());
         }
         else if (expr->isRecord())
@@ -157,6 +158,13 @@ void expandSymbolMeta(IPropertyTree * metaTree, IHqlExpression * expr)
             def->setProp("@type", "record");
             expandRecordSymbolsMeta(def, expr);
         }
+        else
+        {
+            StringBuffer ecltype;
+            expr->queryType()->getECLType(ecltype);
+            def->setProp("@type", ecltype);
+        }
+
     }
 }
 
@@ -165,6 +173,18 @@ void expandScopeSymbolsMeta(IPropertyTree * meta, IHqlScope * scope)
 {
     if (!scope)
         return;
+
+    //The following symbols will not have parsed all their members, and can cause recursive dependency errors trying.
+    switch (queryExpression(scope)->getOperator())
+    {
+    case no_forwardscope:
+        meta->setPropBool("@forward", true);
+        return;
+    case no_remotescope:
+        //Strange e.g. shared me := myModule;
+        meta->setPropBool("@global", true);
+        return;
+    }
 
     HqlExprArray symbols;
     scope->getSymbols(symbols);
