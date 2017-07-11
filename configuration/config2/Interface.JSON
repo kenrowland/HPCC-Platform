@@ -1,0 +1,91 @@
+
+//
+// Objects that can appear in the interface
+
+// Limit - adds limits to a type. All members are optional
+"limit" : {
+    "min" : number,         // For a number it's the lowest allowed value, for string it's the min length of the string
+    "max" : number,         // For a number it's the highest alowed value, for a string it's the longest allowed length
+    "allowList" : [ ],      // for a dropdown type, this the list of allowed value
+    "disallowList" [ ],     // array of values not allowed (used for something like a port that could already be assigned)
+    "regex" : [ ]           // array of possible regex expressions that must match to be a valid value
+},
+
+
+// 
+// Documentation element
+"doc" : {
+    "tooltip" : "tooltip text",
+    "msg" : "a message for display, usually an error or something after a call"
+},
+
+
+"type" : {
+    "name" : "typeName",
+    "limits" : { },         // limits object
+    "modifiesrs" : [ ]      // array of modifers that limit or control how the UI interacts with the user with respec to the value
+                            //   defined modifiers:
+                            //     "mask"   - input value shall be masked (like a password)
+                            //     "verify" - input value should be verified (enter twice)
+},
+
+//
+// Element - This is an element in the configuration. It is fluid
+"element" : {
+    "class" : "elementClass",  // the class of the element. It controles what is in the elementData object
+                               //   defined classes
+                               //     category      - a top level type separation of config elements (HW, SW) (list is fixed, user cannot add one) (more than one category levels allowed)
+                               //     instanceSet   - a set of stuff to which the user related components (ESP, LoggingAgents, etc.  List is fixed, user cannot add a component set, but children may be addable)
+                               //     component     - an instance of a component
+                               //     valueSet      - a set of values
+                               //     value         - a value
+                               
+    
+    "name" : "elementName",    // name foe the element (used in some requests)
+    "displayName" : string,    // Use this when displaying this element to the user
+
+    "path" : <path>,           // opaque unique identifier for this element (do not interpret) Usually input for 
+
+    "doc" : { },               // documentation object
+    "status" : <status>,       // 
+    "children" : number,       // number of current children defined below this element (for an instance set it's the current number of defined instances)
+
+    "elementData" : {          // all elements present, only certain ones used base on class above. See comments (may promote to encapuslating object)
+
+        // common for all classes
+        
+
+        // instanceSet - indicates that the user adds these based on these numbers
+        "allowedInstances" : number,         // number of allowed instances -1 = unlimited (Dali = 1, for example)
+        "requiredInstances" : number,        // count of required instances -1 for none
+
+        // value
+        "type" : { },                        // type for value (used by UI)
+        "currentValue" : <current Value>,    // the current value for the
+        "defaultValue" : <default value>,
+        "required" : boolean,                // true (default) if user must provide a value
+        "readonly" : boolean,                // true if currentValue should be dsplayed only (user cannot change)
+        
+    }
+}
+
+
+
+
+
+
+GetElements
+
+{
+    "path" : <path>  ("." is root),
+}
+
+
+GetResults
+
+{
+    "status" : "ok",
+    "elements" : [
+        <array of elements>
+    ]
+}

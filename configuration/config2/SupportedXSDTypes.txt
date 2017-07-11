@@ -1,0 +1,11 @@
+The following xsd types are supported
+
+Base: String
+Derived: -
+Restrictions: enumeration, length, maxLength, minLength, pattern, whiteSpace(collapse)
+
+
+Base: integer
+Drived: negativeInteger, nonNegativeInteger, positiveInteger, nonPositiveInteger 
+Restrictions: enumeration, maxInclusive, maxExclusive, minInclusive, minExclusive
+
