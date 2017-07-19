@@ -15,148 +15,104 @@
     limitations under the License.
 ############################################################################## */
 
-ESPRequest SetValueRequest
+ESPrequest GetPathRequest 
 {
-    string  XPath;
-    string  Value;
-};
-
-ESPRequest GetValueRequest
-{
-    string  XPath;
-};
-
-ESPRequest GetNumberOfRowsRequest
-{
-    string  XPath;
-};
-
-ESPResponse GetNumberOfRowsResponse
-{
-    int Rows;
-};
-
-ESPRequest SetTableValueRequest
-{
-    string  XPath;
-    string  Value;
-    int     Row;
-};
-
-ESPRequest GetTableValueRequest
-{
-    string  XPath;
-    int     Row;
-};
-
-ESPResponse [exceptions_inline, encode(0)] SetValueResponse
-{
-    string Empty;
-};
-
-ESPResponse [exceptions_inline, encode(0)] SetTableValueResponse
-{
-    string Empty;
-};
-
-ESPResponse [exceptions_inline, encode(0)] GetValueResponse
-{
-    string Value;
-};
-
-ESPResponse [exceptions_inline, encode(0)] GetTableValueResponse
-{
-    string Value;
-};
-
-ESPRequest OpenConfigurationFileRequest
-{
-   string FilePath;
-};
-
-ESPResponse [exceptions_inline, encode(0)]  OpenConfigurationFileResponse
-{
-   int code;
-};
-
-ESPRequest GetJSONForComponentRequest
-{
-   [json_inline(1)] string ComponentName;
-};
-
-ESPResponse GetJSONForComponentResponse
-{
-   [json_inline(1)] string JSON;
-};
-
-ESPRequest GetNumberOfAvailableComponentsRequest
-{
-   string Empty;
-};
-
-ESPResponse GetNumberOfAvailableComponentsResponse
-{
-   int Number;
-};
-
-ESPRequest GetComponentNameRequest
-{
-   int Number;
-};
-
-ESPResponse GetComponentNameResponse
-{
-   string ComponentName;
-};
-
-ESPRequest GetNavigatorJSONRequest
-{
-   string Empty;
-};
-
-ESPResponse GetNavigatorJSONResponse
-{
-   [json_inline(1)] string JSON;
-};
-
-ESPRequest SaveConfigurationFileAsRequest
-{
-   string FilePath;
-};
-
-ESPRequest SaveConfigurationFileRequest
-{
-   string Empty;
-};
-
-ESPResponse [exceptions_inline, encode(0)]  SaveConfigurationFileResponse
-{
-   int code;
-};
-
-ESPResponse [exceptions_inline, encode(0)]  SaveConfigurationFileAsResponse
-{
-   int code;
+    string path;
 };
 
 
-
-ESPservice [auth_feature("DEFERRED"),version("2.0"), default_client_version("2.0"), exceptions_inline("xslt/exceptions.xslt")] ws_configurator
+ESPstruct limitsType
 {
-    ESPMethod getValue(GetValueRequest, GetValueResponse);
-    ESPMethod setValue(SetValueRequest, SetValueResponse);
-    ESPMethod getTableValue(GetTableValueRequest, GetTableValueResponse);
-    ESPMethod setTableValue(SetTableValueRequest, SetTableValueResponse);
-    ESPMethod getNumberOfRows(GetNumberOfRowsRequest, GetNumberOfRowsResponse);
-    ESPMethod openConfigurationFile(OpenConfigurationFileRequest, OpenConfigurationFileResponse);
-    ESPMethod saveConfigurationFile(SaveConfigurationFileRequest, SaveConfigurationFileResponse);
-    ESPMethod saveConfigurationFileAs(SaveConfigurationFileAsRequest, SaveConfigurationFileAsResponse);
-    ESPMethod getJSONForComponent(GetJSONForComponentRequest, GetJSONForComponentResponse);
-    ESPMethod getNumberOfAvailableComponents(GetNumberOfAvailableComponentsRequest, GetNumberOfAvailableComponentsResponse);
-    ESPMethod getComponentName(GetComponentNameRequest, GetComponentNameResponse);
-    ESPMethod getNavigatorJSON(GetNavigatorJSONRequest, GetNavigatorJSONResponse);
+    int    min(0);
+    int    max(0);
+    ESParray<string, allowList> allowList;
+    ESParray<string, disallow> disallowList;
+    ESParray<string, regex> regex;
 };
 
-SCMexportdef(ws_configurator);
 
-SCMapi(ws_configurator) IClientws_configurator *createws_configuratorClient();
+ESPstruct typeInfo
+{
+    string name("na");
+    ESPstruct limitsType limits;
+    ESParray<string, modifier> modifiers;
+};
+
+
+ESPstruct elementDataType
+{
+    int   numAllowedInstances(0);
+    int   numRequiredInstances(0);
+    ESPstruct typeInfo type;
+    string currentValue("");
+    string defaultValue("");
+    bool   required(true);
+    bool   readonl(false);
+};
+
+
+ESPstruct docType
+{
+    string tooltip("");
+    string msg("");
+};
+
+
+ESPstruct elementType
+{
+    string    name("");
+    string    displayName("");
+    string    class("");
+    string    path("");
+    ESPstruct docType doc;
+    int       numChildren(0);
+    ESPstruct elementDataType elementData;
+};
+
+
+ESPstruct valueType
+{
+    string    name;
+    string    value;
+    string    msg("");     // used for warnings and errors and whatever
+};
+
+
+ESPresponse [exceptions_inline, encode(0)] GetPathResponse
+{
+    string status("error");
+    string inputPath;
+    ESParray<ESPstruct elementType, element> elements;
+};
+
+
+ESPrequest CreateInstanceRequest  // response is same as GetPathRequest
+{
+    string path;  // path to instance set where a new one is created
+};
+
+
+ESPrequest SetValueSetRequest
+{
+    string path;  // path to instance set where a new one is created
+    ESParray<ESPstruct valueType, value> values;
+};
+
+
+ESPresponse [exceptions_inline, encode(0)] SetValueSetResponse
+{
+    string status("error");
+    ESParray<ESPstruct valueType, value> values;
+};
+
+
+ESPservice [auth_feature("DEFERRED"),version("2.0"), default_client_version("2.0"), exceptions_inline("xslt/exceptions.xslt")] ws_config2
+{
+    ESPMethod getPath(GetPathRequest, GetPathResponse);
+    
+};
+
+SCMexportdef(ws_config2);
+
+SCMapi(ws_config2) IClientws_config2 *createws_config2Client();
+

@@ -1,7 +1,8 @@
 ################################################################################
-#    HPCC SYSTEMS software Copyright (C) 2016 HPCC Systems.
+#    HPCC SYSTEMS software Copyright (C) 2012 HPCC Systems®.
 #
-#    Licensed under the Apache License, Version 2.0 (the "License");
+#    All rights reserved. This program is free software: you can redistribute it
+#    and/or modify
 #    you may not use this file except in compliance with the License.
 #    You may obtain a copy of the License at
 #
@@ -13,6 +14,11 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 ################################################################################
-
-HPCC_ADD_SUBDIRECTORY (configurator)
-
+configure_file("config2.conf.in" "config2.conf")
+configure_file("esp.xml.in" "esp.xml")
+install(
+    FILES ${CMAKE_CURRENT_BINARY_DIR}/esp.xml
+          ${CMAKE_CURRENT_BINARY_DIR}/config2.conf
+    DESTINATION etc/${DIR_NAME}/config2
+    COMPONENT Runtime
+    )

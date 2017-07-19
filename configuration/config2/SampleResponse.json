@@ -1,0 +1,138 @@
+{
+    "GetPathResponse": {
+        "Exceptions": {
+            "Source": "String",
+            "Exception": [
+                {
+                    "Code": "String",
+                    "Audience": "String",
+                    "Source": "String",
+                    "Message": "String"
+                }
+            ]
+        },
+        "status": "ok",
+        "elements": [
+            {
+                "name": "esp",
+                "displayName": "ESP Processes",
+                "class": "instanceSet",
+                "path": ".sw.esp",
+                "doc": {
+                    "tooltip": "Click to expand or add to the list of ESP Processes",
+                    "msg": ""
+                },
+                "children": 2,
+                "elementData": {
+                    "allowedInstances": 0,
+                    "requiredInstances": 1,
+                    "type": {
+                        "name": "esp",
+                        "limits": {
+                            "min": 0,
+                            "max": 0,
+                            "allowList": [],
+                            "disallowList" : [],
+                            "regex": []
+                        },
+                        "modifiers": []
+                    },
+                    "currentValue": "",
+                    "defaultValue": "",
+                    "required": true,
+                    "readonly": false
+                }
+            },
+            {
+                "name": "dropzones",
+                "displayName": "Drop Zones",
+                "class": "instanceSet",
+                "path": ".sw",
+                "doc": {
+                    "tooltip": "Click to expand and add to the current list of drop zones",
+                    "msg": ""
+                },
+                "children": 2,
+                "elementData": {
+                    "allowedInstances": 0,
+                    "requiredInstances": 1,
+                    "type": {
+                        "name": "",
+                        "limits": {
+                            "min": 0,
+                            "max": 0,
+                            "allowList": [],
+                            "disallowList": [],
+                            "regex": []
+                        },
+                        "modifiers": []
+                    },
+                    "currentValue": "",
+                    "defaultValue": "",
+                    "required": true,
+                    "readonly": false
+                }
+            },
+            {
+                "name": "logginagents",
+                "displayName": "Loggiing Agents",
+                "class": "instanceSet",
+                "path": ".sw.loggingagents",
+                "doc": {
+                    "tooltip": "Click to expand and add to the current list of loggin agents",
+                    "msg": ""
+                },
+                "children": 0,
+                "elementData": {
+                    "allowedInstances": 0,
+                    "requiredInstances": 0,
+                    "type": {
+                        "name": "",
+                        "limits": {
+                            "min": 0,
+                            "max": 0,
+                            "allowList": [],
+                            "disallowList": [],
+                            "regex": []
+                        },
+                        "modifiers": []
+                    },
+                    "currentValue": "",
+                    "defaultValue": "",
+                    "required": false,
+                    "readonly": false
+                }
+            },
+            {
+                "name": "singleservice",
+                "displayName": "A required service",
+                "class": "component",
+                "path": ".sw.service",
+                "doc": {
+                    "tooltip": "Click to expand and add to the current list of loggin agents",
+                    "msg": ""
+                },
+                "children": 2,
+                "elementData": {
+                    "allowedInstances": 0,
+                    "requiredInstances": 0,
+                    "type": {
+                        "name": "",
+                        "limits": {
+                            "min": 0,
+                            "max": 0,
+                            "allowList": [],
+                            "disallowList": [],
+                            "regex": []
+                        },
+                        "modifiers": []
+                    },
+                    "currentValue": "",
+                    "defaultValue": "",
+                    "required": true,
+                    "readonly": false
+                }
+            }
+        ]
+    }
+}

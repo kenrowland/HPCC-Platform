@@ -45,7 +45,7 @@
 
 
             <xs:element name="Software">
-                <xs:include schemaLocation="dali.xsd"/>
+                <xs:include schemaLocation="dafilesrv.xsd"/>
             </xs:element>
 
 

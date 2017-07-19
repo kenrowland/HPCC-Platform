@@ -30,6 +30,7 @@ install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/genenvrules.conf DESTINATION etc/${DIR
 
 add_subdirectory(configmgr)
 add_subdirectory(configurator)
+add_subdirectory(config2)
 
 # Developer build
 # target: configure

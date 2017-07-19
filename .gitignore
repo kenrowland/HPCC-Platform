@@ -4,3 +4,4 @@ externals/
 ln/
 .cproject
 node_modules
+.vscode/
