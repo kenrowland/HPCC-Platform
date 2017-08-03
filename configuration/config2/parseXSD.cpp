@@ -1,22 +1,60 @@
 
 #include <stdlib.h>
-#include <boost/property_tree/ptree.hpp>
-#include <boost/property_tree/xml_parser.hpp>
-#include <boost/property_tree/json_parser.hpp>
-#include <boost/foreach.hpp>
+#include <memory.h>
+// #include <boost/property_tree/ptree.hpp>
+// #include <boost/property_tree/xml_parser.hpp>
+// //#include <boost/property_tree/json_parser.hpp>
+// #include <boost/foreach.hpp>
 #include <string>
-#include <set>
+// #include <set>
 #include <exception>
 #include <iostream>
-namespace pt = boost::property_tree;
+// #include <vector>
+
+#include "ConfigExceptions.hpp"
+// //#include "XSDAttribute.hpp"
+// #include "XSDTypeParser.hpp"
+
+
+
+// namespace pt = boost::property_tree;
+
+const std::string c_path = ""; ///opt/HPCCSystems/componentfiles/config2xml/";
+
+// void parseComponentXSD(pt::ptree &xsdTree);
+// void parseIncludes(pt::ptree &xsdTree);
+
+#include "ConfigItem.hpp"
+#include "XSDConfigParser.hpp"
 
 int main()
 {
-    pt::ptree xsdTree;
 
-    try
+    try 
     {
-        pt::read_xml("dafilesrv.xsd", xsdTree);
+        //std::string fpath = c_path + "types.xsd";  //dafilesrv.xsd";
+        std::shared_ptr<ConfigParser> pCfgParser = std::make_shared<XSDConfigParser>("");
+        std::shared_ptr<ConfigItem> pConfig = std::make_shared<ConfigItem>("myconfig");
+
+        pCfgParser->parseEnvironmentConfig("newenv.xsd", "", pConfig);
+
+    }
+    catch (ParseException &e)
+    {
+        std::cout << "Error: " << e.what() << "\n";
+    }
+
+    //pt::ptree xsdTree;
+
+    // try
+    // {
+    //     std::string fpath = c_path + "types.xsd";  //dafilesrv.xsd";
+    //     pt::read_xml(fpath, xsdTree);
+
+    //     // throw(ParseException("exception throw test"));
+
+    //     parseComponentXSD(xsdTree);
+
 
         //
         // Let's try iterating
@@ -25,9 +63,37 @@ int main()
         //     std::cout << "here: " << it->first << std::endl;
         // }
 
-        auto it = xsdTree.find("xs:schema");
-        bool isEnd = (it == xsdTree.not_found());
-        std::cout << "here " << it->first << "  " << it->second.data() << std::endl;
+        // auto it = xsdTree.find("xs:schema");
+        // bool isEnd = (it == xsdTree.not_found());
+        // std::cout << "here " << it->first << "  " << it->second.get_value<std::string>() << std::endl;
+
+        // parseIncludes(it->second);
+
+        // const pt::ptree &attributes = it->second.get_child("<xmlattr>", pt::ptree());
+        // for (auto attrIt=attributes.begin(); attrIt!=attributes.end(); ++attrIt)
+        // {
+        //     std::cout << "attr = " << attrIt->first.data() << " second = " << attrIt->second.get_value<std::string>() << std::endl;
+        // }
+
+
+        // std::cout << "First level keys: " << std::endl;
+        // const pt::ptree &keys = it->second.get_child("", pt::ptree());
+
+        // std::string val = it->second.get_value<std::string>("xs:include.<xmlattr>.schemaLocation");
+        // std::cout << "value: " << val << std::endl;
+
+        // for (auto keyIt=keys.begin(); keyIt!=keys.end(); ++keyIt)
+        // {
+        //     std::cout << "key = >>" << keyIt->first << "<< " << std::endl;
+        //     if (keyIt->first == "xs:include")
+        //     {
+        //         int i = 5;
+        //         std::string val = keyIt->second.get("<xmlattr>.schemaLocation", "not found");
+        //         std::cout << "   schema Location = " << val << std::endl;
+        //     }
+        //     //if (keyIt->first.get_value())
+        // }
+
 
 
         std::cout << "Success\n";
@@ -37,10 +103,89 @@ int main()
         //   << BOOST_VERSION / 100 % 1000 << "."  // minor version
         //   << BOOST_VERSION % 100                // patch level
         //   << std::endl;
-    }
-    catch (std::exception &e)
-    {
-        std::cout << "Error: " << e.what() << "\n";
-    }
-    return 0;
+    // }
+    // catch (const ParseException &e)
+    // {
+    //     std::cout << "Error: " << e.what() << "\n";
+    // }
+    // catch (std::exception &e)
+    // {
+    //     std::cout << "Error: " << e.what() << "\n";
+    // }
+    // return 0;
 }
+
+
+
+// void parseComponentXSD(pt::ptree &xsdTree)
+// {
+//     //
+//     // Get to the schema
+//     auto schemaIt = xsdTree.find("xs:schema");
+
+//     //
+//     // Since we only support includes for a component schema at the top level, look for includes first and process them.
+//     // Note that these includes may NOT define elements or anything like that. Only types, attribute groups, keyrefs
+//     const pt::ptree &keys = schemaIt->second.get_child("", pt::ptree());  
+//     for (auto it=keys.begin(); it!=keys.end(); ++it)
+//     {
+//         if (it->first == "xs:include")
+//         {
+//             std::string schema = it->second.get("<xmlattr>.schemaLocation", "not found");
+//             std::cout << "Parsing found include: " << schema << std::endl;
+//         }
+//     }
+
+//     std::vector<std::string> vec;
+//     vec.push_back("Hello");
+//     vec.push_back("There");
+
+
+    //
+    // Now look for any special sections we support
+    // for (auto it=keys.begin(); it!=keys.end(); ++it)
+    // {
+        // if (it->first == "xs:attributeGroup")
+        // {
+        //     std::string groupName = it->second.get("<xmlattr>.name", "not found");
+        //     std::cout << "Attribute group name: " << groupName << std::endl;
+
+        //     //
+        //     // Lets parse the attributes now
+        //     const pt::ptree &attrs = it->second.get_child("", pt::ptree());
+        //     for (auto attributeIt = attrs.begin(); attributeIt != attrs.end(); ++attributeIt)
+        //     {
+        //         auto ss = attributeIt->first;
+        //         if (attributeIt->first == "xs:attribute")
+        //         {
+        //             std::cout << "found attribute" << groupName << std::endl;
+        //             XSDAttribute attr;
+        //             attr.parse(attributeIt->second);
+        //         }
+        //     }
+//         // }
+//         if (it->first == "xs:simpleType")
+//         {
+//             //std::string typeName = it->second.get("<xmlattr>.name", "not found");
+//             //int i = 4;
+//             std::shared_ptr<CfgType> pType = XSDTypeParser::parseSimpleType(it->second);
+//         }
+//     }
+
+
+// }
+
+
+
+// void parseIncludes(pt::ptree &xsdTree)
+// {
+//     const pt::ptree &keys = xsdTree.get_child("", pt::ptree());
+//     for (auto it=keys.begin(); it!=keys.end(); ++it)
+//     {
+//         if (it->first == "xs:include")
+//         {
+//             std::string schema = it->second.get("<xmlattr>.schemaLocation", "not found");
+//             std::cout << "Parsing found include: " << schema << std::endl;
+//         }
+//     }
+// }

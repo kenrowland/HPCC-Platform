@@ -26,7 +26,7 @@
         </xs:restriction>
     </xs:simpleType>
     <xs:simpleType name="nodeName">
-        <xs:restriction base="xs:string">
+        <xs:restriction base="xs:token">
             <xs:pattern value="[a-zA-z0-9_\-]+"/>
             <!-- need regex to eliminate special characters -->
         </xs:restriction>

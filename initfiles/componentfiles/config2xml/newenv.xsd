@@ -16,25 +16,42 @@
 #    limitations under the License.
 ################################################################################
 -->
-<xs:schema 
-    xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" attributeFormDefault="unqualified" 
-    xmlns:hpcc="something hpcc.xsd">
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" attributeFormDefault="unqualified">
     <xs:include schemaLocation="types.xsd"/>
-    <xs:include schemaLocation="dafilesrv.xsd" hpcc:component="true"/>
     <xs:element name="Environment">
+
         <xs:complexType>
-            <xs:sequence>
-                <xs:element name="EnvSettings" hpcc:class="category" hpcc:category="System Settings" hpcc:hidden="true"></xs:element>
-                <xs:element name="Hardware" hpcc:class="category" hpcc:category="Hardware"></xs:element>
-                <xs:element name="Programs" hpcc:class="category" hpcc:category="Programs" hpcc:hidden="true"></xs:element>
-                <xs:element name="Software" hpcc:class="category" hpcc:category="Software">
-                    <xs:complexType>
-                        <xs:sequence>
-                            <xs:element ref="dafilesrv"/>
-                        </xs:sequence>
-                    </xs:complexType>
-                </xs:element>
-            </xs:sequence>
+
+            <xs:element name="EnvSettings">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:any minOccurs="0"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+
+
+            <xs:element name="Hardware">
+                <xs:complexType>
+                    <xs:element name="Computer" maxOccurs="unbounded">      <!-- unbounded implies instanceSet -->
+                        <xs:attribute name="node" use="required"/>
+                    </xs:element>
+                </xs:complexType>
+            </xs:element>
+
+
+            <xs:element name="Programs">
+            </xs:element>
+
+
+            <xs:element name="Software">
+                <xs:include schemaLocation="dafilesrv.xsd"/>
+            </xs:element>
+
+
         </xs:complexType>
+
     </xs:element>
+
+
 </xs:schema>
