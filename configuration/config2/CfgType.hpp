@@ -35,7 +35,7 @@ class CfgType
         std::shared_ptr<CfgLimits> &getLimits() { return m_pLimits; }
         void setLimits(const std::shared_ptr<CfgLimits> &pLimits) { m_pLimits = pLimits; };
         const std::string &getName() { return m_name; };
-        template <typename T> bool isValueValid(const T &testValue);
+        bool isValueValid(const std::string &testValue) { return m_pLimits->isValueValid(testValue); };
 
 
     private:
@@ -44,12 +44,6 @@ class CfgType
         std::shared_ptr<CfgLimits> m_pLimits;
 
 };
-
-
-template <typename T> bool CfgType::isValueValid(const T &testValue)
-{
-    return m_pLimits->isValueValid<T>(testValue);
-}
 
 
 #endif // _CONFIG2_CFGTYPE_HPP_

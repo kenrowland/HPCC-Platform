@@ -20,20 +20,29 @@
 
 #include <memory>
 #include <vector>
-#include "CfgType.hpp"
+#include "CfgValue.hpp"
+#include "ConfigItem.hpp"
 
 
-class CfgValueSet 
+class ConfigItemComponent : public ConfigItem
 {
     public:
 
-        CfgValueSet() { };
-        virtual ~CfgValueSet() { };
+        ConfigItemComponent(const std::string &name, std::shared_ptr<ConfigItem> &pParent) : ConfigItem(name, pParent, "component") { };
+        virtual ~ConfigItemComponent() { };
+    
+
+    private:
 
 
     protected:
 
-        std::vector<std::shared_ptr<CfgValue>> m_pValues;
+        std::shared_ptr<ConfigItemValueSet> m_pAttributeValueSet;  // attributes at the component level
+        std::vector<std::shared_ptr<ConfigItemValueSet>> m_valueSets;  // additional named attributes
+
+
+    private:
+
 
 };
 

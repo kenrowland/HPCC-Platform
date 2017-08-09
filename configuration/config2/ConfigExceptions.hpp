@@ -20,3 +20,23 @@ class ParseException : public std::exception
         std::string m_reason;
 
 };
+
+
+class ValueException : public std::exception
+{
+    public:
+
+        ValueException(const std::string &reason) : m_reason(reason) { };
+        ValueException(const char *reason) : m_reason(reason) { };
+
+        virtual const char *what() const throw()
+        {
+            return m_reason.c_str();
+        }
+
+    
+    private:
+
+        std::string m_reason;
+
+};

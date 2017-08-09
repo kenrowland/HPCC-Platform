@@ -21,13 +21,21 @@ ESPrequest GetPathRequest
 };
 
 
+ESPstruct instanceType
+{
+    string displayName;
+    string type;
+};
+
+
 ESPstruct limitsType
 {
     int    min(0);
     int    max(0);
-    ESParray<string, allowList> allowList;
+    ESParray<string, allow> allowList;
     ESParray<string, disallow> disallowList;
-    ESParray<string, regex> regex;
+    ESParray<string, expr> regex;
+    ESParray<ESPstruct instanceType, instance> allowedInstances;
 };
 
 

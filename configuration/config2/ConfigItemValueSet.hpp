@@ -15,42 +15,41 @@
     limitations under the License.
 ############################################################################## */
 
+#ifndef _CONFIG2_VALUESET_HPP_
+#define _CONFIG2_VALUESET_HPP_
 
-#ifndef _CONFIG2_CONFIGPARSER_HPP_
-#define _CONFIG2_CONFIGPARSER_HPP_
-
-#include <string>
 #include <memory>
-
-
+#include <vector>
+#include "CfgValue.hpp"
 #include "ConfigItem.hpp"
 
 
-
-class ConfigParser 
+class ConfigItemValueSet : public ConfigItem
 {
     public:
 
-        ConfigParser(const std::string &basePath, std::shared_ptr<ConfigItem> &pConfig) : m_basePath(basePath), m_pConfig(pConfig) { };
-        virtual ~ConfigParser() { };
-        virtual bool parseEnvironmentConfig(const std::string &envFilename, const std::string &buildsetFilename);
-    
+        ConfigItemValueSet(const std::string &name, std::shared_ptr<ConfigItem> &pParent) : ConfigItem(name, pParent, "valueset") { };
+        virtual ~ConfigItemValueSet() { };
 
-    protected:
-
-        virtual bool doParse(const std::string &envFilename) = 0;
-        ConfigParser() { };
+        void addCfgValue(const std::shared_ptr<CfgValue> pValue);
+        void addCfgValue(const std::vector<std::shared_ptr<CfgValue>> &values);
+        const std::vector<std::shared_ptr<CfgValue>> &get() const;
+        void setValue(const std::string &valueName, const std::string &newValue);
         
 
+
+    private:
+
+        std::shared_ptr<CfgValue> findValue(const std::string &valueName, bool throwIfNotFound = true) const;
+
+
     protected:
 
-        std::string m_basePath;
-        std::string m_buildsetFilename;
-        std::shared_ptr<ConfigItem> m_pConfig;
-
+        std::vector<std::shared_ptr<CfgValue>> m_values;
 
 
 };
 
 
-#endif // _CONFIG2_CONFIGPARSER_HPP_
+
+#endif // _CONFIG2_VALUESET_HPP_

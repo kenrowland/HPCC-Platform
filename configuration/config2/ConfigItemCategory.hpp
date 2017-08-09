@@ -15,32 +15,33 @@
     limitations under the License.
 ############################################################################## */
 
-#ifndef _CONFIG2_VALUE_HPP_
-#define _CONFIG2_VALUE_HPP_
 
-#include <memory>
-#include "CfgType.hpp"
+#ifndef _CONFIG2_CONFIGITEMCATEGORY_HPP_
+#define _CONFIG2_CONFIGITEMCATEGORY_HPP_
+
+#include "CfgItem.hpp"
 
 
-class CfgValue 
+class ConfigItemCategory
 {
     public:
 
-        CfgValue(const std::string &name) : m_name(name) { };
-        virtual ~CfgValue() { };
-        void setType(const std::shared_ptr<CfgType> &pType);
-        const std::string &getName() const { return m_name; };
-        bool isValueValid(const std::string &newValue) const;
-        bool setValue(const std::string &newValue) { return true; };
+        ConfigItemCategory(const std::string &name, std::shared<ConfigItem> &pParent) : ConfigItem(name, pParent, "category")  { };
+        virtual ~ConfigItemCategory() { };
 
 
     protected:
 
-        std::shared_ptr<CfgType> m_pType;
-        std::string m_name;
+        // some kind of category map parent/child Software->ESP->[components]
+        ConfigItemCategory() { };
+
+
+    private:
+
+        
+        
 
 };
 
 
-
-#endif // _CONFIG2_VALUE_HPP_
+#endif // _CONFIG2_CONFIGITEMCATEGORY_HPP_

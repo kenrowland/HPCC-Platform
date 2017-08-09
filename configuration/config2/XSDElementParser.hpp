@@ -15,32 +15,40 @@
     limitations under the License.
 ############################################################################## */
 
-#ifndef _CONFIG2_VALUE_HPP_
-#define _CONFIG2_VALUE_HPP_
 
+#ifndef _CONFIG2_XSDELEMENTPARSER_HPP_
+#define _CONFIG2_XSDELEMENTPARSER_HPP_
+
+#include <string>
 #include <memory>
-#include "CfgType.hpp"
+#include <map>
+#include <boost/property_tree/ptree.hpp>
 
+#include "XSDConfigParser.hpp"
 
-class CfgValue 
+namespace pt = boost::property_tree;
+
+class XSDElementParser : public XSDConfigParser
 {
     public:
 
-        CfgValue(const std::string &name) : m_name(name) { };
-        virtual ~CfgValue() { };
-        void setType(const std::shared_ptr<CfgType> &pType);
-        const std::string &getName() const { return m_name; };
-        bool isValueValid(const std::string &newValue) const;
-        bool setValue(const std::string &newValue) { return true; };
+        XSDElementParser(const std::string &basePath, std::shared_ptr<ConfigItem> &pConfig) :  XSDConfigParser(basePath, pConfig) { };
+        virtual ~XSDElementParser() { };
+        void parseXSD(const pt::ptree &tree);
+    
 
 
     protected:
 
-        std::shared_ptr<CfgType> m_pType;
-        std::string m_name;
+        XSDElementParser() { };
+        virtual void parseAttributeGroup(const pt::ptree &attributeTree);
+
+
+    private:
+
+        std::shared_ptr<ConfigItemValueSet> m_pValueSet;  // attributes at the component level
 
 };
 
 
-
-#endif // _CONFIG2_VALUE_HPP_
+#endif // _CONFIG2_XSDELEMENTPARSER_HPP_

@@ -64,7 +64,7 @@ class CfgLimits
         virtual void setMinLength(int v)     { m_minLength    = v; }; 
         virtual void setMaxLength(int v)     { m_maxLength    = v; };
         virtual void addPattern(const std::string &pattern) { m_patterns.push_back(pattern); }
-        template <typename T> bool isValueValid(const T &testValue) { return true; };
+        bool isValueValid(const std::string &testValue) { return true; };
 
 
     protected:

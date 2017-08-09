@@ -32,7 +32,8 @@ class XSDConfigParser : public ConfigParser
 {
     public:
 
-        XSDConfigParser(const std::string &basePath) :  ConfigParser(basePath) { };
+        XSDConfigParser(const std::string &basePath, std::shared_ptr<ConfigItem> &pConfig) :  
+            ConfigParser(basePath, pConfig), m_curXSDElementParent(""), m_curXSDElementName("") { };
         virtual ~XSDConfigParser() { };
     
 
@@ -41,12 +42,25 @@ class XSDConfigParser : public ConfigParser
 
         XSDConfigParser() { };
         virtual bool doParse(const std::string &envFilename) override;
-        bool parseXSD(const std::string &filename, bool isComponent=false);
-        bool parseComponent(const pt::ptree &componentTree);
-        bool parseAttributeGroup(const pt::ptree &attributeTree);
+        virtual void parseXSD(const pt::ptree &tree);
+        virtual void parseXSD(const std::string &filename);
+        virtual std::string getXSDAttributeValue(const pt::ptree &tree, const std::string &attriName, bool throwIfNotPresent=true, const std::string &defaultVal = "") const;
+        virtual void parseAttributeGroup(const pt::ptree &attributeTree);
+        virtual void parseAttribute(const pt::ptree &attr) const;
+
+        virtual void parseSimpleType(const pt::ptree &typeTree);
+        virtual void parseComplexType(const pt::ptree &typeTree);
+        virtual void parseElement(const pt::ptree &elemTree);
+        
 
 
     private:
+
+
+    protected:
+
+        std::string m_curXSDElementParent;
+        std::string m_curXSDElementName;
     
 
 };

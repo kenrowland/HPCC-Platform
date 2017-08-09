@@ -15,41 +15,37 @@
     limitations under the License.
 ############################################################################## */
 
-#ifndef _CONFIG2_TYPE_HPP_
-#define _CONFIG2_TYPE_HPP_
 
-#include "jiface.hpp"
-#include "jhash.ipp"
-#include "jutil.hpp"
+#ifndef _CONFIG2_XSDCOMPONENTPARSER_HPP_
+#define _CONFIG2_XSDCOMPONENTPARSER_HPP_
 
-namespace CONFIG2
+#include <string>
+#include <memory>
+#include <map>
+#include <boost/property_tree/ptree.hpp>
+
+#include "XSDConfigParser.hpp"
+
+namespace pt = boost::property_tree;
+
+class XSDComponentParser : public XSDConfigParser
 {
+    public:
 
-class CSettingType : public CInterface // TODO: what does CInterface get me?
-{
-  public:
-    CSettingTypoe(const std::string &name) : m_name(name){};
-    virtual ~CSettingType(){};
+        XSDComponentParser(const std::string &basePath, std::shared_ptr<ConfigItem> &pConfig) :  XSDConfigParser(basePath, pConfig) { };
+        virtual ~XSDComponentParser() { };
+    
 
-    virtual bool checkValue(const std::string &value) { return (true); }
+    protected:
 
-  private:
-    std::string m_name;
-    CConstraints &m_constraints;
+        XSDComponentParser() { };
+        void parseElement(const pt::ptree &elemTree);
+
+
+    private:
+    
+
 };
 
-class CNotification : public CInterfaceOf<IInterface>
-{
-    friend class CNotificationManager;
 
-  public:
-    CNotification()
-    {
-    }
-    virtual ~CNotification()
-    {
-    }
-    StringArray m_NotificationMessagesArrays[eUnknown];
-};
-}
-#endif // _CONFIG2_TYPE_HPP_
+#endif // _CONFIG2_XSDCOMPONENTPARSER_HPP_

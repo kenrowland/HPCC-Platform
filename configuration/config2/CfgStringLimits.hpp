@@ -28,18 +28,11 @@ class CfgStringLimits : public CfgLimits
         CfgStringLimits()  { };
         virtual ~CfgStringLimits() { };
 
-        template <typename T> bool isValueValid(const T &testValue);
-
 
     protected:
 
 };
 
-
-template<> bool CfgStringLimits::isValueValid<std::string>(const std::string &testValue)
-{
-    return true;
-}
 
 
 

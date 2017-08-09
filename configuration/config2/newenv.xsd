@@ -20,8 +20,8 @@
     xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" attributeFormDefault="unqualified" 
     xmlns:hpcc="something hpcc.xsd">
     <xs:include schemaLocation="types.xsd"/>
-    <xs:include schemaLocation="dafilesrv.xsd" hpcc:component="true"/>
-    <xs:element name="Environment">
+    <xs:include schemaLocation="dafilesrv.xsd"/>
+    <xs:element name="Environment" hpcc:category="Environment" hpcc:class="category">
         <xs:complexType>
             <xs:sequence>
                 <xs:element name="EnvSettings" hpcc:class="category" hpcc:category="System Settings" hpcc:hidden="true"></xs:element>

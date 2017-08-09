@@ -33,10 +33,11 @@ int main()
     try 
     {
         //std::string fpath = c_path + "types.xsd";  //dafilesrv.xsd";
-        std::shared_ptr<ConfigParser> pCfgParser = std::make_shared<XSDConfigParser>("");
-        std::shared_ptr<ConfigItem> pConfig = std::make_shared<ConfigItem>("myconfig");
+        // std::shared_ptr<ConfigParser> pCfgParser = std::make_shared<XSDConfigParser>("");
+        // std::shared_ptr<ConfigItem> pNull;
+        // std::shared_ptr<ConfigItem> pConfig = std::make_shared<ConfigItem>("myconfig", pNull);
 
-        pCfgParser->parseEnvironmentConfig("newenv.xsd", "", pConfig);
+        //pCfgParser->parseEnvironmentConfig("newenv.xsd", "");
 
     }
     catch (ParseException &e)

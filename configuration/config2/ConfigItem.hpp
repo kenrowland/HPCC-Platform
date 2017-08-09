@@ -25,18 +25,34 @@
 #include "CfgType.hpp"
 #include "CfgValue.hpp"
 
-
+class ConfigItemValueSet;
 
 class ConfigItem 
 {
     public:
 
-        ConfigItem(const std::string &name, const std::string &className, std::shared<ConfigItem> &pParent) : m_name(name), m_className(className), m_pParent(pParent)  { };
+        ConfigItem(const std::string &name, std::shared_ptr<ConfigItem> &pParent, const std::string &className="root") : 
+            m_className(className), m_name(name), m_pParent(pParent), m_displayName(name), 
+            m_minInstances(1), m_maxInstances(1)  { };
         virtual ~ConfigItem() { };
 
-        void addType(const std::shared_ptr<CfgType> &pType);
-        const std::shared_ptr<CfgType> &getType(const std::string &typeName) const;
-        const std::vector<std::shared_ptr<CfgValue>> &getNamedValueSet(const std::string &setName) const;
+        virtual const std::string &getClassName() const { return m_className; };
+        virtual const std::string &getName() const { return m_name; };
+        virtual void setName(const std::string &name) { m_name = name; };
+        
+        //virtual void addValueSetType(const std::vector<std::shared_ptr<CfgValue>> &set, const std::string &setName);
+        virtual const std::vector<std::shared_ptr<CfgValue>> &getValueSetType(const std::string &setName) const;
+        virtual void setDisplayName(const std::string &displayName) { m_displayName = displayName; };
+        virtual void setMinInstances(int num) { m_minInstances = num; };
+        virtual const int getMinInstances() { return m_minInstances; };
+        virtual void setMaxInstances(int num) { m_maxInstances = num; };
+        virtual const int getMaxInstances() { return m_maxInstances; };
+
+        virtual void addType(const std::shared_ptr<CfgType> &pType);
+        virtual const std::shared_ptr<CfgType> &getType(const std::string &typeName) const;
+        virtual void addValueToValueSetType(const std::shared_ptr<CfgValue> &pValue, const std::string &setName);
+        virtual void addConfigValue(const std::shared_ptr<CfgValue> &pValue) { m_configValues.push_back(pValue); };
+        virtual void addConfigValue(const std::vector<std::shared_ptr<CfgValue>> &configValues);
 
 
     protected:
@@ -44,11 +60,22 @@ class ConfigItem
         // some kind of category map parent/child Software->ESP->[components]
         ConfigItem() { };
 
-        std::string m_class;
+        std::string m_name;
+        std::string m_displayName;
+        std::string m_className;
         std::vector<std::shared_ptr<ConfigItem>> m_children;
         std::weak_ptr<ConfigItem> m_pParent;
+
         std::map<std::string, std::shared_ptr<CfgType>> m_pTypes;
-        std::map<std::string, std::vector<std::shared_ptr<CfgValue>>> m_namedValueSets;   // in XSD terms, an attribute group that can be referenced
+        std::map<std::string, std::vector<std::shared_ptr<CfgValue>>> m_valueSetTypes;   // in XSD terms, an attribute group that can be referenced
+        std::vector<std::shared_ptr<CfgValue>> m_configValues;                           // this item's config values (like attributes in XML terms)
+
+
+
+        std::vector<std::shared_ptr<ConfigItemValueSet>> m_valueSets;   // for a component this is the set of attributes by element
+
+        int m_minInstances;
+        int m_maxInstances;
         
 
     private:
