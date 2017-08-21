@@ -21,38 +21,59 @@
 
 #include <string>
 #include <memory>
+#include <set>
 #include <map>
 #include "CfgType.hpp"
 #include "CfgValue.hpp"
 
+
 class ConfigItemValueSet;
+
 
 class ConfigItem 
 {
     public:
 
-        ConfigItem(const std::string &name, std::shared_ptr<ConfigItem> &pParent, const std::string &className="root") : 
+        ConfigItem(const std::string &name, const std::string &className="category", std::shared_ptr<ConfigItem> pParent=nullptr) : 
             m_className(className), m_name(name), m_pParent(pParent), m_displayName(name), 
-            m_minInstances(1), m_maxInstances(1)  { };
-        virtual ~ConfigItem() { };
+            m_minInstances(1), m_maxInstances(1)  { }
+        virtual ~ConfigItem() { }
 
-        virtual const std::string &getClassName() const { return m_className; };
-        virtual const std::string &getName() const { return m_name; };
-        virtual void setName(const std::string &name) { m_name = name; };
+        virtual const std::string &getClassName() const { return m_className; }
+
+        virtual const std::string &getName() const { return m_name; }
+        virtual void setName(const std::string &name) { m_name = name; }      
+
+        virtual void setDisplayName(const std::string &displayName) { m_displayName = displayName; }
+        virtual const std::string &getDisplayName() const { return m_displayName; }
+
+        virtual void setCategory(const std::string &category) { m_category = category; }
+        virtual const std::string &getCategory() const { return m_category; }
+
+        void setMinInstances(int num) { m_minInstances = num; }
+        int getMinInstances() const { return m_minInstances; }
         
-        //virtual void addValueSetType(const std::vector<std::shared_ptr<CfgValue>> &set, const std::string &setName);
-        virtual const std::vector<std::shared_ptr<CfgValue>> &getValueSetType(const std::string &setName) const;
-        virtual void setDisplayName(const std::string &displayName) { m_displayName = displayName; };
-        virtual void setMinInstances(int num) { m_minInstances = num; };
-        virtual const int getMinInstances() { return m_minInstances; };
-        virtual void setMaxInstances(int num) { m_maxInstances = num; };
-        virtual const int getMaxInstances() { return m_maxInstances; };
+        void setMaxInstances(int num) { m_maxInstances = num; }
+        void setMaxInstances(const std::string &max) { m_maxInstances = (max == "unbounded") ? -1 : stoi(max); }
+        int getMaxInstances() const { return m_maxInstances; }
 
         virtual void addType(const std::shared_ptr<CfgType> &pType);
-        virtual const std::shared_ptr<CfgType> &getType(const std::string &typeName) const;
-        virtual void addValueToValueSetType(const std::shared_ptr<CfgValue> &pValue, const std::string &setName);
-        virtual void addConfigValue(const std::shared_ptr<CfgValue> &pValue) { m_configValues.push_back(pValue); };
-        virtual void addConfigValue(const std::vector<std::shared_ptr<CfgValue>> &configValues);
+        virtual const std::shared_ptr<CfgType> getType(const std::string &typeName);
+        std::shared_ptr<CfgLimits> getStandardTypeLimits(const std::string &typeName) const;
+
+        // virtual void addValueToValueSetType(const std::shared_ptr<CfgValue> &pValue, const std::string &setName);
+        // virtual void addConfigValueSetType(const std::shared_ptr<ConfigItemValueSet> &pValueSet);
+        // virtual void addConfigValue(const std::shared_ptr<CfgValue> &pValue) { m_configValues.push_back(pValue); };
+        // virtual void addConfigValue(const std::vector<std::shared_ptr<CfgValue>> &configValues);
+
+        virtual void addConfigType(const std::shared_ptr<ConfigItem> &pItem);  
+        virtual const std::shared_ptr<ConfigItem> &getConfigType(const std::string &name) const;
+
+        virtual void addChild(const std::shared_ptr<ConfigItem> &pItem) { m_children.push_back(pItem); }
+        virtual void setItemCfgValue(const std::shared_ptr<CfgValue> &pValue) { m_pValue = pValue; }
+        virtual std::shared_ptr<CfgValue> getItemCfgValue() const { return m_pValue; }
+
+        virtual bool addKey(const std::string keyName);
 
 
     protected:
@@ -63,16 +84,17 @@ class ConfigItem
         std::string m_name;
         std::string m_displayName;
         std::string m_className;
+        std::string m_category;  // used for further subdividing to the user
         std::vector<std::shared_ptr<ConfigItem>> m_children;
+        std::shared_ptr<CfgValue> m_pValue;   // value for this itme (think of it as the value for an element <xx attr= att1=>value</xx>)
+        std::set<std::string> m_keys;   // generic set of key values for use by any component to prevent duplicat operations
         std::weak_ptr<ConfigItem> m_pParent;
 
-        std::map<std::string, std::shared_ptr<CfgType>> m_pTypes;
-        std::map<std::string, std::vector<std::shared_ptr<CfgValue>>> m_valueSetTypes;   // in XSD terms, an attribute group that can be referenced
-        std::vector<std::shared_ptr<CfgValue>> m_configValues;                           // this item's config values (like attributes in XML terms)
-
-
-
-        std::vector<std::shared_ptr<ConfigItemValueSet>> m_valueSets;   // for a component this is the set of attributes by element
+        std::map<std::string, std::shared_ptr<CfgType>> m_types;
+        std::map<std::string, std::shared_ptr<ConfigItem>> m_configTypes;                // reusable types
+        //std::map<std::string, std::shared_ptr<ConfigItemValueSet>> m_valueSetTypes;      // in XSD terms, an attribute group that can be referenced
+        
+        //std::vector<std::shared_ptr<ConfigItemValueSet>> m_valueSets;   // for a component this is the set of attributes by element
 
         int m_minInstances;
         int m_maxInstances;

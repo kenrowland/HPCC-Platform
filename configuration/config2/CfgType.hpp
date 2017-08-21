@@ -29,13 +29,14 @@ class CfgType
 {
     public:
 
-        CfgType(const std::string &name) : m_name(name) { };
-        virtual ~CfgType() { };
+        CfgType(const std::string &name) : m_name(name) { }
+        virtual ~CfgType() { }
 
         std::shared_ptr<CfgLimits> &getLimits() { return m_pLimits; }
-        void setLimits(const std::shared_ptr<CfgLimits> &pLimits) { m_pLimits = pLimits; };
-        const std::string &getName() { return m_name; };
-        bool isValueValid(const std::string &testValue) { return m_pLimits->isValueValid(testValue); };
+        void setLimits(const std::shared_ptr<CfgLimits> &pLimits) { m_pLimits = pLimits; }
+        bool isValid() const { return m_pLimits!=nullptr; }
+        const std::string &getName() { return m_name; }
+        bool isValueValid(const std::string &testValue) { return m_pLimits->isValueValid(testValue); }
 
 
     private:

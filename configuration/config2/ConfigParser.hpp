@@ -31,7 +31,7 @@ class ConfigParser
 {
     public:
 
-        ConfigParser(const std::string &basePath, std::shared_ptr<ConfigItem> &pConfig) : m_basePath(basePath), m_pConfig(pConfig) { };
+        ConfigParser(const std::string &basePath, std::shared_ptr<ConfigItem> pConfig) : m_basePath(basePath), m_pConfig(pConfig) { };
         virtual ~ConfigParser() { };
         virtual bool parseEnvironmentConfig(const std::string &envFilename, const std::string &buildsetFilename);
     

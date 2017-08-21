@@ -15,8 +15,8 @@
     limitations under the License.
 ############################################################################## */
 
-#ifndef _CONFIG2_VALUESET_HPP_
-#define _CONFIG2_VALUESET_HPP_
+#ifndef _CONFIG2_CONFIGITEMCOMPONENT_HPP_
+#define _CONFIG2_CONFIGITEMCOMPONENT_HPP_
 
 #include <memory>
 #include <vector>
@@ -28,7 +28,7 @@ class ConfigItemComponent : public ConfigItem
 {
     public:
 
-        ConfigItemComponent(const std::string &name, std::shared_ptr<ConfigItem> &pParent) : ConfigItem(name, pParent, "component") { };
+        ConfigItemComponent(const std::string &name, std::shared_ptr<ConfigItem> pParent) : ConfigItem(name, "component", pParent) { };
         virtual ~ConfigItemComponent() { };
     
 
@@ -37,8 +37,8 @@ class ConfigItemComponent : public ConfigItem
 
     protected:
 
-        std::shared_ptr<ConfigItemValueSet> m_pAttributeValueSet;  // attributes at the component level
-        std::vector<std::shared_ptr<ConfigItemValueSet>> m_valueSets;  // additional named attributes
+        // std::shared_ptr<ConfigItemValueSet> m_pAttributeValueSet;  // attributes at the component level
+        // std::vector<std::shared_ptr<ConfigItemValueSet>> m_valueSets;  // additional named attributes
 
 
     private:
@@ -48,4 +48,4 @@ class ConfigItemComponent : public ConfigItem
 
 
 
-#endif // _CONFIG2_VALUESET_HPP_
+#endif // _CONFIG2_CONFIGITEMCOMPONENT_HPP_

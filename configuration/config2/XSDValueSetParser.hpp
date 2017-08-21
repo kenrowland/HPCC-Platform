@@ -16,8 +16,8 @@
 ############################################################################## */
 
 
-#ifndef _CONFIG2_XSDELEMENTPARSER_HPP_
-#define _CONFIG2_XSDELEMENTPARSER_HPP_
+#ifndef _CONFIG2_XSDVALUESETPARSER_HPP_
+#define _CONFIG2_XSDVALUESETPARSER_HPP_
 
 #include <string>
 #include <memory>
@@ -25,30 +25,35 @@
 #include <boost/property_tree/ptree.hpp>
 
 #include "XSDConfigParser.hpp"
+#include "ConfigItemValueSet.hpp"
 
 namespace pt = boost::property_tree;
 
-class XSDElementParser : public XSDConfigParser
+class XSDValueSetParser : public XSDConfigParser
 {
     public:
 
-        XSDElementParser(const std::string &basePath, std::shared_ptr<ConfigItem> &pConfig) :  XSDConfigParser(basePath, pConfig) { };
-        virtual ~XSDElementParser() { };
-        void parseXSD(const pt::ptree &tree);
+        XSDValueSetParser(const std::string &basePath, std::shared_ptr<ConfigItem> pValueSet) : 
+            XSDConfigParser(basePath, pValueSet) { m_pValueSet = std::dynamic_pointer_cast<ConfigItemValueSet>(pValueSet);  }
+        virtual ~XSDValueSetParser() { }
+        virtual void parseXSD(const pt::ptree &valueSetTree);
+        void parseAttributeGroup(const pt::ptree &attributeTree);
+        void parseAttribute(const pt::ptree &attr);
+        // void parseSimpleType(const pt::ptree &typeTree) ;
     
-
 
     protected:
 
-        XSDElementParser() { };
-        virtual void parseAttributeGroup(const pt::ptree &attributeTree);
+        XSDValueSetParser() { }
+        std::shared_ptr<ConfigItemValueSet> m_pValueSet;
+        // virtual void parseAttributeGroup(const pt::ptree &attributeTree);
 
 
     private:
 
-        std::shared_ptr<ConfigItemValueSet> m_pValueSet;  // attributes at the component level
+        // std::shared_ptr<ConfigItemValueSet> m_pValueSet;  // attributes at the component level
 
 };
 
 
-#endif // _CONFIG2_XSDELEMENTPARSER_HPP_
+#endif // _CONFIG2_XSDVALUESETPARSER_HPP_

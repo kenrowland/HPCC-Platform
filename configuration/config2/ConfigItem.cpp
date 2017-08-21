@@ -17,18 +17,19 @@
 
 #include "ConfigItem.hpp"
 #include "ConfigExceptions.hpp"
-
+#include "CfgStringLimits.hpp"
+#include "CfgIntegerLimits.hpp"
 
 void ConfigItem::addType(const std::shared_ptr<CfgType> &pType)
 {
-    m_pTypes[pType->getName()] = pType;
+    m_types[pType->getName()] = pType;
 }
 
 
-const std::shared_ptr<CfgType> &ConfigItem::getType(const std::string &typeName) const
+const std::shared_ptr<CfgType> ConfigItem::getType(const std::string &typeName)
 {
-    auto it = m_pTypes.find(typeName);
-    if (it != m_pTypes.end())
+    auto it = m_types.find(typeName);
+    if (it != m_types.end())
     {
         return it->second;
     }
@@ -39,17 +40,74 @@ const std::shared_ptr<CfgType> &ConfigItem::getType(const std::string &typeName)
         {
             return pParent->getType(typeName);
         }
-        std::string msg = "Unable to find type: " + typeName;
-        throw(new ParseException(msg));
+        else
+        {
+            //
+            // We are at the root and did not find the type. Inspect the type to see if it is a builtin type and add it if needed
+            std::shared_ptr<CfgLimits> pLimits = getStandardTypeLimits(typeName);
+            if (pLimits)
+            {
+                std::shared_ptr<CfgType> pCfgType = std::make_shared<CfgType>(typeName);
+                pCfgType->setLimits(pLimits);
+                addType(pCfgType);
+                return pCfgType;
+            }
+        }    
     }
-    
+
+    //
+    // Did not find the type
+    std::string msg = "Unable to find type: " + typeName;
+    throw(new ParseException(msg));
 }
 
 
-const std::vector<std::shared_ptr<CfgValue>> &ConfigItem::getValueSetType(const std::string &setName) const
+std::shared_ptr<CfgLimits> ConfigItem::getStandardTypeLimits(const std::string &typeName) const
 {
-    auto it = m_valueSetTypes.find(setName);
-    if (it != m_valueSetTypes.end())
+    std::shared_ptr<CfgLimits> pLimits;
+    if (typeName == "xs:string" || typeName == "xs:token")
+        pLimits = std::make_shared<CfgStringLimits>();
+    else if (typeName == "xs:integer" || typeName == "xs:int")
+        pLimits = std::make_shared<CfgIntegerLimits>();
+    else if (typeName == "xs:nonNegativeInteger")
+    {
+        pLimits = std::make_shared<CfgIntegerLimits>();
+        pLimits->setMinInclusive(0);
+    }
+    else if (typeName == "xs:positiveInteger")
+    {
+        pLimits = std::make_shared<CfgIntegerLimits>();
+        pLimits->setMinInclusive(1);
+    }
+    return pLimits;
+}
+
+
+bool ConfigItem::addKey(const std::string keyName)
+{
+    auto result = m_keys.insert(keyName);
+    return result.second;
+}
+
+
+void ConfigItem::addConfigType(const std::shared_ptr<ConfigItem> &pItem)
+{
+    auto it = m_configTypes.find(pItem->getName());
+    if (it == m_configTypes.end())
+    {
+        m_configTypes[pItem->getName()] = pItem;
+    }
+    else
+    {
+        throw(new ParseException("Duplicate config type found: " + pItem->getName()));
+    }
+}
+
+
+const std::shared_ptr<ConfigItem> &ConfigItem::getConfigType(const std::string &name) const
+{
+    auto it = m_configTypes.find(name);
+    if (it != m_configTypes.end())
     {
         return it->second;
     }
@@ -58,50 +116,11 @@ const std::vector<std::shared_ptr<CfgValue>> &ConfigItem::getValueSetType(const 
         std::shared_ptr<ConfigItem> pParent = m_pParent.lock();
         if (pParent)
         {
-            return pParent->getValueSetType(setName);
+            return pParent->getConfigType(name);
         }
-        std::string msg = "Unable to find named value set: " + setName;
-        throw(new ParseException(msg));
     }
-}
-
-
-// void ConfigItem::addNamedValueSet(const std::vector<std::shared_ptr<CfgValue>> &set, const std::string &setName)
-// {
-//     auto it = m_valueSetTypes.find(setName);
-//     if (it != m_valueSetTypes.end())
-//     {
-//         std::string msg = "Duplicate named valueset found - " + setName;
-//         throw(new ParseException(msg));
-//     }
-//     else
-//     {
-//         m_valueSetTypes[setName] = set;
-//     }
-// }
-
-
-void ConfigItem::addValueToValueSetType(const std::shared_ptr<CfgValue> &pValue, const std::string &setName)
-{
     //
-    // If we get an add for a value set type that is not defined, create it first.
-    auto it = m_valueSetTypes.find(setName);
-    if (it != m_valueSetTypes.end())
-    {
-        (it->second).push_back(pValue);
-    }
-    else
-    {
-        std::vector<std::shared_ptr<CfgValue>> valueSet;
-        valueSet.push_back(pValue);
-        m_valueSetTypes["setName"] = valueSet;
-    }
-
-}
-
-
-void ConfigItem::addConfigValue(const std::vector<std::shared_ptr<CfgValue>> &configValues)
-{
-    for (auto it=configValues.begin(); it!=configValues.end(); ++it)
-        addConfigValue(*it);
+    // Did not find the type
+    std::string msg = "Unable to find config type: " + name;
+    throw(new ParseException(msg));
 }

@@ -36,12 +36,12 @@ void ConfigItemValueSet::addCfgValue(const std::shared_ptr<CfgValue> pNewValue)
 }
 
 
-void ConfigItemValueSet::addCfgValue(const std::vector<std::shared_ptr<CfgValue>> &values)
+void ConfigItemValueSet::addCfgValue(const std::shared_ptr<ConfigItemValueSet> &valueSet)
 {
+    const std::vector<std::shared_ptr<CfgValue>> &values = valueSet->get();
     for (auto it=values.begin(); it!=values.end(); ++it)
         addCfgValue(*it);
 }
-
 
 
 const std::vector<std::shared_ptr<CfgValue>> &ConfigItemValueSet::get() const
@@ -78,4 +78,5 @@ std::shared_ptr<CfgValue> ConfigItemValueSet::findValue(const std::string &value
         std::string msg = "Unable to find valueName(" + valueName + ")";
         throw(new ValueException(msg));
     }
+    return pValue;
 }

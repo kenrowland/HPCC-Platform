@@ -25,11 +25,14 @@ class CfgStringLimits : public CfgLimits
 {
     public:
 
-        CfgStringLimits()  { };
+        CfgStringLimits() : m_removeWhiteSpace(true) { };
         virtual ~CfgStringLimits() { };
+        void setRemoveWhiteSpace(bool remove) { m_removeWhiteSpace = true; }
 
 
     protected:
+
+        bool m_removeWhiteSpace;
 
 };
 

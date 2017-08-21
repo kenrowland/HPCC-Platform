@@ -28,10 +28,11 @@
 #include "ConfigExceptions.hpp"
 #include "CfgValue.hpp"
 //#include "XSDTypeParser.hpp"
-#include "CfgStringLimits.hpp"
-#include "CfgIntegerLimits.hpp"
+// #include "CfgStringLimits.hpp"
+// #include "CfgIntegerLimits.hpp"
 
 #include "XSDComponentParser.hpp"
+#include "XSDValueSetParser.hpp"
 #include "ConfigItemComponent.hpp"
 
 namespace pt = boost::property_tree;
@@ -106,7 +107,10 @@ void XSDConfigParser::parseXSD(const pt::ptree &keys)
         if (it->first == "xs:include")
         {
             std::string schemaFile = getXSDAttributeValue(it->second, "<xmlattr>.schemaLocation");
-            parseXSD(schemaFile);
+            if (m_pConfig->addKey(schemaFile))
+            {
+                parseXSD(schemaFile);
+            }
         }
         else if (it->first == "xs:simpleType")
         {
@@ -141,133 +145,65 @@ std::string XSDConfigParser::getXSDAttributeValue(const pt::ptree &tree, const s
     std::string value = defaultVal;
     try
     {
-        std::string value = tree.get<std::string>(attrName);
+        value = tree.get<std::string>(attrName);
     }
     catch (std::exception &e)
     {
         if (throwIfNotPresent)
-            throw(ParseException("Missint attribute " + attrName + "."));
+            throw(ParseException("Missing attribute " + attrName + "."));
     }
-    return defaultVal;
+    return value;
 }
 
 
 void XSDConfigParser::parseSimpleType(const pt::ptree &typeTree)
 {
-    std::string typeName = getXSDAttributeValue(typeTree, "<xmlattr>.name");
-
-    std::shared_ptr<CfgType> pCfgType = std::make_shared<CfgType>(typeName);
-    auto restriction = typeTree.find("xs:restriction");
-    if (restriction != typeTree.not_found())
-    {
-        std::string baseType = getXSDAttributeValue(restriction->second, "<xmlattr>.base");
-        std::shared_ptr<CfgLimits> pLimits = std::make_shared<CfgLimits>();
-
-        if (baseType == "xs:string")
-            pLimits = std::make_shared<CfgStringLimits>();
-        else if (baseType == "xs:integer")
-            pLimits = std::make_shared<CfgIntegerLimits>();
-        else
-        {
-            std::string msg = "Unsupported base type(" + baseType + ")";
-            throw(ParseException(msg));
-        }
-
-        if (!restriction->second.empty())
-        {
-            pt::ptree restrictTree = restriction->second.get_child("", pt::ptree());
-            for (auto it = restrictTree.begin(); it != restrictTree.end(); ++it)
-            {
-                int value;
-                try
-                {
-                    value = it->second.get<int>("<xmlattr>.value");
-                }
-                catch (std::exception &e)
-                {
-                    std::string msg = "Invalid value found for restriction(" + it->first + ")";
-                    throw(ParseException(msg));
-                }
-
-                if (it->first == "xs:minLength")
-                    pLimits->setMinLength(value);
-                else if (it->first == "xs:maxLength")
-                    pLimits->setMaxLength(value);
-                else if (it->first == "xs:length")
-                    pLimits->setLength(value);
-                else if (it->first == "xs:minInclusive")
-                    pLimits->setMinInclusive(value);
-                else if (it->first == "xs:maxInclusive")
-                    pLimits->setMaxInclusive(value);
-                else if (it->first == "xs:minExclusive")
-                    pLimits->setMinExclusive(value);
-                else if (it->first == "xs:maxExclusive")
-                    pLimits->setMaxExclusive(value);
-                else if (it->first == "xs:pattern")
-                    pLimits->addPattern(it->second.get("<xmlattr>.value", "0"));
-                else
-                {
-                    std::string msg = "Unsupported restriction(" + it->first + ") found while parsing type(" + typeName + ")";
-                    throw(new ParseException(msg));
-                }
-            }
-        }
-
-        pCfgType->setLimits(pLimits);
-        m_pConfig->addType(pCfgType);
-    }
+    std::shared_ptr<CfgType> pCfgType = getCfgType(typeTree, true);
+    m_pConfig->addType(pCfgType);
 }
-
 
 
 void XSDConfigParser::parseAttributeGroup(const pt::ptree &attributeTree)
 {
-    m_curXSDElementParent = "xs:attributeGroup";
-    m_curXSDElementName = getXSDAttributeValue(attributeTree, "<xmlattr>.name");
-    parseXSD(attributeTree.get_child("", pt::ptree()));  // parse the elements in the attribute group
+    std::string groupName = getXSDAttributeValue(attributeTree, "<xmlattr>.name");  // only a named attributeGroup is supported
 
-    // std::string groupName = m_curXSDElementName;
-    // std::vector<std::shared_ptr<CfgValue>> valueSet;
-    // try
-    // {
-    //     groupName = attributeTree.get<std::string>("<xmlattr>.name");
-    //     const pt::ptree &keys = attributeTree.get_child("", pt::ptree());
-    //     for (auto attrIt = keys.begin(); attrIt != keys.end(); ++attrIt)
-    //     {
-    //         if (attrIt->first == "xs:attribute")
-    //         {
-    //             std::shared_ptr<CfgValue> pValue = parseAttribute(attriIt->second);
-    //             valueSet.push_back(pValue);
-    //         }
-    //     }
-    //     m_pConfig->addNamedValueSet(valueSet, groupName);
-    // }
-    // catch (std::exception &e)
-    // {
-    //     std::string msg = "There was an error parsing attributeGroup: " + groupName;
-    //     throw(ParseException(msg));
-    // }
+    std::shared_ptr<ConfigItemValueSet> pValueSet = std::make_shared<ConfigItemValueSet>(groupName, m_pConfig); 
+    std::shared_ptr<ConfigItem> pConfigItem = std::dynamic_pointer_cast<ConfigItem>(pValueSet);
+    std::shared_ptr<XSDValueSetParser> pXSDValueSetParaser = std::make_shared<XSDValueSetParser>(m_basePath, pConfigItem);
+    pXSDValueSetParaser->parseXSD(attributeTree.get_child("", pt::ptree())); 
+    m_pConfig->addConfigType(pValueSet);
 }
 
 
 
 void XSDConfigParser::parseComplexType(const pt::ptree &typeTree)
 {
-    std::string typeName = getXSDAttributeValue(typeTree, "<xmlattr>.name", false, "");
+    std::string complexTypeName = getXSDAttributeValue(typeTree, "<xmlattr>.name", false, "");
+    std::string className = typeTree.get("<xmlattr>.hpcc:class", "");
+    std::string catName = typeTree.get("<xmlattr>.hpcc:category", "");
+    std::string displayName = typeTree.get("<xmlattr>.hpcc:displayName", "");
 
-    if (typeName != "")
+    if (complexTypeName != "" || className != "")
     {
-        std::string className = typeTree.get("<xmlattr>.hpcc:class", "");
-        std::string catName = typeTree.get("<xmlattr>.hpcc:category", "");
-        std::string displayName = typeTree.get("<xmlattr>.hpcc:displayName", "");
-
         if (className == "component")
         {
-            std::shared_ptr<ConfigItemComponent> pComponent = std::make_shared<ConfigItemComponent>("", m_pConfig);  // don't know component name yet, will be in a later xs:element tag
+            std::shared_ptr<ConfigItemComponent> pComponent = std::make_shared<ConfigItemComponent>(complexTypeName, m_pConfig); 
+            pComponent->setCategory(catName);
             pComponent->setDisplayName(displayName);
-            std::shared_ptr<XSDComponentParser> pComponentXSDParaser = std::make_shared<XSDComponentParser>(m_basePath, m_pConfig);
-            pComponentXSDParaser->parseXSD(typeTree.get_child("", pt::ptree()));
+            pt::ptree componentTree = typeTree.get_child("", pt::ptree());
+            if (!componentTree.empty())
+            {
+                std::shared_ptr<ConfigItem> pConfigItem = std::dynamic_pointer_cast<ConfigItem>(pComponent);
+                std::shared_ptr<XSDComponentParser> pComponentXSDParaser = std::make_shared<XSDComponentParser>(m_basePath, pConfigItem);
+                pComponentXSDParaser->parseXSD(componentTree); 
+                m_pConfig->addConfigType(pComponent);
+            }
+            else
+            {
+                throw(new ParseException("Component definition empty: " + displayName));
+            }
         }
+        // todo: else throw, not recognized complexType class
     }
 
     //
@@ -281,24 +217,163 @@ void XSDConfigParser::parseComplexType(const pt::ptree &typeTree)
 
 void XSDConfigParser::parseElement(const pt::ptree &elemTree)
 {
-    // not sure yet, might be an error or could be category like sw/programs/hw etc. turns into category all bsed on hpcc:class
-}
+    std::string elementName = elemTree.get("<xmlattr>.name", "");
+    std::string className = elemTree.get("<xmlattr>.hpcc:class", "");
+    std::string catName = elemTree.get("<xmlattr>.hpcc:category", "");
+    std::string displayName = elemTree.get("<xmlattr>.hpcc:displayName", "");
+    std::string refName = elemTree.get("<xmlattr>.ref", "");
+    std::string typeName = elemTree.get("<xmlattr>.type", "");
 
-
-void XSDConfigParser::parseAttribute(const pt::ptree &attr) const
-{
-    std::string typeName = getXSDAttributeValue(attr, "<xmlattr>.type");
-    std::string attrName = getXSDAttributeValue(attr, "<xmlattr>.name");
-    std::shared_ptr<CfgValue> pCfgValue = std::make_shared<CfgValue>(attrName);
-    pCfgValue->setType(m_pConfig->getType(typeName));
-    // add other stuff later such as hpcc:mirror, hpcc:dependson, hpcc:presentif
-
-    if (m_curXSDElementParent == "xs:attributeGroup")
+    if (className == "component")
     {
-        m_pConfig->addValueToValueSetType(pCfgValue, m_curXSDElementName);
+        std::shared_ptr<ConfigItemComponent> pComponent = std::make_shared<ConfigItemComponent>(elementName, m_pConfig);  
+        pComponent->setCategory(catName);
+        pComponent->setDisplayName(displayName);
+        pComponent->setMinInstances(elemTree.get("<xmlattr>.minOccurs", 1));
+        pComponent->setMaxInstances(elemTree.get("<xmlattr>.maxOccurs", "1"));
+        std::shared_ptr<ConfigItem> pConfigItem = std::dynamic_pointer_cast<ConfigItem>(pComponent);
+        std::shared_ptr<XSDComponentParser> pComponentXSDParaser = std::make_shared<XSDComponentParser>(m_basePath, pConfigItem);
+        pComponentXSDParaser->parseXSD(elemTree.get_child("xs:complexType", pt::ptree())); 
+        m_pConfig->addChild(pComponent);
+    }
+    else if (className == "category")
+    {
+        std::shared_ptr<ConfigItem> pConfigItem = std::make_shared<ConfigItem>(catName, "category", m_pConfig);
+        std::shared_ptr<XSDConfigParser> pXSDParaser = std::make_shared<XSDConfigParser>(m_basePath, pConfigItem);
+        pXSDParaser->parseXSD(elemTree.get_child("", pt::ptree()));
+        m_pConfig->addChild(pConfigItem);
+    }
+    else if (elementName != "")
+    {
+        //
+        // If this element has a type, then it will contain data. Pull the type 
+        // elemTree.get_child("xs:complexType", pt::ptree()) not empty
+        // typeName != ""
+        // then give m_pConfig a value (cfgvalue)
+        if (typeName != "")
+        {
+            std::shared_ptr<CfgValue> pCfgValue = std::make_shared<CfgValue>("");  // a no name value becuase it belongs to the element
+            pCfgValue->setType(m_pConfig->getType(typeName));
+            m_pConfig->setItemCfgValue(pCfgValue);
+        }
+        else 
+        {
+            std::shared_ptr<CfgType> pType = getCfgType(elemTree.get_child("xs:simpleType", pt::ptree()), false);
+            if (pType->isValid())
+            {
+                std::shared_ptr<CfgValue> pCfgValue = std::make_shared<CfgValue>("");  // a no name value becuase it belongs to the element
+                pCfgValue->setType(pType);
+                m_pConfig->setItemCfgValue(pCfgValue);
+            }
+            else 
+            {
+                throw(new ParseException("Invalid type for element " + elementName));
+            }
+        }
+
+        
+        std::shared_ptr<ConfigItemValueSet> pValueSet = std::make_shared<ConfigItemValueSet>(elementName, m_pConfig);  
+        pValueSet->setDisplayName(displayName);
+        pValueSet->setMinInstances(elemTree.get("<xmlattr>.minOccurs", 1));
+        pValueSet->setMaxInstances(elemTree.get("<xmlattr>.maxOccurs", "1"));
+        std::shared_ptr<ConfigItem> pConfigItem = std::dynamic_pointer_cast<ConfigItem>(pValueSet);
+        std::shared_ptr<XSDValueSetParser> pValueSetXSDParaser = std::make_shared<XSDValueSetParser>(m_basePath, pConfigItem);
+        pValueSetXSDParaser->parseXSD(elemTree.get_child("xs:complexType", pt::ptree())); 
+        m_pConfig->addChild(pValueSet);
+    }
+    else if (refName != "")
+    {
+        std::shared_ptr<ConfigItem> pConfigItem = m_pConfig->getConfigType(refName);
+        std::shared_ptr<ConfigItemComponent> pComponent = std::dynamic_pointer_cast<ConfigItemComponent>(pConfigItem);
+        if (pComponent)
+        {
+             std::shared_ptr<ConfigItemComponent> pComponentCopy = std::make_shared<ConfigItemComponent>(*pComponent);
+             m_pConfig->addChild(pComponentCopy);
+        }
+        else
+        {
+            throw(new ParseException("Element reference is not a compoenent: " + refName));
+        }
     }
     else
     {
-        m_pConfig->addConfigValue(pCfgValue);
+        throw(new ParseException("Only component elements are supported at the top level"));
     }
+}
+
+
+std::shared_ptr<CfgType> XSDConfigParser::getCfgType(const pt::ptree &typeTree, bool nameRequired)
+{
+    std::string typeName = getXSDAttributeValue(typeTree, "<xmlattr>.name", nameRequired, "");
+
+    std::shared_ptr<CfgType> pCfgType = std::make_shared<CfgType>(typeName);
+    std::shared_ptr<CfgLimits> pLimits = std::make_shared<CfgLimits>();
+    auto restriction = typeTree.find("xs:restriction");
+    if (restriction != typeTree.not_found())
+    {
+        std::string baseType = getXSDAttributeValue(restriction->second, "<xmlattr>.base");
+        pLimits = m_pConfig->getStandardTypeLimits(baseType);
+        if (!pLimits)
+        {
+            std::string msg = "Unsupported base type(" + baseType + ")";
+            throw(ParseException(msg));
+        }
+
+        if (!restriction->second.empty())
+        {
+            pt::ptree restrictTree = restriction->second.get_child("", pt::ptree());
+            for (auto it = restrictTree.begin(); it != restrictTree.end(); ++it)
+            {
+                try
+                {
+                    std::string restrictionType = it->first;
+                    if (restrictionType == "xs:minLength")
+                        pLimits->setMinLength(it->second.get<int>("<xmlattr>.value"));
+                    else if (restrictionType == "xs:maxLength")
+                        pLimits->setMaxLength(it->second.get<int>("<xmlattr>.value"));
+                    else if (restrictionType == "xs:length")
+                        pLimits->setLength(it->second.get<int>("<xmlattr>.value"));
+                    else if (restrictionType == "xs:minInclusive")
+                        pLimits->setMinInclusive(it->second.get<int>("<xmlattr>.value"));
+                    else if (restrictionType == "xs:maxInclusive")
+                        pLimits->setMaxInclusive(it->second.get<int>("<xmlattr>.value"));
+                    else if (restrictionType == "xs:minExclusive")
+                        pLimits->setMinExclusive(it->second.get<int>("<xmlattr>.value"));
+                    else if (restrictionType == "xs:maxExclusive")
+                        pLimits->setMaxExclusive(it->second.get<int>("<xmlattr>.value"));
+                    else if (restrictionType == "xs:pattern")
+                        pLimits->addPattern(it->second.get("<xmlattr>.value", "0"));
+                    else if (restrictionType == "xs:enumeration")
+                        pLimits->addAllowedValue(it->second.get("<xmlattr>.value", "badbadbad"), it->second.get("<xmlattr>.hpcc:description", ""));
+                    else if (restrictionType.find("xs:") != std::string::npos)
+                    {
+                        std::string msg = "Unsupported restriction(" + it->first + ") found while parsing type(" + typeName + ")";
+                        throw(new ParseException(msg));
+                    }
+                }
+                catch (std::exception &e)
+                {
+                    std::string msg = "Invalid value found for restriction(" + it->first + ")";
+                    throw(ParseException(msg));
+                }
+            }
+        }
+    }
+
+    pCfgType->setLimits(pLimits);
+    return pCfgType;
+}
+
+
+
+void XSDConfigParser::parseAttribute(const pt::ptree &attr)
+{
+    // std::string typeName = getXSDAttributeValue(attr, "<xmlattr>.type");
+    // std::string attrName = getXSDAttributeValue(attr, "<xmlattr>.name");
+    // std::shared_ptr<CfgValue> pCfgValue = std::make_shared<CfgValue>(attrName);
+    // pCfgValue->setType(m_pConfig->getType(typeName));
+    // // add other stuff later such as hpcc:mirror, hpcc:dependson, hpcc:presentif
+
+    //     m_pConfig->addConfigValue(pCfgValue);
+    // }
 }

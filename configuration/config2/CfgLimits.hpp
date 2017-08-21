@@ -21,24 +21,14 @@
 #include <memory>
 #include <vector>
 #include <string>
-//#include "CfgCollection.hpp"
+#include <limits.h>
 
-// class CfgLimitsBase 
-// {
-//     public:
-
-//         CfgLimitsBase() { };
-//         virtual ~CfgLimitsBase() { };
-//         virtual void addPattern(const std::string &pattern) { m_patterns.push_back(pattern); };
-//         virtual bool checkPatternMatch(const std::string &value) const { return true; };
-
-
-//     protected:
-
-//         std::vector<std::string> m_patterns;
-// };
-
-
+struct AllowedValue 
+{
+    AllowedValue(const std::string &value, const std::string &desc) : m_value(value), m_description(desc) { }
+    std::string m_value;
+    std::string m_description;
+};
 
 class CfgLimits 
 {
@@ -46,25 +36,22 @@ class CfgLimits
 
         
         CfgLimits() :
-            m_minInclusive(0),
-            m_maxInclusive(0),
-            m_minExclusive(0),
-            m_maxExclusive(0),
-            m_length(0)
-        {
-
-        };
-        virtual ~CfgLimits() { };
-        //virtual void addItemToCollection(const T &item);
-        virtual void setMinInclusive(int v)  { m_minInclusive = v; }; 
-        virtual void setMinExclusive(int v)  { m_minExclusive = v; }; 
-        virtual void setMaxInclusive(int v)  { m_maxInclusive = v; }; 
-        virtual void setMaxExclusive(int v)  { m_maxExclusive = v; }; 
-        virtual void setLength(int v)        { m_length       = v; };
-        virtual void setMinLength(int v)     { m_minLength    = v; }; 
-        virtual void setMaxLength(int v)     { m_maxLength    = v; };
-        virtual void addPattern(const std::string &pattern) { m_patterns.push_back(pattern); }
-        bool isValueValid(const std::string &testValue) { return true; };
+            m_minInclusive(INT_MIN),
+            m_maxInclusive(INT_MAX),
+            m_minExclusive(INT_MIN),
+            m_maxExclusive(INT_MAX),
+            m_length(0) { }
+        virtual ~CfgLimits() { }
+        void setMinInclusive(int v)  { m_minInclusive = v; } 
+        void setMinExclusive(int v)  { m_minExclusive = v; } 
+        void setMaxInclusive(int v)  { m_maxInclusive = v; } 
+        void setMaxExclusive(int v)  { m_maxExclusive = v; } 
+        void setLength(int v)        { m_length       = v; }
+        void setMinLength(int v)     { m_minLength    = v; } 
+        void setMaxLength(int v)     { m_maxLength    = v; }
+        void addPattern(const std::string &pattern) { m_patterns.push_back(pattern); }
+        void addAllowedValue(const std::string &value, const std::string &desc) { m_allowedValues.push_back(AllowedValue(value, desc)); }
+        bool isValueValid(const std::string &testValue) { return true; }
 
 
     protected:
@@ -77,6 +64,9 @@ class CfgLimits
         int m_minLength;
         int m_maxLength;
         std::vector<std::string> m_patterns;
+        std::vector<AllowedValue> m_allowedValues;
+
+        
 
 
     private:
