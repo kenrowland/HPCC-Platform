@@ -28,13 +28,14 @@ class ConfigItemValueSet : public ConfigItem
 {
     public:
 
-        ConfigItemValueSet(const std::string &name, std::shared_ptr<ConfigItem> pParent) : ConfigItem(name, "valueset", pParent) { };
+		ConfigItemValueSet(const std::string &name, std::shared_ptr<ConfigItem> pParent) : ConfigItem(name, "valueset", pParent) { m_isConfigurable = true; };
         virtual ~ConfigItemValueSet() { };
 
         void addCfgValue(const std::shared_ptr<CfgValue> pValue);
         void addCfgValue(const std::shared_ptr<ConfigItemValueSet> &valueSet);
-        const std::vector<std::shared_ptr<CfgValue>> &get() const;
-        void setValue(const std::string &valueName, const std::string &newValue);
+        const std::vector<std::shared_ptr<CfgValue>> &getCfgValues() const;
+        
+		//void setValue(const std::string &valueName, const std::string &newValue);
         // virtual void addConfigType(const std::shared_ptr<ConfigItem> &pItem);
         
 
@@ -46,8 +47,7 @@ class ConfigItemValueSet : public ConfigItem
 
     protected:
 
-        std::vector<std::shared_ptr<CfgValue>> m_values;
-        // std::vector<std::shared_ptr<CfgValue>> m_configValues;                           // this item's config values (like attributes in XML terms)
+        std::vector<std::shared_ptr<CfgValue>> m_cfgValues;
 
 
 };

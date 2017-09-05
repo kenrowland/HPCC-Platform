@@ -19,6 +19,7 @@
 #include "ConfigExceptions.hpp"
 #include "CfgStringLimits.hpp"
 #include "CfgIntegerLimits.hpp"
+#include <algorithm>
 
 void ConfigItem::addType(const std::shared_ptr<CfgType> &pType)
 {
@@ -62,23 +63,34 @@ const std::shared_ptr<CfgType> ConfigItem::getType(const std::string &typeName)
 }
 
 
-std::shared_ptr<CfgLimits> ConfigItem::getStandardTypeLimits(const std::string &typeName) const
+std::shared_ptr<CfgLimits> ConfigItem::getStandardTypeLimits(const std::string &baseType) const
 {
     std::shared_ptr<CfgLimits> pLimits;
-    if (typeName == "xs:string" || typeName == "xs:token")
-        pLimits = std::make_shared<CfgStringLimits>();
-    else if (typeName == "xs:integer" || typeName == "xs:int")
-        pLimits = std::make_shared<CfgIntegerLimits>();
-    else if (typeName == "xs:nonNegativeInteger")
+	if (baseType == "xs:string" || baseType == "xs:token")
+	{
+		pLimits = std::make_shared<CfgStringLimits>();
+	}
+	else if (baseType == "xs:integer" || baseType == "xs:int")
+	{
+		pLimits = std::make_shared<CfgIntegerLimits>();
+	}
+    else if (baseType == "xs:nonNegativeInteger")
     {
         pLimits = std::make_shared<CfgIntegerLimits>();
         pLimits->setMinInclusive(0);
     }
-    else if (typeName == "xs:positiveInteger")
+    else if (baseType == "xs:positiveInteger")
     {
         pLimits = std::make_shared<CfgIntegerLimits>();
         pLimits->setMinInclusive(1);
     }
+	else if (baseType == "xs:boolean")
+	{
+		pLimits = std::make_shared<CfgStringLimits>();
+		pLimits->addAllowedValue("true");
+		pLimits->addAllowedValue("false");
+	}
+	
     return pLimits;
 }
 
@@ -90,12 +102,12 @@ bool ConfigItem::addKey(const std::string keyName)
 }
 
 
-void ConfigItem::addConfigType(const std::shared_ptr<ConfigItem> &pItem)
+void ConfigItem::addConfigType(const std::shared_ptr<ConfigItem> &pItem, const std::string &typeName)
 {
-    auto it = m_configTypes.find(pItem->getName());
+    auto it = m_configTypes.find(typeName);
     if (it == m_configTypes.end())
     {
-        m_configTypes[pItem->getName()] = pItem;
+        m_configTypes[typeName] = pItem;
     }
     else
     {
@@ -123,4 +135,31 @@ const std::shared_ptr<ConfigItem> &ConfigItem::getConfigType(const std::string &
     // Did not find the type
     std::string msg = "Unable to find config type: " + name;
     throw(new ParseException(msg));
+}
+
+
+void ConfigItem::addAttribute(const std::shared_ptr<CfgValue> &pCfgValue)
+{
+	auto retVal = m_attributes.insert({ pCfgValue->getName(), pCfgValue });
+	if (!retVal.second)
+	{
+		throw(new ParseException("Duplicate attribute (" + pCfgValue->getName() + " found for element " + m_name));
+	}
+}
+
+
+void ConfigItem::addAttribute(const std::vector<std::shared_ptr<CfgValue>> &attributes)
+{
+	for (auto it = attributes.begin(); it != attributes.end(); ++it)
+		addAttribute((*it));
+}
+
+
+std::shared_ptr<CfgValue> ConfigItem::getAttribute(const std::string &name) const
+{
+	std::shared_ptr<CfgValue> pCfgValue;
+	auto it = m_attributes.find(name);
+	if (it != m_attributes.end())
+		pCfgValue = it->second;
+	return pCfgValue;
 }

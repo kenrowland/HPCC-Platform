@@ -26,7 +26,7 @@ void ConfigItemValueSet::addCfgValue(const std::shared_ptr<CfgValue> pNewValue)
     std::shared_ptr<CfgValue> pValue = findValue(pNewValue->getName(), false);
     if (!pValue)
     {
-        m_values.push_back(pNewValue);
+		m_cfgValues.push_back(pNewValue);
     }
     else 
     {
@@ -38,18 +38,19 @@ void ConfigItemValueSet::addCfgValue(const std::shared_ptr<CfgValue> pNewValue)
 
 void ConfigItemValueSet::addCfgValue(const std::shared_ptr<ConfigItemValueSet> &valueSet)
 {
-    const std::vector<std::shared_ptr<CfgValue>> &values = valueSet->get();
+    const std::vector<std::shared_ptr<CfgValue>> &values = valueSet->getCfgValues();
     for (auto it=values.begin(); it!=values.end(); ++it)
         addCfgValue(*it);
 }
 
 
-const std::vector<std::shared_ptr<CfgValue>> &ConfigItemValueSet::get() const
+const std::vector<std::shared_ptr<CfgValue>> &ConfigItemValueSet::getCfgValues() const
 {
-    return m_values;
+    return m_cfgValues;
 }
 
 
+/*
 void ConfigItemValueSet::setValue(const std::string &valueName, const std::string &newValue)
 {
     std::shared_ptr<CfgValue> pValue = findValue(pValue->getName(), true);
@@ -62,14 +63,14 @@ void ConfigItemValueSet::setValue(const std::string &valueName, const std::strin
         std::string msg = "New value(" + newValue + "for value(" + valueName + " is not valid.";
         throw(new ValueException(msg));
     }
-}
+}*/
 
 
 std::shared_ptr<CfgValue> ConfigItemValueSet::findValue(const std::string &valueName, bool throwIfNotFound) const
 {
     std::shared_ptr<CfgValue> pValue;
-    auto it = std::find_if(m_values.begin(), m_values.end(), [valueName](const std::shared_ptr<CfgValue> &pTestValue) -> bool {return pTestValue->getName() == valueName;} );
-    if (it != m_values.end())
+    auto it = std::find_if(m_cfgValues.begin(), m_cfgValues.end(), [valueName](const std::shared_ptr<CfgValue> &pTestValue) -> bool {return pTestValue->getName() == valueName;} );
+    if (it != m_cfgValues.end())
     {
         pValue = *it;
     }

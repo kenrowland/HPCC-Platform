@@ -73,15 +73,33 @@ void XSDComponentParser::parseXSD(const pt::ptree &compTree)
             m_pConfig->setMinInstances(elemTree.get("<xmlattr>.minOccurs", 1));
             m_pConfig->setMaxInstances(elemTree.get("<xmlattr>.maxOccurs", "1"));
 
+			//
+			// Parse any attributes, these are located in the xs:complexType section
+			pt::ptree attributeTree = elemTree.get_child("xs:complexType", pt::ptree());
+			for (auto attrIt = attributeTree.begin(); attrIt != attributeTree.end(); ++attrIt)
+			{
+				//
+				// Element parent (a type in realilty) and the element name help figure out how to process the XSD schema element
+				std::string elemType = attrIt->first;
+				if (elemType == "xs:attributeGroup")
+				{
+					parseAttributeGroup(attrIt->second);
+				}
+				else if (elemType == "xs:attribute")
+				{
+					parseAttribute(attrIt->second);
+				}
+			}
+
             //
             // Allocate a value set to hold the component attributes, parse them and save
-            std::shared_ptr<ConfigItemValueSet> pAttributeValueSet = std::make_shared<ConfigItemValueSet>("attributes", m_pConfig); // holds the attributes for the component level element 
-            pAttributeValueSet->setDisplayName("Attributes");
-            std::shared_ptr<ConfigItem> pConfigItem = std::dynamic_pointer_cast<ConfigItem>(pAttributeValueSet);
-            std::shared_ptr<XSDValueSetParser> pXSDValueSetParaser = std::make_shared<XSDValueSetParser>(m_basePath, pConfigItem);
-            pt::ptree keys = elemTree.get_child("xs:complexType", pt::ptree());
-            pXSDValueSetParaser->parseXSD(keys);
-            m_pConfig->addChild(pAttributeValueSet);
+            //std::shared_ptr<ConfigItemValueSet> pAttributeValueSet = std::make_shared<ConfigItemValueSet>("attributes", m_pConfig); // holds the attributes for the component level element 
+            //pAttributeValueSet->setDisplayName("Attributes");
+            //std::shared_ptr<ConfigItem> pConfigItem = std::dynamic_pointer_cast<ConfigItem>(pAttributeValueSet);
+            //std::shared_ptr<XSDValueSetParser> pXSDValueSetParaser = std::make_shared<XSDValueSetParser>(m_basePath, std::dynamic_pointer_cast<ConfigItem>(pAttributeValueSet));
+            //pt::ptree keys = elemTree.get_child("xs:complexType", pt::ptree());
+            //pXSDValueSetParaser->parseXSD(keys);
+            //m_pConfig->addChild(pAttributeValueSet);
 
             //
             // Now parse the sequence section (these are sub keys for the component)
