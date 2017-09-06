@@ -24,40 +24,33 @@ limitations under the License.
 #include "EnvValue.hpp"
 #include "CfgValue.hpp"
 
-class EnvironmentNode : std::enable_shared_from_this<EnvironmentNode>
+class EnvironmentNode //: std::enable_shared_from_this<EnvironmentNode>
 {
 	public:
 
-		EnvironmentNode(const std::shared_ptr<ConfigItem> &pCfgItem, const std::shared_ptr<EnvironmentNode> &pParent = nullptr) : m_pConfigItem(pCfgItem), m_pParent(pParent) { }
+		EnvironmentNode(const std::shared_ptr<ConfigItem> &pCfgItem, const std::string &elemName, const std::shared_ptr<EnvironmentNode> &pParent = nullptr) : 
+			m_pConfigItem(pCfgItem), m_elementName(elemName), m_pParent(pParent) { }
 		~EnvironmentNode() { }
-		void addSubNode(const std::string &nodeName, std::shared_ptr<EnvironmentNode> pNode);
+		const std::string &getNodeName() const { return m_elementName;  }
+		void addSubNode(std::shared_ptr<EnvironmentNode> pNode);
+		std::vector<std::shared_ptr<EnvironmentNode>> getElements() const;
 		void addValue(const std::string &name, std::shared_ptr<EnvValue> pValue);
+		std::map<std::string, std::shared_ptr<EnvValue>> getValues() const { return m_values; }
+		bool hasValues() const { return m_values.size() != 0; }
+		void setPath(const std::string &path) { m_path = path; } 
+		const std::string &getPath() const { return m_path;  }
 
 
 	protected:
 
+		std::string m_elementName;   // may also be stored in m_values, so keep synched
 		std::shared_ptr<ConfigItem> m_pConfigItem;
 		std::weak_ptr<EnvironmentNode> m_pParent;
 		std::multimap<std::string, std::shared_ptr<EnvironmentNode>> m_subNodes;
 		std::shared_ptr<CfgValue> m_nodeValue;
 		std::map<std::string, std::shared_ptr<EnvValue>> m_values;
-		//std::vector <std::shared_ptr<EnvironmentNode>> m_children;
+		std::string m_path;
 };
 
-
-//class EnvironmentAttributeNode : public EnvironmentNode
-//{
-//	public:
-//
-//		EnvironmentAttributeNode(const std::shared_ptr<ConfigItem> &pCfgItem, const std::shared_ptr<EnvironmentNode> &pParent = nullptr) : EnvironmentNode(pCfgItem, pParent) { }
-//		virtual ~EnvironmentAttributeNode() { }
-//		void addValue(const std::string &name, const std::shared_ptr<EnvValue> &pValue);
-//
-//
-//	private:
-//
-//		std::map<std::string, std::shared_ptr<EnvValue>> m_values;
-//
-//};
 
 #endif

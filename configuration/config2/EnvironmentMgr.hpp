@@ -27,16 +27,23 @@ class EnvironmentMgr
 {
 	public:
 
-		EnvironmentMgr() { }
+		EnvironmentMgr() : m_key(0) { }
 		virtual ~EnvironmentMgr() { }
 
 		void setConfig(const std::shared_ptr<ConfigItem> &pConfig) { m_pConfig = pConfig; }
 		virtual bool loadEnvironment(const std::string &file);  // return some error code,or a get last error type of call?
+
+		void addPath(const std::string &pathName, const std::shared_ptr<EnvironmentNode> pNode);
+
+		std::vector<std::shared_ptr<EnvironmentNode>> getElements(const std::string &path);
+		std::map<std::string, std::shared_ptr<EnvValue>> getValues(const std::string &path);
+
 		// virtual bool writeEnvironment(const std::string &file /* same with load */) = 0;
 		//virtual bool validate();
 
 	protected:
 
+		std::string getUniqueKey();
 		virtual bool load(std::istream &in) = 0;
 
 
@@ -44,7 +51,13 @@ class EnvironmentMgr
 
 
 		std::shared_ptr<ConfigItem> m_pConfig;
-		std::shared_ptr<EnvironmentNode> m_pEnvironment;
+		std::shared_ptr<EnvironmentNode> m_pRootNode;
+		std::map<std::string, std::shared_ptr<EnvironmentNode>> m_paths;
+
+
+	private:
+		
+		int m_key;
 };
 
 #endif

@@ -29,18 +29,19 @@ bool XMLEnvironmentMgr::load(std::istream &in)
 	//
 	// Start at root, these better match!
 	std::string rootName = rootIt->first;
-	std::shared_ptr<EnvironmentNode> pRootNode;
+	//std::shared_ptr<EnvironmentNode> pRootNode;
 	if (rootName == m_pConfig->getName())
 	{
-		pRootNode = std::make_shared<EnvironmentNode>(m_pConfig);
-		parse(rootIt->second, m_pConfig, pRootNode);
+		m_pRootNode = std::make_shared<EnvironmentNode>(m_pConfig, rootName);
+		addPath(getUniqueKey(), m_pRootNode);
+		parse(rootIt->second, m_pConfig, m_pRootNode);
 	}
 
 	return true;
 }
 
 
-bool XMLEnvironmentMgr::parse(const pt::ptree &envTree, const std::shared_ptr<ConfigItem> &pConfigItem, std::shared_ptr<EnvironmentNode> &pEnvNode)
+void XMLEnvironmentMgr::parse(const pt::ptree &envTree, const std::shared_ptr<ConfigItem> &pConfigItem, std::shared_ptr<EnvironmentNode> &pEnvNode)
 {
 
 	//
@@ -59,6 +60,7 @@ bool XMLEnvironmentMgr::parse(const pt::ptree &envTree, const std::shared_ptr<Co
 				std::shared_ptr<CfgValue> pCfgValue = pConfigItem->getAttribute(attrIt->first);
 				pEnvValue->setCfgValue(pCfgValue);
 				pEnvValue->setValue(attrIt->second.get_value<std::string>());
+				//pEnvNode->addInt(4, 5);
 				pEnvNode->addValue(attrIt->first, pEnvValue);
 			}
 		}
@@ -67,33 +69,15 @@ bool XMLEnvironmentMgr::parse(const pt::ptree &envTree, const std::shared_ptr<Co
 			std::shared_ptr<ConfigItem> pEnvConfig = pConfigItem->getChild<ConfigItem>(elemName);
 			if (pEnvConfig)
 			{
-				std::shared_ptr<EnvironmentNode> pElementNode = std::make_shared<EnvironmentNode>(pEnvConfig, pEnvNode);
+				std::shared_ptr<EnvironmentNode> pElementNode = std::make_shared<EnvironmentNode>(pEnvConfig, elemName, pEnvNode);
+				addPath(getUniqueKey(), pElementNode);
 				parse(it->second, pEnvConfig, pElementNode);
-				pEnvNode->addSubNode(it->first, pElementNode);
+				pEnvNode->addSubNode(pElementNode);
 			}
 			else
 			{
 				// this is where we need to generate a raw environment node that just passes thru environment stuff
 			}
-
-			/*std::shared_ptr<ConfigItem> pChild = pConfigItem->getChild<ConfigItem>(elemName);
-			if (pChild)
-			{
-				std::shared_ptr<EnvConfigItem> pNewEnvCfgItem = std::make_shared<EnvConfigItem>(shared_from_this(), pEnvConfigItem);
-				std::shared_ptr<EnvInstance<pt::ptree *>> pEnvItem = std::make_shared<EnvInstance<pt::ptree *>>();
-				pEnvItem->setInstance(&it->second);
-				pNewEnvCfgItem->setEnvironmentInstance(pEnvItem);
-				pNewEnvCfgItem->setConfigInstance(pChild);
-				pEnvConfigItem->addChild(pNewEnvCfgItem);
-				parseEnvironment(it->second, pNewEnvCfgItem);
-			}*/
 		}
-
-
-
 	}
-
-
-
-	return true;
 }

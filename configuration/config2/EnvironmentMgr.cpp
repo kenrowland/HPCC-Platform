@@ -16,6 +16,7 @@ limitations under the License.
 ############################################################################## */
 
 #include "EnvironmentMgr.hpp"
+#include "ConfigExceptions.hpp"
 
 bool EnvironmentMgr::loadEnvironment(const std::string &filename)
 {
@@ -24,8 +25,46 @@ bool EnvironmentMgr::loadEnvironment(const std::string &filename)
 	in.open(filename);
 	if (in.is_open())
 	{
-		return (load(in));
+		load(in);
 	}
 	return true;
 }
 
+
+void EnvironmentMgr::addPath(const std::string &pathName, const std::shared_ptr<EnvironmentNode> pNode)
+{
+	auto retVal = m_paths.insert({pathName, pNode });
+	if (!retVal.second)
+	{
+		throw (new ParseException("Attempted to insert duplicate path name " + pathName + " for node "));
+	}
+}
+
+
+std::vector<std::shared_ptr<EnvironmentNode>> EnvironmentMgr::getElements(const std::string &path)
+{
+	auto pathIt = m_paths.find(path);
+	//if (pathIt == m_paths.end())
+	//	return;
+
+	std::shared_ptr<EnvironmentNode> pNode = pathIt->second;
+	return pNode->getElements();
+}
+
+
+std::map<std::string, std::shared_ptr<EnvValue>> EnvironmentMgr::getValues(const std::string &path)
+{
+	auto pathIt = m_paths.find(path);
+	//if (pathIt == m_paths.end())
+	//	return;
+
+	std::shared_ptr<EnvironmentNode> pNode = pathIt->second;
+	return pNode->getValues();
+
+}
+
+
+std::string EnvironmentMgr::getUniqueKey()
+{
+	return std::to_string(m_key++);
+}
