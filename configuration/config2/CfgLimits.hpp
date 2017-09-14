@@ -25,7 +25,7 @@
 
 struct AllowedValue 
 {
-    AllowedValue(const std::string &value, const std::string &desc) : m_value(value), m_description(desc) { }
+    AllowedValue(const std::string &value, const std::string &desc="") : m_value(value), m_description(desc) { }
     std::string m_value;
     std::string m_description;
 };
@@ -50,7 +50,7 @@ class CfgLimits
         void setMinLength(int v)     { m_minLength    = v; } 
         void setMaxLength(int v)     { m_maxLength    = v; }
         void addPattern(const std::string &pattern) { m_patterns.push_back(pattern); }
-        void addAllowedValue(const std::string &value, const std::string &desc) { m_allowedValues.push_back(AllowedValue(value, desc)); }
+        void addAllowedValue(const std::string &value, const std::string &desc="") { m_allowedValues.push_back(AllowedValue(value, desc)); }
         bool isValueValid(const std::string &testValue) { return true; }
 
 

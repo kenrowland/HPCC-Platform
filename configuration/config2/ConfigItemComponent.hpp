@@ -28,7 +28,7 @@ class ConfigItemComponent : public ConfigItem
 {
     public:
 
-        ConfigItemComponent(const std::string &name, std::shared_ptr<ConfigItem> pParent) : ConfigItem(name, "component", pParent) { };
+		ConfigItemComponent(const std::string &name, std::shared_ptr<ConfigItem> pParent) : ConfigItem(name, "component", pParent) { m_isConfigurable = true; };
         virtual ~ConfigItemComponent() { };
     
 

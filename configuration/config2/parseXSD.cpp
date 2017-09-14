@@ -1,20 +1,15 @@
 
 #include <stdlib.h>
+#include <stdio.h>
 #include <memory.h>
-// #include <boost/property_tree/ptree.hpp>
-// #include <boost/property_tree/xml_parser.hpp>
-// //#include <boost/property_tree/json_parser.hpp>
-// #include <boost/foreach.hpp>
 #include <string>
-// #include <set>
 #include <exception>
 #include <iostream>
-// #include <vector>
 
 #include "ConfigExceptions.hpp"
-// //#include "XSDAttribute.hpp"
-// #include "XSDTypeParser.hpp"
 
+//#include "libxml/parser.h"
+//#include "libxml/tree.h"
 
 
 // namespace pt = boost::property_tree;
@@ -26,6 +21,8 @@ const std::string c_path = ""; ///opt/HPCCSystems/componentfiles/config2xml/";
 
 #include "ConfigItem.hpp"
 #include "XSDConfigParser.hpp"
+#include "XMLEnvironmentMgr.hpp"
+
 
 int main()
 {
@@ -41,6 +38,11 @@ int main()
         // std::shared_ptr<ConfigItem> pConfig = std::make_shared<ConfigItem>("myconfig", pNull);
 
         pCfgParser->parseEnvironmentConfig("newenv.xsd", "");
+
+		XMLEnvironmentMgr envMgr;
+
+		envMgr.setConfig(pConfig);
+		envMgr.loadEnvironment("environment.xml");
 
     }
     catch (ParseException &e)

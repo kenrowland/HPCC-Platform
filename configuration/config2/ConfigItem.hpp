@@ -27,6 +27,25 @@
 #include "CfgValue.hpp"
 
 
+// this should be replaced with a generic environment item class
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/xml_parser.hpp>
+
+
+//
+// hpcc:class - what the item is
+//              component - represents something that is configurable, addable, deletable, etc
+//              category  - represents a hierarchial grouping in the configuration. A real deliniation (Hardware, Software)
+//
+// hpcc:category - Meaning differs based on class
+//                 component - value is used to group together components into logical functional groups (esp services, logging agents, etc.) 
+//                             does not represent a real division, a logical division
+
+
+
+namespace pt = boost::property_tree;
+
+
 class ConfigItemValueSet;
 
 
@@ -36,7 +55,7 @@ class ConfigItem
 
         ConfigItem(const std::string &name, const std::string &className="category", std::shared_ptr<ConfigItem> pParent=nullptr) : 
             m_className(className), m_name(name), m_pParent(pParent), m_displayName(name), 
-            m_minInstances(1), m_maxInstances(1)  { }
+            m_minInstances(1), m_maxInstances(1), m_isConfigurable(false), m_version(-1)  { }
         virtual ~ConfigItem() { }
 
         virtual const std::string &getClassName() const { return m_className; }
@@ -61,19 +80,26 @@ class ConfigItem
         virtual const std::shared_ptr<CfgType> getType(const std::string &typeName);
         std::shared_ptr<CfgLimits> getStandardTypeLimits(const std::string &typeName) const;
 
-        // virtual void addValueToValueSetType(const std::shared_ptr<CfgValue> &pValue, const std::string &setName);
-        // virtual void addConfigValueSetType(const std::shared_ptr<ConfigItemValueSet> &pValueSet);
-        // virtual void addConfigValue(const std::shared_ptr<CfgValue> &pValue) { m_configValues.push_back(pValue); };
-        // virtual void addConfigValue(const std::vector<std::shared_ptr<CfgValue>> &configValues);
+		void setVersion(int version) { m_version = version;  }
+		int getVersion() const { return m_version; }
 
-        virtual void addConfigType(const std::shared_ptr<ConfigItem> &pItem);  
+        virtual void addConfigType(const std::shared_ptr<ConfigItem> &pItem, const std::string &typeName);
         virtual const std::shared_ptr<ConfigItem> &getConfigType(const std::string &name) const;
 
-        virtual void addChild(const std::shared_ptr<ConfigItem> &pItem) { m_children.push_back(pItem); }
+        virtual void addChild(const std::shared_ptr<ConfigItem> &pItem) { m_cfgChildren[pItem->getName()] = pItem; }
+		virtual const std::map<std::string, std::shared_ptr<ConfigItem>> &getChildren() const { return m_cfgChildren;  }
+		template<typename T> std::shared_ptr<T> getChild(const std::string &name) const;
         virtual void setItemCfgValue(const std::shared_ptr<CfgValue> &pValue) { m_pValue = pValue; }
         virtual std::shared_ptr<CfgValue> getItemCfgValue() const { return m_pValue; }
+		virtual void addAttribute(const std::shared_ptr<CfgValue> &pCfgValue);
+		virtual void addAttribute(const std::vector<std::shared_ptr<CfgValue>> &attributes);
+		virtual std::shared_ptr<CfgValue> getAttribute(const std::string &name) const;
 
         virtual bool addKey(const std::string keyName);
+
+		//virtual void addEnvironmentInstance(const std::shared_ptr<EnvInstanceBase> &pInstance) { m_envInstances.push_back(pInstance); }
+
+		bool isConfigurable() const { return m_isConfigurable; }
 
 
     protected:
@@ -85,19 +111,22 @@ class ConfigItem
         std::string m_displayName;
         std::string m_className;
         std::string m_category;  // used for further subdividing to the user
-        std::vector<std::shared_ptr<ConfigItem>> m_children;
-        std::shared_ptr<CfgValue> m_pValue;   // value for this itme (think of it as the value for an element <xx attr= att1=>value</xx>)
+		bool m_isConfigurable;
+        std::map<std::string, std::shared_ptr<ConfigItem>> m_cfgChildren; 
+        std::shared_ptr<CfgValue> m_pValue;   // value for this itme (think of it as the VALUE for an element <xx attr= att1=>VALUE</xx>)
+		std::map<std::string, std::shared_ptr<CfgValue>> m_attributes;   // attributes for this item (thin in xml terms <m_name attr1="val" attr2="val" .../> where attrN is in this vector
         std::set<std::string> m_keys;   // generic set of key values for use by any component to prevent duplicat operations
         std::weak_ptr<ConfigItem> m_pParent;
 
         std::map<std::string, std::shared_ptr<CfgType>> m_types;
         std::map<std::string, std::shared_ptr<ConfigItem>> m_configTypes;                // reusable types
-        //std::map<std::string, std::shared_ptr<ConfigItemValueSet>> m_valueSetTypes;      // in XSD terms, an attribute group that can be referenced
         
-        //std::vector<std::shared_ptr<ConfigItemValueSet>> m_valueSets;   // for a component this is the set of attributes by element
+
+		//std::vector<std::shared_ptr<EnvInstanceBase>> m_envInstances;
 
         int m_minInstances;
         int m_maxInstances;
+		int m_version;
         
 
     private:
@@ -107,5 +136,14 @@ class ConfigItem
 
 };
 
+
+template<typename T> std::shared_ptr<T> ConfigItem::getChild(const std::string &name) const
+{
+	std::shared_ptr<T> pItem;
+	auto it = m_cfgChildren.find(name);
+	if (it != m_cfgChildren.end())
+		pItem = std::dynamic_pointer_cast<T>(it->second);
+	return pItem;
+}
 
 #endif // _CONFIG2_CONFIGITEM_HPP_

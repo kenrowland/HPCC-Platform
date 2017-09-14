@@ -23,7 +23,7 @@
 "type" : {
     "name" : "typeName",
     "limits" : { },         // limits object
-    "modifiesrs" : [ ]      // array of modifers that limit or control how the UI interacts with the user with respec to the value
+    "modifiers" : [ ]       // array of modifers that limit or control how the UI interacts with the user with respec to the value
                             //   defined modifiers:
                             //     "mask"   - input value shall be masked (like a password)
                             //     "verify" - input value should be verified (enter twice)

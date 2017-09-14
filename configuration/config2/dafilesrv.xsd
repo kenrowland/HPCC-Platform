@@ -24,8 +24,7 @@
                             </xs:complexType>
                         </xs:element>
                     </xs:sequence>
-                    <xs:attribute name="build" type="xs:string" use="required" hpcc:hidden="true" hpcc:tooltip="The build name to be deployed"/>
-                    <xs:attribute name="buildSet" type="xs:string" use="required" hpcc:hidden="true"/>
+                    <xs:attributeGroup ref="buildInfo"/>
                     <xs:attribute name="name" type="xs:string" use="required" hpcc:tooltip="Name for this process"/>
                     <xs:attribute name="description" type="xs:string" use="optional" default="DaFileSrv process" hpcc:tooltip="Description for this process"/>
                     <xs:attribute name="version" type="xs:string" use="optional" default="1" hpcc:tooltip="Version identifier used to select which process will be started"/>

@@ -1,0 +1,65 @@
+/*##############################################################################
+
+HPCC SYSTEMS software Copyright (C) 2015 HPCC Systems®.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+############################################################################## */
+
+#ifndef _CONFIG2_ENVVALUE_HPP_
+#define _CONFIG2_ENVVALUE_HPP_
+
+#include <string>
+#include "CfgValue.hpp"
+
+class EnvValue
+{
+	public:
+		EnvValue() { }
+		~EnvValue() { }
+		void setValue(const std::string &value) { m_value = value;  }
+		const std::string &getValue() const { return m_value;  }
+		void setCfgValue(const std::shared_ptr<CfgValue> &pCfgValue) { m_pCfgValue = pCfgValue;  }
+		const std::shared_ptr<CfgValue> &getCfgValue() const { return m_pCfgValue;  }
+
+	private:
+
+		std::string m_value;
+		std::shared_ptr<CfgValue> m_pCfgValue;   // may be empty for non-config defined attributes
+};
+
+
+// EnvValue class for passthru type config data?
+// maybe an environent node instead
+
+
+// look into using a variant later
+
+//template <typename T> class EnvValue<T> : public EnvValue
+//{
+//	public:
+//
+//		EnvValue() { }
+//		~EnvValue() { }
+//		void setValue(T &val) { m_val = val;  }
+//		virtual T getValue() const { return m_val;  }
+//
+//
+//
+//	private:
+//
+//		T m_val;
+//
+//};
+
+
+#endif
