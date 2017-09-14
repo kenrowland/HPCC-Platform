@@ -3,14 +3,14 @@
     xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" attributeFormDefault="unqualified" 
     xmlns:hpcc="someuri">
     <xs:include schemaLocation="types.xsd"/>
-    <xs:attributeGroup name="executionSettings">
-        <xs:attribute name="parallelRequestLimit" type="percent" use="optional" default="20" hpcc:tooltip="Defines the maximum number of concurrent dafilesrv requests allowed. Requests that exceed the limit will be delayed. A value of 0 disables throttling. Overrides global settting."/>
-        <xs:attribute name="throttleDelayMs" type="xs:nonNegativeInteger" use="optional" default="5000" hpcc:tooltip="Defines how many milliseconds delayed requests will be delayed by. Overrides global settting."/>
-        <xs:attribute name="throttleCPULimit" type="xs:nonNegativeInteger" use="optional" default="75" hpcc:tooltip="f after the initial delay, the CPU % falls below this setting, the transaction will be allowed to continue, i.e. the limit can be exceeded this way. Overrides global settting."/>
-    </xs:attributeGroup>
-    <xs:complexType name="dafileserv" hpcc:class="component" hpcc:category="espporocess" hpcc:displayName="Da File serve Process">
+    <xs:complexType hpcc:class="component" hpcc:category="espporocess" hpcc:displayName="Da File serve Process">
+        <xs:attributeGroup name="executionSettings">
+            <xs:attribute name="parallelRequestLimit" type="percent" use="optional" default="20" hpcc:tooltip="Defines the maximum number of concurrent dafilesrv requests allowed. Requests that exceed the limit will be delayed. A value of 0 disables throttling. Overrides global settting."/>
+            <xs:attribute name="throttleDelayMs" type="xs:nonNegativeInteger" use="optional" default="5000" hpcc:tooltip="Defines how many milliseconds delayed requests will be delayed by. Overrides global settting."/>
+            <xs:attribute name="throttleCPULimit" type="xs:nonNegativeInteger" use="optional" default="75" hpcc:tooltip="if after the initial delay, the CPU % falls below this setting, the transaction will be allowed to continue, i.e. the limit can be exceeded this way. Overrides global settting."/>
+        </xs:attributeGroup>
         <xs:sequence>
-            <xs:element name="DaFileSrvProcess" hpcc:docid="daFs.t">
+            <xs:element name="dafilesrv" hpcc:docid="daFs.t">
                 <xs:annotation>
                     <xs:documentation>Describes an DFUFileSrv installation</xs:documentation>
                 </xs:annotation>
