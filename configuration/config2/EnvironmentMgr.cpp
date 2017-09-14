@@ -60,7 +60,6 @@ std::map<std::string, std::shared_ptr<EnvValue>> EnvironmentMgr::getValues(const
 
 	std::shared_ptr<EnvironmentNode> pNode = pathIt->second;
 	return pNode->getValues();
-
 }
 
 

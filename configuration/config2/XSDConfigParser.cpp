@@ -33,8 +33,9 @@ bool XSDConfigParser::doParse(const std::string &envFilename)
     {
         parseXSD(envFilename);
     }
-    catch (ParseException &e)
+    catch (...)
     {
+		// need to return the message somehow here
         rc = false;
     }
     // pt::ptree xsdTree;
@@ -86,7 +87,7 @@ void XSDConfigParser::parseXSD(const std::string &filename)
 	}
     catch (std::exception &e)
     {
-        throw(ParseException("Input configuration file is not valid"));
+        throw(ParseException("Input configuration file is not valid: " + *e.what()));
     }
 }
 

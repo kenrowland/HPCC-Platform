@@ -33,8 +33,6 @@ class EnvironmentMgr
 		void setConfig(const std::shared_ptr<ConfigItem> &pConfig) { m_pConfig = pConfig; }
 		virtual bool loadEnvironment(const std::string &file);  // return some error code,or a get last error type of call?
 
-		void addPath(const std::string &pathName, const std::shared_ptr<EnvironmentNode> pNode);
-
 		std::vector<std::shared_ptr<EnvironmentNode>> getElements(const std::string &path);
 		std::map<std::string, std::shared_ptr<EnvValue>> getValues(const std::string &path);
 
@@ -44,6 +42,7 @@ class EnvironmentMgr
 	protected:
 
 		std::string getUniqueKey();
+		void addPath(const std::string &pathName, const std::shared_ptr<EnvironmentNode> pNode);
 		virtual bool load(std::istream &in) = 0;
 
 
