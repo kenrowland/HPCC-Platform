@@ -26,7 +26,7 @@ class CfgValue
 {
     public:
 
-        CfgValue(const std::string &name) : m_name(name), m_displayName(name), m_required(true), m_readOnly(false), m_hidden(false), m_defaultSet(false), m_deprecated(false) { }
+        CfgValue(const std::string &name) : m_name(name), m_displayName(name), m_required(true), m_readOnly(false), m_hidden(false), m_defaultSet(false), m_deprecated(false), m_forceOutput(true) { }
         virtual ~CfgValue() { }
         void setType(const std::shared_ptr<CfgType> &pType);
         const std::string &getName() const { return m_name; }
@@ -45,6 +45,8 @@ class CfgValue
         bool isHidden() const { return m_hidden; }
 		void setDeprecated(bool deprecated) { m_deprecated = deprecated; }
 		bool isDeprecated() const { return m_deprecated; }
+		void setForceOutput(bool force) { m_forceOutput = force; }
+		bool isForceOutput() const { return m_forceOutput;  }
         void setToolTip(const std::string &toolTip) { m_toolTip = toolTip; }
         const std::string &getToolTip() const { return m_toolTip; }
 
@@ -59,6 +61,7 @@ class CfgValue
         bool m_hidden;
 		bool m_defaultSet;
 		bool m_deprecated;
+		bool m_forceOutput;
         std::string m_default;
         std::string m_toolTip;
 

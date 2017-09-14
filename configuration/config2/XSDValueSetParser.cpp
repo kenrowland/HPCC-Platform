@@ -60,10 +60,21 @@ void XSDValueSetParser::parseAttribute(const pt::ptree &attr)
     std::shared_ptr<CfgValue> pCfgValue = std::make_shared<CfgValue>(attrName);
     pCfgValue->setDisplayName(attr.get("<xmlattr>.hpcc:displayName", attrName));
     pCfgValue->setRequired(use == "required");
-    pCfgValue->setDefault(attr.get("<xmlattr>.default", ""));
+    pCfgValue->setForceOutput(attr.get("<xmlattr>.forceOutput", true));
     pCfgValue->setToolTip(attr.get("<xmlattr>.hpcc:tooltip", ""));
     pCfgValue->setReadOnly(attr.get("<xmlattr>.hpcc:readOnly", "false") == "true");
     pCfgValue->setHidden(attr.get("<xmlattr>.hpcc:hidden", "false") == "true");
+
+	try
+	{
+		std::string defaultValue = getXSDAttributeValue(attr, "<xmlattr>.default");
+		pCfgValue->setDefault(defaultValue);
+	}
+	catch (ParseException &e)
+	{
+		// don't do anything, no default found
+	}
+
 
     std::string typeName = attr.get("<xmlattr>.type", "");
     if (typeName != "")
