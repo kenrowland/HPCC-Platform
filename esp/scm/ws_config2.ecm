@@ -47,18 +47,6 @@ ESPstruct typeInfo
 };
 
 
-ESPstruct elementDataType
-{
-    int   numAllowedInstances(0);
-    int   numRequiredInstances(0);
-    ESPstruct typeInfo type;
-    string currentValue("");
-    string defaultValue("");
-    bool   required(true);
-    bool   readonl(false);
-};
-
-
 ESPstruct docType
 {
     string tooltip("");
@@ -66,15 +54,37 @@ ESPstruct docType
 };
 
 
-ESPstruct elementType
+ESPstruct itemInfoType
 {
     string    name("");
     string    displayName("");
+    string    status("ok");
+};
+
+
+ESPstruct elementType
+{
+    ESPstruct itemInfoType itemInfo;
     string    class("");
     string    path("");
     ESPstruct docType doc;
     int       numChildren(0);
-    ESPstruct elementDataType elementData;
+    int   numAllowedInstances(0);
+    int   numRequiredInstances(0);
+};
+
+
+ESPstruct attributeType
+{
+    ESPstruct  itemInfoType itemInfo;
+    ESPstruct docType doc;
+    ESPstruct  typeInfo type;
+    string currentValue("");
+    string defaultValue("");
+    bool   defaultProvided(false);
+    bool   required(true);
+    bool   readonl(false);
+    bool   forceOut(false);
 };
 
 
@@ -90,6 +100,7 @@ ESPresponse [exceptions_inline, encode(0)] GetPathResponse
 {
     string status("error");
     string inputPath;
+    ESParray<ESPstruct attributeType, attribute> attributes;
     ESParray<ESPstruct elementType, element> elements;
 };
 
