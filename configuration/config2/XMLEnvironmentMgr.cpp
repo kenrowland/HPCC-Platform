@@ -59,6 +59,10 @@ void XMLEnvironmentMgr::parse(const pt::ptree &envTree, const std::shared_ptr<Co
 			{
 				std::shared_ptr<EnvValue> pEnvValue = std::make_shared<EnvValue>();   // this is where we would use a variant
 				std::shared_ptr<CfgValue> pCfgValue = pConfigItem->getAttribute(attrIt->first);
+				if (!pCfgValue)
+				{
+					pEnvNode->addStatus(NodeStatus::warning, "Attribute " + attrIt->first + " not defined in configuration schema, unable to validate value.");
+				}
 				pEnvValue->setCfgValue(pCfgValue);
 				pEnvValue->setValue(attrIt->second.get_value<std::string>());
 				//pEnvNode->addInt(4, 5);
@@ -67,7 +71,22 @@ void XMLEnvironmentMgr::parse(const pt::ptree &envTree, const std::shared_ptr<Co
 		}
 		else
 		{
-			std::shared_ptr<ConfigItem> pEnvConfig = pConfigItem->getChild<ConfigItem>(elemName);
+			std::string typeName = it->second.get("<xmlattr>.buildSet", "");
+			std::shared_ptr<ConfigItem> pEnvConfig;
+			if (typeName != "")
+			{
+				pEnvConfig = pConfigItem->getChild<ConfigItem>(typeName);
+				if (!pEnvConfig)
+				{
+					pEnvNode->addStatus(NodeStatus::warning, "Specified schema " + typeName + " was not found");
+				}
+			}
+			else
+			{
+				pEnvConfig = pConfigItem->getChild<ConfigItem>(elemName);
+			}
+
+			
 			if (pEnvConfig)
 			{
 				std::shared_ptr<EnvironmentNode> pElementNode = std::make_shared<EnvironmentNode>(pEnvConfig, elemName, pEnvNode);
@@ -83,3 +102,4 @@ void XMLEnvironmentMgr::parse(const pt::ptree &envTree, const std::shared_ptr<Co
 		}
 	}
 }
+

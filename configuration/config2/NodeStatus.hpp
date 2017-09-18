@@ -15,15 +15,36 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ############################################################################## */
 
-#ifndef _CONFIG2_CONFIGMGR_HPP_
-#define _CONFIG2_CONFIGMGR_HPP_
+#ifndef _CONFIG2_NODESTATUS_HPP_
+#define _CONFIG2_NODESTATUS_HPP_
 
-enum nodeStatus
+#include <map>
+
+class NodeStatus
 {
-	ok,
-	warning,
-	error
-};
+	public:
+		
+		enum nodeStatus
+		{
+			ok,
+			warning,
+			error,
+			fatal
+		};
 
+		NodeStatus() : m_highestStatus(ok) { }
+		~NodeStatus() {}
+		void addStatus(nodeStatus status, const std::string &msg);
+		nodeStatus getStatus() const { return m_highestStatus; }
+		std::string getStatusString(nodeStatus status) const;
+		void clearStatus() { m_highestStatus = ok;  m_messages.clear(); }
+
+
+	private:
+
+		nodeStatus m_highestStatus;
+		std::multimap<nodeStatus, std::string> m_messages;
+
+};
 
 #endif

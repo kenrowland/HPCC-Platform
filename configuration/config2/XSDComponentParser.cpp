@@ -68,8 +68,8 @@ void XSDComponentParser::parseXSD(const pt::ptree &compTree)
         pt::ptree elemTree = compTree.get_child("xs:sequence.xs:element", pt::ptree());
         if (!elemTree.empty())
         {
-            std::string componentName = getXSDAttributeValue(elemTree, "<xmlattr>.name");
-            m_pConfig->setName(componentName);
+            std::string elementName = getXSDAttributeValue(elemTree, "<xmlattr>.name");
+            m_pConfig->setName(elementName);
             m_pConfig->setMinInstances(elemTree.get("<xmlattr>.minOccurs", 1));
             m_pConfig->setMaxInstances(elemTree.get("<xmlattr>.maxOccurs", "1"));
 

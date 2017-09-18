@@ -233,7 +233,7 @@ void XSDConfigParser::parseComplexType(const pt::ptree &typeTree)
             {
                 std::shared_ptr<XSDComponentParser> pComponentXSDParaser = std::make_shared<XSDComponentParser>(m_basePath, std::dynamic_pointer_cast<ConfigItem>(pComponent));
                 pComponentXSDParaser->parseXSD(componentTree); 
-                m_pConfig->addConfigType(pComponent, pComponent->getName());
+                m_pConfig->addConfigType(pComponent, complexTypeName);
             }
             else
             {
@@ -317,63 +317,6 @@ void XSDConfigParser::parseElement(const pt::ptree &elemTree)
 		pConfigElement->setMinInstances(elemTree.get("<xmlattr>.minOccurs", 1));
 		pConfigElement->setMaxInstances(elemTree.get("<xmlattr>.maxOccurs", "1"));
 		m_pConfig->addChild(pConfigElement);  
-
-
-		/*pXSDParaser->parseXSD(childTree);
-		m_pConfig->addChild(pConfigItem);*/
-
-
-        //
-        // If this element has a type, then it will contain data. Pull the type 
-        // elemTree.get_child("xs:complexType", pt::ptree()) not empty
-        // typeName != ""
-        // then give m_pConfig a value (cfgvalue)
-   //     if (typeName != "")
-   //     {
-   //         std::shared_ptr<CfgValue> pCfgValue = std::make_shared<CfgValue>("");  // a no name value becuase it belongs to the element
-   //         pCfgValue->setType(m_pConfig->getType(typeName));
-   //         m_pConfig->setItemCfgValue(pCfgValue);
-   //     }
-   //     else 
-   //     {
-			////
-			//// Look for a simpleType or complexType subtree
-			//pt::ptree simpleTree = elemTree.get_child("xs:simpleType", pt::ptree());
-			//pt::ptree complexTree = elemTree.get_child("xs:complexType", pt::ptree());
-			//if (!simpleTree.empty())
-			//{
-			//	std::shared_ptr<CfgType> pCfgType = getCfgType(simpleTree, true);
-			//	std::shared_ptr<CfgValue> pCfgValue = std::make_shared<CfgValue>("");  // a no name value becuase it belongs to the element
-			//	pCfgValue->setType(pCfgType);
-			//	m_pConfig->setItemCfgValue(pCfgValue);
-			//}
-			//else if (!complexTree.empty())
-			//{
-			//	parseComplexType(complexTree);
-			//}
-
-   //         //std::shared_ptr<CfgType> pType = getCfgType(elemTree.get_child("xs:simpleType", pt::ptree()), false);
-   //         //if (pType->isValid())
-   //         //{
-   //         //    std::shared_ptr<CfgValue> pCfgValue = std::make_shared<CfgValue>("");  // a no name value becuase it belongs to the element
-   //         //    pCfgValue->setType(pType);
-   //         //    m_pConfig->setItemCfgValue(pCfgValue);
-   //         //}
-   //         //else 
-   //         //{
-   //         //    throw(new ParseException("Invalid type for element " + elementName));
-   //         //}
-   //     }
-
-
-   //     std::shared_ptr<ConfigItemValueSet> pValueSet = std::make_shared<ConfigItemValueSet>(elementName, m_pConfig);  
-   //     pValueSet->setDisplayName(displayName);
-   //     pValueSet->setMinInstances(elemTree.get("<xmlattr>.minOccurs", 1));
-   //     pValueSet->setMaxInstances(elemTree.get("<xmlattr>.maxOccurs", "1"));
-   //     std::shared_ptr<ConfigItem> pConfigItem = std::dynamic_pointer_cast<ConfigItem>(pValueSet);
-   //     std::shared_ptr<XSDValueSetParser> pValueSetXSDParaser = std::make_shared<XSDValueSetParser>(m_basePath, pConfigItem);
-   //     pValueSetXSDParaser->parseXSD(elemTree.get_child("xs:complexType", pt::ptree())); 
-   //     m_pConfig->addChild(pValueSet);
     }
     else if (refName != "")
     {
@@ -389,6 +332,20 @@ void XSDConfigParser::parseElement(const pt::ptree &elemTree)
             throw(new ParseException("Element reference is not a compoenent: " + refName));
         }
     }
+	else if (typeName != "")
+	{
+		std::shared_ptr<ConfigItem> pConfigItem = m_pConfig->getConfigType(typeName);
+		std::shared_ptr<ConfigItemComponent> pComponent = std::dynamic_pointer_cast<ConfigItemComponent>(pConfigItem);
+		if (pComponent)
+		{
+			std::shared_ptr<ConfigItemComponent> pComponentCopy = std::make_shared<ConfigItemComponent>(*pComponent);
+			m_pConfig->addChild(pComponentCopy, typeName);
+		}
+		else
+		{
+			throw(new ParseException("Element reference is not a compoenent: " + typeName));
+		}
+	}
     else
     {
         throw(new ParseException("Only component elements are supported at the top level"));

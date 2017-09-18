@@ -15,25 +15,27 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ############################################################################## */
 
-#include "EnvValue.hpp"
 
-void EnvValue::setValue(const std::string &value, bool force) 
-{ 
-	clearStatus();  // always clear the status since in can only be sigular
-	if (m_pCfgValue)
+#include "NodeStatus.hpp"
+
+
+void NodeStatus::addStatus(nodeStatus status, const std::string &msg)
+{
+	m_messages.insert({ status, msg });
+	if (status > m_highestStatus)
+		m_highestStatus = status;
+}
+
+
+std::string NodeStatus::getStatusString(nodeStatus status) const
+{
+	std::string result = "Not found";
+	switch (status)
 	{
-		if (m_pCfgValue->isValueValid(value))
-		{
-			m_value = value;
-		}
-		else if (force)
-		{
-			m_value = value;
-			addStatus(error, "Value is not valid");
-		}
+		case ok:      result = "Ok";       break;
+		case warning: result = "Warning";  break;
+		case error:   result = "Error";    break;
+		case fatal:   result = "Fatal";    break;
 	}
-	else
-	{
-		m_value = value;
-	}
+	return result;
 }

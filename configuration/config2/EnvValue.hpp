@@ -20,23 +20,21 @@ limitations under the License.
 
 #include <string>
 #include "CfgValue.hpp"
-#include "ConfigMgr.hpp"
+#include "NodeStatus.hpp"
 
-class EnvValue
+class EnvValue : public NodeStatus
 {
 	public:
 		EnvValue() { }
 		~EnvValue() { }
-		void setValue(const std::string &value) { m_value = value;  }
+		void setValue(const std::string &value, bool force=false);
 		const std::string &getValue() const { return m_value;  }
 		void setCfgValue(const std::shared_ptr<CfgValue> &pCfgValue) { m_pCfgValue = pCfgValue;  }
 		const std::shared_ptr<CfgValue> &getCfgValue() const { return m_pCfgValue;  }
-		nodeStatus getStatus() const { return m_status;  }
-		void setStatus(nodeStatus status) { m_status = status; }
+	
 
 	private:
 
-		nodeStatus m_status;
 		std::string m_value;
 		std::shared_ptr<CfgValue> m_pCfgValue;   // may be empty for non-config defined attributes
 };

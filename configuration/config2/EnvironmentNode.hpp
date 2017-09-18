@@ -23,25 +23,24 @@ limitations under the License.
 #include "ConfigItem.hpp"
 #include "EnvValue.hpp"
 #include "CfgValue.hpp"
-#include "ConfigMgr.hpp"
+#include "NodeStatus.hpp"
 
-class EnvironmentNode //: std::enable_shared_from_this<EnvironmentNode>
+class EnvironmentNode : public NodeStatus
 {
 	public:
 
 		EnvironmentNode(const std::shared_ptr<ConfigItem> &pCfgItem, const std::string &elemName, const std::shared_ptr<EnvironmentNode> &pParent = nullptr) : 
-			m_pConfigItem(pCfgItem), m_elementName(elemName), m_pParent(pParent), m_status(ok) { }
+			m_pConfigItem(pCfgItem), m_elementName(elemName), m_pParent(pParent) { }
 		~EnvironmentNode() { }
 		const std::string &getNodeName() const { return m_elementName;  }
 		void addSubNode(std::shared_ptr<EnvironmentNode> pNode);
 		std::vector<std::shared_ptr<EnvironmentNode>> getElements() const;
 		void addAttribute(const std::string &name, std::shared_ptr<EnvValue> pValue);
+		std::shared_ptr<EnvValue> &getAttribute(const std::string &name);
 		std::map<std::string, std::shared_ptr<EnvValue>> getAttributes() const { return m_attributes; }
 		bool hasAttributes() const { return m_attributes.size() != 0; }
 		void setPath(const std::string &path) { m_path = path; } 
 		const std::string &getPath() const { return m_path;  }
-		nodeStatus getStatus() const { return m_status; }
-		void setStatus(nodeStatus status) { m_status = status;  }
 		const std::string &getMessage() const { return m_msg; }
 		void setMessage(const std::string &msg) { m_msg = msg; }
 
@@ -49,7 +48,6 @@ class EnvironmentNode //: std::enable_shared_from_this<EnvironmentNode>
 
 	protected:
 
-		nodeStatus m_status;
 		std::string m_msg;           // error or warning message
 		std::string m_elementName;   
 		std::shared_ptr<ConfigItem> m_pConfigItem;

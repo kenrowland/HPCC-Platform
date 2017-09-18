@@ -87,6 +87,7 @@ class ConfigItem
         virtual const std::shared_ptr<ConfigItem> &getConfigType(const std::string &name) const;
 
         virtual void addChild(const std::shared_ptr<ConfigItem> &pItem) { m_cfgChildren[pItem->getName()] = pItem; }
+		virtual void addChild(const std::shared_ptr<ConfigItem> &pItem, const std::string &name) { m_cfgChildren[name] = pItem; }
 		virtual const std::map<std::string, std::shared_ptr<ConfigItem>> &getChildren() const { return m_cfgChildren;  }
 		template<typename T> std::shared_ptr<T> getChild(const std::string &name) const;
         virtual void setItemCfgValue(const std::shared_ptr<CfgValue> &pValue) { m_pValue = pValue; }
