@@ -59,31 +59,14 @@ Response: {
             "path": ".sw.esp",
             "doc": {
                 "tooltip": "Click to expand or add to the list of ESP Processes",
-
-                "msg": ""
+                "msg": "A duplicate ESP name <name> was detected"
             },
 			"status" : "error"
             "children": 2,
-            "elementData": {
-                "allowedInstances": 0,
-                "requiredInstances": 1,
-                "type": {
-                    "name": "esp",
-                    "limits": {
-                        "min": 0,
-                        "max": 0,
-                        "allowList": [],
-                        "disallowList" [],
-                        "regex": []
-                    },
-                    "modifiers": []
-                },
-                "currentValue": "",
-                "defaultValue": "",
-                "required": true,
-                "readonly": false,
-            }
+            "allowedInstances": 0,
+            "requiredInstances": 1
         },
+		
         {
             "name": "dropzones",
             "displayName": "Drop Zones",
@@ -93,26 +76,10 @@ Response: {
                 "tooltip": "Click to expand and add to the current list of drop zones",
                 "msg": ""
             },
+			"status" : "ok",
             "children": 2,
-            "elementData": {
-                "allowedInstances": 0,
-                "requiredInstances": 1,
-                "type": {
-                    "name": "",
-                    "limits": {
-                        "min": 0,
-                        "max": 0,
-                        "allowList": [],
-                        "disallowList" [],
-                        "regex": []
-                    },
-                    "modifiers": []
-                },
-                "currentValue": "",
-                "defaultValue": "",
-                "required": true,
-                "readonly": false,
-            }
+            "allowedInstances": 0,
+            "requiredInstances": 1
         },
 
         {
@@ -124,26 +91,10 @@ Response: {
                 "tooltip": "Click to expand and add to the current list of loggin agents",
                 "msg": ""
             },
+			"status" : "ok",
             "children": 0,
-            "elementData": {
-                "allowedInstances": 0,
-                "requiredInstances": 0,
-                "type": {
-                    "name": "",
-                    "limits": {
-                        "min": 0,
-                        "max": 0,
-                        "allowList": [],
-                        "disallowList" [],
-                        "regex": []
-                    },
-                    "modifiers": []
-                },
-                "currentValue": "",
-                "defaultValue": "",
-                "required": false,
-                "readonly": false,
-            }
+            "allowedInstances": 0,
+            "requiredInstances": 0
         },
 
         {
@@ -155,26 +106,10 @@ Response: {
                 "tooltip": "Click to expand and add to the current list of loggin agents",
                 "msg": ""
             },
+			"status" : "ok",
             "children": 2,
-            "elementData": {
-                "allowedInstances": 0,
-                "requiredInstances": 0,
-                "type": {
-                    "name": "",
-                    "limits": {
-                        "min": 0,
-                        "max": 0,
-                        "allowList": [],
-                        "disallowList" [],
-                        "regex": []
-                    },
-                    "modifiers": []
-                },
-                "currentValue": "",
-                "defaultValue": "",
-                "required": true,
-                "readonly": false,
-            }
+            "allowedInstances": 0,
+            "requiredInstances": 0
         }
     ]
 }
@@ -194,27 +129,12 @@ Response: {
                 "tooltip": "Click to view an configure this component",
                 "msg": ""
             },
+			"status" : "ok",
             "children": 2,
-            "elementData": {
-                "allowedInstances": 0,
-                "requiredInstances": 0,
-                "type": {
-                    "name": "",
-                    "limits": {
-                        "min": 0,
-                        "max": 0,
-                        "allowList": [],
-                        "disallowList" [],
-                        "regex": []
-                    },
-                    "modifiers": []
-                },
-                "currentValue": "",
-                "defaultValue": "",
-                "required": true,
-                "readonly": false,
-            }
+            "allowedInstances": 0,
+            "requiredInstances": 0
         },
+		
         {
             "name": "esp2",
             "displayName": "esp2",
@@ -224,26 +144,10 @@ Response: {
                 "tooltip": "Click to view an configure this component",
                 "msg": ""
             },
+			"status" : "ok",
             "children": 2,
-            "elementData": {
-                "allowedInstances": 0,
-                "requiredInstances": 0,
-                "type": {
-                    "name": "",
-                    "limits": {
-                        "min": 0,
-                        "max": 0,
-                        "allowList": [],
-                        "disallowList" [],
-                        "regex": []
-                    },
-                    "modifiers": []
-                },
-                "currentValue": "",
-                "defaultValue": "",
-                "required": true,
-                "readonly": false,
-            }
+            "allowedInstances": 0,
+            "requiredInstances": 0
         }
     ]
 }
@@ -253,105 +157,32 @@ Get(".sw.esp.esp1")
 
 Response: {
     "status": "ok",
-    "elements": [
-        {
-            "name": "attributes",
-            "displayName": "Attributes",
-            "class": "valueSet",
-            "path": ".sw.esp.esp1.attributes",
-            "doc": {
-                "tooltip": "Click to configure this component",
-                "msg": ""
-            },
-            "children": 3,
-            "elementData": {
-                "allowedInstances": 0,
-                "requiredInstances": 0,
-                "type": {
-                    "name": "",
-                    "limits": {
-                        "min": 0,
-                        "max": 0,
-                        "allowList": [],
-                        "disallowList" [],
-                        "regex": []
-                    },
-                    "modifiers": []
-                },
-                "currentValue": "",
-                "defaultValue": "",
-                "required": true,
-                "readonly": false,
-            }
-        },
-        {
-            "name": "instances",
-            "displayName": "Instnces (Bindings)",
-            "class": "instanceSet",
-            "path": ".sw.esp.esp2.instances",
-            "doc": {
-                "tooltip": "Click to view and configure bindings for this ESP",,
-                "msg": ""
-            },
-            "children": 3,
-            "elementData": {
-                "allowedInstances": 0,
-                "requiredInstances": 1,
-                "type": {
-                    "name": "",
-                    "limits": {
-                        "min": 0,
-                        "max": 0,
-                        "allowList": [],
-                        "disallowList" [],
-                        "regex": []
-                    },
-                    "modifiers": []
-                },
-                "currentValue": "",
-                "defaultValue": "",
-                "required": true,
-                "readonly": false,
-            }
-        }
-    ]
-}
-
-
-Get(".sw.esp.esp1.attributes")
-
-Response: {
-    "status": "ok",
-    "elements": [
-        {
+	"values" : [
+		{
             "name": "name",
             "displayName": "Name",
-            "class": "value",
-            "path": ".sw.esp.esp1.attributes.name",
             "doc": {
                 "tooltip": "Name for this ESP Service",
                 "msg": ""
             },
-            "children": 0,
-            "elementData": {
-                "allowedInstances": 0,
-                "requiredInstances": 0,
-                "type": {
-                    "name": "string",
-                    "limits": {
-                        "min": 1,
-                        "max": 0,
-                        "allowList": [],
-                        "disallowList" [ "esp2" ],
-                        "regex": [ "^[a-zA-Z][a-zA-Z0-9]+$" ]
-                    },
-                    "modifiers": []
+			"status": "ok",
+            "type": {
+                "name": "string",
+                "limits": {
+                    "min": 1,
+                    "max": 0,
+                    "allowList": [],
+                    "disallowList" [ "esp2" ],
+                    "regex": [ "^[a-zA-Z][a-zA-Z0-9]+$" ]
                 },
-                "currentValue": "",
-                "defaultValue": "",
-                "required": true,
-                "readonly": false,
-            }
+                "modifiers": []
+            },
+            "currentValue": "",
+            "defaultValue": "",
+			"defaultValid" : true,
+            "required": true,
+            "readonly": false,
+			"forceOut" : false
         },
         {
             "name": "description",
@@ -362,26 +193,24 @@ Response: {
                 "tooltip": "A desciption for the service",
                 "msg" : ""
             },
-            "children": 0,
-            "elementData": {
-                "allowedInstances": 0,
-                "requiredInstances": 0,
-                "type": {
-                    "name": "string",
-                    "limits": {
-                        "min": 0,
-                        "max": 0,
-                        "allowList": [],
-                        "disallowList" [],
-                        "regex": []
-                    },
-                    "modifiers": []
+			"status": "ok",
+            "type": {
+                "name": "string",
+                "limits": {
+                    "min": 0,
+                    "max": 0,
+                    "allowList": [],
+                    "disallowList" [],
+                    "regex": []
                 },
-                "currentValue": "",
-                "defaultValue": "",
-                "required": false,
-                "readonly": false,
-            }
+                "modifiers": []
+            },
+            "currentValue": "",
+            "defaultValue": "",
+			"defaultValid" : true,
+            "required": false,
+            "readonly": false,
+			"forceOut" : false
         },
         {
             "name": "password",
@@ -390,124 +219,45 @@ Response: {
             "path": ".sw.esp.esp2.attributes.password",
             "doc": {
                 "tooltip": "Password",
+				"msg"
             },
-            "children": 0,
-            "elementData": {
-                "allowedInstances": 0,
-                "requiredInstances": 0,
-                "type": {
-                    "name": "string",
-                    "limits": {
-                        "min": 8,
-                        "max": 12,
-                        "allowList": [],
-                        "disallowList" [],
-                        "regex": []
-                    },
-                    "modifiers": [ "mask", "verify"]
+            "status": "ok",
+            "type": {
+                "name": "string",
+                "limits": {
+                    "min": 8,
+                    "max": 12,
+                    "allowList": [],
+                    "disallowList" [],
+                    "regex": []
                 },
-                "currentValue": "",
-                "defaultValue": "",
-                "required": true,
-                "readonly": false,
+                "modifiers": [ "mask", "verify"]
+            },
+            "currentValue": "",
+            "defaultValue": "",
+			"defaultValid" : false,
+            "required": true,
+            "readonly": false,
+			"forceOut" : false
             }
         }
-    ]
-}
-
-
-Get(".sw.esp.esp1.instances")
-
-Response: {
-    "status": "ok",
+	],
+	
     "elements": [
         {
-            "name": "name",
-            "displayName": "Name",
-            "class": "value",
-            "path": ".sw.esp.esp1.attributes.name",
+            "name": "instances",
+            "displayName": "Instnces (Bindings)",
+            "class": "instanceSet",
+            "path": ".sw.esp.esp2.instances",
             "doc": {
-                "tooltip": "Name for this ESP Service",
+                "tooltip": "Click to view and configure bindings for this ESP",,
                 "msg": ""
             },
-            "children": 0,
-            "elementData": {
-                "allowedInstances": 0,
-                "requiredInstances": 0,
-                "type": {
-                    "name": "string",
-                    "limits": {
-                        "min": 1,
-                        "max": 0,
-                        "allowList": [],
-                        "disallowList" [ "esp2" ],
-                        "regex": [ "^[a-zA-Z][a-zA-Z0-9]+$" ]
-                    },
-                    "modifiers": []
-                },
-                "currentValue": "",
-                "defaultValue": "",
-                "required": true,
-                "readonly": false,
-            }
-        },
-        {
-            "name": "description",
-            "displayName": "Description",
-            "class": "value",
-            "path": ".sw.esp.esp2.attributes.description",
-            "doc": {
-                "tooltip": "A desciption for the service",
-            },
-            "children": 0,
-            "elementData": {
-                "allowedInstances": 0,
-                "requiredInstances": 0,
-                "type": {
-                    "name": "string",
-                    "limits": {
-                        "min": 0,
-                        "max": 0,
-                        "allowList": [],
-                        "disallowList" [],
-                        "regex": []
-                    },
-                    "modifiers": []
-                },
-                "currentValue": "",
-                "defaultValue": "",
-                "required": false,
-                "readonly": false,
-            }
-        },
-        {
-            "name": "password",
-            "displayName": "Password",
-            "class": "value",
-            "path": ".sw.esp.esp2.attributes.password",
-            "doc": {
-                "tooltip": "Password",
-            },
-            "children": 0,
-            "elementData": {
-                "allowedInstances": 0,
-                "requiredInstances": 0,
-                "type": {
-                    "name": "string",
-                    "limits": {
-                        "min": 8,
-                        "max": 12,
-                        "allowList": [],
-                        "disallowList" [],
-                        "regex": []
-                    },
-                    "modifiers": [ "mask", "verify"]
-                },
-                "currentValue": "",
-                "defaultValue": "",
-                "required": true,
-                "readonly": false,
-            }
+			"status" : "ok",
+            "children": 3,
+            "allowedInstances": 0,
+            "requiredInstances": 1
         }
     ]
 }
+

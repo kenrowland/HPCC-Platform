@@ -233,7 +233,7 @@ void XSDConfigParser::parseComplexType(const pt::ptree &typeTree)
             {
                 std::shared_ptr<XSDComponentParser> pComponentXSDParaser = std::make_shared<XSDComponentParser>(m_basePath, std::dynamic_pointer_cast<ConfigItem>(pComponent));
                 pComponentXSDParaser->parseXSD(componentTree); 
-                m_pConfig->addConfigType(pComponent, complexTypeName);
+                m_pConfig->addConfigType(pComponent, pComponent->getName());
             }
             else
             {

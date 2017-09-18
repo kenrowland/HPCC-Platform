@@ -98,8 +98,9 @@ ESPstruct valueType
 
 ESPresponse [exceptions_inline, encode(0)] GetPathResponse
 {
-    string status("error");
     string inputPath;
+	string status("error");
+	ESPstruct docType doc;
     ESParray<ESPstruct attributeType, attribute> attributes;
     ESParray<ESPstruct elementType, element> elements;
 };

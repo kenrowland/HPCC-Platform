@@ -23,32 +23,40 @@ limitations under the License.
 #include "ConfigItem.hpp"
 #include "EnvValue.hpp"
 #include "CfgValue.hpp"
+#include "ConfigMgr.hpp"
 
 class EnvironmentNode //: std::enable_shared_from_this<EnvironmentNode>
 {
 	public:
 
 		EnvironmentNode(const std::shared_ptr<ConfigItem> &pCfgItem, const std::string &elemName, const std::shared_ptr<EnvironmentNode> &pParent = nullptr) : 
-			m_pConfigItem(pCfgItem), m_elementName(elemName), m_pParent(pParent) { }
+			m_pConfigItem(pCfgItem), m_elementName(elemName), m_pParent(pParent), m_status(ok) { }
 		~EnvironmentNode() { }
 		const std::string &getNodeName() const { return m_elementName;  }
 		void addSubNode(std::shared_ptr<EnvironmentNode> pNode);
 		std::vector<std::shared_ptr<EnvironmentNode>> getElements() const;
-		void addValue(const std::string &name, std::shared_ptr<EnvValue> pValue);
-		std::map<std::string, std::shared_ptr<EnvValue>> getValues() const { return m_values; }
-		bool hasValues() const { return m_values.size() != 0; }
+		void addAttribute(const std::string &name, std::shared_ptr<EnvValue> pValue);
+		std::map<std::string, std::shared_ptr<EnvValue>> getAttributes() const { return m_attributes; }
+		bool hasAttributes() const { return m_attributes.size() != 0; }
 		void setPath(const std::string &path) { m_path = path; } 
 		const std::string &getPath() const { return m_path;  }
+		nodeStatus getStatus() const { return m_status; }
+		void setStatus(nodeStatus status) { m_status = status;  }
+		const std::string &getMessage() const { return m_msg; }
+		void setMessage(const std::string &msg) { m_msg = msg; }
+
 
 
 	protected:
 
-		std::string m_elementName;   // may also be stored in m_values, so keep synched
+		nodeStatus m_status;
+		std::string m_msg;           // error or warning message
+		std::string m_elementName;   
 		std::shared_ptr<ConfigItem> m_pConfigItem;
 		std::weak_ptr<EnvironmentNode> m_pParent;
 		std::multimap<std::string, std::shared_ptr<EnvironmentNode>> m_subNodes;
 		std::shared_ptr<CfgValue> m_nodeValue;
-		std::map<std::string, std::shared_ptr<EnvValue>> m_values;
+		std::map<std::string, std::shared_ptr<EnvValue>> m_attributes;
 		std::string m_path;
 };
 

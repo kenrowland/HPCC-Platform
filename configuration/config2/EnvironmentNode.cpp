@@ -7,9 +7,9 @@ void EnvironmentNode::addSubNode(std::shared_ptr<EnvironmentNode> pNode)
 
 
 
-void EnvironmentNode::addValue(const std::string &name, std::shared_ptr<EnvValue> pValue)
+void EnvironmentNode::addAttribute(const std::string &name, std::shared_ptr<EnvValue> pValue)
 {
-	auto retValue = m_values.insert(std::make_pair(name, pValue));
+	auto retValue = m_attributes.insert(std::make_pair(name, pValue));
 }
 
 std::vector<std::shared_ptr<EnvironmentNode>> EnvironmentNode::getElements() const

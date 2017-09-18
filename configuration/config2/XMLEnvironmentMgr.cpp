@@ -33,7 +33,8 @@ bool XMLEnvironmentMgr::load(std::istream &in)
 	if (rootName == m_pConfig->getName())
 	{
 		m_pRootNode = std::make_shared<EnvironmentNode>(m_pConfig, rootName);
-		addPath(getUniqueKey(), m_pRootNode);
+		m_pRootNode->setPath(".");
+		addPath(m_pRootNode);
 		parse(rootIt->second, m_pConfig, m_pRootNode);
 	}
 
@@ -61,7 +62,7 @@ void XMLEnvironmentMgr::parse(const pt::ptree &envTree, const std::shared_ptr<Co
 				pEnvValue->setCfgValue(pCfgValue);
 				pEnvValue->setValue(attrIt->second.get_value<std::string>());
 				//pEnvNode->addInt(4, 5);
-				pEnvNode->addValue(attrIt->first, pEnvValue);
+				pEnvNode->addAttribute(attrIt->first, pEnvValue);
 			}
 		}
 		else
@@ -70,7 +71,8 @@ void XMLEnvironmentMgr::parse(const pt::ptree &envTree, const std::shared_ptr<Co
 			if (pEnvConfig)
 			{
 				std::shared_ptr<EnvironmentNode> pElementNode = std::make_shared<EnvironmentNode>(pEnvConfig, elemName, pEnvNode);
-				addPath(getUniqueKey(), pElementNode);
+				pElementNode->setPath(getUniqueKey());
+				addPath(pElementNode);
 				parse(it->second, pEnvConfig, pElementNode);
 				pEnvNode->addSubNode(pElementNode);
 			}

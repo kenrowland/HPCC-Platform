@@ -44,6 +44,8 @@ int main()
 		envMgr.setConfig(pConfig);
 		envMgr.loadEnvironment("environment.xml");
 
+		auto results = envMgr.getNodeFromPath(".");
+
     }
     catch (ParseException &e)
     {

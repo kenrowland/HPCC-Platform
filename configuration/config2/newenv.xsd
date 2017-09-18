@@ -32,8 +32,8 @@
                 <xs:element name="Software" hpcc:class="category" hpcc:displayName="Software">
                     <xs:complexType>
                         <xs:sequence>
-                            <xs:element ref="dafilesrv"/>
-                            <xs:element ref="eclagentprocess"/>
+                            <xs:element ref="DafilesrvProcess"/>
+                            <xs:element ref="EclAgentProcess"/>
                         </xs:sequence>
                     </xs:complexType>
                 </xs:element>

@@ -31,35 +31,34 @@ bool EnvironmentMgr::loadEnvironment(const std::string &filename)
 }
 
 
-void EnvironmentMgr::addPath(const std::string &pathName, const std::shared_ptr<EnvironmentNode> pNode)
+void EnvironmentMgr::addPath(const std::shared_ptr<EnvironmentNode> pNode)
 {
-	auto retVal = m_paths.insert({pathName, pNode });
+	auto retVal = m_paths.insert({pNode->getPath(), pNode });
 	if (!retVal.second)
 	{
-		throw (new ParseException("Attempted to insert duplicate path name " + pathName + " for node "));
+		throw (new ParseException("Attempted to insert duplicate path name " + pNode->getPath() + " for node "));
 	}
 }
 
 
-std::vector<std::shared_ptr<EnvironmentNode>> EnvironmentMgr::getElements(const std::string &path)
+std::shared_ptr<EnvironmentNode> EnvironmentMgr::getElement(const std::string &path)
 {
 	auto pathIt = m_paths.find(path);
 	//if (pathIt == m_paths.end())
 	//	return;
 
-	std::shared_ptr<EnvironmentNode> pNode = pathIt->second;
-	return pNode->getElements();
+	return pathIt->second;
 }
 
 
-std::map<std::string, std::shared_ptr<EnvValue>> EnvironmentMgr::getValues(const std::string &path)
+std::map<std::string, std::shared_ptr<EnvValue>> EnvironmentMgr::getAttributes(const std::string &path)
 {
 	auto pathIt = m_paths.find(path);
 	//if (pathIt == m_paths.end())
 	//	return;
 
 	std::shared_ptr<EnvironmentNode> pNode = pathIt->second;
-	return pNode->getValues();
+	return pNode->getAttributes();
 }
 
 
