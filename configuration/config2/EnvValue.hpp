@@ -22,19 +22,23 @@ limitations under the License.
 #include "CfgValue.hpp"
 #include "NodeStatus.hpp"
 
+
 class EnvValue : public NodeStatus
 {
 	public:
-		EnvValue() { }
+		EnvValue(const std::string &name="") : m_name(name) { }
 		~EnvValue() { }
-		void setValue(const std::string &value, bool force=false);
+		bool setValue(const std::string &value, bool force=false);
+		bool checkCurrentValue();
 		const std::string &getValue() const { return m_value;  }
 		void setCfgValue(const std::shared_ptr<CfgValue> &pCfgValue) { m_pCfgValue = pCfgValue;  }
 		const std::shared_ptr<CfgValue> &getCfgValue() const { return m_pCfgValue;  }
+		const std::string &getName() const { return m_name;  }
 	
 
 	private:
 
+		std::string m_name;
 		std::string m_value;
 		std::shared_ptr<CfgValue> m_pCfgValue;   // may be empty for non-config defined attributes
 };

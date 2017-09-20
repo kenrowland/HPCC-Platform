@@ -69,7 +69,41 @@
     }
 }
 
+"element" : {
+    "class" : "elementClass",  // the class of the element. It controles what is in the elementData object
+                               //   defined classes
+                               //     category      - a top level type separation of config elements (HW, SW) (list is fixed, user cannot add one) (more than one category levels allowed)
+                               //     instanceSet   - a set of stuff to which the user related components (ESP, LoggingAgents, etc.  List is fixed, user cannot add a component set, but children may be addable)
+                               //     component     - an instance of a component
+                               //     value         - a value
+                               
+    
+    "name" : "elementName",    // name foe the element (used in some requests)
+    "displayName" : string,    // Use this when displaying this element to the user
 
+    "path" : <path>,           // opaque unique identifier for this element (do not interpret) Usually input for 
+
+    "doc" : { },               // documentation object
+    "status" : <status>,       // 
+    "children" : number,       // number of current children defined below this element (for an instance set it's the current number of defined instances)
+	"allowedInstances" : number,         // number of allowed instances -1 = unlimited (Dali = 1, for example)
+    "requiredInstances" : number,        // count of required instances -1 for none
+}
+
+
+"value" : {
+	"name"           : "elementName",    // name foe the element (used in some requests)
+    "displayName"    : string,    // Use this when displaying this element to the user
+	"doc"            : { },
+	"status"         : "ok|error|warning",  // if not ok, doc.msg may indicate what is wrong
+	"type"           : { },                   // type info
+	"currentValue"   : "curValue",  
+	"defaultDefined" : boolean,     // indicates if defaultValue is valid or not
+	"defaultValue"   : "defaultValue", 
+	"required":      : boolean,
+	"readOnly"       : boolean      
+	"ignoreIfNotSet" : boolean
+}
 
 
 

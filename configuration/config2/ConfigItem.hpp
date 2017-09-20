@@ -114,7 +114,7 @@ class ConfigItem
         std::string m_category;  // used for further subdividing to the user
 		bool m_isConfigurable;
         std::map<std::string, std::shared_ptr<ConfigItem>> m_cfgChildren; 
-        std::shared_ptr<CfgValue> m_pValue;   // value for this itme (think of it as the VALUE for an element <xx attr= att1=>VALUE</xx>)
+        std::shared_ptr<CfgValue> m_pValue;   // value for this item (think of it as the VALUE for an element <xx attr= att1=>VALUE</xx>)
 		std::map<std::string, std::shared_ptr<CfgValue>> m_attributes;   // attributes for this item (thin in xml terms <m_name attr1="val" attr2="val" .../> where attrN is in this vector
         std::set<std::string> m_keys;   // generic set of key values for use by any component to prevent duplicat operations
         std::weak_ptr<ConfigItem> m_pParent;

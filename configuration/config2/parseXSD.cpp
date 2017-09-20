@@ -44,6 +44,8 @@ int main()
 		envMgr.setConfig(pConfig);
 		envMgr.loadEnvironment("environment.xml");
 
+		envMgr.saveEnvironment("testout.xml");
+
 		auto results = envMgr.getNodeFromPath(".");
 
     }

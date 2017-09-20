@@ -1,6 +1,6 @@
 /*##############################################################################
 
-    HPCC SYSTEMS software Copyright (C) 2015 HPCC Systems®.
+    HPCC SYSTEMS software Copyright (C) 2017 HPCC Systems®.
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -81,18 +81,19 @@ ESPstruct attributeType
     ESPstruct  typeInfo type;
     string currentValue("");
     string defaultValue("");
-    bool   defaultProvided(false);
+	bool   valueSet(false);           // indicates if currentValue is actually a valid value (has been set)
+    bool   defaultProvided(false);    // true if defaultValue is a valid default value, false if no default provided
     bool   required(true);
-    bool   readonl(false);
+    bool   readonly(false);
     bool   forceOut(false);
 };
 
 
-ESPstruct valueType
+ESPstruct attributeValueType
 {
     string    name;
     string    value;
-    string    msg("");     // used for warnings and errors and whatever
+	bool      force(false);  // set to true to allow setting a non-legal value, or to add a new value that is not defined
 };
 
 
@@ -102,7 +103,9 @@ ESPresponse [exceptions_inline, encode(0)] GetPathResponse
 	string status("error");
 	ESPstruct docType doc;
     ESParray<ESPstruct attributeType, attribute> attributes;
-    ESParray<ESPstruct elementType, element> elements;
+    ESParray<ESPstruct elementType, children> children;
+	bool valueDefined(false);                                    // indicates that value if defined (not normal)
+	ESPstruct attributeType value;                               // this would be <element>value</element> not normal, see valueDefined
 };
 
 
@@ -112,10 +115,12 @@ ESPrequest CreateInstanceRequest  // response is same as GetPathRequest
 };
 
 
-ESPrequest SetValueSetRequest
+ESPrequest SetValuesRequest
 {
-    string path;  // path to instance set where a new one is created
-    ESParray<ESPstruct valueType, value> values;
+    string path;    // 
+    ESParray<ESPstruct attributeValueType, attribute> attributeValues;
+	bool force(false);  // force setting of value for the path
+	string value("");   // only valid if valueDefined is true for this path, ignored otherwise
 };
 
 

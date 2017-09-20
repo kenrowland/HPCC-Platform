@@ -36,7 +36,9 @@ class XMLEnvironmentMgr : 	public EnvironmentMgr
 	protected:
 
 		bool load(std::istream &in);
+		void save(std::ostream &out);
 		void parse(const pt::ptree &envTree, const std::shared_ptr<ConfigItem> &pConfig, std::shared_ptr<EnvironmentNode> &pEnvNode);
+		void serialize(pt::ptree &envTree, std::shared_ptr<EnvironmentNode> &pEnvNode) const;
 
 };
 

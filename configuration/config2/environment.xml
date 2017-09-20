@@ -1,6 +1,32 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Generated with envgen -->
 <Environment bbb="aaa">
+  <EnvSettings>
+    <pid>/var/run/HPCCSystems</pid>
+    <sourcedir>/etc/HPCCSystems/source</sourcedir>
+    <mpTraceLevel>0</mpTraceLevel>
+    <mpStart>7101</mpStart>
+    <jvmoptions>-XX:-UsePerfData</jvmoptions>
+    <allow_pgcache_flush>true</allow_pgcache_flush>
+    <environment>environment.xml</environment>
+    <home>/home</home>
+    <blockname>HPCCSystems</blockname>
+    <mpEnd>7500</mpEnd>
+    <group>hpcc</group>
+    <interface>*</interface>
+    <mpSoMaxConn>128</mpSoMaxConn>
+    <user>hpcc</user>
+    <classpath>/opt/HPCCSystems/classes</classpath>
+    <log>/var/log/HPCCSystems</log>
+    <logfields>TIM+DAT+MLT+MID+PID+TID+COD+QUO+PFX</logfields>
+    <use_epoll>true</use_epoll>
+    <udp_stats>true</udp_stats>
+    <dfsUseSSL>SSLNone</dfsUseSSL>
+    <runtime>/var/lib/HPCCSystems</runtime>
+    <lock>/var/lock/HPCCSystems</lock>
+    <configs>/etc/HPCCSystems</configs>
+    <path>/opt/HPCCSystems</path>
+  </EnvSettings> 
  <Hardware>
   <ComputerType computerType="linuxmachine"
                 manufacturer="unknown"
@@ -764,32 +790,6 @@
              netAddress="."/>
   </EclSchedulerProcess>
  </Software>
- <EnvSettings>
-  <pid>/var/run/HPCCSystems</pid>
-  <sourcedir>/etc/HPCCSystems/source</sourcedir>
-  <mpTraceLevel>0</mpTraceLevel>
-  <mpStart>7101</mpStart>
-  <jvmoptions>-XX:-UsePerfData</jvmoptions>
-  <allow_pgcache_flush>true</allow_pgcache_flush>
-  <environment>environment.xml</environment>
-  <home>/home</home>
-  <blockname>HPCCSystems</blockname>
-  <mpEnd>7500</mpEnd>
-  <group>hpcc</group>
-  <interface>*</interface>
-  <mpSoMaxConn>128</mpSoMaxConn>
-  <user>hpcc</user>
-  <classpath>/opt/HPCCSystems/classes</classpath>
-  <log>/var/log/HPCCSystems</log>
-  <logfields>TIM+DAT+MLT+MID+PID+TID+COD+QUO+PFX</logfields>
-  <use_epoll>true</use_epoll>
-  <udp_stats>true</udp_stats>
-  <dfsUseSSL>SSLNone</dfsUseSSL>
-  <runtime>/var/lib/HPCCSystems</runtime>
-  <lock>/var/lock/HPCCSystems</lock>
-  <configs>/etc/HPCCSystems</configs>
-  <path>/opt/HPCCSystems</path>
- </EnvSettings>
  <Programs>
   <Build name="_" url="/opt/HPCCSystems">
    <BuildSet installSet="deploy_map.xml"

@@ -31,6 +31,18 @@ bool EnvironmentMgr::loadEnvironment(const std::string &filename)
 }
 
 
+void EnvironmentMgr::saveEnvironment(const std::string &filename)
+{
+	std::ofstream out;
+
+	out.open(filename);
+	if (out.is_open())
+	{
+		save(out);
+	}
+}
+
+
 void EnvironmentMgr::addPath(const std::shared_ptr<EnvironmentNode> pNode)
 {
 	auto retVal = m_paths.insert({pNode->getPath(), pNode });
@@ -51,15 +63,15 @@ std::shared_ptr<EnvironmentNode> EnvironmentMgr::getElement(const std::string &p
 }
 
 
-std::map<std::string, std::shared_ptr<EnvValue>> EnvironmentMgr::getAttributes(const std::string &path)
-{
-	auto pathIt = m_paths.find(path);
-	//if (pathIt == m_paths.end())
-	//	return;
-
-	std::shared_ptr<EnvironmentNode> pNode = pathIt->second;
-	return pNode->getAttributes();
-}
+//std::map<std::string, std::shared_ptr<EnvValue>> EnvironmentMgr::getAttributes(const std::string &path)
+//{
+//	auto pathIt = m_paths.find(path);
+//	//if (pathIt == m_paths.end())
+//	//	return;
+//
+//	std::shared_ptr<EnvironmentNode> pNode = pathIt->second;
+//	return pNode->getAttributes();
+//}
 
 
 std::string EnvironmentMgr::getUniqueKey()

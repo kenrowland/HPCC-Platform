@@ -31,10 +31,14 @@ class EnvironmentMgr
 		virtual ~EnvironmentMgr() { }
 
 		void setConfig(const std::shared_ptr<ConfigItem> &pConfig) { m_pConfig = pConfig; }
+		// add a load from stream?
 		virtual bool loadEnvironment(const std::string &file);  // return some error code,or a get last error type of call?
 
 		std::shared_ptr<EnvironmentNode> getNodeFromPath(const std::string &path) { return getElement(path); }
-		std::map<std::string, std::shared_ptr<EnvValue>> getAttributes(const std::string &path);
+		
+		// save to stream ?
+		void saveEnvironment(const std::string &file);
+
 
 		// virtual bool writeEnvironment(const std::string &file /* same with load */) = 0;
 		//virtual bool validate();
@@ -45,6 +49,7 @@ class EnvironmentMgr
 		std::shared_ptr<EnvironmentNode> getElement(const std::string &path);
 		void addPath(const std::shared_ptr<EnvironmentNode> pNode);
 		virtual bool load(std::istream &in) = 0;
+		virtual void save(std::ostream &out) = 0;
 
 
 	protected:

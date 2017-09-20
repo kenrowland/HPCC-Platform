@@ -36,8 +36,11 @@ class EnvironmentNode : public NodeStatus
 		void addSubNode(std::shared_ptr<EnvironmentNode> pNode);
 		std::vector<std::shared_ptr<EnvironmentNode>> getElements() const;
 		void addAttribute(const std::string &name, std::shared_ptr<EnvValue> pValue);
-		std::shared_ptr<EnvValue> &getAttribute(const std::string &name);
-		std::map<std::string, std::shared_ptr<EnvValue>> getAttributes() const { return m_attributes; }
+		bool setAttributeValue(const std::string &name, const std::string &value, bool force=false);   // candidate for a variant?
+		bool setValue(const std::string &value, bool force = false);   
+		void setNodeEnvValue(const std::shared_ptr<EnvValue> &pEnvValue) { m_pNodeValue = pEnvValue;  }
+		const std::shared_ptr<EnvValue> &getNodeEnvValue() const { return m_pNodeValue;  }
+		std::vector<std::shared_ptr<EnvValue>> getAttributes() const;
 		bool hasAttributes() const { return m_attributes.size() != 0; }
 		void setPath(const std::string &path) { m_path = path; } 
 		const std::string &getPath() const { return m_path;  }
@@ -46,14 +49,15 @@ class EnvironmentNode : public NodeStatus
 
 
 
+
 	protected:
 
 		std::string m_msg;           // error or warning message
 		std::string m_elementName;   
-		std::shared_ptr<ConfigItem> m_pConfigItem;
+		std::shared_ptr<ConfigItem> m_pConfigItem;  // is valid if there is config data for the node value (not related to attributes or children)
 		std::weak_ptr<EnvironmentNode> m_pParent;
 		std::multimap<std::string, std::shared_ptr<EnvironmentNode>> m_subNodes;
-		std::shared_ptr<CfgValue> m_nodeValue;
+		std::shared_ptr<EnvValue> m_pNodeValue;   // the node's value (not normal)
 		std::map<std::string, std::shared_ptr<EnvValue>> m_attributes;
 		std::string m_path;
 };

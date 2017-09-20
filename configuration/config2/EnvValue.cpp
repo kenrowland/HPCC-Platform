@@ -17,8 +17,9 @@ limitations under the License.
 
 #include "EnvValue.hpp"
 
-void EnvValue::setValue(const std::string &value, bool force) 
+bool EnvValue::setValue(const std::string &value, bool force) 
 { 
+	bool rc = true;
 	clearStatus();  // always clear the status since in can only be sigular
 	if (m_pCfgValue)
 	{
@@ -30,10 +31,35 @@ void EnvValue::setValue(const std::string &value, bool force)
 		{
 			m_value = value;
 			addStatus(error, "Value is not valid");
+			rc = false;
 		}
 	}
 	else
 	{
+		addStatus(warning, "Value saved, but no configuration defined for this value, unable to validate");
+		rc = false;
 		m_value = value;
 	}
+	return rc;
+}
+
+
+bool EnvValue::checkCurrentValue()
+{
+	bool rc = true;
+	clearStatus();  // always clear the status since in can only be sigular
+	if (m_pCfgValue)
+	{
+		if (!m_pCfgValue->isValueValid(m_value))
+		{
+			addStatus(error, "Value is not valid");
+			rc = false;
+		}
+	}
+	else
+	{
+		addStatus(warning, "no configuration defined for this value, unable to validate");
+		rc = false;
+	}
+	return rc;
 }
