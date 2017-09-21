@@ -41,6 +41,8 @@ class XSDComponentParser : public XSDConfigParser
     protected:
 
         XSDComponentParser() { };
+        virtual void parseKey(const pt::ptree &keyTree);
+        virtual void parseKeyRef(const pt::ptree &keyTree);
         //void parseElement(const pt::ptree &elemTree);
 
 

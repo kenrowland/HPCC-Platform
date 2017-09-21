@@ -46,6 +46,7 @@ class XSDValueSetParser : public XSDConfigParser
 
         XSDValueSetParser() { }
         std::shared_ptr<ConfigItemValueSet> m_pValueSet;
+        std::vector<std::string> split(const std::string  &input, const std::string  &delim);
         // virtual void parseAttributeGroup(const pt::ptree &attributeTree);
 
 

@@ -63,15 +63,17 @@ std::shared_ptr<EnvironmentNode> EnvironmentMgr::getElement(const std::string &p
 }
 
 
-//std::map<std::string, std::shared_ptr<EnvValue>> EnvironmentMgr::getAttributes(const std::string &path)
-//{
-//	auto pathIt = m_paths.find(path);
-//	//if (pathIt == m_paths.end())
-//	//	return;
-//
-//	std::shared_ptr<EnvironmentNode> pNode = pathIt->second;
-//	return pNode->getAttributes();
-//}
+// todo: make a standard return that has a status string and array of messages
+bool EnvironmentMgr::setValuesForPath(const std::string &path, const std::vector<valueDef> &values, const std::string &nodeValue, bool force)
+{
+	std::shared_ptr<EnvironmentNode> pEnvNode = getElement(path);
+	if (pEnvNode)
+	{
+		for (auto it = values.begin(); it != values.end(); ++it)
+			pEnvNode->setAttributeValue((*it).name, (*it).value, force);
+	}
+	return true;
+}
 
 
 std::string EnvironmentMgr::getUniqueKey()

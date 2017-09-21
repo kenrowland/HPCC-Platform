@@ -27,6 +27,11 @@ class EnvironmentMgr
 {
 	public:
 
+		struct valueDef {
+			std::string name;
+			std::string value;
+		};
+
 		EnvironmentMgr() : m_key(0) { }
 		virtual ~EnvironmentMgr() { }
 
@@ -35,6 +40,7 @@ class EnvironmentMgr
 		virtual bool loadEnvironment(const std::string &file);  // return some error code,or a get last error type of call?
 
 		std::shared_ptr<EnvironmentNode> getNodeFromPath(const std::string &path) { return getElement(path); }
+		bool setValuesForPath(const std::string &path, const std::vector<valueDef> &values, const std::string &nodeValue, bool force=false);
 		
 		// save to stream ?
 		void saveEnvironment(const std::string &file);

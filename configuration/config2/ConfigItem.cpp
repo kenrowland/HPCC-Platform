@@ -95,7 +95,7 @@ std::shared_ptr<CfgLimits> ConfigItem::getStandardTypeLimits(const std::string &
 }
 
 
-bool ConfigItem::addKey(const std::string keyName)
+bool ConfigItem::addUniqueName(const std::string keyName)
 {
     auto result = m_keys.insert(keyName);
     return result.second;
@@ -143,7 +143,7 @@ void ConfigItem::addAttribute(const std::shared_ptr<CfgValue> &pCfgValue)
 	auto retVal = m_attributes.insert({ pCfgValue->getName(), pCfgValue });
 	if (!retVal.second)
 	{
-		throw(new ParseException("Duplicate attribute (" + pCfgValue->getName() + " found for element " + m_name));
+		throw(new ParseException("Duplicate attribute (" + pCfgValue->getName() + ") found for element " + m_name));
 	}
 }
 
@@ -162,4 +162,48 @@ std::shared_ptr<CfgValue> ConfigItem::getAttribute(const std::string &name) cons
 	if (it != m_attributes.end())
 		pCfgValue = it->second;
 	return pCfgValue;
+}
+
+
+void ConfigItem::addKey(const std::string &keyName, const std::string &elementName, const std::string &attributeName)
+{
+    std::shared_ptr<ConfigItem> pCfgItem = getChild<ConfigItem>(elementName);  // todo: validate pCfgItem
+    std::shared_ptr<CfgValue> pAttribute = pCfgItem->getAttribute(attributeName);  
+    if (pAttribute)
+    {
+        pAttribute->setKey(true);
+        auto result = m_keyDefs.insert({ keyName, pAttribute });
+        if (!result.second)
+        {
+            throw(new ParseException("Duplicate key (" + keyName + ") found for element " + m_name));
+        }
+    }
+}
+
+
+void ConfigItem::addKeyRef(const std::string &keyName, const std::string &elementName, const std::string &attributeName)
+{
+    auto keyIt = m_keyDefs.find(keyName);
+    if (keyIt != m_keyDefs.end())
+    {
+        std::shared_ptr<CfgValue> pKeyRefAttribute = keyIt->second;
+        std::shared_ptr<ConfigItem> pCfgItem = getChild<ConfigItem>(elementName);   // todo: validate pCfgItem
+        std::shared_ptr<CfgValue> pAttribute = pCfgItem->getAttribute(attributeName); 
+        if (pAttribute)
+        {
+            pAttribute->setKeyRef(pKeyRefAttribute);
+        }
+    }
+}
+
+
+
+std::vector<std::shared_ptr<ConfigItem>> ConfigItem::getChildren() const
+{
+    std::vector<std::shared_ptr<ConfigItem>> children;
+    
+    for (auto it = m_children.begin(); it != m_children.end(); ++it)
+        children.push_back(it->second);
+
+    return children;
 }

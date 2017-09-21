@@ -44,6 +44,13 @@ int main()
 		envMgr.setConfig(pConfig);
 		envMgr.loadEnvironment("environment.xml");
 
+        // 158
+        auto pNode = envMgr.getNodeFromPath("158");
+
+        std::vector<EnvironmentMgr::valueDef> newValues;
+        newValues.push_back({ "name", "namehasbeenchanged" });
+        envMgr.setValuesForPath("158", newValues, "", false);
+
 		envMgr.saveEnvironment("testout.xml");
 
 		auto results = envMgr.getNodeFromPath(".");

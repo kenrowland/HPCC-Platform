@@ -102,7 +102,7 @@ void XSDConfigParser::parseXSD(const pt::ptree &keys)
         if (elemType == "xs:include")
         {
             std::string schemaFile = getXSDAttributeValue(it->second, "<xmlattr>.schemaLocation");
-            if (m_pConfig->addKey(schemaFile))
+            if (m_pConfig->addUniqueName(schemaFile))
             {
                 parseXSD(schemaFile);
             }
@@ -232,7 +232,7 @@ void XSDConfigParser::parseComplexType(const pt::ptree &typeTree)
             if (!componentTree.empty())
             {
                 std::shared_ptr<XSDComponentParser> pComponentXSDParaser = std::make_shared<XSDComponentParser>(m_basePath, std::dynamic_pointer_cast<ConfigItem>(pComponent));
-                pComponentXSDParaser->parseXSD(componentTree); 
+                pComponentXSDParaser->parseXSD(typeTree);
                 m_pConfig->addConfigType(pComponent, complexTypeName);
             }
             else

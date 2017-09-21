@@ -53,6 +53,8 @@ class ConfigItem
 {
     public:
 
+    public:
+
         ConfigItem(const std::string &name, const std::string &className="category", std::shared_ptr<ConfigItem> pParent=nullptr) : 
             m_className(className), m_name(name), m_pParent(pParent), m_displayName(name), 
             m_minInstances(1), m_maxInstances(1), m_isConfigurable(false), m_version(-1)  { }
@@ -86,9 +88,9 @@ class ConfigItem
         virtual void addConfigType(const std::shared_ptr<ConfigItem> &pItem, const std::string &typeName);
         virtual const std::shared_ptr<ConfigItem> &getConfigType(const std::string &name) const;
 
-        virtual void addChild(const std::shared_ptr<ConfigItem> &pItem) { m_cfgChildren[pItem->getName()] = pItem; }
-		virtual void addChild(const std::shared_ptr<ConfigItem> &pItem, const std::string &name) { m_cfgChildren[name] = pItem; }
-		virtual const std::map<std::string, std::shared_ptr<ConfigItem>> &getChildren() const { return m_cfgChildren;  }
+        virtual void addChild(const std::shared_ptr<ConfigItem> &pItem) { m_children[pItem->getName()] = pItem; }
+		virtual void addChild(const std::shared_ptr<ConfigItem> &pItem, const std::string &name) { m_children[name] = pItem; }
+        virtual std::vector<std::shared_ptr<ConfigItem>> getChildren() const;
 		template<typename T> std::shared_ptr<T> getChild(const std::string &name) const;
         virtual void setItemCfgValue(const std::shared_ptr<CfgValue> &pValue) { m_pValue = pValue; }
         virtual std::shared_ptr<CfgValue> getItemCfgValue() const { return m_pValue; }
@@ -96,7 +98,9 @@ class ConfigItem
 		virtual void addAttribute(const std::vector<std::shared_ptr<CfgValue>> &attributes);
 		virtual std::shared_ptr<CfgValue> getAttribute(const std::string &name) const;
 
-        virtual bool addKey(const std::string keyName);
+        virtual bool addUniqueName(const std::string keyName);
+        virtual void addKey(const std::string &keyName, const std::string &elementName, const std::string &attributeName);
+        virtual void addKeyRef(const std::string &keyName, const std::string &elementName, const std::string &attributeName);
 
 		//virtual void addEnvironmentInstance(const std::shared_ptr<EnvInstanceBase> &pInstance) { m_envInstances.push_back(pInstance); }
 
@@ -105,6 +109,7 @@ class ConfigItem
 
     protected:
 
+       
         // some kind of category map parent/child Software->ESP->[components]
         ConfigItem() { };
 
@@ -113,7 +118,7 @@ class ConfigItem
         std::string m_className;
         std::string m_category;  // used for further subdividing to the user
 		bool m_isConfigurable;
-        std::map<std::string, std::shared_ptr<ConfigItem>> m_cfgChildren; 
+        std::map<std::string, std::shared_ptr<ConfigItem>> m_children; 
         std::shared_ptr<CfgValue> m_pValue;   // value for this item (think of it as the VALUE for an element <xx attr= att1=>VALUE</xx>)
 		std::map<std::string, std::shared_ptr<CfgValue>> m_attributes;   // attributes for this item (thin in xml terms <m_name attr1="val" attr2="val" .../> where attrN is in this vector
         std::set<std::string> m_keys;   // generic set of key values for use by any component to prevent duplicat operations
@@ -122,8 +127,7 @@ class ConfigItem
         std::map<std::string, std::shared_ptr<CfgType>> m_types;
         std::map<std::string, std::shared_ptr<ConfigItem>> m_configTypes;                // reusable types
         
-
-		//std::vector<std::shared_ptr<EnvInstanceBase>> m_envInstances;
+        std::map<std::string, std::shared_ptr<CfgValue>> m_keyDefs;
 
         int m_minInstances;
         int m_maxInstances;
@@ -141,8 +145,8 @@ class ConfigItem
 template<typename T> std::shared_ptr<T> ConfigItem::getChild(const std::string &name) const
 {
 	std::shared_ptr<T> pItem;
-	auto it = m_cfgChildren.find(name);
-	if (it != m_cfgChildren.end())
+	auto it = m_children.find(name);
+	if (it != m_children.end())
 		pItem = std::dynamic_pointer_cast<T>(it->second);
 	return pItem;
 }
