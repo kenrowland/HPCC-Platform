@@ -72,6 +72,16 @@
           <xs:field xpath="@name" />
         </xs:key>
 
+        <xs:key name="computerIPAddressKey">
+          <xs:selector xpath="Computer" />
+          <xs:field xpath="netAddress" />
+        </xs:key>
+
+        <xs:key name="computerNameKey">
+          <xs:selector xpath="Computer" />
+          <xs:field xpath="@name" />
+        </xs:key>
+        
         <xs:keyref name="Computer_computerTypeRef" refer="computerTypeKey">
           <xs:selector xpath="Computer"/>
           <xs:field xpath="@computerType" />
