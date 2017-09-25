@@ -55,7 +55,7 @@ class CfgValue
         bool hasModifiers() const { return m_modifiers.size() > 0; }
         void setKey(bool isKey) { m_isKey = isKey; }
         bool isKey() const { return m_isKey;  }
-        void setKeyRef(const std::shared_ptr<CfgValue> &pValue) { m_pRefValue = pValue; }
+        void setKeyRef(const std::shared_ptr<CfgValue> &pValue) { m_pKeyRefValue = pValue; }
 
 
     protected:
@@ -73,7 +73,7 @@ class CfgValue
         std::string m_default;
         std::string m_toolTip;
         std::vector<std::string> m_modifiers;
-        std::shared_ptr<CfgValue> m_pRefValue;    // this value serves as the key from which values are valid
+        std::shared_ptr<CfgValue> m_pKeyRefValue;    // this value serves as the key from which values are valid
 };
 
 

@@ -22,11 +22,12 @@ limitations under the License.
 #include "CfgValue.hpp"
 #include "NodeStatus.hpp"
 
+class EnvironmentNode;
 
 class EnvValue : public NodeStatus
 {
 	public:
-		EnvValue(const std::string &name="") : m_name(name) { }
+		EnvValue(const std::shared_ptr<EnvironmentNode> &pMyNode, const std::string &name="") : m_pMyEnvNode(pMyNode), m_name(name) { }
 		~EnvValue() { }
 		bool setValue(const std::string &value, bool force=false);
 		bool checkCurrentValue();
@@ -34,6 +35,7 @@ class EnvValue : public NodeStatus
 		void setCfgValue(const std::shared_ptr<CfgValue> &pCfgValue) { m_pCfgValue = pCfgValue;  }
 		const std::shared_ptr<CfgValue> &getCfgValue() const { return m_pCfgValue;  }
 		const std::string &getName() const { return m_name;  }
+		bool isValueValid(const std::string &value) const;
 	
 
 	private:
@@ -41,6 +43,7 @@ class EnvValue : public NodeStatus
 		std::string m_name;
 		std::string m_value;
 		std::shared_ptr<CfgValue> m_pCfgValue;   // may be empty for non-config defined attributes
+		std::weak_ptr<EnvironmentNode> m_pMyEnvNode;
 };
 
 

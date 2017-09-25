@@ -45,6 +45,8 @@ class EnvironmentMgr
 		// save to stream ?
 		void saveEnvironment(const std::string &file);
 
+		bool validate();
+
 
 		// virtual bool writeEnvironment(const std::string &file /* same with load */) = 0;
 		//virtual bool validate();

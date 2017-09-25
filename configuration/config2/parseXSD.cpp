@@ -47,6 +47,11 @@ int main()
         // 158
         auto pNode = envMgr.getNodeFromPath("158");
 
+		//
+		// Validate the environment
+
+		//
+		// Value set test
         std::vector<EnvironmentMgr::valueDef> newValues;
         newValues.push_back({ "name", "namehasbeenchanged" });
         envMgr.setValuesForPath("158", newValues, "", false);

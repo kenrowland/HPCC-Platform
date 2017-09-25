@@ -63,3 +63,36 @@ bool EnvValue::checkCurrentValue()
 	}
 	return rc;
 }
+
+
+bool EnvValue::isValueValid(const std::string &value) const
+{
+	bool rc = true;
+	if (m_pCfgValue)
+	{
+		//
+		// Check the value against the type
+		if (m_pCfgValue->isValueValid(value))
+		{
+			//
+			// If this is a key, make sure it's unique
+			if (m_pCfgValue->isKey())
+			{
+				std::string fieldName = m_pCfgValue->getName();
+				std::shared_ptr<EnvironmentNode> pMyEnvNode = m_pMyEnvNode.lock();
+				if (pMyEnvNode)
+				{
+
+
+					// need the parent of myenvnode
+					// then get from that parent, get all fieldNames for children with name myenvnode->getName()
+					// get all values for fieldname from pParent
+				}
+			}
+		}
+
+		//
+		// If this is a key, then we 
+	}
+	return rc;
+}

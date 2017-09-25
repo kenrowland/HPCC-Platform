@@ -64,7 +64,7 @@ void XMLEnvironmentMgr::parse(const pt::ptree &envTree, const std::shared_ptr<Co
 			std::shared_ptr<CfgValue> pCfgValue;
 			if (pConfigItem)
 				pCfgValue = pConfigItem->getItemCfgValue();
-			std::shared_ptr<EnvValue> pEnvValue = std::make_shared<EnvValue>("");  // node's value has no name
+			std::shared_ptr<EnvValue> pEnvValue = std::make_shared<EnvValue>(pEnvNode, "");  // node's value has no name
 			pEnvValue->setCfgValue(pCfgValue);
 			pEnvValue->setValue(value);
 			pEnvNode->setNodeEnvValue(pEnvValue);
@@ -88,7 +88,7 @@ void XMLEnvironmentMgr::parse(const pt::ptree &envTree, const std::shared_ptr<Co
 			for (auto attrIt = it->second.begin(); attrIt != it->second.end(); ++attrIt)
 			{
 				std::shared_ptr<CfgValue> pCfgValue;
-				std::shared_ptr<EnvValue> pEnvValue = std::make_shared<EnvValue>(attrIt->first);   // this is where we would use a variant
+				std::shared_ptr<EnvValue> pEnvValue = std::make_shared<EnvValue>(pEnvNode, attrIt->first);   // this is where we would use a variant
 				if (pConfigItem)
 					pCfgValue = pConfigItem->getAttribute(attrIt->first);
 				if (!pCfgValue)
@@ -147,7 +147,7 @@ void XMLEnvironmentMgr::parse(const pt::ptree &envTree, const std::shared_ptr<Co
 				pElementNode->setPath(getUniqueKey());
 				addPath(pElementNode);
 				parse(it->second, pEnvConfig, pElementNode);
-				pEnvNode->addSubNode(pElementNode);
+				pEnvNode->addChild(pElementNode);
 			}
 			//else
 			//{
@@ -172,11 +172,11 @@ void XMLEnvironmentMgr::serialize(pt::ptree &envTree, std::shared_ptr<Environmen
 		envTree.put_value(pNodeValue->getValue()); 
 	}
 
-	std::vector<std::shared_ptr<EnvironmentNode>> children = pEnvNode->getElements();
+	std::vector<std::shared_ptr<EnvironmentNode>> children = pEnvNode->getChildren();
 	for (auto childIt = children.begin(); childIt != children.end(); ++childIt)
 	{
 		pt::ptree nodeTree;
 		serialize(nodeTree, *childIt);
-		envTree.add_child((*childIt)->getNodeName(), nodeTree);
+		envTree.add_child((*childIt)->getName(), nodeTree);
 	}
 }

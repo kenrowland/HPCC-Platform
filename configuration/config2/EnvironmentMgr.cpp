@@ -80,3 +80,13 @@ std::string EnvironmentMgr::getUniqueKey()
 {
 	return std::to_string(m_key++);
 }
+
+
+bool EnvironmentMgr::validate()
+{
+	if (m_pRootNode)
+	{
+
+	}
+	return true;
+}

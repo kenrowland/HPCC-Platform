@@ -27,7 +27,11 @@ void CfgValue::setType(const std::shared_ptr<CfgType> &pType)
 bool CfgValue::isValueValid(const std::string &newValue) const
 {
 	bool rc = true;
+
 	if (m_pType)
 		rc = m_pType->isValueValid(newValue);
+
+
+
 	return rc;
 }

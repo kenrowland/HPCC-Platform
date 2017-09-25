@@ -25,38 +25,41 @@ limitations under the License.
 #include "CfgValue.hpp"
 #include "NodeStatus.hpp"
 
-class EnvironmentNode : public NodeStatus
+class EnvironmentNode : public NodeStatus, std::enable_shared_from_this<EnvironmentNode>
 {
 	public:
 
 		EnvironmentNode(const std::shared_ptr<ConfigItem> &pCfgItem, const std::string &elemName, const std::shared_ptr<EnvironmentNode> &pParent = nullptr) : 
-			m_pConfigItem(pCfgItem), m_elementName(elemName), m_pParent(pParent) { }
+			m_pConfigItem(pCfgItem), m_name(elemName), m_pParent(pParent) { }
 		~EnvironmentNode() { }
-		const std::string &getNodeName() const { return m_elementName;  }
-		void addSubNode(std::shared_ptr<EnvironmentNode> pNode);
-		std::vector<std::shared_ptr<EnvironmentNode>> getElements() const;
+		const std::string &getName() const { return m_name;  }
+		void addChild(std::shared_ptr<EnvironmentNode> pNode);
+		std::vector<std::shared_ptr<EnvironmentNode>> getChildren(const std::string &name="") const;
 		void addAttribute(const std::string &name, std::shared_ptr<EnvValue> pValue);
 		bool setAttributeValue(const std::string &name, const std::string &value, bool force=false);   // candidate for a variant?
+		std::string getAttributeValue(const std::string &name) const;                                  // candidate for a variant?
 		bool setValue(const std::string &value, bool force = false);   
 		void setNodeEnvValue(const std::shared_ptr<EnvValue> &pEnvValue) { m_pNodeValue = pEnvValue;  }
 		const std::shared_ptr<EnvValue> &getNodeEnvValue() const { return m_pNodeValue;  }
 		std::vector<std::shared_ptr<EnvValue>> getAttributes() const;
+		const std::shared_ptr<EnvValue> getAttribute(const std::string &name) const;
 		bool hasAttributes() const { return m_attributes.size() != 0; }
 		void setPath(const std::string &path) { m_path = path; } 
 		const std::string &getPath() const { return m_path;  }
 		const std::string &getMessage() const { return m_msg; }
 		void setMessage(const std::string &msg) { m_msg = msg; }
-
+		bool validate();
+		std::vector<std::string> getAllFieldValues(const std::string &fieldName) const;
 
 
 
 	protected:
 
 		std::string m_msg;           // error or warning message
-		std::string m_elementName;   
+		std::string m_name;   
 		std::shared_ptr<ConfigItem> m_pConfigItem;  // is valid if there is config data for the node value (not related to attributes or children)
 		std::weak_ptr<EnvironmentNode> m_pParent;
-		std::multimap<std::string, std::shared_ptr<EnvironmentNode>> m_subNodes;
+		std::multimap<std::string, std::shared_ptr<EnvironmentNode>> m_children;
 		std::shared_ptr<EnvValue> m_pNodeValue;   // the node's value (not normal)
 		std::map<std::string, std::shared_ptr<EnvValue>> m_attributes;
 		std::string m_path;
