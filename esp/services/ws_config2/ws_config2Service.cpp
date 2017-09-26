@@ -246,7 +246,7 @@ bool Cws_config2Ex::mockInterface(const std::string &path, IEspGetPathResponse &
 
 
     // just add the elements we made
-    resp.setElements(elements); 
+    resp.setChildren(elements); 
     resp.setAttributes(attributes); 
     resp.setStatus("ok");
 
