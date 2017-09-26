@@ -127,7 +127,7 @@ ESPrequest SetValuesRequest
 ESPresponse [exceptions_inline, encode(0)] SetValueSetResponse
 {
     string status("error");
-    ESParray<ESPstruct valueType, value> values;
+    //ESParray<ESPstruct valueType, value> values;
 };
 
 
