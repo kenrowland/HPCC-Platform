@@ -116,8 +116,9 @@ void ConfigItem::addConfigType(const std::shared_ptr<ConfigItem> &pItem, const s
 }
 
 
-const std::shared_ptr<ConfigItem> &ConfigItem::getConfigType(const std::string &name) const
+const std::shared_ptr<ConfigItem> &ConfigItem::getConfigType(const std::string &name, bool throwIfNotPresent) const
 {
+    std::shared_ptr<ConfigItem> pItem;
     auto it = m_configTypes.find(name);
     if (it != m_configTypes.end())
     {
@@ -133,8 +134,12 @@ const std::shared_ptr<ConfigItem> &ConfigItem::getConfigType(const std::string &
     }
     //
     // Did not find the type
-    std::string msg = "Unable to find config type: " + name;
-    throw(new ParseException(msg));
+    if (throwIfNotPresent)
+    {
+        std::string msg = "Unable to find config type: " + name;
+        throw(new ParseException(msg));
+    }
+    return pItem;
 }
 
 

@@ -82,7 +82,14 @@ bool EnvValue::isValueValid(const std::string &value) const
 				std::shared_ptr<EnvironmentNode> pMyEnvNode = m_pMyEnvNode.lock();
 				if (pMyEnvNode)
 				{
+                    // todo: use getAllFieldValues
 
+                    //
+                    // Is this a key value? If so, make sure our value is unique for all the values. Note that we are likely an attribute here
+                    //if (m_pCfgValue->isKey())
+                    //{
+                    //    pMyEnvNode
+                    //}
 
 					// need the parent of myenvnode
 					// then get from that parent, get all fieldNames for children with name myenvnode->getName()
@@ -95,4 +102,10 @@ bool EnvValue::isValueValid(const std::string &value) const
 		// If this is a key, then we 
 	}
 	return rc;
+}
+
+
+bool EnvValue::validate() const
+{
+    return isValueValid(m_value);
 }

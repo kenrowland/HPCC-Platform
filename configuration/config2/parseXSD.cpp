@@ -45,10 +45,19 @@ int main()
 		envMgr.loadEnvironment("environment.xml");
 
         // 158
-        auto pNode = envMgr.getNodeFromPath("158");
+        //auto pNode = envMgr.getNodeFromPath("158");
+        auto pNode = envMgr.getNodeFromPath("29");     // 29 is Hardware/Computer
+
+        auto x = pNode->getAllFieldValues("name");
+
+        // keyref needs to look local first, then search the config tree, but field is ALWAYS local
+        // Used during validation. 
 
 		//
 		// Validate the environment
+
+        
+
 
 		//
 		// Value set test

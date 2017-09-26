@@ -262,6 +262,55 @@ void XSDConfigParser::parseElement(const pt::ptree &elemTree)
     std::string refName = elemTree.get("<xmlattr>.ref", "");
     std::string typeName = elemTree.get("<xmlattr>.type", "");
 
+    std::shared_ptr<ConfigItemComponent> pTypeConfigItem;
+
+    //
+    // If we have a type name specififed, see of it has a config defined for it
+    if (typeName != "")
+    {
+        std::shared_ptr<ConfigItem> pConfigItem = m_pConfig->getConfigType(typeName);
+        if (pConfigItem)
+        {
+            std::shared_ptr<ConfigItemComponent> pComponent = std::dynamic_pointer_cast<ConfigItemComponent>(pConfigItem);
+            if (pComponent)
+            {
+                pTypeConfigItem = std::make_shared<ConfigItemComponent>(*pComponent);
+                pTypeConfigItem->setCategory(category);
+                pTypeConfigItem->setDisplayName(displayName);
+                pTypeConfigItem->setMinInstances(elemTree.get("<xmlattr>.minOccurs", 1));
+                pTypeConfigItem->setMaxInstances(elemTree.get("<xmlattr>.maxOccurs", "1"));
+                pTypeConfigItem->setVersion(elemTree.get("<xmlattr>.hpcc:version", -1));
+            }
+            else
+            {
+                throw(new ParseException("Element reference is not a compoenent: " + refName));
+            }
+        }
+    }
+
+
+    //if (typeName != "")
+    //{
+    //    std::shared_ptr<ConfigItem> pConfigItem = m_pConfig->getConfigType(typeName);
+    //    std::shared_ptr<ConfigItemComponent> pComponent = std::dynamic_pointer_cast<ConfigItemComponent>(pConfigItem);
+    //    if (pComponent)
+    //    {
+    //        std::shared_ptr<ConfigItemComponent> pComponentCopy = std::make_shared<ConfigItemComponent>(*pComponent);
+    //        pComponentCopy->setCategory(category);
+    //        pComponentCopy->setDisplayName(displayName);
+    //        pComponentCopy->setMinInstances(elemTree.get("<xmlattr>.minOccurs", 1));
+    //        pComponentCopy->setMaxInstances(elemTree.get("<xmlattr>.maxOccurs", "1"));
+    //        pComponentCopy->setVersion(elemTree.get("<xmlattr>.hpcc:version", -1));
+    //        m_pConfig->addChild(pComponentCopy, pComponentCopy->getName());
+    //    }
+    //    else
+    //    {
+    //        throw(new ParseException("Element reference is not a compoenent: " + typeName));
+    //    }
+    //}
+
+    //
+    // A class name of component is used to start the definition of a component type that can be referenced as a type elsewhere
     if (className == "component")
     {
         std::shared_ptr<ConfigItemComponent> pComponent = std::make_shared<ConfigItemComponent>(elementName, m_pConfig);  
@@ -275,21 +324,33 @@ void XSDConfigParser::parseElement(const pt::ptree &elemTree)
         pComponentXSDParaser->parseXSD(elemTree.get_child("xs:complexType", pt::ptree())); 
         m_pConfig->addChild(pComponent);
     }
+
+    //
+    // A category?
     else if (className == "category")
     {
-		pt::ptree childTree = elemTree.get_child("", pt::ptree());
-		if (category == "root")
-		{
-			m_pConfig->setName(elementName);
-			parseXSD(childTree);
-		}
-		else
-		{
-			std::shared_ptr<ConfigItem> pConfigItem = std::make_shared<ConfigItem>(elementName, "category", m_pConfig);
-			std::shared_ptr<XSDConfigParser> pXSDParaser = std::make_shared<XSDConfigParser>(m_basePath, pConfigItem);
-			pXSDParaser->parseXSD(childTree);
-			m_pConfig->addChild(pConfigItem);
-		}
+        //
+        // If we have a type config we found before, add it
+        if (pTypeConfigItem)
+        {   
+            m_pConfig->addChild(pTypeConfigItem);
+        }
+        else
+        {
+            pt::ptree childTree = elemTree.get_child("", pt::ptree());
+            if (category == "root")
+            {
+                m_pConfig->setName(elementName);
+                parseXSD(childTree);
+            }
+            else
+            {
+                std::shared_ptr<ConfigItem> pConfigItem = std::make_shared<ConfigItem>(elementName, "category", m_pConfig);
+                std::shared_ptr<XSDConfigParser> pXSDParaser = std::make_shared<XSDConfigParser>(m_basePath, pConfigItem);
+                pXSDParaser->parseXSD(childTree);
+                m_pConfig->addChild(pConfigItem);
+            }
+        }
     }
     else if (elementName != "")
     {
@@ -318,38 +379,49 @@ void XSDConfigParser::parseElement(const pt::ptree &elemTree)
 		pConfigElement->setMaxInstances(elemTree.get("<xmlattr>.maxOccurs", "1"));
 		m_pConfig->addChild(pConfigElement);  
     }
-    else if (refName != "")
+    else
     {
-        std::shared_ptr<ConfigItem> pConfigItem = m_pConfig->getConfigType(refName);
-        std::shared_ptr<ConfigItemComponent> pComponent = std::dynamic_pointer_cast<ConfigItemComponent>(pConfigItem);
-        if (pComponent)
+        if (pTypeConfigItem)
         {
-             std::shared_ptr<ConfigItemComponent> pComponentCopy = std::make_shared<ConfigItemComponent>(*pComponent);
-             m_pConfig->addChild(pComponentCopy);
+            m_pConfig->addChild(pTypeConfigItem);
         }
         else
         {
-            throw(new ParseException("Element reference is not a compoenent: " + refName));
+            throw(new ParseException("Only component elements are supported at the top level"));
         }
     }
-	else if (typeName != "")
-	{
-		std::shared_ptr<ConfigItem> pConfigItem = m_pConfig->getConfigType(typeName);
-		std::shared_ptr<ConfigItemComponent> pComponent = std::dynamic_pointer_cast<ConfigItemComponent>(pConfigItem);
-		if (pComponent)
-		{
-			std::shared_ptr<ConfigItemComponent> pComponentCopy = std::make_shared<ConfigItemComponent>(*pComponent);
-			m_pConfig->addChild(pComponentCopy, typeName);
-		}
-		else
-		{
-			throw(new ParseException("Element reference is not a compoenent: " + typeName));
-		}
-	}
-    else
-    {
-        throw(new ParseException("Only component elements are supported at the top level"));
-    }
+    //else if (refName != "")
+    //{
+    //    std::shared_ptr<ConfigItem> pConfigItem = m_pConfig->getConfigType(refName);
+    //    std::shared_ptr<ConfigItemComponent> pComponent = std::dynamic_pointer_cast<ConfigItemComponent>(pConfigItem);
+    //    if (pComponent)
+    //    {
+    //         std::shared_ptr<ConfigItemComponent> pComponentCopy = std::make_shared<ConfigItemComponent>(*pComponent);
+    //         m_pConfig->addChild(pComponentCopy);
+    //    }
+    //    else
+    //    {
+    //        throw(new ParseException("Element reference is not a compoenent: " + refName));
+    //    }
+    //}
+	//else if (typeName != "")
+	//{
+	//	std::shared_ptr<ConfigItem> pConfigItem = m_pConfig->getConfigType(typeName);
+	//	std::shared_ptr<ConfigItemComponent> pComponent = std::dynamic_pointer_cast<ConfigItemComponent>(pConfigItem);
+	//	if (pComponent)
+	//	{
+	//		std::shared_ptr<ConfigItemComponent> pComponentCopy = std::make_shared<ConfigItemComponent>(*pComponent);
+	//		m_pConfig->addChild(pComponentCopy, typeName);
+	//	}
+	//	else
+	//	{
+	//		throw(new ParseException("Element reference is not a compoenent: " + typeName));
+	//	}
+	//}
+    //else
+    //{
+    //    throw(new ParseException("Only component elements are supported at the top level"));
+    //}
 }
 
 

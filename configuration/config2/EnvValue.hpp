@@ -36,6 +36,7 @@ class EnvValue : public NodeStatus
 		const std::shared_ptr<CfgValue> &getCfgValue() const { return m_pCfgValue;  }
 		const std::string &getName() const { return m_name;  }
 		bool isValueValid(const std::string &value) const;
+        bool validate() const;
 	
 
 	private:

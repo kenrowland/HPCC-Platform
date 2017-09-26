@@ -33,11 +33,32 @@
                 name="linuxmachine"
                 nicSpeed="1000"
                 opSys="linux"/>
+   <ComputerType computerType="Solaris"
+                manufacturer="unknown"
+                name="linuxmachine"
+                nicSpeed="1000"
+                opSys="solaris"/>
   <Domain name="localdomain"/>
-  <Computer computerType="linuxmachine"
-            domain="localdomain"
-            name="localhost"
-            netAddress="."/>
+   <Computer computerType="linuxmachine"
+             domain="localdomain"
+             name="localhost"
+             netAddress="10.173.84.202"/>
+   <Computer computerType="linuxmachine"
+             domain="localdomain"
+             name="node084202"
+             netAddress="10.173.84.202"/>
+   <Computer computerType="linuxmachine"
+             domain="localdomain"
+             name="node084204"
+             netAddress="10.173.84.204"/>
+   <Computer computerType="linuxmachine"
+             domain="localdomain"
+             name="node084205"
+             netAddress="10.173.84.205"/>
+   <Computer computerType="linuxmachine"
+             domain="localdomain"
+             name="node084207"
+             netAddress="10.173.84.207"/>
   <Switch name="Switch"/>
  </Hardware>
  <Software>
