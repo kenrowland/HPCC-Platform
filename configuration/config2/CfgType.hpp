@@ -38,7 +38,7 @@ class CfgType
         const std::string &getName() { return m_name; }
         bool isValueValid(const std::string &testValue) { return m_pLimits->isValueValid(testValue); }
 		bool isAutoValueType() const { return m_autoValueType != "" ;  }
-		const std::string &getAutoValue() const { return "";  }  // todo: this is to be expanded to the supported types
+		const std::string &getAutoValue() const { return m_autoValueType;  }  // todo: this is to be expanded to the supported types
 		void setAutoValueType(const std::string &valueType) { m_autoValueType = valueType;  }
 		
 
