@@ -1,6 +1,6 @@
 /*##############################################################################
 
-HPCC SYSTEMS software Copyright (C) 2015 HPCC Systems®.
+HPCC SYSTEMS software Copyright (C) 2015 HPCC Systemsï¿½.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -25,7 +25,7 @@ limitations under the License.
 #include "CfgValue.hpp"
 #include "NodeStatus.hpp"
 
-class EnvironmentNode : public NodeStatus, std::enable_shared_from_this<EnvironmentNode>
+class EnvironmentNode : public NodeStatus, public std::enable_shared_from_this<EnvironmentNode>
 {
 	public:
 
@@ -63,6 +63,8 @@ class EnvironmentNode : public NodeStatus, std::enable_shared_from_this<Environm
 		std::shared_ptr<EnvValue> m_pNodeValue;   // the node's value (not normal)
 		std::map<std::string, std::shared_ptr<EnvValue>> m_attributes;
 		std::string m_path;
+
+	
 };
 
 

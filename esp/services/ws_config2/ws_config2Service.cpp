@@ -9,8 +9,8 @@ Cws_config2Ex::Cws_config2Ex()
     //CONFIGURATOR_API::initialize();
     
     std::shared_ptr<ConfigItem> pConfig = std::make_shared<ConfigItem>("root");
-    ConfigParser *pCfgParser = new XSDConfigParser("", pConfig);
-    m_envMgr.setConfig(pConfig);
+    //ConfigParser *pCfgParser = new XSDConfigParser("", pConfig);
+    //m_envMgr.setConfig(pConfig);
 
 }
 

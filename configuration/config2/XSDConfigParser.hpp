@@ -28,7 +28,7 @@
 
 namespace pt = boost::property_tree;
 
-class XSDConfigParser : public ConfigParser
+extern "C" class XSDConfigParser : public ConfigParser
 {
     public:
 

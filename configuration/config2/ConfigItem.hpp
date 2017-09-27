@@ -49,7 +49,7 @@ namespace pt = boost::property_tree;
 class ConfigItemValueSet;
 
 
-class ConfigItem 
+extern "C" class ConfigItem 
 {
     public:
 
@@ -106,12 +106,14 @@ class ConfigItem
 
 		bool isConfigurable() const { return m_isConfigurable; }
 
+        ConfigItem() { };
+
 
     protected:
 
        
         // some kind of category map parent/child Software->ESP->[components]
-        ConfigItem() { };
+        
 
         std::string m_name;
         std::string m_displayName;
@@ -142,7 +144,7 @@ class ConfigItem
 };
 
 
-template<typename T> std::shared_ptr<T> ConfigItem::getChild(const std::string &name) const
+extern "C" template<typename T> std::shared_ptr<T> ConfigItem::getChild(const std::string &name) const
 {
 	std::shared_ptr<T> pItem;
 	auto it = m_children.find(name);

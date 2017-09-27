@@ -86,7 +86,7 @@ std::shared_ptr<CfgLimits> ConfigItem::getStandardTypeLimits(const std::string &
     }
 	else if (baseType == "xs:boolean")
 	{
-		pLimits = std::make_shared<CfgStringLimits>();
+		pLimits = std::make_shared<CfgStringLimits>(); 
 		pLimits->addAllowedValue("true");
 		pLimits->addAllowedValue("false");
 	}

@@ -1,12 +1,12 @@
 project ( config2 )
 
-SET(  SRCS EnvironmentMgr.cpp
+SET(  SRCS 
+      EnvironmentMgr.cpp
       XMLEnvironmentMgr.cpp
 	  ConfigParser.cpp
 	  ConfigItemValueSet.cpp
 	  ConfigItemComponent.cpp
 	  ConfigItem.cpp
-	  ConfigExceptions.cpp
 	  CfgValue.cpp
 	  EnvironmentNode.cpp
 	  EnvValue.cpp
