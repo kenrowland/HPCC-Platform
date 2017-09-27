@@ -27,7 +27,7 @@
 
 
 
-class ConfigParser 
+extern "C" class ConfigParser 
 {
     public:
 
