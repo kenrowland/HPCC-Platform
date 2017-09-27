@@ -172,7 +172,7 @@ std::shared_ptr<CfgValue> ConfigItem::getAttribute(const std::string &name) cons
 
 void ConfigItem::addKey(const std::string &keyName, const std::string &elementName, const std::string &attributeName)
 {
-    std::shared_ptr<ConfigItem> pCfgItem = getChild<ConfigItem>(elementName);  // todo: validate pCfgItem
+    std::shared_ptr<ConfigItem> pCfgItem = getChild(elementName);  // todo: validate pCfgItem
     std::shared_ptr<CfgValue> pAttribute = pCfgItem->getAttribute(attributeName);  
     if (pAttribute)
     {
@@ -192,7 +192,7 @@ void ConfigItem::addKeyRef(const std::string &keyName, const std::string &elemen
     if (keyIt != m_keyDefs.end())
     {
         std::shared_ptr<CfgValue> pKeyRefAttribute = keyIt->second;
-        std::shared_ptr<ConfigItem> pCfgItem = getChild<ConfigItem>(elementName);   // todo: validate pCfgItem
+        std::shared_ptr<ConfigItem> pCfgItem = getChild(elementName);   // todo: validate pCfgItem
         std::shared_ptr<CfgValue> pAttribute = pCfgItem->getAttribute(attributeName); 
         if (pAttribute)
         {
@@ -211,4 +211,13 @@ std::vector<std::shared_ptr<ConfigItem>> ConfigItem::getChildren() const
         children.push_back(it->second);
 
     return children;
+}
+
+std::shared_ptr<ConfigItem> ConfigItem::getChild(const std::string &name) const
+{
+	std::shared_ptr<ConfigItem> pItem;
+	auto it = m_children.find(name);
+	if (it != m_children.end())
+		pItem = it->second;
+	return pItem;
 }

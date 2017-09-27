@@ -107,7 +107,7 @@ void XMLEnvironmentMgr::parse(const pt::ptree &envTree, const std::shared_ptr<Co
 			if (typeName != "")
 			{
 				if (pConfigItem)
-					pEnvConfig = pConfigItem->getChild<ConfigItem>(typeName);
+					pEnvConfig = pConfigItem->getChild(typeName);
 
 				if (!pEnvConfig)
 				{
@@ -117,7 +117,7 @@ void XMLEnvironmentMgr::parse(const pt::ptree &envTree, const std::shared_ptr<Co
 			else
 			{
 				if (pConfigItem)
-					pEnvConfig = pConfigItem->getChild<ConfigItem>(elemName);
+					pEnvConfig = pConfigItem->getChild(elemName);
 			}
 
 			//std::string value;

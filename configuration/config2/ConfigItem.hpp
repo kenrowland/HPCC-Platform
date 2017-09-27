@@ -91,7 +91,8 @@ extern "C" class ConfigItem
         virtual void addChild(const std::shared_ptr<ConfigItem> &pItem) { m_children[pItem->getName()] = pItem; }
 		virtual void addChild(const std::shared_ptr<ConfigItem> &pItem, const std::string &name) { m_children[name] = pItem; }
         virtual std::vector<std::shared_ptr<ConfigItem>> getChildren() const;
-		template<typename T> std::shared_ptr<T> getChild(const std::string &name) const;
+		//template<typename T> std::shared_ptr<T> getChild(const std::string &name) const;
+        std::shared_ptr<ConfigItem> getChild(const std::string &name) const;
         virtual void setItemCfgValue(const std::shared_ptr<CfgValue> &pValue) { m_pValue = pValue; }
         virtual std::shared_ptr<CfgValue> getItemCfgValue() const { return m_pValue; }
 		virtual void addAttribute(const std::shared_ptr<CfgValue> &pCfgValue);
@@ -144,13 +145,13 @@ extern "C" class ConfigItem
 };
 
 
-extern "C" template<typename T> std::shared_ptr<T> ConfigItem::getChild(const std::string &name) const
-{
-	std::shared_ptr<T> pItem;
-	auto it = m_children.find(name);
-	if (it != m_children.end())
-		pItem = std::dynamic_pointer_cast<T>(it->second);
-	return pItem;
-}
+//template<typename T> std::shared_ptr<T> ConfigItem::getChild(const std::string &name) const
+//{
+//	std::shared_ptr<T> pItem;
+//	auto it = m_children.find(name);
+//	if (it != m_children.end())
+//		pItem = std::dynamic_pointer_cast<T>(it->second);
+//	return pItem;
+//}
 
 #endif // _CONFIG2_CONFIGITEM_HPP_
