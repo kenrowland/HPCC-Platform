@@ -1,6 +1,6 @@
 /*##############################################################################
 
-HPCC SYSTEMS software Copyright (C) 2015 HPCC Systems®.
+HPCC SYSTEMS software Copyright (C) 2015 HPCC Systemsï¿½.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -23,6 +23,11 @@ limitations under the License.
 #include "ConfigItem.hpp"
 #include "EnvironmentNode.hpp"
 
+class EnvironmentMgr;
+
+EnvironmentMgr *getEnvironmentMgr(const std::string &env);
+
+
 class EnvironmentMgr
 {
 	public:
@@ -31,6 +36,8 @@ class EnvironmentMgr
 			std::string name;
 			std::string value;
 		};
+
+		//static EnvironmentMgr *getInstance(const std::string &type);
 
 		EnvironmentMgr() : m_key(0) { }
 		virtual ~EnvironmentMgr() { }

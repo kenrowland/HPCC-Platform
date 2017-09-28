@@ -1,6 +1,6 @@
 /*##############################################################################
 
-HPCC SYSTEMS software Copyright (C) 2015 HPCC Systems®.
+HPCC SYSTEMS software Copyright (C) 2015 HPCC Systemsï¿½.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -17,6 +17,18 @@ limitations under the License.
 
 #include "EnvironmentMgr.hpp"
 #include "ConfigExceptions.hpp"
+#include "XMLEnvironmentMgr.hpp"
+
+
+EnvironmentMgr *getEnvironmentMgr(const std::string &type)
+{
+	EnvironmentMgr *pEnvMgr = NULL;
+	if (type == "XML")
+		pEnvMgr = new XMLEnvironmentMgr;
+
+	return pEnvMgr;
+}
+
 
 bool EnvironmentMgr::loadEnvironment(const std::string &filename)
 {

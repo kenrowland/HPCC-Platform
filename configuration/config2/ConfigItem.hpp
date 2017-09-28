@@ -49,7 +49,7 @@ namespace pt = boost::property_tree;
 class ConfigItemValueSet;
 
 
-extern "C" class ConfigItem 
+extern "C" class __attribute__ ((visibility ("default"))) ConfigItem 
 {
     public:
 
@@ -86,7 +86,7 @@ extern "C" class ConfigItem
 		int getVersion() const { return m_version; }
 
         virtual void addConfigType(const std::shared_ptr<ConfigItem> &pItem, const std::string &typeName);
-        virtual const std::shared_ptr<ConfigItem> &getConfigType(const std::string &name, bool throwIfNotPresent=false) const;
+        virtual std::shared_ptr<ConfigItem> getConfigType(const std::string &name, bool throwIfNotPresent=false) const;
 
         virtual void addChild(const std::shared_ptr<ConfigItem> &pItem) { m_children[pItem->getName()] = pItem; }
 		virtual void addChild(const std::shared_ptr<ConfigItem> &pItem, const std::string &name) { m_children[name] = pItem; }

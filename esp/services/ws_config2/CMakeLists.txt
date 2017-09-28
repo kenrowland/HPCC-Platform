@@ -67,5 +67,6 @@ target_link_libraries(
     environment
     dllserver
     securesocket
+    config2
     )
 # add config2 to above list later

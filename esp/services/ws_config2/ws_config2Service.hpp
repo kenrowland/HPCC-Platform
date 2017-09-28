@@ -5,6 +5,7 @@
 #include "ws_config2_esp.ipp"
 #include <string>
 #include "XSDConfigParser.hpp"
+#include "EnvironmentMgr.hpp"
 #include "XMLEnvironmentMgr.hpp"
 
 class Cws_config2Ex : public Cws_config2
@@ -20,7 +21,8 @@ public:
     virtual bool mockInterface(const std::string &path, IEspGetPathResponse &resp);
 
 private:
-    XMLEnvironmentMgr m_envMgr;    
+    EnvironmentMgr *m_pEnvMgr;   
+    XMLEnvironmentMgr m_EnvMgr; 
 };
 
 #endif // _WSCONFIG2_HPP_

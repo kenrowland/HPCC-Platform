@@ -116,7 +116,7 @@ void ConfigItem::addConfigType(const std::shared_ptr<ConfigItem> &pItem, const s
 }
 
 
-const std::shared_ptr<ConfigItem> &ConfigItem::getConfigType(const std::string &name, bool throwIfNotPresent) const
+std::shared_ptr<ConfigItem> ConfigItem::getConfigType(const std::string &name, bool throwIfNotPresent) const
 {
     std::shared_ptr<ConfigItem> pItem;
     auto it = m_configTypes.find(name);
@@ -218,6 +218,6 @@ std::shared_ptr<ConfigItem> ConfigItem::getChild(const std::string &name) const
 	std::shared_ptr<ConfigItem> pItem;
 	auto it = m_children.find(name);
 	if (it != m_children.end())
-		pItem = it->second;
+		return it->second;
 	return pItem;
 }
