@@ -17,6 +17,14 @@ limitations under the License.
 
 #include "XMLEnvironmentMgr.hpp"
 #include "ConfigItemValueSet.hpp"
+#include "XSDConfigParser.hpp"
+
+
+bool XMLEnvironmentMgr::createParser(const std::vector<std::string> &cfgParms)
+{
+    m_pConfigParser = std::make_shared<XSDConfigParser>(m_configPath, m_pConfig);
+    return true;
+}
 
 
 bool XMLEnvironmentMgr::load(std::istream &in)

@@ -18,8 +18,7 @@
 #include "ConfigParser.hpp"
 
 
- bool ConfigParser::parseEnvironmentConfig(const std::string &envFilename, const std::string &buildsetFilename)
+ bool ConfigParser::parseEnvironmentConfig(const std::vector<std::string> &cfgParms)
  {
-     m_buildsetFilename = buildsetFilename;
-     return doParse(envFilename);
+     return doParse(cfgParms);
  }

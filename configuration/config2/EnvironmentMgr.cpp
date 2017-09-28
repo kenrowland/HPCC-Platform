@@ -20,13 +20,32 @@ limitations under the License.
 #include "XMLEnvironmentMgr.hpp"
 
 
-EnvironmentMgr *getEnvironmentMgr(const std::string &type)
-{
-	EnvironmentMgr *pEnvMgr = NULL;
-	if (type == "XML")
-		pEnvMgr = new XMLEnvironmentMgr;
 
-	return pEnvMgr;
+EnvironmentMgr *getEnvironmentMgrInstance(const std::string &envType, const std::string &configPath)
+{
+    EnvironmentMgr *pEnvMgr = NULL;
+    if (envType == "XML")
+    {
+        //std::shared_ptr<ConfigParser> pCfgParser = std::make_shared<XSDConfigParser>(configPath, m_pConfig);
+        pEnvMgr = new XMLEnvironmentMgr(configPath);
+    }
+    return pEnvMgr;
+}
+
+
+EnvironmentMgr::EnvironmentMgr(const std::string &configPath) :
+    m_key(0), 
+    m_configPath(configPath)
+{
+    m_pConfig = std::make_shared<ConfigItem>("root");  // make the root
+}
+
+
+bool EnvironmentMgr::loadConfig(const std::vector<std::string> &cfgParms)
+{
+    createParser(cfgParms);
+    m_pConfigParser->parseEnvironmentConfig(cfgParms);
+    return true;
 }
 
 

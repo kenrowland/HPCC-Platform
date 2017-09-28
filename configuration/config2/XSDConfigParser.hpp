@@ -32,8 +32,8 @@ extern "C" class XSDConfigParser : public ConfigParser
 {
     public:
 
-        XSDConfigParser(const std::string &basePath, std::shared_ptr<ConfigItem> pConfig) :  
-            ConfigParser(basePath, pConfig) { };
+        XSDConfigParser(const std::string &basePath, std::shared_ptr<ConfigItem> &pConfig) :
+            ConfigParser(basePath, pConfig) { }
         virtual ~XSDConfigParser() { };
     
 
@@ -41,7 +41,7 @@ extern "C" class XSDConfigParser : public ConfigParser
     protected:
 
         XSDConfigParser() { };
-        virtual bool doParse(const std::string &envFilename) override;
+        virtual bool doParse(const std::vector<std::string> &cfgParms) override;
         virtual void parseXSD(const pt::ptree &tree);
         virtual void parseXSD(const std::string &filename);
         virtual std::string getXSDAttributeValue(const pt::ptree &tree, const std::string &attriName, bool throwIfNotPresent=true, const std::string &defaultVal = "") const;
@@ -61,6 +61,7 @@ extern "C" class XSDConfigParser : public ConfigParser
 
     protected:
     
+        std::string m_buildsetFilename;   
 
 };
 

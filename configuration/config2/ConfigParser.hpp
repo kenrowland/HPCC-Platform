@@ -21,35 +21,31 @@
 
 #include <string>
 #include <memory>
+#include <vector>
 
 
 #include "ConfigItem.hpp"
 
 
-
-extern "C" class ConfigParser 
+class ConfigParser 
 {
     public:
 
-        ConfigParser(const std::string &basePath, std::shared_ptr<ConfigItem> pConfig) : m_basePath(basePath), m_pConfig(pConfig) { };
+        ConfigParser(const std::string &basePath, std::shared_ptr<ConfigItem> &pConfig) : m_basePath(basePath), m_pConfig(pConfig) { };
         virtual ~ConfigParser() { };
-        virtual bool parseEnvironmentConfig(const std::string &envFilename, const std::string &buildsetFilename);
+        virtual bool parseEnvironmentConfig(const std::vector<std::string> &cfgParms);
     
 
     protected:
 
-        virtual bool doParse(const std::string &envFilename) = 0;
+        virtual bool doParse(const std::vector<std::string> &cfgParms) = 0;
         ConfigParser() { };
         
 
     protected:
 
         std::string m_basePath;
-        std::string m_buildsetFilename;
         std::shared_ptr<ConfigItem> m_pConfig;
-
-
-
 };
 
 

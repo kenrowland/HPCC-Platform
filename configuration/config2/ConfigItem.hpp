@@ -49,10 +49,8 @@ namespace pt = boost::property_tree;
 class ConfigItemValueSet;
 
 
-extern "C" class __attribute__ ((visibility ("default"))) ConfigItem 
+class ConfigItem 
 {
-    public:
-
     public:
 
         ConfigItem(const std::string &name, const std::string &className="category", std::shared_ptr<ConfigItem> pParent=nullptr) : 

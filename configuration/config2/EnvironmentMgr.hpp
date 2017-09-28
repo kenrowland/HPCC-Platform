@@ -20,12 +20,14 @@ limitations under the License.
 
 #include <string>
 #include <fstream>
+#include <vector>
 #include "ConfigItem.hpp"
+#include "ConfigParser.hpp"
 #include "EnvironmentNode.hpp"
 
 class EnvironmentMgr;
 
-EnvironmentMgr *getEnvironmentMgr(const std::string &env);
+EnvironmentMgr *getEnvironmentMgrInstance(const std::string &envType, const std::string &configPath);
 
 
 class EnvironmentMgr
@@ -39,12 +41,13 @@ class EnvironmentMgr
 
 		//static EnvironmentMgr *getInstance(const std::string &type);
 
-		EnvironmentMgr() : m_key(0) { }
+        EnvironmentMgr(const std::string &configPath);
 		virtual ~EnvironmentMgr() { }
 
-		void setConfig(const std::shared_ptr<ConfigItem> &pConfig) { m_pConfig = pConfig; }
+		//void setConfig(const std::shared_ptr<ConfigItem> &pConfig) { m_pConfig = pConfig; }
 		// add a load from stream?
-		virtual bool loadEnvironment(const std::string &file);  // return some error code,or a get last error type of call?
+        bool loadConfig(const std::vector<std::string> &cfgParms);  // parms are dependent on the environment type
+		bool loadEnvironment(const std::string &file);  // return some error code,or a get last error type of call?
 
 		std::shared_ptr<EnvironmentNode> getNodeFromPath(const std::string &path) { return getElement(path); }
 		bool setValuesForPath(const std::string &path, const std::vector<valueDef> &values, const std::string &nodeValue, bool force=false);
@@ -63,14 +66,16 @@ class EnvironmentMgr
 		std::string getUniqueKey();
 		std::shared_ptr<EnvironmentNode> getElement(const std::string &path);
 		void addPath(const std::shared_ptr<EnvironmentNode> pNode);
+        virtual bool createParser(const std::vector<std::string> &cfgParms) = 0;
 		virtual bool load(std::istream &in) = 0;
 		virtual void save(std::ostream &out) = 0;
 
 
 	protected:
 
-
+        std::string m_configPath;
 		std::shared_ptr<ConfigItem> m_pConfig;
+        std::shared_ptr<ConfigParser> m_pConfigParser;
 		std::shared_ptr<EnvironmentNode> m_pRootNode;
 		std::map<std::string, std::shared_ptr<EnvironmentNode>> m_paths;
 

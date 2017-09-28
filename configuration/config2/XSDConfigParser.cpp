@@ -26,45 +26,20 @@
 
 namespace pt = boost::property_tree;
 
-bool XSDConfigParser::doParse(const std::string &envFilename)
+bool XSDConfigParser::doParse(const std::vector<std::string> &cfgParms)
 {
     bool rc = true;
     try
     {
-        parseXSD(envFilename);
+        m_buildsetFilename = cfgParms[1];
+        parseXSD(cfgParms[0]);
     }
     catch (...)
     {
 		// need to return the message somehow here
         rc = false;
     }
-    // pt::ptree xsdTree;
-
-    // try
-    // {
-    //     std::string fpath = m_basePath + envFilename;
-    //     pt::read_xml(fpath, xsdTree);
-
-    //     //
-    //     // // Proccess include files first
-    //     // auto schemaIt = xsdTree.find("xs:schema");
-    //     // const pt::ptree &keys = schemaIt->second.get_child("", pt::ptree());
-    //     parseXSD(xsdTree);
-    //     // for (auto it = keys.begin(); it != keys.end(); ++it)
-    //     // {
-    //     //     if (it->first == "xs:include")
-    //     //     {
-    //     //         std::string schema = it->second.get("<xmlattr>.schemaLocation", "not found");
-    //     //         parseXSD(schema);
-    //     //         // std::cout << "Parsing found include: " << schema << std::endl;
-    //     //     }
-    //     // }
-    // }
-    // catch (std::exception &e)
-    // {
-    //     throw(ParseException("Input configuration file is not valid"));
-    // }
-
+    
     return rc;
 }
 

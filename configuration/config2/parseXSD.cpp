@@ -29,24 +29,28 @@ int main()
 
     try 
     {
-        std::shared_ptr<ConfigItem> pConfig = std::make_shared<ConfigItem>("root");
+        //std::shared_ptr<ConfigItem> pConfig = std::make_shared<ConfigItem>("root");
 
-        ConfigParser *pCfgParser = new XSDConfigParser("", pConfig);
+        //ConfigParser *pCfgParser = new XSDConfigParser("", pConfig);
         //std::string fpath = c_path + "types.xsd";  //dafilesrv.xsd";
         // std::shared_ptr<ConfigParser> pCfgParser = std::make_shared<XSDConfigParser>("");
         // std::shared_ptr<ConfigItem> pNull;
         // std::shared_ptr<ConfigItem> pConfig = std::make_shared<ConfigItem>("myconfig", pNull);
 
-        pCfgParser->parseEnvironmentConfig("newenv.xsd", "");
+        //pCfgParser->parseEnvironmentConfig("newenv.xsd", "");
 
-		XMLEnvironmentMgr envMgr;
+        EnvironmentMgr *pEnvMgr = getEnvironmentMgrInstance("XML", "");
+        std::vector<std::string> cfgParms;
+        cfgParms.push_back("newenv.xsd");
+        cfgParms.push_back("buildset.xml");
+        pEnvMgr->loadConfig(cfgParms);
 
-		envMgr.setConfig(pConfig);
-		envMgr.loadEnvironment("environment.xml");
+		//envMgr.setConfig(pConfig);
+        pEnvMgr->loadEnvironment("environment.xml");
 
         // 158
         //auto pNode = envMgr.getNodeFromPath("158");
-        auto pNode = envMgr.getNodeFromPath("29");     // 29 is Hardware/Computer
+        auto pNode = pEnvMgr->getNodeFromPath("29");     // 29 is Hardware/Computer
 
         auto x = pNode->getAllFieldValues("name");
 
@@ -63,11 +67,11 @@ int main()
 		// Value set test
         std::vector<EnvironmentMgr::valueDef> newValues;
         newValues.push_back({ "name", "namehasbeenchanged" });
-        envMgr.setValuesForPath("158", newValues, "", false);
+        pEnvMgr->setValuesForPath("158", newValues, "", false);
 
-		envMgr.saveEnvironment("testout.xml");
+        pEnvMgr->saveEnvironment("testout.xml");
 
-		auto results = envMgr.getNodeFromPath(".");
+		auto results = pEnvMgr->getNodeFromPath(".");
 
     }
     catch (ParseException &e)

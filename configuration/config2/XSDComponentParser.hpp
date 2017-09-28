@@ -32,8 +32,8 @@ class XSDComponentParser : public XSDConfigParser
 {
     public:
 
-        XSDComponentParser(const std::string &basePath, std::shared_ptr<ConfigItem> pConfig) :  XSDConfigParser(basePath, pConfig) { };
-        virtual ~XSDComponentParser() { };
+        XSDComponentParser(const std::string &basePath, std::shared_ptr<ConfigItem> pConfig) : XSDConfigParser(basePath, pConfig) { }
+        virtual ~XSDComponentParser() { }
         virtual void parseXSD(const pt::ptree &tree);
 
     
@@ -44,10 +44,6 @@ class XSDComponentParser : public XSDConfigParser
         virtual void parseKey(const pt::ptree &keyTree);
         virtual void parseKeyRef(const pt::ptree &keyTree);
         //void parseElement(const pt::ptree &elemTree);
-
-
-    private:
-    
 
 };
 
