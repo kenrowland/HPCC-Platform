@@ -12,7 +12,12 @@ Cws_config2Ex::Cws_config2Ex()
     //ConfigParser *pCfgParser = new XSDConfigParser("", pConfig);
     //m_envMgr.setConfig(pConfig);
 
-    m_pEnvMgr = getEnvironmentMgr("XML");
+    m_pEnvMgr = getEnvironmentMgrInstance("XML", "/home/rowlke01/configurator/");
+    std::vector<std::string> cfgParms;
+    cfgParms.push_back("newenv.xsd");
+    cfgParms.push_back("buildset.xml");
+    m_pEnvMgr->loadConfig(cfgParms);
+    m_pEnvMgr->loadEnvironment("environment.xml");
 
 }
 
@@ -22,21 +27,102 @@ Cws_config2Ex::~Cws_config2Ex()
 
 bool Cws_config2Ex::ongetPath(IEspContext &context, IEspGetPathRequest &req, IEspGetPathResponse &resp)
 {
-    StringBuffer status = "ok";
+    std::string path = req.getPath();
+    std::shared_ptr<EnvironmentNode> pNode = m_pEnvMgr->getNodeFromPath(path);
 
-    StringArray mods;
-    mods.append("mod1");
-    mods.append("mod2");
+    IArrayOf<IEspelementType> elements;
+    
+
+    //
+    // Fill out the response headdre stuff
+    resp.setInputPath(path.c_str());
+    resp.setStatus("ok");
+
+    //
+    // Attributes?
+    IArrayOf<IEspattributeType> nodeAttributes;
+    if (pNode->hasAttributes())
+    {
+        std::vector<std::shared_ptr<EnvValue>> attributes = pNode->getAttributes();
+        for (auto it=attributes.begin(); it!=attributes.end(); ++it)
+        {
+            std::shared_ptr<EnvValue> pAttr = *it;
+            Owned<IEspattributeType> pAttribute = createattributeType();
+            const std::shared_ptr<CfgValue> &pCfgValue = pAttr->getCfgValue();
+            pAttribute->updateItemInfo().setName(pAttr->getName().c_str());
+            if (pCfgValue)
+            {
+                pAttribute->updateItemInfo().setDisplayName(pCfgValue->getDisplayName().c_str());
+                pAttribute->updateDoc().setTooltip(pCfgValue->getTooltip().c_str());
+                const std::shared_ptr<CfgType> &pType = pCfgValue->getType();
+                if (pType)
+                {
+                    pAttribute->updateType().setName(pType->getName().c_str());
+                    pAttribute->updateType().updateLimits().setMin(pType->getLimits()->getMin());
+                    pAttribute->updateType().updateLimits().setMax(pType->getLimits()->getMin());
+                    StringArray excludeList;
+                    //excludeList.append("username");
+                    pAttribute->updateType().updateLimits().setDisallowList(excludeList);
+                }
+                pAttribute->setCurrentValue("");
+                pAttribute->setDefaultValue("");
+            }
+            else
+            {
+                pAttribute->updateItemInfo().setDisplayName(pAttr->getName().c_str());
+            }
+            pAttribute->updateItemInfo().setStatus("ok");
+            nodeAttributes.append(*pAttribute.getLink());
+        }
+    }
+    resp.setAttributes(nodeAttributes); 
+
+    //
+    // Now the children
+    if (pNode->hasChildren())
+    {
+        std::vector<std::shared_ptr<EnvironmentNode>> children = pNode->getChildren();
+        for (auto it=children.begin(); it!=children.end(); ++it)
+        {
+            std::shared_ptr<EnvironmentNode> pChildNode = *it;
+            std::shared_ptr<ConfigItem> pConfigItem = pChildNode->getConfigItem();
+            Owned<IEspelementType> pElement = createelementType();
+            pElement->updateItemInfo().setName(pChildNode->getName().c_str());
+            if (pConfigItem)
+            {
+                pElement->updateItemInfo().setDisplayName(pConfigItem->getDisplayName().c_str());
+                pElement->setClass(pConfigItem->getClassName().c_str());
+                pElement->setNumAllowedInstances(pConfigItem->getMinInstances());
+                pElement->setNumRequiredInstances(pConfigItem->getMaxInstances());
+            }
+            else
+            {
+                pElement->updateItemInfo().setDisplayName(pChildNode->getName().c_str());
+            }
+            
+            pElement->updateItemInfo().setStatus("ok");
+            pElement->setPath(pChildNode->getPath().c_str());
+            pElement->updateDoc().setTooltip("");
+            pElement->setNumChildren(pChildNode->getNumChildren());
+            elements.append(*pElement.getLink());
+        }
+    }
+    resp.setChildren(elements); 
+
+
+    //StringArray mods;
+    //mods.append("mod1");
+    //mods.append("mod2");
 
     //resp.setModxxx(mods);
 
-    std::string path = req.getPath();
+    
     // StringBuffer path = req.getPath();
 
     //
     // Temp code
-    resp.setInputPath(path.c_str());
-    return(mockInterface(path, resp));
+    //resp.setInputPath(path.c_str());
+    //return(mockInterface(path, resp));
 
 
     // IArrayOf<IEspelementType> elements;
@@ -48,7 +134,7 @@ bool Cws_config2Ex::ongetPath(IEspContext &context, IEspGetPathRequest &req, IEs
     // resp.setElements(elements); 
 
     // resp.setStatus(status);
-    // return true;
+    return true;  
 }
 
 

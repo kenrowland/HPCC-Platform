@@ -22,7 +22,6 @@ public:
 
 private:
     EnvironmentMgr *m_pEnvMgr;   
-    XMLEnvironmentMgr m_EnvMgr; 
 };
 
 #endif // _WSCONFIG2_HPP_

@@ -61,7 +61,7 @@ void XSDValueSetParser::parseAttribute(const pt::ptree &attr)
     pCfgValue->setDisplayName(attr.get("<xmlattr>.hpcc:displayName", attrName));
     pCfgValue->setRequired(use == "required");
     pCfgValue->setForceOutput(attr.get("<xmlattr>.forceOutput", true));
-    pCfgValue->setToolTip(attr.get("<xmlattr>.hpcc:tooltip", ""));
+    pCfgValue->setTooltip(attr.get("<xmlattr>.hpcc:tooltip", ""));
     pCfgValue->setReadOnly(attr.get("<xmlattr>.hpcc:readOnly", "false") == "true");
     pCfgValue->setHidden(attr.get("<xmlattr>.hpcc:hidden", "false") == "true");
 

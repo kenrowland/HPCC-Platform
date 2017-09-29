@@ -52,8 +52,9 @@ bool EnvironmentMgr::loadConfig(const std::vector<std::string> &cfgParms)
 bool EnvironmentMgr::loadEnvironment(const std::string &filename)
 {
 	std::ifstream in;
+    std::string fpath = m_configPath + filename;
 	
-	in.open(filename);
+	in.open(fpath);
 	if (in.is_open())
 	{
 		load(in);

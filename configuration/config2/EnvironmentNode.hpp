@@ -35,6 +35,8 @@ class EnvironmentNode : public NodeStatus, public std::enable_shared_from_this<E
 		const std::string &getName() const { return m_name;  }
 		void addChild(std::shared_ptr<EnvironmentNode> pNode);
 		std::vector<std::shared_ptr<EnvironmentNode>> getChildren(const std::string &name="") const;
+		bool hasChildren() const { return m_children.size() != 0; }
+		int getNumChildren() const { return m_children.size(); }
 		void addAttribute(const std::string &name, std::shared_ptr<EnvValue> pValue);
 		bool setAttributeValue(const std::string &name, const std::string &value, bool force=false);   // candidate for a variant?
 		std::string getAttributeValue(const std::string &name) const;                                  // candidate for a variant?
@@ -50,6 +52,7 @@ class EnvironmentNode : public NodeStatus, public std::enable_shared_from_this<E
 		void setMessage(const std::string &msg) { m_msg = msg; }
 		bool validate();
 		std::vector<std::string> getAllFieldValues(const std::string &fieldName) const;
+		const std::shared_ptr<ConfigItem> &getConfigItem() const { return m_pConfigItem; }
 
 
 
@@ -57,7 +60,7 @@ class EnvironmentNode : public NodeStatus, public std::enable_shared_from_this<E
 
 		std::string m_msg;           // error or warning message
 		std::string m_name;   
-		std::shared_ptr<ConfigItem> m_pConfigItem;  // is valid if there is config data for the node value (not related to attributes or children)
+		std::shared_ptr<ConfigItem> m_pConfigItem;  
 		std::weak_ptr<EnvironmentNode> m_pParent;
 		std::multimap<std::string, std::shared_ptr<EnvironmentNode>> m_children;
 		std::shared_ptr<EnvValue> m_pNodeValue;   // the node's value (not normal)

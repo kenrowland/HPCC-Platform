@@ -141,7 +141,7 @@ void XSDConfigParser::parseAttribute(const pt::ptree &attr)
 	pCfgValue->setDisplayName(attr.get("<xmlattr>.hpcc:displayName", attrName));
 	pCfgValue->setRequired(use == "required");
 	pCfgValue->setDefault(attr.get("<xmlattr>.default", ""));
-	pCfgValue->setToolTip(attr.get("<xmlattr>.hpcc:tooltip", ""));
+	pCfgValue->setTooltip(attr.get("<xmlattr>.hpcc:tooltip", ""));
 	pCfgValue->setReadOnly(attr.get("<xmlattr>.hpcc:readOnly", "false") == "true");
 	pCfgValue->setHidden(attr.get("<xmlattr>.hpcc:hidden", "false") == "true");
 	pCfgValue->setDeprecated(attr.get("<xmlattr>.hpcc:deprecated", "false") == "true");
@@ -405,7 +405,7 @@ std::shared_ptr<CfgType> XSDConfigParser::getCfgType(const pt::ptree &typeTree, 
     std::string typeName = getXSDAttributeValue(typeTree, "<xmlattr>.name", nameRequired, "");
 
     std::shared_ptr<CfgType> pCfgType = std::make_shared<CfgType>(typeName);
-    std::shared_ptr<CfgLimits> pLimits = std::make_shared<CfgLimits>();
+    std::shared_ptr<CfgLimits> pLimits; // = std::make_shared<CfgLimits>();
     auto restriction = typeTree.find("xs:restriction");
     if (restriction != typeTree.not_found())
     {

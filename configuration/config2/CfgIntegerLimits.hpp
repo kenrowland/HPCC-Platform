@@ -27,6 +27,8 @@ class CfgIntegerLimits : public CfgLimits
 
         CfgIntegerLimits() { };
         virtual ~CfgIntegerLimits() { };
+        int getMin() const { return m_minInclusive; }
+        int getMax() const { return m_maxInclusive; }
 
 
     protected:

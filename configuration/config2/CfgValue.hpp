@@ -29,6 +29,7 @@ class CfgValue
         CfgValue(const std::string &name) : m_name(name), m_displayName(name), m_required(true), m_readOnly(false), m_hidden(false), m_defaultSet(false), m_deprecated(false), m_forceOutput(true), m_isKey(false) { }
         virtual ~CfgValue() { }
         void setType(const std::shared_ptr<CfgType> &pType);
+        const std::shared_ptr<CfgType> &getType() const { return m_pType; }
         const std::string &getName() const { return m_name; }
         bool isValueValid(const std::string &newValue) const;
         //bool setValue(const std::string &newValue) { return true; }
@@ -47,8 +48,8 @@ class CfgValue
 		bool isDeprecated() const { return m_deprecated; }
 		void setForceOutput(bool force) { m_forceOutput = force; }
 		bool isForceOutput() const { return m_forceOutput;  }
-        void setToolTip(const std::string &toolTip) { m_toolTip = toolTip; }
-        const std::string &getToolTip() const { return m_toolTip; }
+        void setTooltip(const std::string &tooltip) { m_tooltip = tooltip; }
+        const std::string &getTooltip() const { return m_tooltip; }
         void addModifer(const std::string &mod) { m_modifiers.push_back(mod); }
         void setModifiers(const std::vector<std::string> &list) { m_modifiers = list;  }
         const std::vector<std::string> &getModifiers() const { return m_modifiers; }
@@ -71,7 +72,7 @@ class CfgValue
 		bool m_forceOutput;
         bool m_isKey;
         std::string m_default;
-        std::string m_toolTip;
+        std::string m_tooltip;
         std::vector<std::string> m_modifiers;
         std::shared_ptr<CfgValue> m_pKeyRefValue;    // this value serves as the key from which values are valid
 };

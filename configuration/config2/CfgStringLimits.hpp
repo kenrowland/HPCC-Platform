@@ -28,6 +28,8 @@ class CfgStringLimits : public CfgLimits
         CfgStringLimits() : m_removeWhiteSpace(true) { };
         virtual ~CfgStringLimits() { };
         void setRemoveWhiteSpace(bool remove) { m_removeWhiteSpace = true; }
+        int getMin() const { return m_minLength; }
+        int getMax() const { return m_maxLength; }
 
 
     protected:
