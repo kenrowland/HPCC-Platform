@@ -37,7 +37,6 @@ bool XMLEnvironmentMgr::load(std::istream &in)
 	//
 	// Start at root, these better match!
 	std::string rootName = rootIt->first;
-	//std::shared_ptr<EnvironmentNode> pRootNode;
 	if (rootName == m_pConfig->getName())
 	{
 		m_pRootNode = std::make_shared<EnvironmentNode>(m_pConfig, rootName);
@@ -52,11 +51,10 @@ bool XMLEnvironmentMgr::load(std::istream &in)
 
 void XMLEnvironmentMgr::save(std::ostream &out)
 {
-	pt::ptree envTree;
-
+	pt::ptree envTree, topTree;
 	serialize(envTree, m_pRootNode);
-
-	pt::write_xml(out, envTree);
+	topTree.add_child("Environment", envTree);
+	pt::write_xml(out, topTree);
 }
 
 
@@ -69,11 +67,8 @@ void XMLEnvironmentMgr::parse(const pt::ptree &envTree, const std::shared_ptr<Co
 		value = envTree.get<std::string>("");
 		if (value != "")
 		{
-			std::shared_ptr<CfgValue> pCfgValue;
-			if (pConfigItem)
-				pCfgValue = pConfigItem->getItemCfgValue();
-			std::shared_ptr<EnvValue> pEnvValue = std::make_shared<EnvValue>(pEnvNode, "");  // node's value has no name
-			pEnvValue->setCfgValue(pCfgValue);
+			std::shared_ptr<CfgValue> pCfgValue = pConfigItem->getItemCfgValue();
+			std::shared_ptr<EnvValue> pEnvValue = std::make_shared<EnvValue>(pEnvNode, pCfgValue, "");  // node's value has no name
 			pEnvValue->setValue(value);
 			pEnvNode->setNodeEnvValue(pEnvValue);
 		}
@@ -95,15 +90,9 @@ void XMLEnvironmentMgr::parse(const pt::ptree &envTree, const std::shared_ptr<Co
 		{
 			for (auto attrIt = it->second.begin(); attrIt != it->second.end(); ++attrIt)
 			{
-				std::shared_ptr<CfgValue> pCfgValue;
-				std::shared_ptr<EnvValue> pEnvValue = std::make_shared<EnvValue>(pEnvNode, attrIt->first);   // this is where we would use a variant
-				if (pConfigItem)
-					pCfgValue = pConfigItem->getAttribute(attrIt->first);
-				if (!pCfgValue)
-				{
-					pEnvNode->addStatus(NodeStatus::warning, "Attribute " + attrIt->first + " not defined in configuration schema, unable to validate value.");
-				}
-				pEnvValue->setCfgValue(pCfgValue);
+				std::shared_ptr<CfgValue> pCfgValue = pConfigItem->getAttribute(attrIt->first);
+				std::shared_ptr<EnvValue> pEnvValue = std::make_shared<EnvValue>(pEnvNode, pCfgValue, attrIt->first);   // this is where we would use a variant
+				//pEnvNode->addStatus(NodeStatus::warning, "Attribute " + attrIt->first + " not defined in configuration schema, unable to validate value.");
 				pEnvValue->setValue(attrIt->second.get_value<std::string>());
 				pEnvNode->addAttribute(attrIt->first, pEnvValue);
 			}
@@ -114,53 +103,22 @@ void XMLEnvironmentMgr::parse(const pt::ptree &envTree, const std::shared_ptr<Co
 			std::shared_ptr<ConfigItem> pEnvConfig;
 			if (typeName != "")
 			{
-				if (pConfigItem)
-					pEnvConfig = pConfigItem->getChild(typeName);
-
-				if (!pEnvConfig)
-				{
-					pEnvNode->addStatus(NodeStatus::warning, "Specified schema " + typeName + " was not found");
-				}
+				pEnvConfig = pConfigItem->getChild(typeName);
+				// if pEnvConfig->getName == undefined  ....
+				//pEnvNode->addStatus(NodeStatus::warning, "Specified schema " + typeName + " was not found");
 			}
 			else
 			{
-				if (pConfigItem)
-					pEnvConfig = pConfigItem->getChild(elemName);
+				pEnvConfig = pConfigItem->getChild(elemName);
+				// if pEnvConfig->getName == undefined  ....  same, but not based on buildset
 			}
-
-			//std::string value;
-			//try
-			//{
-			//	value = it->second.get<std::string>("");
-			//	if (value != "")
-			//	{
-			//		std::shared_ptr<CfgValue> pCfgValue;
-			//		if (pConfigItem)
-			//			pCfgValue = pConfigItem->getItemCfgValue();
-			//		std::shared_ptr<EnvValue> pEnvValue = std::make_shared<EnvValue>("");  // node's value has no name
-			//		pEnvValue->setCfgValue(pCfgValue);
-			//		pEnvValue->setValue(value);
-			//		pEnvNode->setNodeEnvValue(pEnvValue);
-			//	}
-			//}
-			//catch (...)
-			//{
-			//	// do nothing
-			//}
 
 			
-			//if (pEnvConfig)
-			{
-				std::shared_ptr<EnvironmentNode> pElementNode = std::make_shared<EnvironmentNode>(pEnvConfig, elemName, pEnvNode);
-				pElementNode->setPath(getUniqueKey());
-				addPath(pElementNode);
-				parse(it->second, pEnvConfig, pElementNode);
-				pEnvNode->addChild(pElementNode);
-			}
-			//else
-			//{
-				// this is where we need to generate a raw environment node that just passes thru environment stuff
-			//}
+			std::shared_ptr<EnvironmentNode> pElementNode = std::make_shared<EnvironmentNode>(pEnvConfig, elemName, pEnvNode);
+			pElementNode->setPath(getUniqueKey());
+			addPath(pElementNode);
+			parse(it->second, pEnvConfig, pElementNode);
+			pEnvNode->addChild(pElementNode);
 		}
 	}
 }

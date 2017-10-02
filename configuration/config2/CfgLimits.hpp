@@ -52,8 +52,8 @@ class CfgLimits
         void addPattern(const std::string &pattern) { m_patterns.push_back(pattern); }
         void addAllowedValue(const std::string &value, const std::string &desc="") { m_allowedValues.push_back(AllowedValue(value, desc)); }
         bool isValueValid(const std::string &testValue) { return true; }
-        virtual int getMin() const = 0;
-        virtual int getMax() const = 0;
+		virtual int getMin() { return m_minInclusive; }
+        virtual int getMax() { return m_maxInclusive; }
 
 
     protected:

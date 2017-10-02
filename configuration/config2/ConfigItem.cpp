@@ -21,13 +21,37 @@
 #include "CfgIntegerLimits.hpp"
 #include <algorithm>
 
+
+ConfigItem::ConfigItem(const std::string &name, const std::string &className, const std::shared_ptr<ConfigItem> &pParent) :
+	m_className(className), 
+	m_name(name), 
+	m_pParent(pParent), 
+	m_displayName(name),
+	m_minInstances(1), 
+	m_maxInstances(1), 
+	m_isConfigurable(false), 
+	m_version(-1) 
+{
+	//
+	// If this is a root node (no parent), then do some additional init so that default nodes
+	// throughout the configuration can present a set of objects, even for non configured elements
+	if (m_pParent.expired())
+	{
+		std::shared_ptr<CfgType> pDefaultType = std::make_shared<CfgType>("none");
+		std::shared_ptr<CfgLimits> pDefaultLimits = std::make_shared<CfgLimits>();
+		pDefaultType->setLimits(pDefaultLimits);
+		addType(pDefaultType);
+	}
+}
+
+
 void ConfigItem::addType(const std::shared_ptr<CfgType> &pType)
 {
     m_types[pType->getName()] = pType;
 }
 
 
-const std::shared_ptr<CfgType> ConfigItem::getType(const std::string &typeName)
+const std::shared_ptr<CfgType> &ConfigItem::getType(const std::string &typeName) const
 {
     auto it = m_types.find(typeName);
     if (it != m_types.end())
@@ -41,19 +65,19 @@ const std::shared_ptr<CfgType> ConfigItem::getType(const std::string &typeName)
         {
             return pParent->getType(typeName);
         }
-        else
-        {
-            //
-            // We are at the root and did not find the type. Inspect the type to see if it is a builtin type and add it if needed
-            std::shared_ptr<CfgLimits> pLimits = getStandardTypeLimits(typeName);
-            if (pLimits)
-            {
-                std::shared_ptr<CfgType> pCfgType = std::make_shared<CfgType>(typeName);
-                pCfgType->setLimits(pLimits);
-                addType(pCfgType);
-                return pCfgType;
-            }
-        }    
+        //else
+        //{
+        //    //
+        //    // We are at the root and did not find the type. Inspect the type to see if it is a builtin type and add it if needed
+        //    std::shared_ptr<CfgLimits> pLimits = getStandardTypeLimits(typeName);
+        //    if (pLimits)
+        //    {
+        //        std::shared_ptr<CfgType> pCfgType = std::make_shared<CfgType>(typeName);
+        //        pCfgType->setLimits(pLimits);
+        //        //addType(pCfgType);
+        //        return pCfgType;
+        //    }
+        //}    
     }
 
     //
@@ -63,36 +87,37 @@ const std::shared_ptr<CfgType> ConfigItem::getType(const std::string &typeName)
 }
 
 
-std::shared_ptr<CfgLimits> ConfigItem::getStandardTypeLimits(const std::string &baseType) const
-{
-    std::shared_ptr<CfgLimits> pLimits;
-	if (baseType == "xs:string" || baseType == "xs:token")
-	{
-		pLimits = std::make_shared<CfgStringLimits>();
-	}
-	else if (baseType == "xs:integer" || baseType == "xs:int")
-	{
-		pLimits = std::make_shared<CfgIntegerLimits>();
-	}
-    else if (baseType == "xs:nonNegativeInteger")
-    {
-        pLimits = std::make_shared<CfgIntegerLimits>();
-        pLimits->setMinInclusive(0);
-    }
-    else if (baseType == "xs:positiveInteger")
-    {
-        pLimits = std::make_shared<CfgIntegerLimits>();
-        pLimits->setMinInclusive(1);
-    }
-	else if (baseType == "xs:boolean")
-	{
-		pLimits = std::make_shared<CfgStringLimits>(); 
-		pLimits->addAllowedValue("true");
-		pLimits->addAllowedValue("false");
-	}
-	
-    return pLimits;
-}
+// todo: this needs to move out of config item, it is XSD specific
+//std::shared_ptr<CfgLimits> ConfigItem::getStandardTypeLimits(const std::string &baseType) const
+//{
+//    std::shared_ptr<CfgLimits> pLimits;
+//	if (baseType == "xs:string" || baseType == "xs:token")
+//	{
+//		pLimits = std::make_shared<CfgStringLimits>();
+//	}
+//	else if (baseType == "xs:integer" || baseType == "xs:int")
+//	{
+//		pLimits = std::make_shared<CfgIntegerLimits>();
+//	}
+//    else if (baseType == "xs:nonNegativeInteger")
+//    {
+//        pLimits = std::make_shared<CfgIntegerLimits>();
+//        pLimits->setMinInclusive(0);
+//    }
+//    else if (baseType == "xs:positiveInteger")
+//    {
+//        pLimits = std::make_shared<CfgIntegerLimits>();
+//        pLimits->setMinInclusive(1);
+//    }
+//	else if (baseType == "xs:boolean")
+//	{
+//		pLimits = std::make_shared<CfgStringLimits>(); 
+//		pLimits->addAllowedValue("true");
+//		pLimits->addAllowedValue("false");
+//	}
+//	
+//    return pLimits;
+//}
 
 
 bool ConfigItem::addUniqueName(const std::string keyName)
@@ -162,10 +187,15 @@ void ConfigItem::addAttribute(const std::vector<std::shared_ptr<CfgValue>> &attr
 
 std::shared_ptr<CfgValue> ConfigItem::getAttribute(const std::string &name) const
 {
-	std::shared_ptr<CfgValue> pCfgValue;
+	std::shared_ptr<CfgValue> pCfgValue;  
 	auto it = m_attributes.find(name);
 	if (it != m_attributes.end())
 		pCfgValue = it->second;
+	else
+	{
+		pCfgValue = std::make_shared<CfgValue>(name);
+		pCfgValue->setType(getType("none"));
+	}
 	return pCfgValue;
 }
 
@@ -213,11 +243,17 @@ std::vector<std::shared_ptr<ConfigItem>> ConfigItem::getChildren() const
     return children;
 }
 
-std::shared_ptr<ConfigItem> ConfigItem::getChild(const std::string &name) const
+std::shared_ptr<ConfigItem> ConfigItem::getChild(const std::string &name)
 {
 	std::shared_ptr<ConfigItem> pItem;
 	auto it = m_children.find(name);
 	if (it != m_children.end())
-		return it->second;
+	{
+		pItem = it->second;
+	}
+	else
+	{
+		pItem = std::make_shared<ConfigItem>(name, "undefined", shared_from_this());
+	}
 	return pItem;
 }

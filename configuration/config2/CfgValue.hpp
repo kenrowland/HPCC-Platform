@@ -26,9 +26,9 @@ class CfgValue
 {
     public:
 
-        CfgValue(const std::string &name) : m_name(name), m_displayName(name), m_required(true), m_readOnly(false), m_hidden(false), m_defaultSet(false), m_deprecated(false), m_forceOutput(true), m_isKey(false) { }
+        CfgValue(const std::string &name, bool isDefined=true) : m_name(name), m_displayName(name), m_required(false), m_readOnly(false), m_hidden(false), m_defaultSet(false), m_deprecated(false), m_forceOutput(false), m_isKey(false) { }
         virtual ~CfgValue() { }
-        void setType(const std::shared_ptr<CfgType> &pType);
+        void setType(const std::shared_ptr<CfgType> pType) { m_pType = pType; }
         const std::shared_ptr<CfgType> &getType() const { return m_pType; }
         const std::string &getName() const { return m_name; }
         bool isValueValid(const std::string &newValue) const;
@@ -38,7 +38,7 @@ class CfgValue
         void setRequired(bool reqd) { m_required = reqd; }
         bool isRequired() const { return m_required; }
 		void setDefault(const std::string &dflt) { m_default = dflt; m_defaultSet = true; }
-        const std::string &getDefault() const { return m_default; }
+        const std::string &getDefaultValue() const { return m_default; }
 		bool hasDefaultValue() const { return m_defaultSet; }
         void setReadOnly(bool readOnly) { m_readOnly = readOnly; }
         bool isReadOnly() const { return m_readOnly; }
@@ -57,6 +57,7 @@ class CfgValue
         void setKey(bool isKey) { m_isKey = isKey; }
         bool isKey() const { return m_isKey;  }
         void setKeyRef(const std::shared_ptr<CfgValue> &pValue) { m_pKeyRefValue = pValue; }
+		bool isDefined() const { return m_isDefined;  }
 
 
     protected:
@@ -71,6 +72,7 @@ class CfgValue
 		bool m_deprecated;
 		bool m_forceOutput;
         bool m_isKey;
+		bool m_isDefined;  // false indicates a value for which there is no defined configuration
         std::string m_default;
         std::string m_tooltip;
         std::vector<std::string> m_modifiers;

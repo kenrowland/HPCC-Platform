@@ -49,13 +49,11 @@ namespace pt = boost::property_tree;
 class ConfigItemValueSet;
 
 
-class ConfigItem 
+class ConfigItem : public std::enable_shared_from_this<ConfigItem>
 {
     public:
 
-        ConfigItem(const std::string &name, const std::string &className="category", std::shared_ptr<ConfigItem> pParent=nullptr) : 
-            m_className(className), m_name(name), m_pParent(pParent), m_displayName(name), 
-            m_minInstances(1), m_maxInstances(1), m_isConfigurable(false), m_version(-1)  { }
+		ConfigItem(const std::string &name, const std::string &className = "category", const std::shared_ptr<ConfigItem> &pParent = nullptr);
         virtual ~ConfigItem() { }
 
         virtual const std::string &getClassName() const { return m_className; }
@@ -77,8 +75,8 @@ class ConfigItem
         int getMaxInstances() const { return m_maxInstances; }
 
         virtual void addType(const std::shared_ptr<CfgType> &pType);
-        virtual const std::shared_ptr<CfgType> getType(const std::string &typeName);
-        std::shared_ptr<CfgLimits> getStandardTypeLimits(const std::string &typeName) const;
+        virtual const std::shared_ptr<CfgType> &getType(const std::string &typeName) const;
+        //std::shared_ptr<CfgLimits> getStandardTypeLimits(const std::string &typeName) const;
 
 		void setVersion(int version) { m_version = version;  }
 		int getVersion() const { return m_version; }
@@ -90,7 +88,7 @@ class ConfigItem
 		virtual void addChild(const std::shared_ptr<ConfigItem> &pItem, const std::string &name) { m_children[name] = pItem; }
         virtual std::vector<std::shared_ptr<ConfigItem>> getChildren() const;
 		//template<typename T> std::shared_ptr<T> getChild(const std::string &name) const;
-        std::shared_ptr<ConfigItem> getChild(const std::string &name) const;
+        std::shared_ptr<ConfigItem> getChild(const std::string &name);
         virtual void setItemCfgValue(const std::shared_ptr<CfgValue> &pValue) { m_pValue = pValue; }
         virtual std::shared_ptr<CfgValue> getItemCfgValue() const { return m_pValue; }
 		virtual void addAttribute(const std::shared_ptr<CfgValue> &pCfgValue);
@@ -121,8 +119,8 @@ class ConfigItem
 		bool m_isConfigurable;
         std::map<std::string, std::shared_ptr<ConfigItem>> m_children; 
         std::shared_ptr<CfgValue> m_pValue;   // value for this item (think of it as the VALUE for an element <xx attr= att1=>VALUE</xx>)
-		std::map<std::string, std::shared_ptr<CfgValue>> m_attributes;   // attributes for this item (thin in xml terms <m_name attr1="val" attr2="val" .../> where attrN is in this vector
-        std::set<std::string> m_keys;   // generic set of key values for use by any component to prevent duplicat operations
+		std::map<std::string, std::shared_ptr<CfgValue>> m_attributes;   // attributes for this item (think in xml terms <m_name attr1="val" attr2="val" .../> where attrN is in this vector
+        std::set<std::string> m_keys;   // generic set of key values for use by any component to prevent duplicate operations
         std::weak_ptr<ConfigItem> m_pParent;
 
         std::map<std::string, std::shared_ptr<CfgType>> m_types;

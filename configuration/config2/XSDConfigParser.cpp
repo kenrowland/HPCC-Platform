@@ -23,6 +23,8 @@
 #include "XSDComponentParser.hpp"
 #include "XSDValueSetParser.hpp"
 #include "ConfigItemComponent.hpp"
+#include "CfgStringLimits.hpp"
+#include "CfgIntegerLimits.hpp"
 
 namespace pt = boost::property_tree;
 
@@ -31,6 +33,43 @@ bool XSDConfigParser::doParse(const std::vector<std::string> &cfgParms)
     bool rc = true;
     try
     {
+		//
+		// Add some default types to the config. Note changing values for limits 
+		std::shared_ptr<CfgLimits> pStringLimits = std::make_shared<CfgStringLimits>();;
+		std::shared_ptr<CfgLimits> pIntLimits = std::make_shared<CfgIntegerLimits>();
+
+		std::shared_ptr<CfgType> pType = std::make_shared<CfgType>("xs:string");
+		pType->setLimits(pStringLimits);
+		m_pConfig->addType(pType);
+
+		pType = std::make_shared<CfgType>("xs:token");
+		pType->setLimits(pStringLimits);
+		m_pConfig->addType(pType);
+
+		pType = std::make_shared<CfgType>("xs:boolean");
+		pStringLimits->addAllowedValue("true");
+		pStringLimits->addAllowedValue("false");
+		pType->setLimits(pStringLimits);
+		m_pConfig->addType(pType);
+
+		pType = std::make_shared<CfgType>("xs:integer");
+		pType->setLimits(pIntLimits);
+		m_pConfig->addType(pType);
+
+		pType = std::make_shared<CfgType>("xs:int");
+		pType->setLimits(pIntLimits);
+		m_pConfig->addType(pType);
+
+		pType = std::make_shared<CfgType>("xs:nonNegativeInteger");
+		pIntLimits->setMinInclusive(0);
+		pType->setLimits(pIntLimits);
+		m_pConfig->addType(pType);
+
+		pType = std::make_shared<CfgType>("xs:positiveInteger");
+		pIntLimits->setMinInclusive(1);
+		pType->setLimits(pIntLimits);
+		m_pConfig->addType(pType);
+
         m_buildsetFilename = cfgParms[1];
         parseXSD(cfgParms[0]);
     }
@@ -410,7 +449,8 @@ std::shared_ptr<CfgType> XSDConfigParser::getCfgType(const pt::ptree &typeTree, 
     if (restriction != typeTree.not_found())
     {
         std::string baseType = getXSDAttributeValue(restriction->second, "<xmlattr>.base");
-        pLimits = m_pConfig->getStandardTypeLimits(baseType);
+		std::shared_ptr<CfgType> pType = m_pConfig->getType(baseType);
+		pLimits = pType->getLimits();
         if (!pLimits)
         {
             std::string msg = "Unsupported base type(" + baseType + ")";

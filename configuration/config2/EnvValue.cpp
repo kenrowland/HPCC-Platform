@@ -109,3 +109,4 @@ bool EnvValue::validate() const
 {
     return isValueValid(m_value);
 }
+

@@ -60,7 +60,8 @@ bool EnvironmentNode::setAttributeValue(const std::string &name, const std::stri
 	// This is a non-defined attribute. If force is true, create a new non-config backed attribute
 	else if (force)
 	{
-		std::shared_ptr<EnvValue> pEnvValue = std::make_shared<EnvValue>(shared_from_this(), name);
+		std::shared_ptr<CfgValue> pCfgValue = std::make_shared<CfgValue>(name, false);
+		std::shared_ptr<EnvValue> pEnvValue = std::make_shared<EnvValue>(shared_from_this(), pCfgValue, name);
 		addStatus(NodeStatus::warning, "Attribute " + name + " not defined in configuration schema, unable to validate value.");
 		pEnvValue->setValue(value);
 		addAttribute(name, pEnvValue);
@@ -96,11 +97,9 @@ bool EnvironmentNode::setValue(const std::string &value, bool force)
 	}
 	else
 	{
-		std::shared_ptr<CfgValue> pCfgValue;
+		std::shared_ptr<CfgValue> pCfgValue = m_pConfigItem->getItemCfgValue();
 		
-		m_pNodeValue = std::make_shared<EnvValue>(shared_from_this(), "");  // node's value has no name
-		if (m_pConfigItem)
-			m_pNodeValue->setCfgValue(m_pConfigItem->getItemCfgValue());
+		m_pNodeValue = std::make_shared<EnvValue>(shared_from_this(), pCfgValue, "");  // node's value has no name
 		rc = m_pNodeValue->setValue(value, force);
 	}
 	return rc;

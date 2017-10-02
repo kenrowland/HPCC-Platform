@@ -18,11 +18,6 @@
 #include "CfgValue.hpp"
 
 
-void CfgValue::setType(const std::shared_ptr<CfgType> &pType)
-{
-    m_pType = pType;
-}
-
 
 bool CfgValue::isValueValid(const std::string &newValue) const
 {
@@ -30,8 +25,6 @@ bool CfgValue::isValueValid(const std::string &newValue) const
 
 	if (m_pType)
 		rc = m_pType->isValueValid(newValue);
-
-
 
 	return rc;
 }

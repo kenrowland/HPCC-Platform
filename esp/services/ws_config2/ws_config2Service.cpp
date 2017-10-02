@@ -48,30 +48,24 @@ bool Cws_config2Ex::ongetPath(IEspContext &context, IEspGetPathRequest &req, IEs
         {
             std::shared_ptr<EnvValue> pAttr = *it;
             Owned<IEspattributeType> pAttribute = createattributeType();
-            const std::shared_ptr<CfgValue> &pCfgValue = pAttr->getCfgValue();
+            
+			const std::shared_ptr<CfgValue> &pCfgValue = pAttr->getCfgValue();
             pAttribute->updateItemInfo().setName(pAttr->getName().c_str());
-            if (pCfgValue)
-            {
-                pAttribute->updateItemInfo().setDisplayName(pCfgValue->getDisplayName().c_str());
-                pAttribute->updateDoc().setTooltip(pCfgValue->getTooltip().c_str());
-                const std::shared_ptr<CfgType> &pType = pCfgValue->getType();
-                if (pType)
-                {
-                    pAttribute->updateType().setName(pType->getName().c_str());
-                    pAttribute->updateType().updateLimits().setMin(pType->getLimits()->getMin());
-                    pAttribute->updateType().updateLimits().setMax(pType->getLimits()->getMin());
-                    StringArray excludeList;
-                    //excludeList.append("username");
-                    pAttribute->updateType().updateLimits().setDisallowList(excludeList);
-                }
-                pAttribute->setCurrentValue("");
-                pAttribute->setDefaultValue("");
-            }
-            else
-            {
-                pAttribute->updateItemInfo().setDisplayName(pAttr->getName().c_str());
-            }
-            pAttribute->updateItemInfo().setStatus("ok");
+            pAttribute->updateItemInfo().setDisplayName(pCfgValue->getDisplayName().c_str());
+            pAttribute->updateDoc().setTooltip(pCfgValue->getTooltip().c_str());
+            
+			const std::shared_ptr<CfgType> &pType = pCfgValue->getType();
+            pAttribute->updateType().setName(pType->getName().c_str());
+            pAttribute->updateType().updateLimits().setMin(pType->getLimits()->getMin());
+            pAttribute->updateType().updateLimits().setMax(pType->getLimits()->getMin());
+            StringArray excludeList;
+            //excludeList.append("username");
+            pAttribute->updateType().updateLimits().setDisallowList(excludeList);
+
+            pAttribute->setCurrentValue(pAttr->getValue().c_str());
+            pAttribute->setDefaultValue("");
+            
+			pAttribute->updateItemInfo().setStatus("ok");
             nodeAttributes.append(*pAttribute.getLink());
         }
     }
@@ -88,18 +82,11 @@ bool Cws_config2Ex::ongetPath(IEspContext &context, IEspGetPathRequest &req, IEs
             std::shared_ptr<ConfigItem> pConfigItem = pChildNode->getConfigItem();
             Owned<IEspelementType> pElement = createelementType();
             pElement->updateItemInfo().setName(pChildNode->getName().c_str());
-            if (pConfigItem)
-            {
-                pElement->updateItemInfo().setDisplayName(pConfigItem->getDisplayName().c_str());
-                pElement->setClass(pConfigItem->getClassName().c_str());
-                pElement->setNumAllowedInstances(pConfigItem->getMinInstances());
-                pElement->setNumRequiredInstances(pConfigItem->getMaxInstances());
-            }
-            else
-            {
-                pElement->updateItemInfo().setDisplayName(pChildNode->getName().c_str());
-            }
-            
+            pElement->updateItemInfo().setDisplayName(pConfigItem->getDisplayName().c_str());
+            pElement->setClass(pConfigItem->getClassName().c_str());
+            pElement->setNumAllowedInstances(pConfigItem->getMinInstances());
+            pElement->setNumRequiredInstances(pConfigItem->getMaxInstances());
+                        
             pElement->updateItemInfo().setStatus("ok");
             pElement->setPath(pChildNode->getPath().c_str());
             pElement->updateDoc().setTooltip("");
