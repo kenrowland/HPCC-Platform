@@ -47,18 +47,19 @@ std::vector<std::shared_ptr<EnvValue>> EnvironmentNode::getAttributes() const
 }
 
 
-bool EnvironmentNode::setAttributeValue(const std::string &name, const std::string &value, bool force)
+// should probably return a status object, and put path/valueName in there
+bool EnvironmentNode::setAttributeValue(const std::string &name, const std::string &value, bool allowInvalid, bool forceCreate)
 {
 	bool rc = false;
 	auto it = m_attributes.find(name);
 	if (it != m_attributes.end())
 	{
-		rc = it->second->setValue(value, force);
+		rc = it->second->setValue(value, allowInvalid);
 	}
 
 	//
 	// This is a non-defined attribute. If force is true, create a new non-config backed attribute
-	else if (force)
+	else if (forceCreate)
 	{
 		std::shared_ptr<CfgValue> pCfgValue = std::make_shared<CfgValue>(name, false);
 		std::shared_ptr<EnvValue> pEnvValue = std::make_shared<EnvValue>(shared_from_this(), pCfgValue, name);
