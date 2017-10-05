@@ -103,7 +103,7 @@ ESPresponse [exceptions_inline, encode(0)] GetPathResponse
 	string status("error");
 	ESPstruct docType doc;
     ESParray<ESPstruct attributeType, attribute> attributes;
-    ESParray<ESPstruct elementType, children> children;
+    ESParray<ESPstruct elementType, child> children;
 	bool valueDefined(false);                                    // indicates that value if defined (not normal)
 	ESPstruct attributeType value;                               // this would be <element>value</element> not normal, see valueDefined
 };
@@ -119,7 +119,8 @@ ESPrequest SetValuesRequest
 {
     string path;    // 
     ESParray<ESPstruct attributeValueType, attribute> attributeValues;
-	bool force(false);  // force setting of value for the path
+	bool allowInvalid(false);  // true to allow setting an invalid value
+    bool forceCreate(false);   // force creaation of new value if not defined
 	string value("");   // only valid if valueDefined is true for this path, ignored otherwise
 };
 
@@ -127,6 +128,7 @@ ESPrequest SetValuesRequest
 ESPresponse [exceptions_inline, encode(0)] SetValueSetResponse
 {
     string status("error");
+    ESPstruct docType doc;
     //ESParray<ESPstruct valueType, value> values;
 };
 
@@ -134,8 +136,9 @@ ESPresponse [exceptions_inline, encode(0)] SetValueSetResponse
 ESPservice [auth_feature("DEFERRED"),version("2.0"), default_client_version("2.0"), exceptions_inline("xslt/exceptions.xslt")] ws_config2
 {
     ESPMethod getPath(GetPathRequest, GetPathResponse);
-    
+    ESPMethod setValues(SetValuesRequest, GetPathResponse);
 };
+
 
 SCMexportdef(ws_config2);
 

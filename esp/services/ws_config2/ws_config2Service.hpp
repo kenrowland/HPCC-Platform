@@ -17,6 +17,7 @@ public:
     virtual ~Cws_config2Ex();
 
     virtual bool ongetPath(IEspContext &context, IEspGetPathRequest &req, IEspGetPathResponse &resp);
+    virtual bool onsetValues(IEspContext &context, IEspSetValuesRequest &req, IEspGetPathResponse &resp);
 
     virtual bool mockInterface(const std::string &path, IEspGetPathResponse &resp);
 

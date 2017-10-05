@@ -25,6 +25,7 @@
 
 //ESP Service
 #include "ws_config2Service.hpp"
+#include "ws_config2_binding.hpp"
 
 #include "espplugin.hpp"
 
@@ -46,7 +47,7 @@ ESP_FACTORY IEspRpcBinding * esp_binding_factory(const char *name, const char* t
 {
    if (strcmp(type, "ws_config2SoapBinding")==0)
    {
-        return new Cws_config2SoapBinding(cfg, name, process);
+        return new Cws_config2SoapBindingEx(cfg, name, process);
    }
 
    return NULL;

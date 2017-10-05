@@ -12,7 +12,7 @@ Cws_config2Ex::Cws_config2Ex()
     //ConfigParser *pCfgParser = new XSDConfigParser("", pConfig);
     //m_envMgr.setConfig(pConfig);
 
-    m_pEnvMgr = getEnvironmentMgrInstance("XML", "/home/rowlke01/configurator/");
+    m_pEnvMgr = getEnvironmentMgrInstance("XML", "/opt/HPCCSystems/componentfiles/config2xml/");
     std::vector<std::string> cfgParms;
     cfgParms.push_back("newenv.xsd");
     cfgParms.push_back("buildset.xml");
@@ -122,6 +122,33 @@ bool Cws_config2Ex::ongetPath(IEspContext &context, IEspGetPathRequest &req, IEs
 
     // resp.setStatus(status);
     return true;  
+}
+
+
+bool Cws_config2Ex::onsetValues(IEspContext &context, IEspSetValuesRequest &req, IEspGetPathResponse &resp)
+{
+    std::string path = req.getPath();
+    std::shared_ptr<EnvironmentNode> pNode = m_pEnvMgr->getNodeFromPath(path);
+    if (pNode)
+    {
+        bool forceCreate = req.getForceCreate();
+        bool allowInvalid = req.getAllowInvalid();
+        IArrayOf<IConstattributeValueType> &attrbuteValues = req.getAttributeValues();
+        ForEachItemIn(i, attrbuteValues)
+        {
+            IConstattributeValueType& attrVal = attrbuteValues.item(i);
+            std::string name = attrVal.getName();
+            std::string value = attrVal.getValue();
+            pNode->setAttributeValue(name, value, allowInvalid, forceCreate);
+        }
+    }
+    else
+    {
+        resp.setStatus("error");
+        resp.updateDoc().setMsg("Invalid path");
+    }
+   
+    return true;
 }
 
 
