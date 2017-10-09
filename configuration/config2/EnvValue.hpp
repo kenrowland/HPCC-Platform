@@ -44,13 +44,11 @@ class EnvValue : public NodeStatus
 
 		std::string m_name;
 		std::string m_value;
-		std::shared_ptr<CfgValue> m_pCfgValue;   // may be empty for non-config defined attributes
+		std::shared_ptr<CfgValue> m_pCfgValue;   
 		std::weak_ptr<EnvironmentNode> m_pMyEnvNode;
 };
 
 
-// EnvValue class for passthru type config data?
-// maybe an environent node instead
 
 
 // look into using a variant later

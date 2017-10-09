@@ -51,10 +51,11 @@ std::vector<std::shared_ptr<EnvValue>> EnvironmentNode::getAttributes() const
 bool EnvironmentNode::setAttributeValue(const std::string &name, const std::string &value, bool allowInvalid, bool forceCreate)
 {
 	bool rc = false;
+	std::shared_ptr<EnvValue> pEnvValue;
 	auto it = m_attributes.find(name);
 	if (it != m_attributes.end())
 	{
-		rc = it->second->setValue(value, allowInvalid);
+		pEnvValue = it->second;
 	}
 
 	//
@@ -63,8 +64,7 @@ bool EnvironmentNode::setAttributeValue(const std::string &name, const std::stri
 	{
 		std::shared_ptr<CfgValue> pCfgValue = std::make_shared<CfgValue>(name, false);
 		std::shared_ptr<EnvValue> pEnvValue = std::make_shared<EnvValue>(shared_from_this(), pCfgValue, name);
-		addStatus(NodeStatus::warning, "Attribute " + name + " not defined in configuration schema, unable to validate value.");
-		pEnvValue->setValue(value);
+		//addStatus(NodeStatus::warning, "Attribute " + name + " not defined in configuration schema, unable to validate value.");
 		addAttribute(name, pEnvValue);
 		rc = false;
 	}
@@ -73,6 +73,18 @@ bool EnvironmentNode::setAttributeValue(const std::string &name, const std::stri
 		// todo: a message here that value does not exist and force was not set?
 		rc = false;
 	}
+
+	//
+	// If we have a value, set it to the new value. If that passes, see if there is any post processint to do
+	if (pEnvValue)
+	{
+		rc = pEnvValue->setValue(value); 
+		if (rc)
+		{
+
+		}
+	}
+
 
 	return rc;
 }

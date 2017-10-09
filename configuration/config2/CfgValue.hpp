@@ -65,6 +65,7 @@ class CfgValue
         std::shared_ptr<CfgType> m_pType;
         std::string m_name;
         std::string m_displayName;
+		std::string m_mirrorPath;
         bool m_required;
         bool m_readOnly;
         bool m_hidden;
