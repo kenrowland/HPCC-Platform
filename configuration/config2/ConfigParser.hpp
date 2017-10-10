@@ -40,6 +40,7 @@ class ConfigParser
 
         virtual bool doParse(const std::vector<std::string> &cfgParms) = 0;
         ConfigParser() { };
+        std::vector<std::string> split(const std::string  &input, const std::string  &delim);
         
 
     protected:

@@ -14,7 +14,7 @@
 
 // namespace pt = boost::property_tree;
 
-const std::string c_path = ""; ///opt/HPCCSystems/componentfiles/config2xml/";
+const std::string c_path = "configfiles/"; ///opt/HPCCSystems/componentfiles/config2xml/";
 
 // void parseComponentXSD(pt::ptree &xsdTree);
 // void parseIncludes(pt::ptree &xsdTree);
@@ -39,7 +39,7 @@ int main()
 
         //pCfgParser->parseEnvironmentConfig("newenv.xsd", "");
 
-        EnvironmentMgr *pEnvMgr = getEnvironmentMgrInstance("XML", "");
+        EnvironmentMgr *pEnvMgr = getEnvironmentMgrInstance("XML", c_path);
         std::vector<std::string> cfgParms;
         cfgParms.push_back("newenv.xsd");
         cfgParms.push_back("buildset.xml");

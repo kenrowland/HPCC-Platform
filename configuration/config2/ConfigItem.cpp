@@ -232,7 +232,6 @@ void ConfigItem::addKeyRef(const std::string &keyName, const std::string &elemen
 }
 
 
-
 std::vector<std::shared_ptr<ConfigItem>> ConfigItem::getChildren() const
 {
     std::vector<std::shared_ptr<ConfigItem>> children;
@@ -242,6 +241,7 @@ std::vector<std::shared_ptr<ConfigItem>> ConfigItem::getChildren() const
 
     return children;
 }
+
 
 std::shared_ptr<ConfigItem> ConfigItem::getChild(const std::string &name)
 {
@@ -256,4 +256,112 @@ std::shared_ptr<ConfigItem> ConfigItem::getChild(const std::string &name)
 		pItem = std::make_shared<ConfigItem>(name, "undefined", shared_from_this());
 	}
 	return pItem;
+}
+
+
+void ConfigItem::resetEnvironment()
+{
+    for (auto it = m_attributes.begin(); it != m_attributes.end(); ++it)
+    {
+        it->second->resetEnvironment();
+    }
+}
+
+
+std::shared_ptr<CfgValue> ConfigItem::findCfgValue(const std::string &path)
+{
+    bool rootPath = path[0] == '/';
+    //
+    // If path is from the root, move on up
+    if (rootPath && !m_pParent.expired())
+    {   
+        std::shared_ptr<ConfigItem> pParent = m_pParent.lock();
+        if (pParent)
+        {
+            return pParent->findCfgValue(path);
+        }
+    }
+
+    size_t start = rootPath ? 1 : 0;
+    size_t end = path.find_first_of("/@", start);
+    if (end != std::string::npos)
+    {
+        std::string elem = path.substr(start, end - start);
+
+        if (rootPath)
+        {
+            if (m_name == elem)
+            {
+                return findCfgValue(path.substr(end + 1));
+            }
+            else
+            {
+                // todo: throw? the root is not correct
+            }
+        }
+
+        if (path[0] == '@')
+        {
+            std::string attrName = path.substr(1);
+            auto attrIt = m_attributes.find(attrName);
+            if (attrIt != m_attributes.end())
+            {
+                return attrIt->second;
+            }
+            else
+            {
+                // todo: throw
+            }
+        }
+
+        else
+        {
+            auto cfgChild = m_children.find(elem);
+            if (cfgChild != m_children.end())
+            {
+                return cfgChild->second->findCfgValue(path.substr(end + ((path[end]=='/') ? 1 : 0)));
+            }
+            else
+            {
+                // todo: throw
+            }
+        }
+        //else if (path[end] == '@')
+        //{
+        //    return cfgChild->second->findCfgValue(path.substr(end1));
+        //    std::string attrName = path.substr(end);
+        //    auto attrIt = m_attributes.find(attrName);
+        //    if (attrIt != m_attributes.end())
+        //    {
+        //        return attrIt->second;
+        //    }
+        //    else
+        //    {
+        //        // todo: throw
+        //    }
+        //}
+    }
+
+    return std::shared_ptr<CfgValue>(); 
+}
+
+
+void ConfigItem::postProcessConfig()
+{
+    for (auto it = m_attributes.begin(); it != m_attributes.end(); ++it)
+    {
+        if (it->second->isMirroredValue())
+        {
+            std::shared_ptr<CfgValue> pSrcCfgValue = findCfgValue(it->second->getMirrorFromPath());
+            if (pSrcCfgValue)
+            {
+                pSrcCfgValue->addMirroredCfgValue(it->second);
+            }
+        }
+    }
+
+    for (auto it = m_children.begin(); it!= m_children.end(); ++it)
+    {
+        it->second->postProcessConfig();
+    }
 }

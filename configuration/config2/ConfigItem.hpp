@@ -99,9 +99,14 @@ class ConfigItem : public std::enable_shared_from_this<ConfigItem>
         virtual void addKey(const std::string &keyName, const std::string &elementName, const std::string &attributeName);
         virtual void addKeyRef(const std::string &keyName, const std::string &elementName, const std::string &attributeName);
 
+        virtual void resetEnvironment(); 
+
 		//virtual void addEnvironmentInstance(const std::shared_ptr<EnvInstanceBase> &pInstance) { m_envInstances.push_back(pInstance); }
 
 		bool isConfigurable() const { return m_isConfigurable; }
+        std::shared_ptr<CfgValue> findCfgValue(const std::string &path);
+
+        virtual void postProcessConfig();
 
         ConfigItem() { };
 

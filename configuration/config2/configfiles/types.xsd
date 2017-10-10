@@ -54,16 +54,12 @@
 		<xs:attribute name="build" type="xs:string" use="required" hpcc:hidden="true" hpcc:tooltip="The build name to be deployed"/>
         <xs:attribute name="buildSet" type="xs:string" use="required" hpcc:hidden="true"/>
 	</xs:attributeGroup>
-    <xs:attributeGroup name="baseNode">
-        <xs:attribute name="node" type="nodeName" use="required"/>
+    <xs:attributeGroup name="computerNode">
+        <xs:attribute name="name" type="nodeName" use="required"/>
         <xs:attribute name="netAddress" type="ipV4Address" use="required"/>
     </xs:attributeGroup>
-    <xs:attributeGroup name="baseNodeReadOnly">
-        <xs:attribute name="node" type="nodeName" use="required" hpcc:readOnly="true"/>
-        <xs:attribute name="netAddress" type="ipV4Address" use="required" hpcc:readOnly="true"/>
-    </xs:attributeGroup>
-    <xs:attributeGroup name="computerNode">
-        <xs:attribute name="computer" type="nodeName" use="required" hpcc:mirror="//Computer[@name]"/>
-        <xs:attribute name="netAddress" type="ipV4Address" use="required" hpcc:readOnly="true"/>
+	<xs:attributeGroup name="computerNodeReference">
+        <xs:attribute name="computer" type="nodeName" use="required" hpcc:readOnly="true" hpcc:mirrorFrom="/Environment/Hardware/Computer@name"/>
+        <xs:attribute name="netAddress" type="ipV4Address" use="required" hpcc:readOnly="true" hpcc:mirrorFrom="/Environment/Hardware/Computer@netAddress"/>
     </xs:attributeGroup>
 </xs:schema>

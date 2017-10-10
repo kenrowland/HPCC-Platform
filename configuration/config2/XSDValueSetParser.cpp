@@ -55,63 +55,6 @@ void XSDValueSetParser::parseAttributeGroup(const pt::ptree &attributeTree)
 
 void XSDValueSetParser::parseAttribute(const pt::ptree &attr)
 {
-    std::string attrName = getXSDAttributeValue(attr, "<xmlattr>.name");
-    std::string use = attr.get("<xmlattr>.use", "required");
-    std::shared_ptr<CfgValue> pCfgValue = std::make_shared<CfgValue>(attrName);
-    pCfgValue->setDisplayName(attr.get("<xmlattr>.hpcc:displayName", attrName));
-    pCfgValue->setRequired(use == "required");
-    pCfgValue->setForceOutput(attr.get("<xmlattr>.forceOutput", true));
-    pCfgValue->setTooltip(attr.get("<xmlattr>.hpcc:tooltip", ""));
-    pCfgValue->setReadOnly(attr.get("<xmlattr>.hpcc:readOnly", "false") == "true");
-    pCfgValue->setHidden(attr.get("<xmlattr>.hpcc:hidden", "false") == "true");
-
-    std::string modList = attr.get("<xmlattr>.modifiers", "");
-    if (modList.length())
-    {
-        pCfgValue->setModifiers(split(modList, ","));
-    }
-
-	try
-	{
-		std::string defaultValue = getXSDAttributeValue(attr, "<xmlattr>.default");
-		pCfgValue->setDefault(defaultValue);
-	}
-	catch (ParseException &e)
-	{
-		// don't do anything, no default found
-	}
-
-
-    std::string typeName = attr.get("<xmlattr>.type", "");
-    if (typeName != "")
-    {
-        pCfgValue->setType(m_pConfig->getType(typeName));
-    }
-    else
-    {
-        std::shared_ptr<CfgType> pCfgType = getCfgType(attr.get_child("xs:simpleType", pt::ptree()), false);
-        if (!pCfgType->isValid())
-        {
-            throw(new ParseException("Attribute " + attrName + " does not have a valid type"));
-        }
-        pCfgValue->setType(pCfgType);
-    }
+    std::shared_ptr<CfgValue> pCfgValue = getCfgValue(attr);
     m_pValueSet->addCfgValue(pCfgValue);
-}
-
-
-std::vector<std::string> XSDValueSetParser::split(const std::string  &input, const std::string  &delim)
-{
-    size_t  start = 0, end = 0, delimLen = delim.length();
-    std::vector<std::string> list;
-
-    while (end != std::string::npos)
-    {
-        end = input.find(delim, start);
-        list.push_back(input.substr(start, (end == std::string::npos) ? std::string::npos : end - start));
-
-        // If at end, use start=maxSize.  Else use start=end+delimiter.
-        start = ((end > (std::string::npos - delimLen)) ? std::string::npos : end + delimLen); 
-    }
-    return list;
 }

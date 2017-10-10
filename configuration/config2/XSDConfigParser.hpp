@@ -53,6 +53,7 @@ extern "C" class XSDConfigParser : public ConfigParser
         virtual void parseElement(const pt::ptree &elemTree);
 
         virtual std::shared_ptr<CfgType> getCfgType(const pt::ptree &typeTree, bool nameRequired=true);
+        virtual std::shared_ptr<CfgValue> getCfgValue(const pt::ptree &attr);
         
 
 

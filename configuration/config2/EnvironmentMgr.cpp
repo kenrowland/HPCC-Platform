@@ -45,6 +45,7 @@ bool EnvironmentMgr::loadConfig(const std::vector<std::string> &cfgParms)
 {
     createParser(cfgParms);
     m_pConfigParser->parseEnvironmentConfig(cfgParms);
+    m_pConfig->postProcessConfig();
     return true;
 }
 

@@ -174,31 +174,7 @@ void XSDConfigParser::parseSimpleType(const pt::ptree &typeTree)
 
 void XSDConfigParser::parseAttribute(const pt::ptree &attr)
 {
-	std::string attrName = getXSDAttributeValue(attr, "<xmlattr>.name");
-	std::string use = attr.get("<xmlattr>.use", "required");
-	std::shared_ptr<CfgValue> pCfgValue = std::make_shared<CfgValue>(attrName);
-	pCfgValue->setDisplayName(attr.get("<xmlattr>.hpcc:displayName", attrName));
-	pCfgValue->setRequired(use == "required");
-	pCfgValue->setDefault(attr.get("<xmlattr>.default", ""));
-	pCfgValue->setTooltip(attr.get("<xmlattr>.hpcc:tooltip", ""));
-	pCfgValue->setReadOnly(attr.get("<xmlattr>.hpcc:readOnly", "false") == "true");
-	pCfgValue->setHidden(attr.get("<xmlattr>.hpcc:hidden", "false") == "true");
-	pCfgValue->setDeprecated(attr.get("<xmlattr>.hpcc:deprecated", "false") == "true");
-
-	std::string typeName = attr.get("<xmlattr>.type", "");
-	if (typeName != "")
-	{
-		pCfgValue->setType(m_pConfig->getType(typeName));
-	}
-	else
-	{
-		std::shared_ptr<CfgType> pCfgType = getCfgType(attr.get_child("xs:simpleType", pt::ptree()), false);
-		if (!pCfgType->isValid())
-		{
-			throw(new ParseException("Attribute " + attrName + " does not have a valid type"));
-		}
-		pCfgValue->setType(pCfgType);
-	}
+    std::shared_ptr<CfgValue> pCfgValue = getCfgValue(attr);
 	m_pConfig->addAttribute(pCfgValue);
 }
 
@@ -504,3 +480,84 @@ std::shared_ptr<CfgType> XSDConfigParser::getCfgType(const pt::ptree &typeTree, 
     return pCfgType;
 }
 
+
+std::shared_ptr<CfgValue> XSDConfigParser::getCfgValue(const pt::ptree &attr)
+{
+    std::string attrName = getXSDAttributeValue(attr, "<xmlattr>.name");
+    std::shared_ptr<CfgValue> pCfgValue = std::make_shared<CfgValue>(attrName);
+    pCfgValue->setDisplayName(attr.get("<xmlattr>.hpcc:displayName", attrName));
+    pCfgValue->setRequired(attr.get("<xmlattr>.use", "optional") == "required");
+    pCfgValue->setForceOutput(attr.get("<xmlattr>.forceOutput", true));
+    pCfgValue->setTooltip(attr.get("<xmlattr>.hpcc:tooltip", ""));
+    pCfgValue->setReadOnly(attr.get("<xmlattr>.hpcc:readOnly", "false") == "true");
+    pCfgValue->setHidden(attr.get("<xmlattr>.hpcc:hidden", "false") == "true");
+    pCfgValue->setDefault(attr.get("<xmlattr>.default", ""));
+    pCfgValue->setDeprecated(attr.get("<xmlattr>.hpcc:deprecated", "false") == "true");
+    pCfgValue->setMirrorFromPath(attr.get("<xmlattr>.hpcc:mirrorFrom", ""));
+
+    std::string modList = attr.get("<xmlattr>.modifiers", "");
+    if (modList.length())
+    {
+        pCfgValue->setModifiers(split(modList, ","));
+    }
+
+    std::string typeName = attr.get("<xmlattr>.type", "");
+    if (typeName != "")
+    {
+        pCfgValue->setType(m_pConfig->getType(typeName));
+    }
+    else
+    {
+        std::shared_ptr<CfgType> pCfgType = getCfgType(attr.get_child("xs:simpleType", pt::ptree()), false);
+        if (!pCfgType->isValid())
+        {
+            throw(new ParseException("Attribute " + attrName + " does not have a valid type"));
+        }
+        pCfgValue->setType(pCfgType);
+    }
+    return pCfgValue;
+}
+
+
+//void XSDConfigParser::parseAttribute(const pt::ptree &attr)
+//{
+//    std::string attrName = getXSDAttributeValue(attr, "<xmlattr>.name");
+//    std::string use = attr.get("<xmlattr>.use", "required");
+//    std::shared_ptr<CfgValue> pCfgValue = std::make_shared<CfgValue>(attrName);
+//    pCfgValue->setDisplayName(attr.get("<xmlattr>.hpcc:displayName", attrName));
+//    pCfgValue->setRequired(use == "required");
+//    pCfgValue->setDefault(attr.get("<xmlattr>.default", ""));
+//    pCfgValue->setTooltip(attr.get("<xmlattr>.hpcc:tooltip", ""));
+//    pCfgValue->setReadOnly(attr.get("<xmlattr>.hpcc:readOnly", "false") == "true");
+//    pCfgValue->setHidden(attr.get("<xmlattr>.hpcc:hidden", "false") == "true");
+//    pCfgValue->setDeprecated(attr.get("<xmlattr>.hpcc:deprecated", "false") == "true");
+//
+//    std::string typeName = attr.get("<xmlattr>.type", "");
+//    if (typeName != "")
+//    {
+//        pCfgValue->setType(m_pConfig->getType(typeName));
+//    }
+//    else
+//    {
+//        std::shared_ptr<CfgType> pCfgType = getCfgType(attr.get_child("xs:simpleType", pt::ptree()), false);
+//        if (!pCfgType->isValid())
+//        {
+//            throw(new ParseException("Attribute " + attrName + " does not have a valid type"));
+//        }
+//        pCfgValue->setType(pCfgType);
+//    }
+//
+//    //
+//    // Mirrored from another value?
+//    std::string mirrorPath = attr.get("<xmlattr>.hpcc:mirrorFrom", "");
+//    if (mirrorPath != "")
+//    {
+//        std::shared_ptr<CfgValue> pSrcCfgValue = m_pConfig->findCfgValue(mirrorPath);
+//        if (pSrcCfgValue)
+//        {
+//            pSrcCfgValue->addMirroredCfgValue(pCfgValue);
+//        }
+//    }
+//
+//    m_pConfig->addAttribute(pCfgValue);
+//}

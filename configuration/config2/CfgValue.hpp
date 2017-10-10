@@ -21,6 +21,8 @@
 #include <memory>
 #include "CfgType.hpp"
 
+class EnvValue;
+
 
 class CfgValue 
 {
@@ -37,7 +39,7 @@ class CfgValue
         const std::string &getDisplayName() const { return m_displayName; }
         void setRequired(bool reqd) { m_required = reqd; }
         bool isRequired() const { return m_required; }
-		void setDefault(const std::string &dflt) { m_default = dflt; m_defaultSet = true; }
+		void setDefault(const std::string &dflt) { m_default = dflt; m_defaultSet = (dflt != ""); }
         const std::string &getDefaultValue() const { return m_default; }
 		bool hasDefaultValue() const { return m_defaultSet; }
         void setReadOnly(bool readOnly) { m_readOnly = readOnly; }
@@ -58,14 +60,24 @@ class CfgValue
         bool isKey() const { return m_isKey;  }
         void setKeyRef(const std::shared_ptr<CfgValue> &pValue) { m_pKeyRefValue = pValue; }
 		bool isDefined() const { return m_isDefined;  }
+        void resetEnvironment();
+        void setMirrorFromPath(const std::string &path) { m_mirrorFromPath = path;  }
+        const std::string &getMirrorFromPath() const { return m_mirrorFromPath;  }
+        bool isMirroredValue() const { return m_mirrorFromPath.length() > 0; }
+        void addMirroredCfgValue(const std::shared_ptr<CfgValue> &pVal) { m_mirrorToCfgValues.push_back(pVal); }
+        void addEnvValue(const std::shared_ptr<EnvValue> &pEnvValue) { m_envValues.push_back(pEnvValue); }
+        void mirrorValue(const std::string &oldValue, const std::string &newValue);
+        void setMirroredEnvValues(const std::string &oldValue, const std::string &newValue);
 
 
     protected:
 
         std::shared_ptr<CfgType> m_pType;
+        std::vector<std::weak_ptr<EnvValue>> m_envValues;
+        std::vector<std::shared_ptr<CfgValue>> m_mirrorToCfgValues;
         std::string m_name;
         std::string m_displayName;
-		std::string m_mirrorPath;
+		std::string m_mirrorFromPath;
         bool m_required;
         bool m_readOnly;
         bool m_hidden;

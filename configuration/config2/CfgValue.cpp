@@ -16,7 +16,7 @@
 ############################################################################## */
 
 #include "CfgValue.hpp"
-
+#include "EnvValue.hpp"
 
 
 bool CfgValue::isValueValid(const std::string &newValue) const
@@ -27,4 +27,31 @@ bool CfgValue::isValueValid(const std::string &newValue) const
 		rc = m_pType->isValueValid(newValue);
 
 	return rc;
+}
+
+void CfgValue::resetEnvironment() 
+{ 
+    m_envValues.clear();
+}
+
+
+void CfgValue::mirrorValue(const std::string &oldValue, const std::string &newValue)
+{
+    for (auto mirrorCfg = m_mirrorToCfgValues.begin(); mirrorCfg != m_mirrorToCfgValues.end(); ++mirrorCfg)
+    {
+        (*mirrorCfg)->setMirroredEnvValues(oldValue, newValue);
+    }
+
+}
+
+void CfgValue::setMirroredEnvValues(const std::string &oldValue, const std::string &newValue)
+{
+    for (auto envIt = m_envValues.begin(); envIt != m_envValues.end(); ++envIt)
+    {
+        std::shared_ptr<EnvValue> pEnvValue = (*envIt).lock();
+        if (pEnvValue && pEnvValue->getValue() == oldValue)
+        {
+            pEnvValue->setValue(newValue);  
+        }
+    }
 }

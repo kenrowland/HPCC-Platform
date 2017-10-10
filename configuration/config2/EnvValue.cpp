@@ -20,12 +20,14 @@ limitations under the License.
 bool EnvValue::setValue(const std::string &value, bool force) 
 { 
 	bool rc = true;
+    std::string oldValue = m_value;
 	clearStatus();  // always clear the status since in can only be sigular
 	if (m_pCfgValue)
 	{
 		if (m_pCfgValue->isValueValid(value))
 		{
 			m_value = value;
+            m_pCfgValue->mirrorValue(oldValue, value);
 		}
 		else if (force)
 		{
