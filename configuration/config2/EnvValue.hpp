@@ -49,26 +49,4 @@ class EnvValue : public NodeStatus
 };
 
 
-
-
-// look into using a variant later
-
-//template <typename T> class EnvValue<T> : public EnvValue
-//{
-//	public:
-//
-//		EnvValue() { }
-//		~EnvValue() { }
-//		void setValue(T &val) { m_val = val;  }
-//		virtual T getValue() const { return m_val;  }
-//
-//
-//
-//	private:
-//
-//		T m_val;
-//
-//};
-
-
 #endif

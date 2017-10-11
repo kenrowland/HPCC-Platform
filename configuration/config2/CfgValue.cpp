@@ -29,12 +29,14 @@ bool CfgValue::isValueValid(const std::string &newValue) const
 	return rc;
 }
 
+
 void CfgValue::resetEnvironment() 
 { 
     m_envValues.clear();
 }
 
 
+// replicates the new value throughout the environment
 void CfgValue::mirrorValue(const std::string &oldValue, const std::string &newValue)
 {
     for (auto mirrorCfg = m_mirrorToCfgValues.begin(); mirrorCfg != m_mirrorToCfgValues.end(); ++mirrorCfg)
@@ -44,6 +46,8 @@ void CfgValue::mirrorValue(const std::string &oldValue, const std::string &newVa
 
 }
 
+
+// Worker method for replicating a mirrored value to the environment values for this config value
 void CfgValue::setMirroredEnvValues(const std::string &oldValue, const std::string &newValue)
 {
     for (auto envIt = m_envValues.begin(); envIt != m_envValues.end(); ++envIt)

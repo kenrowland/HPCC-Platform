@@ -89,9 +89,6 @@ void EnvironmentMgr::addPath(const std::shared_ptr<EnvironmentNode> pNode)
 std::shared_ptr<EnvironmentNode> EnvironmentMgr::getElement(const std::string &path)
 {
 	auto pathIt = m_paths.find(path);
-	//if (pathIt == m_paths.end())
-	//	return;
-
 	return pathIt->second;
 }
 

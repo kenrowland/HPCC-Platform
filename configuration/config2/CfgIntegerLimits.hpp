@@ -20,7 +20,6 @@
 
 #include "CfgLimits.hpp"
 
-
 class CfgIntegerLimits : public CfgLimits
 {
     public:
@@ -30,12 +29,6 @@ class CfgIntegerLimits : public CfgLimits
         int getMin() const { return m_minInclusive; }
         int getMax() const { return m_maxInclusive; }
 
-
-    protected:
-
-
 };
-
-
 
 #endif // _CONFIG2_CFGINTEGERLIMITS_HPP_

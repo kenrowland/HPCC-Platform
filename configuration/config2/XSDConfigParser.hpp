@@ -23,12 +23,13 @@
 #include <memory>
 #include <map>
 #include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/xml_parser.hpp>
 
 #include "ConfigParser.hpp"
 
 namespace pt = boost::property_tree;
 
-extern "C" class XSDConfigParser : public ConfigParser
+class XSDConfigParser : public ConfigParser
 {
     public:
 
@@ -36,7 +37,6 @@ extern "C" class XSDConfigParser : public ConfigParser
             ConfigParser(basePath, pConfig) { }
         virtual ~XSDConfigParser() { };
     
-
 
     protected:
 
@@ -55,10 +55,6 @@ extern "C" class XSDConfigParser : public ConfigParser
         virtual std::shared_ptr<CfgType> getCfgType(const pt::ptree &typeTree, bool nameRequired=true);
         virtual std::shared_ptr<CfgValue> getCfgValue(const pt::ptree &attr);
         
-
-
-    private:
-
 
     protected:
     

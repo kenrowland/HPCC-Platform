@@ -23,7 +23,6 @@
 
 class EnvValue;
 
-
 class CfgValue 
 {
     public:
@@ -34,7 +33,6 @@ class CfgValue
         const std::shared_ptr<CfgType> &getType() const { return m_pType; }
         const std::string &getName() const { return m_name; }
         bool isValueValid(const std::string &newValue) const;
-        //bool setValue(const std::string &newValue) { return true; }
         void setDisplayName(const std::string &displayName) { m_displayName = displayName; }
         const std::string &getDisplayName() const { return m_displayName; }
         void setRequired(bool reqd) { m_required = reqd; }
@@ -91,7 +89,6 @@ class CfgValue
         std::vector<std::string> m_modifiers;
         std::shared_ptr<CfgValue> m_pKeyRefValue;    // this value serves as the key from which values are valid
 };
-
 
 
 #endif // _CONFIG2_VALUE_HPP_

@@ -56,7 +56,6 @@ class EnvironmentNode : public NodeStatus, public std::enable_shared_from_this<E
 		const std::shared_ptr<ConfigItem> &getConfigItem() const { return m_pConfigItem; }
 
 
-
 	protected:
 
 		std::string m_msg;           // error or warning message
@@ -68,10 +67,6 @@ class EnvironmentNode : public NodeStatus, public std::enable_shared_from_this<E
 		std::map<std::string, std::shared_ptr<EnvValue>> m_attributes;
 		std::string m_path;
 };
-
-
-
-// getChildrenElementNames() = vector of all unique children element names
 
 
 #endif

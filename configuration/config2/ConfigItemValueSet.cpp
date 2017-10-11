@@ -50,22 +50,6 @@ const std::vector<std::shared_ptr<CfgValue>> &ConfigItemValueSet::getCfgValues()
 }
 
 
-/*
-void ConfigItemValueSet::setValue(const std::string &valueName, const std::string &newValue)
-{
-    std::shared_ptr<CfgValue> pValue = findValue(pValue->getName(), true);
-    if (pValue->isValueValid(newValue))
-    {
-        pValue->setValue(newValue);
-    }
-    else
-    {
-        std::string msg = "New value(" + newValue + "for value(" + valueName + " is not valid.";
-        throw(new ValueException(msg));
-    }
-}*/
-
-
 std::shared_ptr<CfgValue> ConfigItemValueSet::findValue(const std::string &valueName, bool throwIfNotFound) const
 {
     std::shared_ptr<CfgValue> pValue;

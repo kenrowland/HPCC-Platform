@@ -34,10 +34,6 @@ class ConfigItemValueSet : public ConfigItem
         void addCfgValue(const std::shared_ptr<CfgValue> pValue);
         void addCfgValue(const std::shared_ptr<ConfigItemValueSet> &valueSet);
         const std::vector<std::shared_ptr<CfgValue>> &getCfgValues() const;
-        
-		//void setValue(const std::string &valueName, const std::string &newValue);
-        // virtual void addConfigType(const std::shared_ptr<ConfigItem> &pItem);
-        
 
 
     private:
@@ -49,9 +45,7 @@ class ConfigItemValueSet : public ConfigItem
 
         std::vector<std::shared_ptr<CfgValue>> m_cfgValues;
 
-
 };
-
 
 
 #endif // _CONFIG2_VALUESET_HPP_

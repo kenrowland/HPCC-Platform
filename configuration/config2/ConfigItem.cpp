@@ -65,19 +65,6 @@ const std::shared_ptr<CfgType> &ConfigItem::getType(const std::string &typeName)
         {
             return pParent->getType(typeName);
         }
-        //else
-        //{
-        //    //
-        //    // We are at the root and did not find the type. Inspect the type to see if it is a builtin type and add it if needed
-        //    std::shared_ptr<CfgLimits> pLimits = getStandardTypeLimits(typeName);
-        //    if (pLimits)
-        //    {
-        //        std::shared_ptr<CfgType> pCfgType = std::make_shared<CfgType>(typeName);
-        //        pCfgType->setLimits(pLimits);
-        //        //addType(pCfgType);
-        //        return pCfgType;
-        //    }
-        //}    
     }
 
     //
@@ -85,39 +72,6 @@ const std::shared_ptr<CfgType> &ConfigItem::getType(const std::string &typeName)
     std::string msg = "Unable to find type: " + typeName;
     throw(new ParseException(msg));
 }
-
-
-// todo: this needs to move out of config item, it is XSD specific
-//std::shared_ptr<CfgLimits> ConfigItem::getStandardTypeLimits(const std::string &baseType) const
-//{
-//    std::shared_ptr<CfgLimits> pLimits;
-//	if (baseType == "xs:string" || baseType == "xs:token")
-//	{
-//		pLimits = std::make_shared<CfgStringLimits>();
-//	}
-//	else if (baseType == "xs:integer" || baseType == "xs:int")
-//	{
-//		pLimits = std::make_shared<CfgIntegerLimits>();
-//	}
-//    else if (baseType == "xs:nonNegativeInteger")
-//    {
-//        pLimits = std::make_shared<CfgIntegerLimits>();
-//        pLimits->setMinInclusive(0);
-//    }
-//    else if (baseType == "xs:positiveInteger")
-//    {
-//        pLimits = std::make_shared<CfgIntegerLimits>();
-//        pLimits->setMinInclusive(1);
-//    }
-//	else if (baseType == "xs:boolean")
-//	{
-//		pLimits = std::make_shared<CfgStringLimits>(); 
-//		pLimits->addAllowedValue("true");
-//		pLimits->addAllowedValue("false");
-//	}
-//	
-//    return pLimits;
-//}
 
 
 bool ConfigItem::addUniqueName(const std::string keyName)
@@ -157,6 +111,7 @@ std::shared_ptr<ConfigItem> ConfigItem::getConfigType(const std::string &name, b
             return pParent->getConfigType(name);
         }
     }
+
     //
     // Did not find the type
     if (throwIfNotPresent)
@@ -202,7 +157,7 @@ std::shared_ptr<CfgValue> ConfigItem::getAttribute(const std::string &name) cons
 
 void ConfigItem::addKey(const std::string &keyName, const std::string &elementName, const std::string &attributeName)
 {
-    std::shared_ptr<ConfigItem> pCfgItem = getChild(elementName);  // todo: validate pCfgItem
+    std::shared_ptr<ConfigItem> pCfgItem = getChild(elementName);  // todo: validate pCfgItem found
     std::shared_ptr<CfgValue> pAttribute = pCfgItem->getAttribute(attributeName);  
     if (pAttribute)
     {

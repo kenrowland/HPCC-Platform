@@ -23,24 +23,6 @@
 namespace pt = boost::property_tree;
 
 
-// void XSDComponentParser::parseXSD(const pt::ptree &compTree)
-// {
-//     //
-//     // Allocate a valueset to hold the attributes, then parse them
-//     std::shared_ptr<ConfigItemValueSet> pAttributeValueSet = std::make_shared<ConfigItemValueSet>("attributes", m_pConfig); // holds the attributes for the component level element 
-//     pAttributeValueSet->setDisplayName("Attributes");
-//     std::shared_ptr<ConfigItem> pConfigItem = std::dynamic_pointer_cast<ConfigItem>(pAttributeValueSet);
-//     std::shared_ptr<XSDValueSetParser> pXSDValueSetParaser = std::make_shared<XSDValueSetParser>(m_basePath, pConfigItem);
-//     pXSDValueSetParaser->parseXSD(compTree);
-//     m_pConfig->addChild(pAttributeValueSet);
-
-//     //
-//     // Now parse the sequence section (these are sub keys for the component)
-//     XSDConfigParser::parseXSD(compTree.get_child("xs:sequence", pt::ptree()));
-// }
-
-
-
 void XSDComponentParser::parseXSD(const pt::ptree &compTree)
 {
     bool foundComponentDef = false;
@@ -140,7 +122,6 @@ void XSDComponentParser::parseKey(const pt::ptree &keyTree)
 
     m_pConfig->addKey(keyName, elementName, attributeName);
 }
-
 
 
 void XSDComponentParser::parseKeyRef(const pt::ptree &keyTree)

@@ -39,19 +39,16 @@ class XSDValueSetParser : public XSDConfigParser
         virtual void parseXSD(const pt::ptree &valueSetTree);
         void parseAttributeGroup(const pt::ptree &attributeTree);
         void parseAttribute(const pt::ptree &attr);
-        // void parseSimpleType(const pt::ptree &typeTree) ;
     
 
     protected:
 
         XSDValueSetParser() { }
+
+
+    protected:
+
         std::shared_ptr<ConfigItemValueSet> m_pValueSet;
-        // virtual void parseAttributeGroup(const pt::ptree &attributeTree);
-
-
-    private:
-
-        // std::shared_ptr<ConfigItemValueSet> m_pValueSet;  // attributes at the component level
 
 };
 

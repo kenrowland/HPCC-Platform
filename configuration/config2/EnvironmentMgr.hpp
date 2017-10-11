@@ -39,12 +39,9 @@ class EnvironmentMgr
 			std::string value;
 		};
 
-		//static EnvironmentMgr *getInstance(const std::string &type);
-
         EnvironmentMgr(const std::string &configPath);
 		virtual ~EnvironmentMgr() { }
 
-		//void setConfig(const std::shared_ptr<ConfigItem> &pConfig) { m_pConfig = pConfig; }
 		// add a load from stream?
         bool loadConfig(const std::vector<std::string> &cfgParms);  // parms are dependent on the environment type
 		bool loadEnvironment(const std::string &file);  // return some error code,or a get last error type of call?
@@ -54,12 +51,8 @@ class EnvironmentMgr
 		
 		// save to stream ?
 		void saveEnvironment(const std::string &file);
-
 		bool validate();
 
-
-		// virtual bool writeEnvironment(const std::string &file /* same with load */) = 0;
-		//virtual bool validate();
 
 	protected:
 

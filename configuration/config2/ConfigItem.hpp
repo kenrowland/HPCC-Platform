@@ -27,25 +27,6 @@
 #include "CfgValue.hpp"
 
 
-// this should be replaced with a generic environment item class
-#include <boost/property_tree/ptree.hpp>
-#include <boost/property_tree/xml_parser.hpp>
-
-
-//
-// hpcc:class - what the item is
-//              component - represents something that is configurable, addable, deletable, etc
-//              category  - represents a hierarchial grouping in the configuration. A real deliniation (Hardware, Software)
-//
-// hpcc:category - Meaning differs based on class
-//                 component - value is used to group together components into logical functional groups (esp services, logging agents, etc.) 
-//                             does not represent a real division, a logical division
-
-
-
-namespace pt = boost::property_tree;
-
-
 class ConfigItemValueSet;
 
 
@@ -75,7 +56,6 @@ class ConfigItem : public std::enable_shared_from_this<ConfigItem>
 
         virtual void addType(const std::shared_ptr<CfgType> &pType);
         virtual const std::shared_ptr<CfgType> &getType(const std::string &typeName) const;
-        //std::shared_ptr<CfgLimits> getStandardTypeLimits(const std::string &typeName) const;
 
 		void setVersion(int version) { m_version = version;  }
 		int getVersion() const { return m_version; }
@@ -86,7 +66,6 @@ class ConfigItem : public std::enable_shared_from_this<ConfigItem>
         virtual void addChild(const std::shared_ptr<ConfigItem> &pItem) { m_children[pItem->getName()] = pItem; }
 		virtual void addChild(const std::shared_ptr<ConfigItem> &pItem, const std::string &name) { m_children[name] = pItem; }
         virtual std::vector<std::shared_ptr<ConfigItem>> getChildren() const;
-		//template<typename T> std::shared_ptr<T> getChild(const std::string &name) const;
         std::shared_ptr<ConfigItem> getChild(const std::string &name);
         virtual void setItemCfgValue(const std::shared_ptr<CfgValue> &pValue) { m_pValue = pValue; }
         virtual std::shared_ptr<CfgValue> getItemCfgValue() const { return m_pValue; }
@@ -100,8 +79,6 @@ class ConfigItem : public std::enable_shared_from_this<ConfigItem>
 
         virtual void resetEnvironment(); 
 
-		//virtual void addEnvironmentInstance(const std::shared_ptr<EnvInstanceBase> &pInstance) { m_envInstances.push_back(pInstance); }
-
 		bool isConfigurable() const { return m_isConfigurable; }
         std::shared_ptr<CfgValue> findCfgValue(const std::string &path);
 
@@ -111,10 +88,6 @@ class ConfigItem : public std::enable_shared_from_this<ConfigItem>
 
 
     protected:
-
-       
-        // some kind of category map parent/child Software->ESP->[components]
-        
 
         std::string m_name;
         std::string m_displayName;
@@ -144,14 +117,5 @@ class ConfigItem : public std::enable_shared_from_this<ConfigItem>
 
 };
 
-
-//template<typename T> std::shared_ptr<T> ConfigItem::getChild(const std::string &name) const
-//{
-//	std::shared_ptr<T> pItem;
-//	auto it = m_children.find(name);
-//	if (it != m_children.end())
-//		pItem = std::dynamic_pointer_cast<T>(it->second);
-//	return pItem;
-//}
 
 #endif // _CONFIG2_CONFIGITEM_HPP_

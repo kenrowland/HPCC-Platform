@@ -131,7 +131,6 @@
   <ItemGroup>
     <ClCompile Include="CfgValue.cpp" />
     <ClCompile Include="ConfigItem.cpp" />
-    <ClCompile Include="ConfigItemComponent.cpp" />
     <ClCompile Include="ConfigItemValueSet.cpp" />
     <ClCompile Include="ConfigParser.cpp" />
     <ClCompile Include="EnvironmentMgr.cpp" />

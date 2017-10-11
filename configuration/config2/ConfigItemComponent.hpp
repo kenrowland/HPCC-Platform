@@ -30,20 +30,7 @@ class ConfigItemComponent : public ConfigItem
 
 		ConfigItemComponent(const std::string &name, std::shared_ptr<ConfigItem> pParent) : ConfigItem(name, "component", pParent) { m_isConfigurable = true; };
         virtual ~ConfigItemComponent() { };
-    
-
-    private:
-
-
-    protected:
-
-        // std::shared_ptr<ConfigItemValueSet> m_pAttributeValueSet;  // attributes at the component level
-        // std::vector<std::shared_ptr<ConfigItemValueSet>> m_valueSets;  // additional named attributes
-
-
-    private:
-
-
+   
 };
 
 

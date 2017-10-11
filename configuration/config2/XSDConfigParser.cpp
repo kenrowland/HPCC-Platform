@@ -97,7 +97,6 @@ void XSDConfigParser::parseXSD(const std::string &filename)
 	catch (ParseException &e)
 	{
 		throw(e);
-		//throw(std::exception(e.what()));
 	}
     catch (std::exception &e)
     {

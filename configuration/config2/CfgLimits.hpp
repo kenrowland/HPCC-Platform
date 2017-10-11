@@ -34,7 +34,6 @@ class CfgLimits
 {
     public:
 
-        
         CfgLimits() :
             m_minInclusive(INT_MIN),
             m_maxInclusive(INT_MAX),
@@ -67,15 +66,6 @@ class CfgLimits
         int m_maxLength;
         std::vector<std::string> m_patterns;
         std::vector<AllowedValue> m_allowedValues;
-
-        
-
-
-    private:
-    
-        
-        
-        
 };
 
 
