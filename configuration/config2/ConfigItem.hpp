@@ -71,7 +71,6 @@ class ConfigItem : public std::enable_shared_from_this<ConfigItem>
         int getMinInstances() const { return m_minInstances; }
         
         void setMaxInstances(int num) { m_maxInstances = num; }
-        void setMaxInstances(const std::string &max) { m_maxInstances = (max == "unbounded") ? -1 : stoi(max); }
         int getMaxInstances() const { return m_maxInstances; }
 
         virtual void addType(const std::shared_ptr<CfgType> &pType);

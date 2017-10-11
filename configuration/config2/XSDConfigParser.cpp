@@ -251,7 +251,10 @@ void XSDConfigParser::parseElement(const pt::ptree &elemTree)
     std::string displayName = elemTree.get("<xmlattr>.hpcc:displayName", "");
     std::string refName = elemTree.get("<xmlattr>.ref", "");
     std::string typeName = elemTree.get("<xmlattr>.type", "");
-
+    int minOccurs = elemTree.get("<xmlattr>.minOccurs", 1);
+    std::string maxOccursStr = elemTree.get("<xmlattr>.maxOccurs", "1");
+    int maxOccurs = (maxOccursStr != "unbounded") ? stoi(maxOccursStr) : -1;
+        
     std::shared_ptr<ConfigItemComponent> pTypeConfigItem;
 
     //
@@ -267,8 +270,8 @@ void XSDConfigParser::parseElement(const pt::ptree &elemTree)
                 pTypeConfigItem = std::make_shared<ConfigItemComponent>(*pComponent);
                 pTypeConfigItem->setCategory(category);
                 pTypeConfigItem->setDisplayName(displayName);
-                pTypeConfigItem->setMinInstances(elemTree.get("<xmlattr>.minOccurs", 1));
-                pTypeConfigItem->setMaxInstances(elemTree.get("<xmlattr>.maxOccurs", "1"));
+                pTypeConfigItem->setMinInstances(minOccurs);
+                pTypeConfigItem->setMaxInstances(maxOccurs);
                 pTypeConfigItem->setVersion(elemTree.get("<xmlattr>.hpcc:version", -1));
             }
             else
@@ -278,27 +281,6 @@ void XSDConfigParser::parseElement(const pt::ptree &elemTree)
         }
     }
 
-
-    //if (typeName != "")
-    //{
-    //    std::shared_ptr<ConfigItem> pConfigItem = m_pConfig->getConfigType(typeName);
-    //    std::shared_ptr<ConfigItemComponent> pComponent = std::dynamic_pointer_cast<ConfigItemComponent>(pConfigItem);
-    //    if (pComponent)
-    //    {
-    //        std::shared_ptr<ConfigItemComponent> pComponentCopy = std::make_shared<ConfigItemComponent>(*pComponent);
-    //        pComponentCopy->setCategory(category);
-    //        pComponentCopy->setDisplayName(displayName);
-    //        pComponentCopy->setMinInstances(elemTree.get("<xmlattr>.minOccurs", 1));
-    //        pComponentCopy->setMaxInstances(elemTree.get("<xmlattr>.maxOccurs", "1"));
-    //        pComponentCopy->setVersion(elemTree.get("<xmlattr>.hpcc:version", -1));
-    //        m_pConfig->addChild(pComponentCopy, pComponentCopy->getName());
-    //    }
-    //    else
-    //    {
-    //        throw(new ParseException("Element reference is not a compoenent: " + typeName));
-    //    }
-    //}
-
     //
     // A class name of component is used to start the definition of a component type that can be referenced as a type elsewhere
     if (className == "component")
@@ -306,8 +288,8 @@ void XSDConfigParser::parseElement(const pt::ptree &elemTree)
         std::shared_ptr<ConfigItemComponent> pComponent = std::make_shared<ConfigItemComponent>(elementName, m_pConfig);  
         pComponent->setCategory(category);
         pComponent->setDisplayName(displayName);
-        pComponent->setMinInstances(elemTree.get("<xmlattr>.minOccurs", 1));
-        pComponent->setMaxInstances(elemTree.get("<xmlattr>.maxOccurs", "1"));
+        pComponent->setMinInstances(minOccurs);
+        pComponent->setMaxInstances(maxOccurs);
 		pComponent->setVersion(elemTree.get("<xmlattr>.hpcc:version", -1));
         std::shared_ptr<ConfigItem> pConfigItem = std::dynamic_pointer_cast<ConfigItem>(pComponent);
         std::shared_ptr<XSDComponentParser> pComponentXSDParaser = std::make_shared<XSDComponentParser>(m_basePath, pConfigItem);
@@ -365,8 +347,8 @@ void XSDConfigParser::parseElement(const pt::ptree &elemTree)
 		}
 
 		pConfigElement->setDisplayName(displayName);
-		pConfigElement->setMinInstances(elemTree.get("<xmlattr>.minOccurs", 1));
-		pConfigElement->setMaxInstances(elemTree.get("<xmlattr>.maxOccurs", "1"));
+		pConfigElement->setMinInstances(minOccurs);
+		pConfigElement->setMaxInstances(maxOccurs);
 		m_pConfig->addChild(pConfigElement);  
     }
     else
@@ -380,38 +362,6 @@ void XSDConfigParser::parseElement(const pt::ptree &elemTree)
             throw(new ParseException("Only component elements are supported at the top level"));
         }
     }
-    //else if (refName != "")
-    //{
-    //    std::shared_ptr<ConfigItem> pConfigItem = m_pConfig->getConfigType(refName);
-    //    std::shared_ptr<ConfigItemComponent> pComponent = std::dynamic_pointer_cast<ConfigItemComponent>(pConfigItem);
-    //    if (pComponent)
-    //    {
-    //         std::shared_ptr<ConfigItemComponent> pComponentCopy = std::make_shared<ConfigItemComponent>(*pComponent);
-    //         m_pConfig->addChild(pComponentCopy);
-    //    }
-    //    else
-    //    {
-    //        throw(new ParseException("Element reference is not a compoenent: " + refName));
-    //    }
-    //}
-	//else if (typeName != "")
-	//{
-	//	std::shared_ptr<ConfigItem> pConfigItem = m_pConfig->getConfigType(typeName);
-	//	std::shared_ptr<ConfigItemComponent> pComponent = std::dynamic_pointer_cast<ConfigItemComponent>(pConfigItem);
-	//	if (pComponent)
-	//	{
-	//		std::shared_ptr<ConfigItemComponent> pComponentCopy = std::make_shared<ConfigItemComponent>(*pComponent);
-	//		m_pConfig->addChild(pComponentCopy, typeName);
-	//	}
-	//	else
-	//	{
-	//		throw(new ParseException("Element reference is not a compoenent: " + typeName));
-	//	}
-	//}
-    //else
-    //{
-    //    throw(new ParseException("Only component elements are supported at the top level"));
-    //}
 }
 
 
@@ -518,46 +468,3 @@ std::shared_ptr<CfgValue> XSDConfigParser::getCfgValue(const pt::ptree &attr)
     return pCfgValue;
 }
 
-
-//void XSDConfigParser::parseAttribute(const pt::ptree &attr)
-//{
-//    std::string attrName = getXSDAttributeValue(attr, "<xmlattr>.name");
-//    std::string use = attr.get("<xmlattr>.use", "required");
-//    std::shared_ptr<CfgValue> pCfgValue = std::make_shared<CfgValue>(attrName);
-//    pCfgValue->setDisplayName(attr.get("<xmlattr>.hpcc:displayName", attrName));
-//    pCfgValue->setRequired(use == "required");
-//    pCfgValue->setDefault(attr.get("<xmlattr>.default", ""));
-//    pCfgValue->setTooltip(attr.get("<xmlattr>.hpcc:tooltip", ""));
-//    pCfgValue->setReadOnly(attr.get("<xmlattr>.hpcc:readOnly", "false") == "true");
-//    pCfgValue->setHidden(attr.get("<xmlattr>.hpcc:hidden", "false") == "true");
-//    pCfgValue->setDeprecated(attr.get("<xmlattr>.hpcc:deprecated", "false") == "true");
-//
-//    std::string typeName = attr.get("<xmlattr>.type", "");
-//    if (typeName != "")
-//    {
-//        pCfgValue->setType(m_pConfig->getType(typeName));
-//    }
-//    else
-//    {
-//        std::shared_ptr<CfgType> pCfgType = getCfgType(attr.get_child("xs:simpleType", pt::ptree()), false);
-//        if (!pCfgType->isValid())
-//        {
-//            throw(new ParseException("Attribute " + attrName + " does not have a valid type"));
-//        }
-//        pCfgValue->setType(pCfgType);
-//    }
-//
-//    //
-//    // Mirrored from another value?
-//    std::string mirrorPath = attr.get("<xmlattr>.hpcc:mirrorFrom", "");
-//    if (mirrorPath != "")
-//    {
-//        std::shared_ptr<CfgValue> pSrcCfgValue = m_pConfig->findCfgValue(mirrorPath);
-//        if (pSrcCfgValue)
-//        {
-//            pSrcCfgValue->addMirroredCfgValue(pCfgValue);
-//        }
-//    }
-//
-//    m_pConfig->addAttribute(pCfgValue);
-//}

@@ -35,6 +35,26 @@ std::vector<std::shared_ptr<EnvironmentNode>> EnvironmentNode::getChildren(const
 }
 
 
+std::map<std::string, std::vector<std::shared_ptr<EnvironmentNode>>> EnvironmentNode::getChildrenByName() const
+{
+    std::map<std::string, std::vector<std::shared_ptr<EnvironmentNode>>> results;
+    for (auto childIt = m_children.begin(); childIt != m_children.end(); ++childIt)
+    {
+        auto it = results.find(childIt->second->getName());
+        if (it == results.end())
+        {
+            std::vector<std::shared_ptr<EnvironmentNode>> nodes;
+            nodes.push_back(childIt->second);
+        }
+        else
+        {
+            it->second.push_back(childIt->second);
+        }
+    }
+    return results;
+}
+
+
 std::vector<std::shared_ptr<EnvValue>> EnvironmentNode::getAttributes() const
 {
 	std::vector<std::shared_ptr<EnvValue>> attributes;
@@ -84,8 +104,6 @@ bool EnvironmentNode::setAttributeValue(const std::string &name, const std::stri
 
 		}
 	}
-
-
 	return rc;
 }
 

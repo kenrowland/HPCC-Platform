@@ -35,6 +35,7 @@ class EnvironmentNode : public NodeStatus, public std::enable_shared_from_this<E
 		const std::string &getName() const { return m_name;  }
 		void addChild(std::shared_ptr<EnvironmentNode> pNode);
 		std::vector<std::shared_ptr<EnvironmentNode>> getChildren(const std::string &name="") const;
+        std::map<std::string, std::vector<std::shared_ptr<EnvironmentNode>>> getChildrenByName() const;
 		bool hasChildren() const { return m_children.size() != 0; }
 		int getNumChildren() const { return m_children.size(); }
 		void addAttribute(const std::string &name, std::shared_ptr<EnvValue> pValue);
@@ -66,9 +67,11 @@ class EnvironmentNode : public NodeStatus, public std::enable_shared_from_this<E
 		std::shared_ptr<EnvValue> m_pNodeValue;   // the node's value (not normal)
 		std::map<std::string, std::shared_ptr<EnvValue>> m_attributes;
 		std::string m_path;
-
-	
 };
+
+
+
+// getChildrenElementNames() = vector of all unique children element names
 
 
 #endif

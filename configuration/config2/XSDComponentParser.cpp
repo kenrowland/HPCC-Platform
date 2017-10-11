@@ -72,8 +72,11 @@ void XSDComponentParser::parseXSD(const pt::ptree &compTree)
         {
             std::string elementName = getXSDAttributeValue(elemTree, "<xmlattr>.name");
             m_pConfig->setName(elementName);
-            m_pConfig->setMinInstances(elemTree.get("<xmlattr>.minOccurs", 1));
-            m_pConfig->setMaxInstances(elemTree.get("<xmlattr>.maxOccurs", "1"));
+            int minOccurs = elemTree.get("<xmlattr>.minOccurs", 1);
+            std::string maxOccursStr = elemTree.get("<xmlattr>.maxOccurs", "1");
+            int maxOccurs = (maxOccursStr != "unbounded") ? stoi(maxOccursStr) : -1;
+            m_pConfig->setMinInstances(minOccurs);
+            m_pConfig->setMaxInstances(maxOccurs);
 
             //
             // Parse any attributes, these are located in the xs:complexType section
