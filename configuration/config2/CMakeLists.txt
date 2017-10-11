@@ -5,7 +5,6 @@ SET(  SRCS
       XMLEnvironmentMgr.cpp
 	  ConfigParser.cpp
 	  ConfigItemValueSet.cpp
-	  ConfigItemComponent.cpp
 	  ConfigItem.cpp
 	  CfgValue.cpp
 	  EnvironmentNode.cpp
