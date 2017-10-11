@@ -66,7 +66,7 @@ ESPstruct elementType
 {
     ESPstruct itemInfoType itemInfo;
     string    class("");
-    string    path("");
+    ESParray<string, path> pathList;
     ESPstruct docType doc;
     int       numChildren(0);
     int   numAllowedInstances(0);

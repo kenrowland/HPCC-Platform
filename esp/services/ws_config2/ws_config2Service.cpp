@@ -84,8 +84,8 @@ bool Cws_config2Ex::ongetPath(IEspContext &context, IEspGetPathRequest &req, IEs
             pElement->updateItemInfo().setName(pChildNode->getName().c_str());
             pElement->updateItemInfo().setDisplayName(pConfigItem->getDisplayName().c_str());
             pElement->setClass(pConfigItem->getClassName().c_str());
-            pElement->setNumAllowedInstances(pConfigItem->getMinInstances());
-            pElement->setNumRequiredInstances(pConfigItem->getMaxInstances());
+            pElement->setNumAllowedInstances(pConfigItem->getMaxInstances());
+            pElement->setNumRequiredInstances(pConfigItem->getMinInstances());
                         
             pElement->updateItemInfo().setStatus("ok");
             pElement->setPath(pChildNode->getPath().c_str());
