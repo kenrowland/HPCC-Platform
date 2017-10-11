@@ -45,6 +45,7 @@ std::map<std::string, std::vector<std::shared_ptr<EnvironmentNode>>> Environment
         {
             std::vector<std::shared_ptr<EnvironmentNode>> nodes;
             nodes.push_back(childIt->second);
+			results[childIt->second->getName()] = nodes;
         }
         else
         {
