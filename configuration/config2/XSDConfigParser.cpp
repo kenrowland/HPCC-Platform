@@ -35,37 +35,44 @@ bool XSDConfigParser::doParse(const std::vector<std::string> &cfgParms)
     {
 		//
 		// Add some default types to the config. Note changing values for limits 
-		std::shared_ptr<CfgLimits> pStringLimits = std::make_shared<CfgStringLimits>();;
-		std::shared_ptr<CfgLimits> pIntLimits = std::make_shared<CfgIntegerLimits>();
+		std::shared_ptr<CfgLimits> pStringLimits;
+		std::shared_ptr<CfgLimits> pIntLimits;
 
 		std::shared_ptr<CfgType> pType = std::make_shared<CfgType>("xs:string");
+        pStringLimits = std::make_shared<CfgStringLimits>();
 		pType->setLimits(pStringLimits);
 		m_pConfig->addType(pType);
 
 		pType = std::make_shared<CfgType>("xs:token");
+        pStringLimits = std::make_shared<CfgStringLimits>();
 		pType->setLimits(pStringLimits);
 		m_pConfig->addType(pType);
 
 		pType = std::make_shared<CfgType>("xs:boolean");
-		pStringLimits->addAllowedValue("true");
-		pStringLimits->addAllowedValue("false");
-		pType->setLimits(pStringLimits);
+        std::shared_ptr<CfgLimits> pBoolLimits = std::make_shared<CfgStringLimits>();
+        pBoolLimits->addAllowedValue("true");
+        pBoolLimits->addAllowedValue("false");
+		pType->setLimits(pBoolLimits);
 		m_pConfig->addType(pType);
 
 		pType = std::make_shared<CfgType>("xs:integer");
+        pIntLimits = std::make_shared<CfgIntegerLimits>();
 		pType->setLimits(pIntLimits);
 		m_pConfig->addType(pType);
 
 		pType = std::make_shared<CfgType>("xs:int");
+        pIntLimits = std::make_shared<CfgIntegerLimits>();
 		pType->setLimits(pIntLimits);
 		m_pConfig->addType(pType);
 
 		pType = std::make_shared<CfgType>("xs:nonNegativeInteger");
+        pIntLimits = std::make_shared<CfgIntegerLimits>();
 		pIntLimits->setMinInclusive(0);
 		pType->setLimits(pIntLimits);
 		m_pConfig->addType(pType);
 
 		pType = std::make_shared<CfgType>("xs:positiveInteger");
+        pIntLimits = std::make_shared<CfgIntegerLimits>();
 		pIntLimits->setMinInclusive(1);
 		pType->setLimits(pIntLimits);
 		m_pConfig->addType(pType);
@@ -374,8 +381,8 @@ std::shared_ptr<CfgType> XSDConfigParser::getCfgType(const pt::ptree &typeTree, 
     if (restriction != typeTree.not_found())
     {
         std::string baseType = getXSDAttributeValue(restriction->second, "<xmlattr>.base");
-		std::shared_ptr<CfgType> pType = m_pConfig->getType(baseType);
-		pLimits = pType->getLimits();
+		std::shared_ptr<CfgType> pType = std::make_shared<CfgType>(*(m_pConfig->getType(baseType)));
+		pLimits = std::make_shared<CfgLimits>(*(pType->getLimits()));
         if (!pLimits)
         {
             std::string msg = "Unsupported base type(" + baseType + ")";
