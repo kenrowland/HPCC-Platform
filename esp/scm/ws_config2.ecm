@@ -15,9 +15,9 @@
     limitations under the License.
 ############################################################################## */
 
-ESPrequest GetPathRequest 
+ESPrequest GetNodeRequest 
 {
-    string path;
+    string id;
 };
 
 
@@ -28,11 +28,18 @@ ESPstruct instanceType
 };
 
 
+ESPstruct choiceType
+{
+    string name;
+    string desc("");
+};
+
+
 ESPstruct limitsType
 {
     int    min(0);
     int    max(0);
-    ESParray<string, allow> allowList;
+    ESParray<ESPstruct choiceType, choice> choiceList;
     ESParray<string, disallow> disallowList;
     ESParray<string, expr> regex;
     ESParray<ESPstruct instanceType, instance> allowedInstances;
@@ -66,9 +73,10 @@ ESPstruct elementType
 {
     ESPstruct itemInfoType itemInfo;
     string    class("");
-    ESParray<string, path> pathList;
+    string    category("");
+    ESParray<string, id> idList;
     ESPstruct docType doc;
-    int       numChildren(0);
+    int   numChildren(0);
     int   numAllowedInstances(0);
     int   numRequiredInstances(0);
 };
@@ -97,9 +105,9 @@ ESPstruct attributeValueType
 };
 
 
-ESPresponse [exceptions_inline, encode(0)] GetPathResponse
+ESPresponse [exceptions_inline, encode(0)] GetNodeResponse
 {
-    string inputPath;
+    string inputId;
 	string status("error");
 	ESPstruct docType doc;
     ESParray<ESPstruct attributeType, attribute> attributes;
@@ -111,13 +119,14 @@ ESPresponse [exceptions_inline, encode(0)] GetPathResponse
 
 ESPrequest CreateInstanceRequest  // response is same as GetPathRequest
 {
-    string path;  // path to instance set where a new one is created
+    string id;    // node id where new isntance is to be created
+    string name;  // name of new instance to create
 };
 
 
 ESPrequest SetValuesRequest
 {
-    string path;    // 
+    string id;    // 
     ESParray<ESPstruct attributeValueType, attribute> attributeValues;
 	bool allowInvalid(false);  // true to allow setting an invalid value
     bool forceCreate(false);   // force creaation of new value if not defined
@@ -135,8 +144,8 @@ ESPresponse [exceptions_inline, encode(0)] SetValueSetResponse
 
 ESPservice [auth_feature("DEFERRED"),version("2.0"), default_client_version("2.0"), exceptions_inline("xslt/exceptions.xslt")] ws_config2
 {
-    ESPMethod getPath(GetPathRequest, GetPathResponse);
-    ESPMethod setValues(SetValuesRequest, GetPathResponse);
+    ESPMethod getNode(GetNodeRequest, GetNodeResponse);
+    ESPMethod setValues(SetValuesRequest, GetNodeResponse);
 };
 
 

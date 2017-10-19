@@ -43,7 +43,7 @@ class ConfigItem : public std::enable_shared_from_this<ConfigItem>
         virtual void setName(const std::string &name) { m_name = name; }      
 
         virtual void setDisplayName(const std::string &displayName) { m_displayName = displayName; }
-        virtual const std::string &getDisplayName() const { return m_displayName; }
+        virtual const std::string &getDisplayName() const { return m_displayName.length() ? m_displayName : m_name; }
 
         virtual void setCategory(const std::string &category) { m_category = category; }
         virtual const std::string &getCategory() const { return m_category; }
@@ -65,7 +65,8 @@ class ConfigItem : public std::enable_shared_from_this<ConfigItem>
 
         virtual void addChild(const std::shared_ptr<ConfigItem> &pItem) { m_children[pItem->getName()] = pItem; }
 		virtual void addChild(const std::shared_ptr<ConfigItem> &pItem, const std::string &name) { m_children[name] = pItem; }
-        virtual std::vector<std::shared_ptr<ConfigItem>> getChildren() const;
+        //virtual std::vector<std::shared_ptr<ConfigItem>> getChildren() const;
+        const std::map<std::string, std::shared_ptr<ConfigItem>> &getChildren() const { return m_children; }
         std::shared_ptr<ConfigItem> getChild(const std::string &name);
         virtual void setItemCfgValue(const std::shared_ptr<CfgValue> &pValue) { m_pValue = pValue; }
         virtual std::shared_ptr<CfgValue> getItemCfgValue() const { return m_pValue; }

@@ -282,23 +282,23 @@ void XSDConfigParser::parseElement(const pt::ptree &elemTree)
 
     //
     // A class name of component is used to start the definition of a component type that can be referenced as a type elsewhere
-    if (className == "component")
-    {
-        std::shared_ptr<ConfigItemComponent> pComponent = std::make_shared<ConfigItemComponent>(elementName, m_pConfig);  
-        pComponent->setCategory(category);
-        pComponent->setDisplayName(displayName);
-        pComponent->setMinInstances(minOccurs);
-        pComponent->setMaxInstances(maxOccurs);
-		pComponent->setVersion(elemTree.get("<xmlattr>.hpcc:version", -1));
-        std::shared_ptr<ConfigItem> pConfigItem = std::dynamic_pointer_cast<ConfigItem>(pComponent);
-        std::shared_ptr<XSDComponentParser> pComponentXSDParaser = std::make_shared<XSDComponentParser>(m_basePath, pConfigItem);
-        pComponentXSDParaser->parseXSD(elemTree.get_child("xs:complexType", pt::ptree())); 
-        m_pConfig->addChild(pComponent);
-    }
+    // if (className == "component")
+    // {
+    //     std::shared_ptr<ConfigItemComponent> pComponent = std::make_shared<ConfigItemComponent>(elementName, m_pConfig);  
+    //     pComponent->setCategory(category);
+    //     pComponent->setDisplayName(displayName);
+    //     pComponent->setMinInstances(minOccurs);
+    //     pComponent->setMaxInstances(maxOccurs);
+	// 	pComponent->setVersion(elemTree.get("<xmlattr>.hpcc:version", -1));
+    //     std::shared_ptr<ConfigItem> pConfigItem = std::dynamic_pointer_cast<ConfigItem>(pComponent);
+    //     std::shared_ptr<XSDComponentParser> pComponentXSDParaser = std::make_shared<XSDComponentParser>(m_basePath, pConfigItem);
+    //     pComponentXSDParaser->parseXSD(elemTree.get_child("xs:complexType", pt::ptree())); 
+    //     m_pConfig->addChild(pComponent);
+    // }
 
     //
     // A category?
-    else if (className == "category")
+    if (className == "category")
     {
         //
         // If we have a type config we found before, add it

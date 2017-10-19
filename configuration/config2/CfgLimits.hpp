@@ -50,6 +50,8 @@ class CfgLimits
         void setMaxLength(int v)     { m_maxLength    = v; }
         void addPattern(const std::string &pattern) { m_patterns.push_back(pattern); }
         void addAllowedValue(const std::string &value, const std::string &desc="") { m_allowedValues.push_back(AllowedValue(value, desc)); }
+        const std::vector<AllowedValue> &getAllowedValues() const { return m_allowedValues; }
+        bool isEnumerated() const { return !m_allowedValues.empty(); }
         bool isValueValid(const std::string &testValue) { return true; }
 		virtual int getMin() { return m_minInclusive; }
         virtual int getMax() { return m_maxInclusive; }

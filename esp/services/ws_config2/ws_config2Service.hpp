@@ -16,10 +16,10 @@ public:
     Cws_config2Ex();
     virtual ~Cws_config2Ex();
 
-    virtual bool ongetPath(IEspContext &context, IEspGetPathRequest &req, IEspGetPathResponse &resp);
-    virtual bool onsetValues(IEspContext &context, IEspSetValuesRequest &req, IEspGetPathResponse &resp);
+    virtual bool ongetNode(IEspContext &context, IEspGetNodeRequest &req, IEspGetNodeResponse &resp);
+    virtual bool onsetValues(IEspContext &context, IEspSetValuesRequest &req, IEspGetNodeResponse &resp);
 
-    virtual bool mockInterface(const std::string &path, IEspGetPathResponse &resp);
+    //virtual bool mockInterface(const std::string &path, IEspGetPathResponse &resp);
 
 private:
     EnvironmentMgr *m_pEnvMgr;   

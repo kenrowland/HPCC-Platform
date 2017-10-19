@@ -187,15 +187,15 @@ void ConfigItem::addKeyRef(const std::string &keyName, const std::string &elemen
 }
 
 
-std::vector<std::shared_ptr<ConfigItem>> ConfigItem::getChildren() const
-{
-    std::vector<std::shared_ptr<ConfigItem>> children;
+// std::vector<std::shared_ptr<ConfigItem>> ConfigItem::getChildren() const
+// {
+//     std::vector<std::shared_ptr<ConfigItem>> children;
     
-    for (auto it = m_children.begin(); it != m_children.end(); ++it)
-        children.push_back(it->second);
+//     for (auto it = m_children.begin(); it != m_children.end(); ++it)
+//         children.push_back(it->second);
 
-    return children;
-}
+//     return children;
+// }
 
 
 std::shared_ptr<ConfigItem> ConfigItem::getChild(const std::string &name)

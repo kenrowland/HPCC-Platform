@@ -29,7 +29,7 @@ class CfgType
 {
     public:
 
-        CfgType(const std::string &name) : m_name(name), m_autoValueType("") { }
+        CfgType(const std::string &name) : m_name(name), m_autoValueType(""), m_pLimits(std::make_shared<CfgLimits>()) { }
         virtual ~CfgType() { }
 
         std::shared_ptr<CfgLimits> &getLimits() { return m_pLimits; }
@@ -40,6 +40,8 @@ class CfgType
 		bool isAutoValueType() const { return m_autoValueType != "" ;  }
 		const std::string &getAutoValue() const { return m_autoValueType;  }  // todo: this is to be expanded to the supported types
 		void setAutoValueType(const std::string &valueType) { m_autoValueType = valueType;  }
+        bool isEnumerated() const { return m_pLimits->isEnumerated(); }
+        const std::vector<AllowedValue> &getAllowedValues() const { return m_pLimits->getAllowedValues(); }
 		
 
     private:
