@@ -50,7 +50,7 @@ int main()
 
         // 158
         //auto pNode = envMgr.getNodeFromPath("158");
-        auto pNode = pEnvMgr->getNodeFromPath("29");     // 29 is Hardware/Computer
+        auto pNode = pEnvMgr->getEnvironmentNode("29");     // 29 is Hardware/Computer
 
         auto x = pNode->getAllFieldValues("name");
 
@@ -67,11 +67,11 @@ int main()
 		// Value set test
         std::vector<EnvironmentMgr::valueDef> newValues;
         newValues.push_back({ "name", "namehasbeenchanged" });
-        pEnvMgr->setValuesForPath("158", newValues, "", false);
+        pEnvMgr->setAttributeValues("158", newValues, "", false);
 
         pEnvMgr->saveEnvironment("testout.xml");
 
-		auto results = pEnvMgr->getNodeFromPath(".");
+		auto results = pEnvMgr->getEnvironmentNode(".");
 
     }
     catch (ParseException &e)

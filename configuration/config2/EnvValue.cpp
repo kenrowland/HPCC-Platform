@@ -16,12 +16,12 @@ limitations under the License.
 ############################################################################## */
 
 #include "EnvValue.hpp"
+#include "EnvironmentNode.hpp"
 
-bool EnvValue::setValue(const std::string &value, bool force) 
+bool EnvValue::setValue(const std::string &value, Status &status, bool force)
 { 
     bool rc = true;
     std::string oldValue = m_value;
-    clearStatus();  // always clear the status since in can only be sigular
     if (m_pCfgValue)
     {
         if (m_pCfgValue->isValueValid(value))
@@ -32,15 +32,10 @@ bool EnvValue::setValue(const std::string &value, bool force)
         else if (force)
         {
             m_value = value;
-            addStatus(error, "Value is not valid");
-            rc = false;
+            m_pCfgValue->mirrorValue(oldValue, value);
+            status.addStatusMsg(ok, m_pMyEnvNode.lock()->getId(), m_name, "", "Attribute forced to invalid value");
+            rc = true;
         }
-    }
-    else
-    {
-        addStatus(warning, "Value saved, but no configuration defined for this value, unable to validate");
-        rc = false;
-        m_value = value;
     }
     return rc;
 }
@@ -49,18 +44,15 @@ bool EnvValue::setValue(const std::string &value, bool force)
 bool EnvValue::checkCurrentValue()
 {
     bool rc = true;
-    clearStatus();  // always clear the status since in can only be sigular
     if (m_pCfgValue)
     {
         if (!m_pCfgValue->isValueValid(m_value))
         {
-            addStatus(error, "Value is not valid");
             rc = false;
         }
     }
     else
     {
-        addStatus(warning, "no configuration defined for this value, unable to validate");
         rc = false;
     }
     return rc;

@@ -24,6 +24,7 @@ limitations under the License.
 #include "ConfigItem.hpp"
 #include "ConfigParser.hpp"
 #include "EnvironmentNode.hpp"
+#include "Status.hpp"
 
 class EnvironmentMgr;
 
@@ -46,18 +47,18 @@ class EnvironmentMgr
         bool loadConfig(const std::vector<std::string> &cfgParms);  // parms are dependent on the environment type
 		bool loadEnvironment(const std::string &file);  // return some error code,or a get last error type of call?
 
-		std::shared_ptr<EnvironmentNode> getNodeFromPath(const std::string &path) { return getElement(path); }
-		bool setValuesForPath(const std::string &path, const std::vector<valueDef> &values, const std::string &nodeValue, bool force=false);
+        std::shared_ptr<EnvironmentNode> getEnvironmentNode(const std::string &nodeId);
+		Status setAttributeValues(const std::string &path, const std::vector<valueDef> &values, const std::string &nodeValue, bool force=false);
 		
 		// save to stream ?
-		void saveEnvironment(const std::string &file);
-		bool validate();
+		Status saveEnvironment(const std::string &file);
+		Status validate();
 
 
 	protected:
 
 		std::string getUniqueKey();
-		std::shared_ptr<EnvironmentNode> getElement(const std::string &path);
+		
 		void addPath(const std::shared_ptr<EnvironmentNode> pNode);
         virtual bool createParser(const std::vector<std::string> &cfgParms) = 0;
 		virtual bool load(std::istream &in) = 0;
@@ -70,7 +71,7 @@ class EnvironmentMgr
 		std::shared_ptr<ConfigItem> m_pConfig;
         std::shared_ptr<ConfigParser> m_pConfigParser;
 		std::shared_ptr<EnvironmentNode> m_pRootNode;
-		std::map<std::string, std::shared_ptr<EnvironmentNode>> m_paths;
+		std::map<std::string, std::shared_ptr<EnvironmentNode>> m_nodeIds;
 
 
 	private:

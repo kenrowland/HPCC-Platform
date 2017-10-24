@@ -23,9 +23,9 @@ limitations under the License.
 #include "ConfigItem.hpp"
 #include "EnvValue.hpp"
 #include "CfgValue.hpp"
-#include "NodeStatus.hpp"
+#include "Status.hpp"
 
-class EnvironmentNode : public NodeStatus, public std::enable_shared_from_this<EnvironmentNode>
+class EnvironmentNode : public std::enable_shared_from_this<EnvironmentNode>
 {
 	public:
 
@@ -39,7 +39,7 @@ class EnvironmentNode : public NodeStatus, public std::enable_shared_from_this<E
 		bool hasChildren() const { return m_children.size() != 0; }
 		int getNumChildren() const { return m_children.size(); }
 		void addAttribute(const std::string &name, std::shared_ptr<EnvValue> pValue);
-		bool setAttributeValue(const std::string &name, const std::string &value, bool allowInvalid=false, bool forceCreate=false);   // candidate for a variant?
+		void setAttributeValue(const std::string &name, const std::string &value, Status &status, bool allowInvalid=false, bool forceCreate=false);   // candidate for a variant?
 		std::string getAttributeValue(const std::string &name) const;                                  // candidate for a variant?
 		bool setValue(const std::string &value, bool force = false);   
 		void setNodeEnvValue(const std::shared_ptr<EnvValue> &pEnvValue) { m_pNodeValue = pEnvValue;  }
@@ -47,11 +47,11 @@ class EnvironmentNode : public NodeStatus, public std::enable_shared_from_this<E
 		std::vector<std::shared_ptr<EnvValue>> getAttributes() const;
 		const std::shared_ptr<EnvValue> getAttribute(const std::string &name) const;
 		bool hasAttributes() const { return m_attributes.size() != 0; }
-		void setPath(const std::string &path) { m_path = path; } 
-		const std::string &getPath() const { return m_path;  }
+		void setId(const std::string &id) { m_id = id; } 
+		const std::string &getId() const { return m_id;  }
 		const std::string &getMessage() const { return m_msg; }
 		void setMessage(const std::string &msg) { m_msg = msg; }
-		bool validate();
+        void validate(Status &status) const;
 		std::vector<std::string> getAllFieldValues(const std::string &fieldName) const;
 		const std::shared_ptr<ConfigItem> &getConfigItem() const { return m_pConfigItem; }
 
@@ -65,7 +65,7 @@ class EnvironmentNode : public NodeStatus, public std::enable_shared_from_this<E
 		std::multimap<std::string, std::shared_ptr<EnvironmentNode>> m_children;
 		std::shared_ptr<EnvValue> m_pNodeValue;   // the node's value (not normal)
 		std::map<std::string, std::shared_ptr<EnvValue>> m_attributes;
-		std::string m_path;
+		std::string m_id;
 };
 
 

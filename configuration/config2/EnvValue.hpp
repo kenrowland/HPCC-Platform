@@ -20,16 +20,17 @@ limitations under the License.
 
 #include <string>
 #include "CfgValue.hpp"
-#include "NodeStatus.hpp"
+#include "Status.hpp"
 
 class EnvironmentNode;
 
-class EnvValue : public NodeStatus
+class EnvValue
 {
 	public:
 		EnvValue(const std::shared_ptr<EnvironmentNode> &pMyNode, const std::shared_ptr<CfgValue> &pCfgValue, const std::string &name="") : m_pMyEnvNode(pMyNode), m_pCfgValue(pCfgValue), m_name(name) { }
 		~EnvValue() { }
-		bool setValue(const std::string &value, bool force=false);
+		bool setValue(const std::string &value, Status &status, bool force=false);
+        bool setValue(const std::string &value, bool force = false) { Status status; return setValue(value, status, force); }
 		bool checkCurrentValue();
 		const std::string &getValue() const { return m_value;  }
 		const std::string &getDefaultValue() const { return m_pCfgValue->getDefaultValue(); }

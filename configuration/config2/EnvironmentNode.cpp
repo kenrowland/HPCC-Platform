@@ -86,43 +86,44 @@ std::vector<std::shared_ptr<EnvValue>> EnvironmentNode::getAttributes() const
 
 
 // should probably return a status object, and put path/valueName in there
-bool EnvironmentNode::setAttributeValue(const std::string &name, const std::string &value, bool allowInvalid, bool forceCreate)
+void EnvironmentNode::setAttributeValue(const std::string &attrName, const std::string &value, Status &status, bool allowInvalid, bool forceCreate)
 {
-	bool rc = false;
 	std::shared_ptr<EnvValue> pEnvValue;
-	auto it = m_attributes.find(name);
+
+	auto it = m_attributes.find(attrName);
 	if (it != m_attributes.end())
 	{
 		pEnvValue = it->second;
 	}
 
-	//
-	// This is a non-defined attribute. If force is true, create a new non-config backed attribute
-	else if (forceCreate)
-	{
-		std::shared_ptr<CfgValue> pCfgValue = std::make_shared<CfgValue>(name, false);
-		std::shared_ptr<EnvValue> pEnvValue = std::make_shared<EnvValue>(shared_from_this(), pCfgValue, name);
-		//addStatus(NodeStatus::warning, "Attribute " + name + " not defined in configuration schema, unable to validate value.");
-		addAttribute(name, pEnvValue);
-		rc = false;
-	}
-	else
-	{
-		// todo: a message here that value does not exist and force was not set?
-		rc = false;
-	}
+    //
+    // Not found on this node. See if the configuration defines the attribute. If so, set the value and move on.
+    // If not and the forceCreate flag is set, create it. 
+    else
+    {
+        std::shared_ptr<CfgValue> pCfgValue = m_pConfigItem->getAttribute(attrName);
+        if (pCfgValue)
+        {
+            pEnvValue = std::make_shared<EnvValue>(shared_from_this(), pCfgValue, attrName);
+            addAttribute(attrName, pEnvValue);
+        }
+        else if (forceCreate)
+        {
+            pCfgValue = std::make_shared<CfgValue>(attrName, false);
+            pEnvValue = std::make_shared<EnvValue>(shared_from_this(), pCfgValue, attrName);
+            addAttribute(attrName, pEnvValue);
+            status.addStatusMsg(ok, getId(), attrName, "", "Undefined attribute did not exist in configuration, was created");
+        }
+    }
+
 
 	//
 	// If we have a value, set it to the new value. If that passes, see if there is any post processint to do
 	if (pEnvValue)
 	{
-		rc = pEnvValue->setValue(value); 
-		if (rc)
-		{
-
-		}
+		pEnvValue->setValue(value, status, allowInvalid); 
 	}
-	return rc;
+	
 }
 
 
@@ -155,30 +156,34 @@ bool EnvironmentNode::setValue(const std::string &value, bool force)
 }
 
 
-bool EnvironmentNode::validate()
+void EnvironmentNode::validate(Status &status) const
 {
 	//
 	// Check node value
 	if (m_pNodeValue)
 	{
-		m_pNodeValue->checkCurrentValue();
+        if (!m_pNodeValue->checkCurrentValue())
+        {
+            status.addStatusMsg(warning, getId(), "", "", "The node value is not valid");
+        }
 	}
 
 	//
 	// Check any attributes
 	for (auto attrIt = m_attributes.begin(); attrIt != m_attributes.end(); ++attrIt)
 	{
-		attrIt->second->checkCurrentValue();
+        if (!attrIt->second->checkCurrentValue())
+        {
+            status.addStatusMsg(warning, getId(), attrIt->first, "", "Attribute value is not valid");
+        }
 	}
 
 	//
 	// Now check all children
 	for (auto childIt = m_children.begin(); childIt != m_children.end(); ++childIt)
 	{
-		childIt->second->validate();
+		childIt->second->validate(status);
 	}
-
-	return true;
 }
 
 

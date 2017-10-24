@@ -122,7 +122,7 @@
     <ClInclude Include="EnvironmentMgr.hpp" />
     <ClInclude Include="EnvironmentNode.hpp" />
     <ClInclude Include="EnvValue.hpp" />
-    <ClInclude Include="NodeStatus.hpp" />
+    <ClInclude Include="Status.hpp" />
     <ClInclude Include="XMLEnvironmentMgr.hpp" />
     <ClInclude Include="XSDComponentParser.hpp" />
     <ClInclude Include="XSDConfigParser.hpp" />
@@ -136,8 +136,8 @@
     <ClCompile Include="EnvironmentMgr.cpp" />
     <ClCompile Include="EnvironmentNode.cpp" />
     <ClCompile Include="EnvValue.cpp" />
-    <ClCompile Include="NodeStatus.cpp" />
     <ClCompile Include="parseXSD.cpp" />
+    <ClCompile Include="Status.cpp" />
     <ClCompile Include="XMLEnvironmentMgr.cpp" />
     <ClCompile Include="XSDComponentParser.cpp" />
     <ClCompile Include="XSDConfigParser.cpp" />

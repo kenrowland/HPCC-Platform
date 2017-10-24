@@ -64,8 +64,9 @@ bool EnvironmentMgr::loadEnvironment(const std::string &filename)
 }
 
 
-void EnvironmentMgr::saveEnvironment(const std::string &filename)
+Status EnvironmentMgr::saveEnvironment(const std::string &filename)
 {
+    Status status;
 	std::ofstream out;
 
 	out.open(filename);
@@ -73,39 +74,45 @@ void EnvironmentMgr::saveEnvironment(const std::string &filename)
 	{
 		save(out);
 	}
+    return status;
 }
 
 
 void EnvironmentMgr::addPath(const std::shared_ptr<EnvironmentNode> pNode)
 {
-	auto retVal = m_paths.insert({pNode->getPath(), pNode });
+	auto retVal = m_nodeIds.insert({pNode->getId(), pNode });
 	if (!retVal.second)
 	{
-		throw (new ParseException("Attempted to insert duplicate path name " + pNode->getPath() + " for node "));
+		throw (new ParseException("Attempted to insert duplicate path name " + pNode->getId() + " for node "));
 	}
 }
 
 
-std::shared_ptr<EnvironmentNode> EnvironmentMgr::getElement(const std::string &path)
+std::shared_ptr<EnvironmentNode> EnvironmentMgr::getEnvironmentNode(const std::string &nodeId)
 {
-	std::shared_ptr<EnvironmentNode> pElement;
-	auto pathIt = m_paths.find(path);
-	if (pathIt != m_paths.end())
-		pElement = pathIt->second;
-	return pElement;
+	std::shared_ptr<EnvironmentNode> pNode;
+	auto pathIt = m_nodeIds.find(nodeId);
+	if (pathIt != m_nodeIds.end())
+        pNode = pathIt->second;
+	return pNode;
 }
 
 
 // todo: make a standard return that has a status string and array of messages
-bool EnvironmentMgr::setValuesForPath(const std::string &path, const std::vector<valueDef> &values, const std::string &nodeValue, bool force)
+Status EnvironmentMgr::setAttributeValues(const std::string &nodeId, const std::vector<valueDef> &values, const std::string &nodeValue, bool force)
 {
-	std::shared_ptr<EnvironmentNode> pEnvNode = getElement(path);
+    Status status;
+	std::shared_ptr<EnvironmentNode> pEnvNode = getEnvironmentNode(nodeId);
 	if (pEnvNode)
 	{
 		for (auto it = values.begin(); it != values.end(); ++it)
-			pEnvNode->setAttributeValue((*it).name, (*it).value, force);
+			pEnvNode->setAttributeValue((*it).name, (*it).value, status, force);
 	}
-	return true;
+    else
+    {
+        status.addStatusMsg(error, nodeId, "", "", "Indicated node ID does not exist");
+    }
+	return status;
 }
 
 
@@ -115,11 +122,12 @@ std::string EnvironmentMgr::getUniqueKey()
 }
 
 
-bool EnvironmentMgr::validate()
+Status EnvironmentMgr::validate()
 {
+    Status status;
 	if (m_pRootNode)
 	{
         // todo: fill it in.
 	}
-	return true;
+	return status;
 }

@@ -16,7 +16,6 @@ limitations under the License.
 ############################################################################## */
 
 
-#include "NodeStatus.hpp"
 
 
 void NodeStatus::addStatus(nodeStatus status, const std::string &msg)
