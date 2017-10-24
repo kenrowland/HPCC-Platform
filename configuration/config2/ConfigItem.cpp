@@ -281,20 +281,7 @@ std::shared_ptr<CfgValue> ConfigItem::findCfgValue(const std::string &path)
                 // todo: throw
             }
         }
-        //else if (path[end] == '@')
-        //{
-        //    return cfgChild->second->findCfgValue(path.substr(end1));
-        //    std::string attrName = path.substr(end);
-        //    auto attrIt = m_attributes.find(attrName);
-        //    if (attrIt != m_attributes.end())
-        //    {
-        //        return attrIt->second;
-        //    }
-        //    else
-        //    {
-        //        // todo: throw
-        //    }
-        //}
+        
     }
 
     return std::shared_ptr<CfgValue>(); 
@@ -303,8 +290,13 @@ std::shared_ptr<CfgValue> ConfigItem::findCfgValue(const std::string &path)
 
 void ConfigItem::postProcessConfig()
 {
+    //
+    // Post process the attributes
     for (auto it = m_attributes.begin(); it != m_attributes.end(); ++it)
     {
+        //
+        // If this is a mirroed value, go find the source and attach ourselves so that if that value changes,
+        // it is replicated to us.
         if (it->second->isMirroredValue())
         {
             std::shared_ptr<CfgValue> pSrcCfgValue = findCfgValue(it->second->getMirrorFromPath());
@@ -312,9 +304,15 @@ void ConfigItem::postProcessConfig()
             {
                 pSrcCfgValue->addMirroredCfgValue(it->second);
             }
+            else
+            {
+                // todo: throw a not found exception for the mirror source
+            }
         }
     }
 
+    //
+    // Post process all of our children now
     for (auto it = m_children.begin(); it!= m_children.end(); ++it)
     {
         it->second->postProcessConfig();

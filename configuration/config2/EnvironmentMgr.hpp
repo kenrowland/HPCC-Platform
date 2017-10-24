@@ -15,6 +15,14 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ############################################################################## */
 
+
+//
+// Todo:
+//   Add a required if capability. hpp:requiredIf="some indicator to a value that if set means this one must be set"
+//   Maybe a component name? Although I think displayName should suffice
+//   See if can put same ESP Service in ESP Process more than once.
+
+
 #ifndef _CONFIG2_ENVIRONMENTMGR_HPP_
 #define _CONFIG2_ENVIRONMENTMGR_HPP_
 
