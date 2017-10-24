@@ -122,12 +122,12 @@ std::string EnvironmentMgr::getUniqueKey()
 }
 
 
-Status EnvironmentMgr::validate()
+Status EnvironmentMgr::validate() const
 {
     Status status;
 	if (m_pRootNode)
 	{
-        // todo: fill it in.
+        m_pRootNode->validate(status);
 	}
 	return status;
 }

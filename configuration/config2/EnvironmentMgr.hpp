@@ -60,7 +60,7 @@ class EnvironmentMgr
 		
 		// save to stream ?
 		Status saveEnvironment(const std::string &file);
-		Status validate();
+        Status validate() const;
 
 
 	protected:
