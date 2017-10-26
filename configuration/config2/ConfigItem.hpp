@@ -68,6 +68,7 @@ class ConfigItem : public std::enable_shared_from_this<ConfigItem>
         //virtual std::vector<std::shared_ptr<ConfigItem>> getChildren() const;
         const std::map<std::string, std::shared_ptr<ConfigItem>> &getChildren() const { return m_children; }
         std::shared_ptr<ConfigItem> getChild(const std::string &name);
+
         virtual void setItemCfgValue(const std::shared_ptr<CfgValue> &pValue) { m_pValue = pValue; }
         virtual std::shared_ptr<CfgValue> getItemCfgValue() const { return m_pValue; }
 		virtual void addAttribute(const std::shared_ptr<CfgValue> &pCfgValue);
