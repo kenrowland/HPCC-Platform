@@ -35,7 +35,11 @@ bool Cws_config2Ex::ongetNode(IEspContext &context, IEspGetNodeRequest &req, IEs
     if (!pNode)
     {
         resp.setInputId(id.c_str());
-        resp.setStatus("error");    
+        resp.updateStatus().setError(true);
+        IArrayOf<IEspstatusMsgType> msgs;
+        Owned<IEspstatusMsgType> pStatusMsg = createstatusMsgType();
+        pStatusMsg->setNodeId(id.c_str());
+        pStatusMsg->setMsg("The input node ID is not a valid not in the environment");
         return false;
     }
 
@@ -45,7 +49,6 @@ bool Cws_config2Ex::ongetNode(IEspContext &context, IEspGetNodeRequest &req, IEs
     //
     // Fill out the response headdre stuff
     resp.setInputId(id.c_str());
-    resp.setStatus("ok");
 
     //
     // Attributes?
