@@ -51,7 +51,7 @@ class EnvironmentNode : public std::enable_shared_from_this<EnvironmentNode>
 		const std::string &getId() const { return m_id;  }
 		const std::string &getMessage() const { return m_msg; }
 		void setMessage(const std::string &msg) { m_msg = msg; }
-        void validate(Status &status) const;
+        void validate(Status &status, bool includeChildren=false) const;
 		std::vector<std::string> getAllFieldValues(const std::string &fieldName) const;
 		const std::shared_ptr<ConfigItem> &getConfigItem() const { return m_pConfigItem; }
 

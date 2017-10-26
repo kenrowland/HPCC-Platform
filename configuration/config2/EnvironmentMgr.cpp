@@ -127,7 +127,7 @@ Status EnvironmentMgr::validate() const
     Status status;
 	if (m_pRootNode)
 	{
-        m_pRootNode->validate(status);
+        m_pRootNode->validate(status, true);
 	}
 	return status;
 }

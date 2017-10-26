@@ -1,6 +1,6 @@
 /*##############################################################################
 
-HPCC SYSTEMS software Copyright (C) 2017 HPCC Systems®.
+HPCC SYSTEMS software Copyright (C) 2017 HPCC Systemsï¿½.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -156,7 +156,7 @@ bool EnvironmentNode::setValue(const std::string &value, bool force)
 }
 
 
-void EnvironmentNode::validate(Status &status) const
+void EnvironmentNode::validate(Status &status, bool includeChildren) const
 {
 	//
 	// Check node value
@@ -180,9 +180,12 @@ void EnvironmentNode::validate(Status &status) const
 
 	//
 	// Now check all children
-	for (auto childIt = m_children.begin(); childIt != m_children.end(); ++childIt)
+	if (includeChildren)
 	{
-		childIt->second->validate(status);
+		for (auto childIt = m_children.begin(); childIt != m_children.end(); ++childIt)
+		{
+			childIt->second->validate(status);
+		}
 	}
 }
 

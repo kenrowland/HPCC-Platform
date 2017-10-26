@@ -54,6 +54,32 @@ ESPstruct typeInfo
 };
 
 
+ESPenum msgType : string
+{
+    Info("info"),
+    Warning("warning"),
+    Error("error"),
+    Fatal("fatal")
+};
+
+
+ESPstruct statusMsgType
+{
+    ESPenum msgType msgType;
+    string nodeId;                  // node identifier that generated this status message
+    string refNodeId("");           // optional refereence node (message dependent)
+    string attribute("";            // name of node's attribute generating the message ("" for the node itself)
+    string msg;                     // the message
+};
+
+
+ESPstruct statusType
+{
+    ESParray<ESPstruct statusMsgType statusMsg> statusMsgs;
+    bool error(false);
+};
+
+
 ESPstruct docType
 {
     string tooltip("");
@@ -108,8 +134,7 @@ ESPstruct attributeValueType
 ESPresponse [exceptions_inline, encode(0)] GetNodeResponse
 {
     string inputId;
-	string status("error");
-	ESPstruct docType doc;
+	ESPstruct statusType status;
     ESParray<ESPstruct attributeType, attribute> attributes;
     ESParray<ESPstruct elementType, child> children;
 	bool valueDefined(false);                                    // indicates that value if defined (not normal)
@@ -136,8 +161,7 @@ ESPrequest SetValuesRequest
 
 ESPresponse [exceptions_inline, encode(0)] SetValueSetResponse
 {
-    string status("error");
-    ESPstruct docType doc;
+    ESPstruct statusType status;
     //ESParray<ESPstruct valueType, value> values;
 };
 
