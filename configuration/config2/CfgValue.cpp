@@ -21,12 +21,7 @@
 
 bool CfgValue::isValueValid(const std::string &newValue) const
 {
-	bool rc = true;
-
-	if (m_pType)
-		rc = m_pType->isValueValid(newValue);
-
-	return rc;
+    return m_pType->isValueValid(newValue);
 }
 
 
@@ -65,7 +60,7 @@ void CfgValue::setMirroredEnvValues(const std::string &oldValue, const std::stri
         std::shared_ptr<EnvValue> pEnvValue = (*envIt).lock();
         if (pEnvValue && pEnvValue->getValue() == oldValue)
         {
-            pEnvValue->setValue(newValue);  
+            pEnvValue->setValue(newValue, nullptr, true);  
         }
     }
 }

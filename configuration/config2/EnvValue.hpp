@@ -34,7 +34,7 @@ class EnvValue
 			EnvValue(pMyNode, pCfgValue, name) { m_value = initValue;  }
 
 		~EnvValue() { }
-		bool setValue(const std::string &value, bool force=false);
+		bool setValue(const std::string &value, Status *pStatus, bool forceSet=false);
 		bool checkCurrentValue();
 		const std::string &getValue() const { return m_value;  }
 		const std::string &getDefaultValue() const { return m_pCfgValue->getDefaultValue(); }
@@ -42,7 +42,6 @@ class EnvValue
 		const std::shared_ptr<CfgValue> &getCfgValue() const { return m_pCfgValue;  }
 		const std::string &getName() const { return m_name;  }
 		bool wasForced() const { return m_forcedSet; }
-		void setForcedCreate(bool forced) { m_forcedCreate = forced; }
 		bool isValueValid(const std::string &value) const;
         void validate(Status &status, const std::string &myId) const;
 	
@@ -50,7 +49,6 @@ class EnvValue
 	private:
 
 		bool m_forcedSet;     // true when last set value was a forced set
-		bool m_forcedCreate;  // true if created via set operation for a non existing value that has not configuration
 		std::string m_name;
 		std::string m_value;
 		std::shared_ptr<CfgValue> m_pCfgValue;   

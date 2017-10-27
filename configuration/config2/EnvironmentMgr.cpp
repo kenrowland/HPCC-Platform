@@ -64,9 +64,8 @@ bool EnvironmentMgr::loadEnvironment(const std::string &filename)
 }
 
 
-Status EnvironmentMgr::saveEnvironment(const std::string &filename)
+void EnvironmentMgr::saveEnvironment(const std::string &filename, Status &status)
 {
-    Status status;
 	std::ofstream out;
 
 	out.open(filename);
@@ -74,7 +73,6 @@ Status EnvironmentMgr::saveEnvironment(const std::string &filename)
 	{
 		save(out);
 	}
-    return status;
 }
 
 
@@ -99,7 +97,7 @@ std::shared_ptr<EnvironmentNode> EnvironmentMgr::getEnvironmentNode(const std::s
 
 
 // todo: make a standard return that has a status string and array of messages
-Status EnvironmentMgr::setAttributeValues(const std::string &nodeId, const std::vector<valueDef> &values, const std::string &nodeValue, bool force)
+/*void EnvironmentMgr::setAttributeValues(const std::string &nodeId, const std::vector<valueDef> &values, const std::string &nodeValue, bool force)
 {
     Status status;
 	std::shared_ptr<EnvironmentNode> pEnvNode = getEnvironmentNode(nodeId);
@@ -112,8 +110,7 @@ Status EnvironmentMgr::setAttributeValues(const std::string &nodeId, const std::
     {
         status.addStatusMsg(statusMsg::error, nodeId, "", "", "Indicated node ID does not exist");
     }
-	return status;
-}
+}*/
 
 
 std::string EnvironmentMgr::getUniqueKey()
@@ -122,12 +119,10 @@ std::string EnvironmentMgr::getUniqueKey()
 }
 
 
-Status EnvironmentMgr::validate() const
+void EnvironmentMgr::validate(Status &status) const
 {
-    Status status;
 	if (m_pRootNode)
 	{
         m_pRootNode->validate(status, true);
 	}
-	return status;
 }

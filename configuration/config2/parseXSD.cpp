@@ -65,11 +65,12 @@ int main()
 
 		//
 		// Value set test
-        std::vector<EnvironmentMgr::valueDef> newValues;
-        newValues.push_back({ "name", "namehasbeenchanged" });
-        pEnvMgr->setAttributeValues("158", newValues, "", false);
+        //std::vector<EnvironmentMgr::valueDef> newValues;
+        //newValues.push_back({ "name", "namehasbeenchanged" });
+        //pEnvMgr->setAttributeValues("158", newValues, "", false);
 
-        pEnvMgr->saveEnvironment("testout.xml");
+        Status status;
+        pEnvMgr->saveEnvironment("testout.xml", status);
 
 		auto results = pEnvMgr->getEnvironmentNode(".");
 

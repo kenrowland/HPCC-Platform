@@ -51,3 +51,11 @@ std::string Status::getStatusTypeString(enum statusMsg::msgLevel status) const
 	}
 	return result;
 }
+
+void Status::add(const std::vector<statusMsg> msgs)
+{
+    for (auto msgIt = msgs.begin(); msgIt != msgs.end(); ++msgIt)
+    {
+        m_messages.insert({ (*msgIt).msgLevel, *msgIt });
+    }
+}

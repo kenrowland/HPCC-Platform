@@ -24,11 +24,11 @@ std::string CfgStringLimits::getString() const
 
     if (m_length != 0)
     {
-        limitStr += "string " + m_length + " charcters in length.";
+        //limitStr += "string " + m_length + " charcters in length.";
     }
     else 
     {
-        limitStr += "string between " + getMin() + " and ";
+        //limitStr += "string between " + getMin() + " and ";
         if (getMax() == INT_MAX)
         {
             limitStr += " unlimited ";

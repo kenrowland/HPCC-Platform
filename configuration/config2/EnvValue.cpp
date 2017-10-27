@@ -18,23 +18,32 @@ limitations under the License.
 #include "EnvValue.hpp"
 #include "EnvironmentNode.hpp"
 
-bool EnvValue::setValue(const std::string &value, bool force)
+bool EnvValue::setValue(const std::string &value, Status *pStatus, bool forceSet)
 { 
     bool rc = true;
     std::string oldValue = m_value;
     if (m_pCfgValue)
     {
+        m_forcedSet = false;
         if (m_pCfgValue->isValueValid(value))
         {
             m_value = value;
             m_pCfgValue->mirrorValue(oldValue, value);
         }
-        else if (force)
+        else if (forceSet)
         {
             m_value = value;
+            m_forcedSet = true;
             m_pCfgValue->mirrorValue(oldValue, value);
-            //status.addStatusMsg(statusMsg::ok, m_pMyEnvNode.lock()->getId(), m_name, "", "Attribute forced to invalid value");
+            if (pStatus != nullptr)
+                pStatus->addStatusMsg(statusMsg::ok, m_pMyEnvNode.lock()->getId(), m_name, "", "Attribute forced to invalid value");
             rc = true;
+        }
+        else
+        {
+            if (pStatus != nullptr)
+                pStatus->addStatusMsg(statusMsg::error, m_pMyEnvNode.lock()->getId(), m_name, "", "New value is not valid");
+            //todo, use the cfgValue->cfgType->getstring or whatever to get a status message as to why it's not valid (in line after the not valid above)
         }
     }
     return rc;
@@ -61,39 +70,33 @@ bool EnvValue::checkCurrentValue()
 
 bool EnvValue::isValueValid(const std::string &value) const
 {
-    bool rc = true;
-    if (m_pCfgValue)
+    bool rc = false;
+    
+    //
+    // Check the value against the type
+    if (m_pCfgValue->isValueValid(value))
     {
         //
-        // Check the value against the type
-        if (m_pCfgValue->isValueValid(value))
+        // If this is a key, make sure it's unique. This check has to be done here because the CfgValue does not know the node
+        if (m_pCfgValue->isKey())
         {
-            //
-            // If this is a key, make sure it's unique
-            if (m_pCfgValue->isKey())
+            std::string fieldName = m_pCfgValue->getName();
+            std::shared_ptr<EnvironmentNode> pMyEnvNode = m_pMyEnvNode.lock();
+            if (pMyEnvNode)
             {
-                std::string fieldName = m_pCfgValue->getName();
-                std::shared_ptr<EnvironmentNode> pMyEnvNode = m_pMyEnvNode.lock();
-                if (pMyEnvNode)
-                {
-                    // todo: use getAllFieldValues
-
-                    //
-                    // Is this a key value? If so, make sure our value is unique for all the values. Note that we are likely an attribute here
-                    //if (m_pCfgValue->isKey())
-                    //{
-                    //    pMyEnvNode
-                    //}
-
-                    // need the parent of myenvnode
-                    // then get from that parent, get all fieldNames for children with name myenvnode->getName()
-                    // get all values for fieldname from pParent
-                }
+                bool found = false;
+                std::vector<std::string> allValues = pMyEnvNode->getAllFieldValues(m_name);
+                for (auto it = allValues.begin(); it != allValues.end() && !found; ++it)
+                    found = *it == value;
+                
+                rc = !found;   
             }
         }
 
         //
-        // If this is a key, then we 
+        // Not a key value, so it's good.
+        else
+            rc = true;
     }
     return rc;
 }
@@ -101,8 +104,9 @@ bool EnvValue::isValueValid(const std::string &value) const
 
 void EnvValue::validate(Status &status, const std::string &myId) const
 {
-    if (m_forcedCreate)
-        status.addStatusMsg(statusMsg::ok, myId, m_name, "", "Undefined attribute did not exist in configuration, was created");
+
+    if (!m_pCfgValue->isDefined())
+        status.addStatusMsg(statusMsg::warning, myId, m_name, "", "No configuration exists for this value");
 
     if (m_forcedSet)
         status.addStatusMsg(statusMsg::warning, myId, m_name, "", "Current value was force set");

@@ -37,7 +37,7 @@ ConfigItem::ConfigItem(const std::string &name, const std::string &className, co
 	// throughout the configuration can present a set of objects, even for non configured elements
 	if (m_pParent.expired())
 	{
-		std::shared_ptr<CfgType> pDefaultType = std::make_shared<CfgType>("none");
+		std::shared_ptr<CfgType> pDefaultType = std::make_shared<CfgType>("default");
 		std::shared_ptr<CfgLimits> pDefaultLimits = std::make_shared<CfgLimits>();
 		pDefaultType->setLimits(pDefaultLimits);
 		addType(pDefaultType);
@@ -149,7 +149,7 @@ std::shared_ptr<CfgValue> ConfigItem::getAttribute(const std::string &name) cons
 	else
 	{
 		pCfgValue = std::make_shared<CfgValue>(name);
-		pCfgValue->setType(getType("none"));
+		pCfgValue->setType(getType("default"));
 	}
 	return pCfgValue;
 }
@@ -208,7 +208,7 @@ std::shared_ptr<ConfigItem> ConfigItem::getChild(const std::string &name)
 	}
 	else
 	{
-		pItem = std::make_shared<ConfigItem>(name, "undefined", shared_from_this());
+		pItem = std::make_shared<ConfigItem>(name, "default", shared_from_this());
 	}
 	return pItem;
 }

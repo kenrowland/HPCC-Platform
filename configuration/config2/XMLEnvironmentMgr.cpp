@@ -69,7 +69,7 @@ void XMLEnvironmentMgr::parse(const pt::ptree &envTree, const std::shared_ptr<Co
 		{
 			std::shared_ptr<CfgValue> pCfgValue = pConfigItem->getItemCfgValue();
 			std::shared_ptr<EnvValue> pEnvValue = std::make_shared<EnvValue>(pEnvNode, pCfgValue, "");  // node's value has no name
-			pEnvValue->setValue(value);
+			pEnvValue->setValue(value, nullptr);
 			pEnvNode->setNodeEnvValue(pEnvValue);
 		}
 	}

@@ -1,6 +1,6 @@
 /*##############################################################################
 
-HPCC SYSTEMS software Copyright (C) 2017 HPCC Systems�.
+HPCC SYSTEMS software Copyright (C) 2017 HPCC Systems
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -56,11 +56,11 @@ class EnvironmentMgr
 		bool loadEnvironment(const std::string &file);  // return some error code,or a get last error type of call?
 
         std::shared_ptr<EnvironmentNode> getEnvironmentNode(const std::string &nodeId);
-		Status setAttributeValues(const std::string &path, const std::vector<valueDef> &values, const std::string &nodeValue, bool force=false);
+		//void setAttributeValues(const std::string &path, const std::vector<valueDef> &values, const std::string &nodeValue, bool force=false);
 		
 		// save to stream ?
-		Status saveEnvironment(const std::string &file);
-        Status validate() const;
+		void saveEnvironment(const std::string &file, Status &status);
+        void validate(Status &status) const;
 
 
 	protected:

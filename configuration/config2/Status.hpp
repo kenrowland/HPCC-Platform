@@ -54,6 +54,7 @@ class Status
         bool isOk() const { return m_highestMsgLevel == statusMsg::ok; }
 		std::string getStatusTypeString(enum statusMsg::msgLevel status) const;
         std::vector<statusMsg> getMessages() const;
+        void add(const std::vector<statusMsg> msgs);
 
 
 	private:

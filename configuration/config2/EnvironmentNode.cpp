@@ -19,36 +19,36 @@ limitations under the License.
 
 void EnvironmentNode::addChild(std::shared_ptr<EnvironmentNode> pNode)
 {
-	m_children.insert(std::make_pair(pNode->getName(), pNode));
+    m_children.insert(std::make_pair(pNode->getName(), pNode));
 }
 
 
 void EnvironmentNode::addAttribute(const std::string &name, std::shared_ptr<EnvValue> pValue)
 {
-	auto retValue = m_attributes.insert(std::make_pair(name, pValue));
-	// todo: add check to make sure no duplicate attributes, use retValue to see if value was inserted or not
+    auto retValue = m_attributes.insert(std::make_pair(name, pValue));
+    // todo: add check to make sure no duplicate attributes, use retValue to see if value was inserted or not
 }
 
 
 std::vector<std::shared_ptr<EnvironmentNode>> EnvironmentNode::getChildren(const std::string &name) const
 {
-	std::vector<std::shared_ptr<EnvironmentNode>> childNodes;
-	if (name == "") {
-		for (auto nodeIt = m_children.begin(); nodeIt != m_children.end(); ++nodeIt)
-		{
-			childNodes.push_back(nodeIt->second);
-		}
-	}
-	else
-	{
-		auto rangeIt = m_children.equal_range(name);
-		for (auto it = rangeIt.first; it != rangeIt.second; ++it)
-		{
-			childNodes.push_back(it->second);
-		}
-	}
+    std::vector<std::shared_ptr<EnvironmentNode>> childNodes;
+    if (name == "") {
+        for (auto nodeIt = m_children.begin(); nodeIt != m_children.end(); ++nodeIt)
+        {
+            childNodes.push_back(nodeIt->second);
+        }
+    }
+    else
+    {
+        auto rangeIt = m_children.equal_range(name);
+        for (auto it = rangeIt.first; it != rangeIt.second; ++it)
+        {
+            childNodes.push_back(it->second);
+        }
+    }
 
-	return childNodes;
+    return childNodes;
 }
 
 
@@ -62,7 +62,7 @@ std::map<std::string, std::vector<std::shared_ptr<EnvironmentNode>>> Environment
         {
             std::vector<std::shared_ptr<EnvironmentNode>> nodes;
             nodes.push_back(childIt->second);
-			results[childIt->second->getName()] = nodes;
+            results[childIt->second->getName()] = nodes;
         }
         else
         {
@@ -75,26 +75,35 @@ std::map<std::string, std::vector<std::shared_ptr<EnvironmentNode>>> Environment
 
 std::vector<std::shared_ptr<EnvValue>> EnvironmentNode::getAttributes() const
 {
-	std::vector<std::shared_ptr<EnvValue>> attributes;
+    std::vector<std::shared_ptr<EnvValue>> attributes;
 
-	for (auto attrIt = m_attributes.begin(); attrIt != m_attributes.end(); ++attrIt)
-	{
-		attributes.push_back(attrIt->second);
-	}
-	return attributes;
+    for (auto attrIt = m_attributes.begin(); attrIt != m_attributes.end(); ++attrIt)
+    {
+        attributes.push_back(attrIt->second);
+    }
+    return attributes;
+}
+
+
+void EnvironmentNode::setAttributeValues(const std::vector<valueDef> &values, Status &status, bool allowInvalid, bool forceCreate)
+{
+    for (auto it = values.begin(); it != values.end(); ++it)
+    {
+        setAttributeValue((*it).name, (*it).value, status, allowInvalid, forceCreate);
+    }
 }
 
 
 // should probably return a status object, and put path/valueName in there
-void EnvironmentNode::setAttributeValue(const std::string &attrName, const std::string &value, bool allowInvalid, bool forceCreate)
+void EnvironmentNode::setAttributeValue(const std::string &attrName, const std::string &value, Status &status, bool allowInvalid, bool forceCreate)
 {
-	std::shared_ptr<EnvValue> pEnvValue;
+    std::shared_ptr<EnvValue> pEnvValue;
 
-	auto it = m_attributes.find(attrName);
-	if (it != m_attributes.end())
-	{
-		pEnvValue = it->second;
-	}
+    auto it = m_attributes.find(attrName);
+    if (it != m_attributes.end())
+    {
+        pEnvValue = it->second;
+    }
 
     //
     // Not found on this node. See if the configuration defines the attribute. If so, set the value and move on.
@@ -111,110 +120,114 @@ void EnvironmentNode::setAttributeValue(const std::string &attrName, const std::
         {
             pCfgValue = std::make_shared<CfgValue>(attrName, false);
             pEnvValue = std::make_shared<EnvValue>(shared_from_this(), pCfgValue, attrName);
-			pEnvValue->setForcedCreate(true);   // creation of this env value was forced
             addAttribute(attrName, pEnvValue);
+            status.addStatusMsg(statusMsg::warning, getId(), attrName, "", "Undefined attribute did not exist in configuration, was created");
         }
     }
 
 
-	//
-	// If we have a value, set it to the new value. If that passes, see if there is any post processing to do. Note that
-	// a forced create value can never have an invalid value.
-	if (pEnvValue)
-	{
-		pEnvValue->setValue(value, allowInvalid); 
-	}
-	
+    //
+    // If we have a value, set it to the new value. If that passes, see if there is any post processing to do. Note that
+    // a forced create value can never have an invalid value.
+    if (pEnvValue)
+    {
+        pEnvValue->setValue(value, &status, allowInvalid); 
+    }
+    else
+    {
+        status.addStatusMsg(statusMsg::error, getId(), attrName, "", "The attribute does not exist and was not created");
+    }
+    
 }
 
 
 std::string EnvironmentNode::getAttributeValue(const std::string &name) const
 {
-	std::string value;
-	std::shared_ptr<EnvValue> pAttribute = getAttribute(name);
-	if (pAttribute)
-		value = pAttribute->getValue();
-	return value;
+    std::string value;
+    std::shared_ptr<EnvValue> pAttribute = getAttribute(name);
+    if (pAttribute)
+        value = pAttribute->getValue();
+    return value;
 }
 
 
-bool EnvironmentNode::setValue(const std::string &value, bool force)
+bool EnvironmentNode::setValue(const std::string &value, Status &status, bool force)
 {
-	bool rc = false;
+    bool rc = false;
 
-	if (m_pNodeValue)
-	{
-		rc = m_pNodeValue->setValue(value, force);
-	}
-	else
-	{
-		std::shared_ptr<CfgValue> pCfgValue = m_pConfigItem->getItemCfgValue();
-		
-		m_pNodeValue = std::make_shared<EnvValue>(shared_from_this(), pCfgValue, "");  // node's value has no name
-		rc = m_pNodeValue->setValue(value, force);
-	}
-	return rc;
+    if (m_pNodeValue)
+    {
+        rc = m_pNodeValue->setValue(value, &status, force);
+    }
+    else
+    {
+        std::shared_ptr<CfgValue> pCfgValue = m_pConfigItem->getItemCfgValue();
+        
+        m_pNodeValue = std::make_shared<EnvValue>(shared_from_this(), pCfgValue, "");  // node's value has no name
+        rc = m_pNodeValue->setValue(value, &status, force);
+    }
+    return rc;
 }
 
 
 void EnvironmentNode::validate(Status &status, bool includeChildren) const
 {
-	//
-	// Check node value
-	if (m_pNodeValue)
-	{
+    //
+    // Check node value
+    if (m_pNodeValue)
+    {
         if (!m_pNodeValue->checkCurrentValue())
         {
-			m_pNodeValue->validate(status, "");
+            m_pNodeValue->validate(status, "");
             //status.addStatusMsg(statusMsg::warning, getId(), "", "", "The node value is not valid");
         }
-	}
+    }
 
-	//
-	// Check any attributes
-	for (auto attrIt = m_attributes.begin(); attrIt != m_attributes.end(); ++attrIt)
-	{
+    //
+    // Check any attributes
+    for (auto attrIt = m_attributes.begin(); attrIt != m_attributes.end(); ++attrIt)
+    {
         if (!attrIt->second->checkCurrentValue())
         {
             attrIt->second->validate(status, m_id);
         }
-	}
+    }
 
-	//
-	// Now check all children
-	if (includeChildren)
-	{
-		for (auto childIt = m_children.begin(); childIt != m_children.end(); ++childIt)
-		{
-			childIt->second->validate(status);
-		}
-	}
+    //
+    // Now check all children
+    if (includeChildren)
+    {
+        for (auto childIt = m_children.begin(); childIt != m_children.end(); ++childIt)
+        {
+            childIt->second->validate(status);
+        }
+    }
 }
 
 
 std::vector<std::string> EnvironmentNode::getAllFieldValues(const std::string &fieldName) const
 {
-	std::vector<std::string> values;
-	std::shared_ptr<EnvironmentNode> pParentNode = m_pParent.lock();
-	if (pParentNode)
-	{
-		std::vector<std::shared_ptr<EnvironmentNode>> nodes = pParentNode->getChildren(m_name);
-		for (auto it = nodes.begin(); it != nodes.end(); ++it)
-		{
-			values.push_back((*it)->getAttributeValue(fieldName));
-		}
-	}
-	return values;
+    std::vector<std::string> values;
+    std::shared_ptr<EnvironmentNode> pParentNode = m_pParent.lock();
+    if (pParentNode)
+    {
+        std::vector<std::shared_ptr<EnvironmentNode>> nodes = pParentNode->getChildren(m_name);
+        for (auto it = nodes.begin(); it != nodes.end(); ++it)
+        {
+            values.push_back((*it)->getAttributeValue(fieldName));
+        }
+    }
+    return values;
 }
 
 
 const std::shared_ptr<EnvValue> EnvironmentNode::getAttribute(const std::string &name) const
 {
-	std::shared_ptr<EnvValue> pValue;
-	auto it = m_attributes.find(name);
-	if (it != m_attributes.end())
-	{
-		pValue = it->second;
-	}
-	return pValue;
+    std::shared_ptr<EnvValue> pValue;
+    auto it = m_attributes.find(name);
+    if (it != m_attributes.end())
+    {
+        pValue = it->second;
+    }
+    return pValue;
 }
