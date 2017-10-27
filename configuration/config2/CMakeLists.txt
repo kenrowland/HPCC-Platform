@@ -9,10 +9,10 @@ SET(  SRCS
 	  CfgValue.cpp
 	  EnvironmentNode.cpp
 	  EnvValue.cpp
-	  NodeStatus.cpp
 	  XSDComponentParser.cpp
 	  XSDConfigParser.cpp
 	  XSDValueSetParser.cpp
+	  Status.cpp
 )
 
 INCLUDE_DIRECTORIES(

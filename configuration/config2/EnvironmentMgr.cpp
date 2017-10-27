@@ -106,11 +106,11 @@ Status EnvironmentMgr::setAttributeValues(const std::string &nodeId, const std::
 	if (pEnvNode)
 	{
 		for (auto it = values.begin(); it != values.end(); ++it)
-			pEnvNode->setAttributeValue((*it).name, (*it).value, status, force);
+			pEnvNode->setAttributeValue((*it).name, (*it).value, force);
 	}
     else
     {
-        status.addStatusMsg(error, nodeId, "", "", "Indicated node ID does not exist");
+        status.addStatusMsg(statusMsg::error, nodeId, "", "", "Indicated node ID does not exist");
     }
 	return status;
 }

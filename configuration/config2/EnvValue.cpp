@@ -1,6 +1,6 @@
 /*##############################################################################
 
-HPCC SYSTEMS software Copyright (C) 2017 HPCC Systems®.
+HPCC SYSTEMS software Copyright (C) 2017 HPCC Systemsï¿½.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@ limitations under the License.
 #include "EnvValue.hpp"
 #include "EnvironmentNode.hpp"
 
-bool EnvValue::setValue(const std::string &value, Status &status, bool force)
+bool EnvValue::setValue(const std::string &value, bool force)
 { 
     bool rc = true;
     std::string oldValue = m_value;
@@ -33,7 +33,7 @@ bool EnvValue::setValue(const std::string &value, Status &status, bool force)
         {
             m_value = value;
             m_pCfgValue->mirrorValue(oldValue, value);
-            status.addStatusMsg(ok, m_pMyEnvNode.lock()->getId(), m_name, "", "Attribute forced to invalid value");
+            //status.addStatusMsg(statusMsg::ok, m_pMyEnvNode.lock()->getId(), m_name, "", "Attribute forced to invalid value");
             rc = true;
         }
     }
@@ -99,8 +99,15 @@ bool EnvValue::isValueValid(const std::string &value) const
 }
 
 
-bool EnvValue::validate() const
+void EnvValue::validate(Status &status, const std::string &myId) const
 {
-    return isValueValid(m_value);
+    if (m_forcedCreate)
+        status.addStatusMsg(statusMsg::ok, myId, m_name, "", "Undefined attribute did not exist in configuration, was created");
+
+    if (m_forcedSet)
+        status.addStatusMsg(statusMsg::warning, myId, m_name, "", "Current value was force set");
+
+    // Will generate status based on current value and type
+    m_pCfgValue->validate(status, myId, m_value);
 }
 

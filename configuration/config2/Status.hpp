@@ -1,6 +1,6 @@
 /*##############################################################################
 
-HPCC SYSTEMS software Copyright (C) 2017 HPCC Systems®.
+HPCC SYSTEMS software Copyright (C) 2017 HPCC Systemsï¿½.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -22,16 +22,19 @@ limitations under the License.
 #include <vector>
 #include <string>
 
-enum msgLevel
-{
-    ok = 0,     // informational messages mainly
-    warning,
-    error,
-    fatal
-};
+
 
 struct statusMsg {
-    statusMsg(msgLevel _msgLevel, const std::string &_nodeId, const std::string &_name, const std::string &_referNodeId, const std::string &_msg) :
+
+    enum msgLevel
+    {
+        ok = 0,     // informational messages mainly
+        warning,
+        error,
+        fatal
+    };
+
+    statusMsg(enum msgLevel _msgLevel, const std::string &_nodeId, const std::string &_name, const std::string &_referNodeId, const std::string &_msg) :
         msgLevel(_msgLevel), nodeId(_nodeId), attribute(_name), referNodeId(_referNodeId), msg(_msg) { }
     msgLevel msgLevel;           // Message level
     std::string nodeId;          // if not '', the node ID to which this status applies
@@ -44,19 +47,19 @@ class Status
 {
 	public:
 		
-		Status() : m_highestMsgLevel(ok) { }
+		Status() : m_highestMsgLevel(statusMsg::ok) { }
 		~Status() {}
-		void addStatusMsg(msgLevel status, const std::string &nodeId, const std::string &name, const std::string &referNodeId, const std::string &msg);
-        msgLevel getHighestMsgLevel() const { return m_highestMsgLevel; }
-        bool isOk() const { return m_highestMsgLevel == ok; }
-		std::string getStatusTypeString(msgLevel status) const;
+		void addStatusMsg(enum statusMsg::msgLevel status, const std::string &nodeId, const std::string &name, const std::string &referNodeId, const std::string &msg);
+        enum statusMsg::msgLevel getHighestMsgLevel() const { return m_highestMsgLevel; }
+        bool isOk() const { return m_highestMsgLevel == statusMsg::ok; }
+		std::string getStatusTypeString(enum statusMsg::msgLevel status) const;
         std::vector<statusMsg> getMessages() const;
 
 
 	private:
 
-		msgLevel m_highestMsgLevel;
-		std::multimap<msgLevel, statusMsg> m_messages;
+		enum statusMsg::msgLevel m_highestMsgLevel;
+		std::multimap<enum statusMsg::msgLevel, statusMsg> m_messages;
 };
 
 #endif

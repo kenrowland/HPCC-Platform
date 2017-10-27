@@ -68,14 +68,14 @@ ESPstruct statusMsgType
     ESPenum msgType msgType;
     string nodeId;                  // node identifier that generated this status message
     string refNodeId("");           // optional refereence node (message dependent)
-    string attribute("";            // name of node's attribute generating the message ("" for the node itself)
+    string attribute("");            // name of node's attribute generating the message ("" for the node itself)
     string msg;                     // the message
 };
 
 
 ESPstruct statusType
 {
-    ESParray<ESPstruct statusMsgType statusMsg> statusMsgs;
+    ESParray<ESPstruct statusMsgType, statusMsg> statusMsgs;
     bool error(false);
 };
 
@@ -91,7 +91,6 @@ ESPstruct itemInfoType
 {
     string    name("");
     string    displayName("");
-    string    status("ok");
 };
 
 

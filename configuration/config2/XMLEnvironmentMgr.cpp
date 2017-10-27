@@ -1,6 +1,6 @@
 /*##############################################################################
 
-HPCC SYSTEMS software Copyright (C) 2017 HPCC Systems®.
+HPCC SYSTEMS software Copyright (C) 2017 HPCC Systemsï¿½.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -91,8 +91,9 @@ void XMLEnvironmentMgr::parse(const pt::ptree &envTree, const std::shared_ptr<Co
 			for (auto attrIt = it->second.begin(); attrIt != it->second.end(); ++attrIt)
 			{
 				std::shared_ptr<CfgValue> pCfgValue = pConfigItem->getAttribute(attrIt->first);
-				std::shared_ptr<EnvValue> pEnvValue = std::make_shared<EnvValue>(pEnvNode, pCfgValue, attrIt->first);   // this is where we would use a variant
-				pEnvValue->setValue(attrIt->second.get_value<std::string>());
+				std::string curValue = attrIt->second.get_value<std::string>();
+				std::shared_ptr<EnvValue> pEnvValue = std::make_shared<EnvValue>(pEnvNode, pCfgValue, attrIt->first, curValue);   // this is where we would use a variant
+				//pEnvValue->setValue(attrIt->second.get_value<std::string>());
 				pEnvNode->addAttribute(attrIt->first, pEnvValue);
 			}
 		}

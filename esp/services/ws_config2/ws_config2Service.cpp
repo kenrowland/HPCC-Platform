@@ -28,7 +28,7 @@ Cws_config2Ex::~Cws_config2Ex()
 bool Cws_config2Ex::ongetNode(IEspContext &context, IEspGetNodeRequest &req, IEspGetNodeResponse &resp)
 {
     std::string id = req.getId();
-    std::shared_ptr<EnvironmentNode> pNode = m_pEnvMgr->getNodeFromPath(id);
+    std::shared_ptr<EnvironmentNode> pNode = m_pEnvMgr->getEnvironmentNode(id);
 
     //
     // If the ID was bad, just return an error
@@ -39,7 +39,9 @@ bool Cws_config2Ex::ongetNode(IEspContext &context, IEspGetNodeRequest &req, IEs
         IArrayOf<IEspstatusMsgType> msgs;
         Owned<IEspstatusMsgType> pStatusMsg = createstatusMsgType();
         pStatusMsg->setNodeId(id.c_str());
-        pStatusMsg->setMsg("The input node ID is not a valid not in the environment");
+        pStatusMsg->setMsg("The input node ID is not a valid node in the environment");
+        msgs.append(*pStatusMsg.getLink());
+        resp.updateStatus().setStatusMsgs(msgs);
         return false;
     }
 
@@ -51,7 +53,11 @@ bool Cws_config2Ex::ongetNode(IEspContext &context, IEspGetNodeRequest &req, IEs
     resp.setInputId(id.c_str());
 
     //
-    // Attributes?
+    // Status object to hold all status for this node
+    Status nodeStatus;
+
+    //
+    // Handle the attributes
     IArrayOf<IEspattributeType> nodeAttributes;
     if (pNode->hasAttributes())
     {
@@ -94,7 +100,7 @@ bool Cws_config2Ex::ongetNode(IEspContext &context, IEspGetNodeRequest &req, IEs
             pAttribute->setCurrentValue(pAttr->getValue().c_str());
             pAttribute->setDefaultValue("");
             
-			pAttribute->updateItemInfo().setStatus("ok");
+            
             nodeAttributes.append(*pAttribute.getLink());
         }
     }
@@ -125,11 +131,10 @@ bool Cws_config2Ex::ongetNode(IEspContext &context, IEspGetNodeRequest &req, IEs
             int numChildren = 0;
             for (auto nodeIt=nodes.begin(); nodeIt!=nodes.end(); ++nodeIt)
             {
-                ids.append((*nodeIt)->getPath().c_str());
+                ids.append((*nodeIt)->getId().c_str());
                 numChildren += (*nodeIt)->getNumChildren();
             }
             pElement->setNumChildren(numChildren);
-            pElement->updateItemInfo().setStatus("ok");
             pElement->setIdList(ids);
             elements.append(*pElement.getLink());
 
@@ -158,7 +163,6 @@ bool Cws_config2Ex::ongetNode(IEspContext &context, IEspGetNodeRequest &req, IEs
             StringArray ids;
             pElement->setIdList(ids);
             pElement->setNumChildren(0);
-            pElement->updateItemInfo().setStatus("ok");
             elements.append(*pElement.getLink());
         }
     }
@@ -171,7 +175,7 @@ bool Cws_config2Ex::ongetNode(IEspContext &context, IEspGetNodeRequest &req, IEs
 bool Cws_config2Ex::onsetValues(IEspContext &context, IEspSetValuesRequest &req, IEspGetNodeResponse &resp)
 {
     std::string id = req.getId();
-    std::shared_ptr<EnvironmentNode> pNode = m_pEnvMgr->getNodeFromPath(id);
+    std::shared_ptr<EnvironmentNode> pNode = m_pEnvMgr->getEnvironmentNode(id);
     if (pNode)
     {
         bool forceCreate = req.getForceCreate();
@@ -187,8 +191,13 @@ bool Cws_config2Ex::onsetValues(IEspContext &context, IEspSetValuesRequest &req,
     }
     else
     {
-        resp.setStatus("error");
-        resp.updateDoc().setMsg("Invalid path");
+        resp.setInputId(id.c_str());
+        resp.updateStatus().setError(true);
+        IArrayOf<IEspstatusMsgType> msgs;
+        Owned<IEspstatusMsgType> pStatusMsg = createstatusMsgType();
+        pStatusMsg->setNodeId(id.c_str());
+        pStatusMsg->setMsg("The input node ID is not a valid not in the environment");
+        return false;
     }
    
     return true;

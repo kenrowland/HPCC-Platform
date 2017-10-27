@@ -1,6 +1,6 @@
 /*##############################################################################
 
-HPCC SYSTEMS software Copyright (C) 2017 HPCC Systems®.
+HPCC SYSTEMS software Copyright (C) 2017 HPCC Systemsï¿½.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -27,22 +27,30 @@ class EnvironmentNode;
 class EnvValue
 {
 	public:
-		EnvValue(const std::shared_ptr<EnvironmentNode> &pMyNode, const std::shared_ptr<CfgValue> &pCfgValue, const std::string &name="") : m_pMyEnvNode(pMyNode), m_pCfgValue(pCfgValue), m_name(name) { }
+
+		EnvValue(const std::shared_ptr<EnvironmentNode> &pMyNode, const std::shared_ptr<CfgValue> &pCfgValue, const std::string &name="") : 
+			m_pMyEnvNode(pMyNode), m_pCfgValue(pCfgValue), m_name(name), m_forcedSet(false) { }
+		EnvValue(const std::shared_ptr<EnvironmentNode> &pMyNode, const std::shared_ptr<CfgValue> &pCfgValue, const std::string &name, const std::string initValue) :
+			EnvValue(pMyNode, pCfgValue, name) { m_value = initValue;  }
+
 		~EnvValue() { }
-		bool setValue(const std::string &value, Status &status, bool force=false);
-        bool setValue(const std::string &value, bool force = false) { Status status; return setValue(value, status, force); }
+		bool setValue(const std::string &value, bool force=false);
 		bool checkCurrentValue();
 		const std::string &getValue() const { return m_value;  }
 		const std::string &getDefaultValue() const { return m_pCfgValue->getDefaultValue(); }
 		bool hasDefaultValue() const { return m_pCfgValue->hasDefaultValue(); }
 		const std::shared_ptr<CfgValue> &getCfgValue() const { return m_pCfgValue;  }
 		const std::string &getName() const { return m_name;  }
+		bool wasForced() const { return m_forcedSet; }
+		void setForcedCreate(bool forced) { m_forcedCreate = forced; }
 		bool isValueValid(const std::string &value) const;
-        bool validate() const;
+        void validate(Status &status, const std::string &myId) const;
 	
 
 	private:
 
+		bool m_forcedSet;     // true when last set value was a forced set
+		bool m_forcedCreate;  // true if created via set operation for a non existing value that has not configuration
 		std::string m_name;
 		std::string m_value;
 		std::shared_ptr<CfgValue> m_pCfgValue;   

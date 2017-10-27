@@ -34,7 +34,7 @@ class CfgType
 
         std::shared_ptr<CfgLimits> &getLimits() { return m_pLimits; }
         void setLimits(const std::shared_ptr<CfgLimits> &pLimits) { m_pLimits = pLimits; }
-        bool isValid() const { return m_pLimits!=nullptr; }
+        bool isComplete() const { return m_pLimits!=nullptr; }
         const std::string &getName() { return m_name; }
         bool isValueValid(const std::string &testValue) { return m_pLimits->isValueValid(testValue); }
 		bool isAutoValueType() const { return m_autoValueType != "" ;  }

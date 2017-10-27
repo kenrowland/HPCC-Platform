@@ -25,11 +25,12 @@ class CfgStringLimits : public CfgLimits
 {
     public:
 
-        CfgStringLimits() : m_removeWhiteSpace(true) { };
+        CfgStringLimits() : m_removeWhiteSpace(true) { m_minInclusive = 0; };
         virtual ~CfgStringLimits() { };
         void setRemoveWhiteSpace(bool remove) { m_removeWhiteSpace = true; }
-        int getMin() const { return m_minLength; }
-        int getMax() const { return m_maxLength; }
+        int getMin() const override { return m_minLength; }
+        int getMax() const override { return m_maxLength; }
+        std::string getString() const override;
 
 
     protected:

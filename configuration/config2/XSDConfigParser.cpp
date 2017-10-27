@@ -465,7 +465,7 @@ std::shared_ptr<CfgValue> XSDConfigParser::getCfgValue(const pt::ptree &attr)
     else
     {
         std::shared_ptr<CfgType> pCfgType = getCfgType(attr.get_child("xs:simpleType", pt::ptree()), false);
-        if (!pCfgType->isValid())
+        if (!pCfgType->isComplete())
         {
             throw(new ParseException("Attribute " + attrName + " does not have a valid type"));
         }

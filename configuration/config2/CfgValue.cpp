@@ -30,6 +30,16 @@ bool CfgValue::isValueValid(const std::string &newValue) const
 }
 
 
+void CfgValue::validate(Status &status, const std::string &id, const std::string &value) const
+{
+
+    // call pType with value to see if good
+    // call pType->limits->toString(value) if bad to get message about whats bad
+    // add to status
+
+}
+
+
 void CfgValue::resetEnvironment() 
 { 
     m_envValues.clear();

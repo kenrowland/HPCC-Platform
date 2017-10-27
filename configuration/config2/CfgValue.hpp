@@ -20,6 +20,7 @@
 
 #include <memory>
 #include "CfgType.hpp"
+#include "Status.hpp"
 
 class EnvValue;
 
@@ -27,7 +28,10 @@ class CfgValue
 {
     public:
 
-        CfgValue(const std::string &name, bool isDefined=true) : m_name(name), m_displayName(name), m_required(false), m_readOnly(false), m_hidden(false), m_defaultSet(false), m_deprecated(false), m_forceOutput(false), m_isKey(false) { }
+        CfgValue(const std::string &name, bool isDefined=true) : 
+            m_name(name), m_displayName(name), m_required(false), m_readOnly(false), 
+            m_hidden(false), m_defaultSet(false), m_deprecated(false), m_forceOutput(false), 
+            m_isKey(false) { }
         virtual ~CfgValue() { }
         void setType(const std::shared_ptr<CfgType> pType) { m_pType = pType; }
         const std::shared_ptr<CfgType> &getType() const { return m_pType; }
@@ -66,6 +70,7 @@ class CfgValue
         void addEnvValue(const std::shared_ptr<EnvValue> &pEnvValue) { m_envValues.push_back(pEnvValue); }
         void mirrorValue(const std::string &oldValue, const std::string &newValue);
         void setMirroredEnvValues(const std::string &oldValue, const std::string &newValue);
+        void validate(Status &status, const std::string &id, const std::string &value) const;
 
 
     protected:

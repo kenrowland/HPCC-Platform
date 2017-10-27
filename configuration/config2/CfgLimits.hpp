@@ -53,8 +53,9 @@ class CfgLimits
         const std::vector<AllowedValue> &getAllowedValues() const { return m_allowedValues; }
         bool isEnumerated() const { return !m_allowedValues.empty(); }
         bool isValueValid(const std::string &testValue) { return true; }
-		virtual int getMin() { return m_minInclusive; }
-        virtual int getMax() { return m_maxInclusive; }
+		virtual int getMin() const { return m_minInclusive; }
+        virtual int getMax() const { return m_maxInclusive; }
+        virtual std::string getString() const { return ""; }
 
 
     protected:
@@ -63,7 +64,7 @@ class CfgLimits
         int m_maxInclusive;
         int m_minExclusive;
         int m_maxExclusive;
-        int m_length;
+        unsigned m_length;
         int m_minLength;
         int m_maxLength;
         std::vector<std::string> m_patterns;

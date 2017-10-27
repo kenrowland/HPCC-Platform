@@ -1,6 +1,6 @@
 /*##############################################################################
 
-HPCC SYSTEMS software Copyright (C) 2017 HPCC Systems®.
+HPCC SYSTEMS software Copyright (C) 2017 HPCC Systemsï¿½.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@ limitations under the License.
 #include "Status.hpp"
 
 
-void Status::addStatusMsg(msgLevel level, const std::string &nodeId, const std::string &name, const std::string &referNodeId, const std::string &msg)
+void Status::addStatusMsg(enum statusMsg::msgLevel level, const std::string &nodeId, const std::string &name, const std::string &referNodeId, const std::string &msg)
 {
     statusMsg statusMsg(level, nodeId, name, referNodeId, msg);
 	m_messages.insert({level, statusMsg });
@@ -39,15 +39,15 @@ std::vector<statusMsg> Status::getMessages() const
 }
 
 
-std::string Status::getStatusTypeString(msgLevel status) const
+std::string Status::getStatusTypeString(enum statusMsg::msgLevel status) const
 {
 	std::string result = "Not found";
 	switch (status)
 	{
-		case ok:      result = "Ok";       break;
-		case warning: result = "Warning";  break;
-		case error:   result = "Error";    break;
-		case fatal:   result = "Fatal";    break;
+		case statusMsg::ok:      result = "Ok";       break;
+		case statusMsg::warning: result = "Warning";  break;
+		case statusMsg::error:   result = "Error";    break;
+		case statusMsg::fatal:   result = "Fatal";    break;
 	}
 	return result;
 }

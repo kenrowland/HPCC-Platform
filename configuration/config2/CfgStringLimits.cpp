@@ -15,20 +15,31 @@
     limitations under the License.
 ############################################################################## */
 
-#ifndef _CONFIG2_CFGINTEGERLIMITS_HPP_
-#define _CONFIG2_CFGINTEGERLIMITS_HPP_
+#include "CfgStringLimits.hpp"
 
-#include "CfgLimits.hpp"
-
-class CfgIntegerLimits : public CfgLimits
+std::string CfgStringLimits::getString() const
 {
-    public:
 
-        CfgIntegerLimits() { };
-        virtual ~CfgIntegerLimits() { };
-        int getMin() const { return m_minInclusive; }
-        int getMax() const { return m_maxInclusive; }
-        std::string getString() const override { return "integer limit string"; }
-};
+    std::string limitStr = "";
 
-#endif // _CONFIG2_CFGINTEGERLIMITS_HPP_
+    if (m_length != 0)
+    {
+        limitStr += "string " + m_length + " charcters in length.";
+    }
+    else 
+    {
+        limitStr += "string between " + getMin() + " and ";
+        if (getMax() == INT_MAX)
+        {
+            limitStr += " unlimited ";
+        }
+        else
+        {
+            limitStr += getMax();
+        }
+        limitStr += "characters in length.";
+
+    }
+
+    return limitStr;
+}

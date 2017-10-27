@@ -86,7 +86,7 @@ std::vector<std::shared_ptr<EnvValue>> EnvironmentNode::getAttributes() const
 
 
 // should probably return a status object, and put path/valueName in there
-void EnvironmentNode::setAttributeValue(const std::string &attrName, const std::string &value, Status &status, bool allowInvalid, bool forceCreate)
+void EnvironmentNode::setAttributeValue(const std::string &attrName, const std::string &value, bool allowInvalid, bool forceCreate)
 {
 	std::shared_ptr<EnvValue> pEnvValue;
 
@@ -111,17 +111,18 @@ void EnvironmentNode::setAttributeValue(const std::string &attrName, const std::
         {
             pCfgValue = std::make_shared<CfgValue>(attrName, false);
             pEnvValue = std::make_shared<EnvValue>(shared_from_this(), pCfgValue, attrName);
+			pEnvValue->setForcedCreate(true);   // creation of this env value was forced
             addAttribute(attrName, pEnvValue);
-            status.addStatusMsg(ok, getId(), attrName, "", "Undefined attribute did not exist in configuration, was created");
         }
     }
 
 
 	//
-	// If we have a value, set it to the new value. If that passes, see if there is any post processint to do
+	// If we have a value, set it to the new value. If that passes, see if there is any post processing to do. Note that
+	// a forced create value can never have an invalid value.
 	if (pEnvValue)
 	{
-		pEnvValue->setValue(value, status, allowInvalid); 
+		pEnvValue->setValue(value, allowInvalid); 
 	}
 	
 }
@@ -164,7 +165,8 @@ void EnvironmentNode::validate(Status &status, bool includeChildren) const
 	{
         if (!m_pNodeValue->checkCurrentValue())
         {
-            status.addStatusMsg(warning, getId(), "", "", "The node value is not valid");
+			m_pNodeValue->validate(status, "");
+            //status.addStatusMsg(statusMsg::warning, getId(), "", "", "The node value is not valid");
         }
 	}
 
@@ -174,7 +176,7 @@ void EnvironmentNode::validate(Status &status, bool includeChildren) const
 	{
         if (!attrIt->second->checkCurrentValue())
         {
-            status.addStatusMsg(warning, getId(), attrIt->first, "", "Attribute value is not valid");
+            attrIt->second->validate(status, m_id);
         }
 	}
 
