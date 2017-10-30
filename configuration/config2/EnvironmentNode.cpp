@@ -85,7 +85,7 @@ std::vector<std::shared_ptr<EnvValue>> EnvironmentNode::getAttributes() const
 }
 
 
-void EnvironmentNode::setAttributeValues(const std::vector<valueDef> &values, Status &status, bool allowInvalid, bool forceCreate)
+void EnvironmentNode::setAttributeValues(const std::vector<ValueDef> &values, Status &status, bool allowInvalid, bool forceCreate)
 {
     for (auto it = values.begin(); it != values.end(); ++it)
     {

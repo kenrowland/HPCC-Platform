@@ -41,7 +41,7 @@ bool Cws_config2Ex::ongetNode(IEspContext &context, IEspGetNodeRequest &req, IEs
         pStatusMsg->setNodeId(id.c_str());
         pStatusMsg->setMsg("The input node ID is not a valid node in the environment");
         msgs.append(*pStatusMsg.getLink());
-        resp.updateStatus().setStatusMsgs(msgs);
+        resp.updateStatus().setStatus(msgs);
         return false;
     }
 
@@ -174,33 +174,56 @@ bool Cws_config2Ex::ongetNode(IEspContext &context, IEspGetNodeRequest &req, IEs
 
 bool Cws_config2Ex::onsetValues(IEspContext &context, IEspSetValuesRequest &req, IEspGetNodeResponse &resp)
 {
+    bool rc;
     std::string id = req.getId();
     std::shared_ptr<EnvironmentNode> pNode = m_pEnvMgr->getEnvironmentNode(id);
+    Status status;
     if (pNode)
     {
         bool forceCreate = req.getForceCreate();
         bool allowInvalid = req.getAllowInvalid();
         IArrayOf<IConstattributeValueType> &attrbuteValues = req.getAttributeValues();
+        std::vector<ValueDef> values;
         ForEachItemIn(i, attrbuteValues)
         {
             IConstattributeValueType& attrVal = attrbuteValues.item(i);
-            std::string name = attrVal.getName();
-            std::string value = attrVal.getValue();
-            pNode->setAttributeValue(name, value, allowInvalid, forceCreate);
+            ValueDef value;
+            value.name = attrVal.getName();
+            value.value = attrVal.getValue();
+            values.push_back(value);
         }
+        pNode->setAttributeValues(values, status, allowInvalid, forceCreate);
+        rc = true;
     }
     else
     {
         resp.setInputId(id.c_str());
-        resp.updateStatus().setError(true);
-        IArrayOf<IEspstatusMsgType> msgs;
-        Owned<IEspstatusMsgType> pStatusMsg = createstatusMsgType();
-        pStatusMsg->setNodeId(id.c_str());
-        pStatusMsg->setMsg("The input node ID is not a valid not in the environment");
-        return false;
+        status.addStatusMsg(statusMsg::error, id.c_str(), "", "", "The input node ID is not a valid not in the environment");
+        rc = false;
     }
+
+    //
+    // Add the messages in the status object to the response
+    IArrayOf<IEspstatusMsgType> msgs;
+    std::vector<statusMsg> statusMsgs = status.getMessages();
+    for (auto msgIt=statusMsgs.begin(); msgIt!=statusMsgs.end(); ++msgIt)
+    {
+        Owned<IEspstatusMsgType> pStatusMsg = createstatusMsgType();
+        pStatusMsg->setNodeId((*msgIt).nodeId.c_str());
+        pStatusMsg->setMsg((*msgIt).msg.c_str());
+        pStatusMsg->setMsgLevel(status.getStatusTypeString((*msgIt).msgLevel).c_str());
+        pStatusMsg->setRefNodeId((*msgIt).referNodeId.c_str());
+        pStatusMsg->setAttribute((*msgIt).attribute.c_str());
+        msgs.append(*pStatusMsg.getLink());
+    }
+
+    //
+    // finalize the responsse
+    resp.setInputId(id.c_str());
+    resp.updateStatus().setStatus(msgs); 
+    resp.updateStatus().setError(status.isError());
    
-    return true;
+    return rc;
 }
 
 

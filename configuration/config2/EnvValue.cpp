@@ -36,7 +36,7 @@ bool EnvValue::setValue(const std::string &value, Status *pStatus, bool forceSet
             m_forcedSet = true;
             m_pCfgValue->mirrorValue(oldValue, value);
             if (pStatus != nullptr)
-                pStatus->addStatusMsg(statusMsg::ok, m_pMyEnvNode.lock()->getId(), m_name, "", "Attribute forced to invalid value");
+                pStatus->addStatusMsg(statusMsg::info, m_pMyEnvNode.lock()->getId(), m_name, "", "Attribute forced to invalid value");
             rc = true;
         }
         else

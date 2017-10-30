@@ -28,7 +28,7 @@ struct statusMsg {
 
     enum msgLevel
     {
-        ok = 0,     // informational messages mainly
+        info = 0,     // informational messages mainly
         warning,
         error,
         fatal
@@ -47,11 +47,12 @@ class Status
 {
 	public:
 		
-		Status() : m_highestMsgLevel(statusMsg::ok) { }
+		Status() : m_highestMsgLevel(statusMsg::info) { }
 		~Status() {}
 		void addStatusMsg(enum statusMsg::msgLevel status, const std::string &nodeId, const std::string &name, const std::string &referNodeId, const std::string &msg);
         enum statusMsg::msgLevel getHighestMsgLevel() const { return m_highestMsgLevel; }
-        bool isOk() const { return m_highestMsgLevel == statusMsg::ok; }
+        bool isOk() const { return m_highestMsgLevel <= statusMsg::warning; }
+        bool isError() const { return m_highestMsgLevel >= statusMsg::error; }
 		std::string getStatusTypeString(enum statusMsg::msgLevel status) const;
         std::vector<statusMsg> getMessages() const;
         void add(const std::vector<statusMsg> msgs);

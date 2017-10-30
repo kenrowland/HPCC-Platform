@@ -20,7 +20,7 @@ limitations under the License.
 
 #include <string>
 
-struct valueDef {
+struct ValueDef {
     std::string name;
     std::string value;
 };

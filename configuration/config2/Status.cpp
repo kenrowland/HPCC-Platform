@@ -44,7 +44,7 @@ std::string Status::getStatusTypeString(enum statusMsg::msgLevel status) const
 	std::string result = "Not found";
 	switch (status)
 	{
-		case statusMsg::ok:      result = "Ok";       break;
+		case statusMsg::info:    result = "Info";     break;
 		case statusMsg::warning: result = "Warning";  break;
 		case statusMsg::error:   result = "Error";    break;
 		case statusMsg::fatal:   result = "Fatal";    break;
