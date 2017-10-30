@@ -8,6 +8,8 @@
 #include "EnvironmentMgr.hpp"
 #include "XMLEnvironmentMgr.hpp"
 
+class Status;
+
 class Cws_config2Ex : public Cws_config2
 {
 public:
@@ -17,9 +19,14 @@ public:
     virtual ~Cws_config2Ex();
 
     virtual bool ongetNode(IEspContext &context, IEspGetNodeRequest &req, IEspGetNodeResponse &resp);
-    virtual bool onsetValues(IEspContext &context, IEspSetValuesRequest &req, IEspGetNodeResponse &resp);
+    virtual bool onsetValues(IEspContext &context, IEspSetValuesRequest &req, IEspSetValuesResponse &resp);
+    virtual bool ongetParents(IEspContext &context, IEspGetParentsRequest &req, IEspGetParentsResponse &resp);
 
-    //virtual bool mockInterface(const std::string &path, IEspGetPathResponse &resp);
+
+private:
+
+    void buildStatusMessageObject(IArrayOf<IEspstatusMsgType> &msgs, const Status &status) const;
+    
 
 private:
     EnvironmentMgr *m_pEnvMgr;   

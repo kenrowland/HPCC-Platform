@@ -17,7 +17,7 @@
 
 ESPrequest GetNodeRequest 
 {
-    string id;
+    string nodeId;
 };
 
 
@@ -90,7 +90,7 @@ ESPstruct elementType
     ESPstruct itemInfoType itemInfo;
     string    class("");
     string    category("");
-    ESParray<string, id> idList;
+    ESParray<string, id> nodeIdList;
     ESPstruct docType doc;
     int   numChildren(0);
     int   numAllowedInstances(0);
@@ -123,7 +123,7 @@ ESPstruct attributeValueType
 
 ESPresponse [exceptions_inline, encode(0)] GetNodeResponse
 {
-    string inputId;
+    string nodeId;
 	ESPstruct statusType status;
     ESParray<ESPstruct attributeType, attribute> attributes;
     ESParray<ESPstruct elementType, child> children;
@@ -134,14 +134,14 @@ ESPresponse [exceptions_inline, encode(0)] GetNodeResponse
 
 ESPrequest CreateInstanceRequest  // response is same as GetPathRequest
 {
-    string id;    // node id where new isntance is to be created
+    string nodeId;    // node id where new isntance is to be created
     string name;  // name of new instance to create
 };
 
 
 ESPrequest SetValuesRequest
 {
-    string id;    // 
+    string nodeId;    // 
     ESParray<ESPstruct attributeValueType, attribute> attributeValues;
 	bool allowInvalid(false);  // true to allow setting an invalid value
     bool forceCreate(false);   // force creaation of new value if not defined
@@ -149,17 +149,34 @@ ESPrequest SetValuesRequest
 };
 
 
-ESPresponse [exceptions_inline, encode(0)] SetValueSetResponse
+ESPresponse [exceptions_inline, encode(0)] SetValuesResponse
 {
-    string inputId;
+    string nodeId;
 	ESPstruct statusType status;
 };
+
+
+ESPrequest GetParentsRequest
+{
+    string nodeId;   
+};
+
+
+ESPresponse [exceptions_inline, encode(0)] GetParentsResponse
+{
+    string nodeId;
+	ESPstruct statusType status;
+    ESParray<string, parentId> parentIdList;
+};
+
+
 
 
 ESPservice [auth_feature("DEFERRED"),version("2.0"), default_client_version("2.0"), exceptions_inline("xslt/exceptions.xslt")] ws_config2
 {
     ESPMethod getNode(GetNodeRequest, GetNodeResponse);
-    ESPMethod setValues(SetValuesRequest, GetNodeResponse);
+    ESPMethod setValues(SetValuesRequest, SetValuesResponse);
+    ESPMethod getParents(GetParentsRequest, GetParentsResponse);
 };
 
 

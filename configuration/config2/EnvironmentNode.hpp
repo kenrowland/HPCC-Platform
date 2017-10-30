@@ -40,6 +40,7 @@ class EnvironmentNode : public std::enable_shared_from_this<EnvironmentNode>
         std::map<std::string, std::vector<std::shared_ptr<EnvironmentNode>>> getChildrenByName() const;
 		bool hasChildren() const { return m_children.size() != 0; }
 		int getNumChildren() const { return m_children.size(); }
+		std::shared_ptr<EnvironmentNode> getParent() const;
 		void addAttribute(const std::string &name, std::shared_ptr<EnvValue> pValue);
         void setAttributeValues(const std::vector<ValueDef> &values, Status &status, bool allowInvalid, bool forceCreate);
 		void setAttributeValue(const std::string &name, const std::string &value, Status &status, bool allowInvalid=false, bool forceCreate=false);   // candidate for a variant?

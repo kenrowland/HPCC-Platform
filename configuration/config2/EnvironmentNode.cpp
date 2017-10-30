@@ -73,6 +73,17 @@ std::map<std::string, std::vector<std::shared_ptr<EnvironmentNode>>> Environment
 }
 
 
+std::shared_ptr<EnvironmentNode> EnvironmentNode::getParent() const
+{
+	std::shared_ptr<EnvironmentNode> pParent;
+	if (!m_pParent.expired())
+	{
+		pParent = m_pParent.lock();
+	}
+	return pParent;
+}
+
+
 std::vector<std::shared_ptr<EnvValue>> EnvironmentNode::getAttributes() const
 {
     std::vector<std::shared_ptr<EnvValue>> attributes;
