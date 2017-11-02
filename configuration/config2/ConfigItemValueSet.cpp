@@ -31,7 +31,7 @@ void ConfigItemValueSet::addCfgValue(const std::shared_ptr<CfgValue> pNewValue)
     else 
     {
         std::string msg = "A value already exists for " + pNewValue->getName();
-        throw(new ParseException(msg));
+        throw(ParseException(msg));
     }
 }
 
@@ -61,7 +61,7 @@ std::shared_ptr<CfgValue> ConfigItemValueSet::findValue(const std::string &value
     else if (throwIfNotFound)
     {
         std::string msg = "Unable to find valueName(" + valueName + ")";
-        throw(new ValueException(msg));
+        throw(ValueException(msg));
     }
     return pValue;
 }

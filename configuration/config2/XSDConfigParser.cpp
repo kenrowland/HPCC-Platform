@@ -31,7 +31,7 @@ namespace pt = boost::property_tree;
 bool XSDConfigParser::doParse(const std::vector<std::string> &cfgParms)
 {
     bool rc = true;
-    try
+    //try
     {
 		//
 		// Add some default types to the config. Note changing values for limits 
@@ -80,11 +80,6 @@ bool XSDConfigParser::doParse(const std::vector<std::string> &cfgParms)
         m_buildsetFilename = cfgParms[1];
         parseXSD(cfgParms[0]);
     }
-    catch (...)
-    {
-		// need to return the message somehow here
-        rc = false;
-    }
     
     return rc;
 }
@@ -92,22 +87,27 @@ bool XSDConfigParser::doParse(const std::vector<std::string> &cfgParms)
 
 void XSDConfigParser::parseXSD(const std::string &filename)
 {
+    pt::ptree xsdTree;
+    std::string fpath = m_basePath + filename;
     try
     {
-        pt::ptree xsdTree;
-        std::string fpath = m_basePath + filename;
         pt::read_xml(fpath, xsdTree);
+    }
+    catch (const std::exception &e)
+    {
+        throw(ParseException("Input configuration file is not valid: " + *e.what()));
+    }
+
+    try
+    {
         auto schemaIt = xsdTree.find("xs:schema");
         const pt::ptree &keys = schemaIt->second.get_child("", pt::ptree());
         parseXSD(keys);
     }
-	catch (ParseException &e)
-	{
-		throw(e);
-	}
-    catch (std::exception &e)
+    catch (ParseException &pe)
     {
-        throw(ParseException("Input configuration file is not valid: " + *e.what()));
+        pe.addFilename(filename);
+        throw(pe);
     }
 }
 
@@ -217,23 +217,49 @@ void XSDConfigParser::parseComplexType(const pt::ptree &typeTree)
     std::string catName = typeTree.get("<xmlattr>.hpcc:category", "");
     std::string displayName = typeTree.get("<xmlattr>.hpcc:displayName", "");
 
-    if (complexTypeName != "" || className != "")
+    if (complexTypeName != "")
     {
-        if (className == "component")
+        if (className != "")
         {
-            std::shared_ptr<ConfigItemComponent> pComponent = std::make_shared<ConfigItemComponent>(complexTypeName, m_pConfig); 
-            pComponent->setCategory(catName);
-            pComponent->setDisplayName(displayName);
-            pt::ptree componentTree = typeTree.get_child("", pt::ptree());
-            if (!componentTree.empty())
+            if (className == "component")
             {
-                std::shared_ptr<XSDComponentParser> pComponentXSDParaser = std::make_shared<XSDComponentParser>(m_basePath, std::dynamic_pointer_cast<ConfigItem>(pComponent));
-                pComponentXSDParaser->parseXSD(typeTree);
-                m_pConfig->addConfigType(pComponent, complexTypeName);
+                std::shared_ptr<ConfigItemComponent> pComponent = std::make_shared<ConfigItemComponent>(complexTypeName, m_pConfig);
+                pComponent->setCategory(catName);
+                pComponent->setDisplayName(displayName);
+                pt::ptree componentTree = typeTree.get_child("", pt::ptree());
+                if (!componentTree.empty())
+                {
+                    std::shared_ptr<XSDComponentParser> pComponentXSDParaser = std::make_shared<XSDComponentParser>(m_basePath, std::dynamic_pointer_cast<ConfigItem>(pComponent));
+                    pComponentXSDParaser->parseXSD(typeTree);
+                    m_pConfig->addConfigType(pComponent, complexTypeName);
+                }
+                else
+                {
+                    throw(ParseException("Component definition empty: " + displayName));
+                }
             }
             else
             {
-                throw(new ParseException("Component definition empty: " + displayName));
+                throw(ParseException("Unrecognized class name for complex type: " + className));
+            }
+        }
+
+        //
+        // This is a complex type definition of just regular XSD statements, no special format. Create a parser and parse it
+        else
+        {
+            std::shared_ptr<ConfigItem> pTypeItem = std::make_shared<ConfigItem>(complexTypeName, "", m_pConfig);
+            pTypeItem->setDisplayName(displayName);
+            pt::ptree childTree = typeTree.get_child("", pt::ptree());
+            if (!childTree.empty())
+            {
+                std::shared_ptr<XSDConfigParser> pXSDParaser = std::make_shared<XSDConfigParser>(m_basePath, pTypeItem);
+                pXSDParaser->parseXSD(childTree);
+                m_pConfig->addConfigType(pTypeItem, complexTypeName);
+            }
+            else
+            {
+                throw(ParseException("Complex type definition empty: " + displayName));
             }
         }
         // todo: else throw, not recognized complexType class
@@ -261,7 +287,8 @@ void XSDConfigParser::parseElement(const pt::ptree &elemTree)
     std::string maxOccursStr = elemTree.get("<xmlattr>.maxOccurs", "1");
     int maxOccurs = (maxOccursStr != "unbounded") ? stoi(maxOccursStr) : -1;
         
-    std::shared_ptr<ConfigItemComponent> pTypeConfigItem;
+    //std::shared_ptr<ConfigItemComponent> pTypeConfigItem;
+    std::shared_ptr<ConfigItem> pTypeConfigItem;
 
     //
     // If we have a type name specififed, see of it has a config defined for it
@@ -270,20 +297,27 @@ void XSDConfigParser::parseElement(const pt::ptree &elemTree)
         std::shared_ptr<ConfigItem> pConfigItem = m_pConfig->getConfigType(typeName);
         if (pConfigItem)
         {
-            std::shared_ptr<ConfigItemComponent> pComponent = std::dynamic_pointer_cast<ConfigItemComponent>(pConfigItem);
-            if (pComponent)
-            {
-                pTypeConfigItem = std::make_shared<ConfigItemComponent>(*pComponent);
-                pTypeConfigItem->setCategory(category);
-                pTypeConfigItem->setDisplayName(displayName);
-                pTypeConfigItem->setMinInstances(minOccurs);
-                pTypeConfigItem->setMaxInstances(maxOccurs);
-                pTypeConfigItem->setVersion(elemTree.get("<xmlattr>.hpcc:version", -1));
-            }
-            else
-            {
-                throw(new ParseException("Element reference is not a compoenent: " + refName));
-            }
+            //std::shared_ptr<ConfigItemComponent> pComponent = std::dynamic_pointer_cast<ConfigItemComponent>(pConfigItem);
+            //if (pComponent)
+            //{
+            //    pTypeConfigItem = std::make_shared<ConfigItemComponent>(*pComponent);
+            //    pTypeConfigItem->setCategory(category);
+            //    pTypeConfigItem->setDisplayName(displayName);
+            //    pTypeConfigItem->setMinInstances(minOccurs);
+            //    pTypeConfigItem->setMaxInstances(maxOccurs);
+            //    pTypeConfigItem->setVersion(elemTree.get("<xmlattr>.hpcc:version", -1));
+            //}
+            //else
+            //{
+            //    throw(ParseException("Element reference is not a compoenent: " + refName));
+            //}
+
+            pTypeConfigItem = std::make_shared<ConfigItem>(*pConfigItem);
+            pTypeConfigItem->setCategory(category);
+            pTypeConfigItem->setDisplayName(displayName);
+            pTypeConfigItem->setMinInstances(minOccurs);
+            pTypeConfigItem->setMaxInstances(maxOccurs);
+            pTypeConfigItem->setVersion(elemTree.get("<xmlattr>.hpcc:version", -1));
         }
     }
 
@@ -365,7 +399,7 @@ void XSDConfigParser::parseElement(const pt::ptree &elemTree)
         }
         else
         {
-            throw(new ParseException("Only component elements are supported at the top level"));
+            throw(ParseException("Only component elements are supported at the top level"));
         }
     }
 }
@@ -420,7 +454,7 @@ std::shared_ptr<CfgType> XSDConfigParser::getCfgType(const pt::ptree &typeTree, 
                     else if (restrictionType.find("xs:") != std::string::npos)
                     {
                         std::string msg = "Unsupported restriction(" + it->first + ") found while parsing type(" + typeName + ")";
-                        throw(new ParseException(msg));
+                        throw(ParseException(msg));
                     }
                 }
                 catch (std::exception &e)
@@ -451,7 +485,7 @@ std::shared_ptr<CfgValue> XSDConfigParser::getCfgValue(const pt::ptree &attr)
     pCfgValue->setDeprecated(attr.get("<xmlattr>.hpcc:deprecated", "false") == "true");
     pCfgValue->setMirrorFromPath(attr.get("<xmlattr>.hpcc:mirrorFrom", ""));
 
-    std::string modList = attr.get("<xmlattr>.modifiers", "");
+    std::string modList = attr.get("<xmlattr>.hpcc:modifiers", "");
     if (modList.length())
     {
         pCfgValue->setModifiers(split(modList, ","));
@@ -467,7 +501,7 @@ std::shared_ptr<CfgValue> XSDConfigParser::getCfgValue(const pt::ptree &attr)
         std::shared_ptr<CfgType> pCfgType = getCfgType(attr.get_child("xs:simpleType", pt::ptree()), false);
         if (!pCfgType->isComplete())
         {
-            throw(new ParseException("Attribute " + attrName + " does not have a valid type"));
+            throw(ParseException("Attribute " + attrName + " does not have a valid type"));
         }
         pCfgValue->setType(pCfgType);
     }

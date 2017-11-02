@@ -77,26 +77,34 @@ bool EnvValue::isValueValid(const std::string &value) const
     if (m_pCfgValue->isValueValid(value))
     {
         //
-        // If this is a key, make sure it's unique. This check has to be done here because the CfgValue does not know the node
-        if (m_pCfgValue->isKey())
+        // Handle keyed value. If keyed, the value must be unique
+        if (m_pCfgValue->isKeyedValue())
         {
-            std::string fieldName = m_pCfgValue->getName();
-            std::shared_ptr<EnvironmentNode> pMyEnvNode = m_pMyEnvNode.lock();
-            if (pMyEnvNode)
-            {
-                bool found = false;
-                std::vector<std::string> allValues = pMyEnvNode->getAllFieldValues(m_name);
-                for (auto it = allValues.begin(); it != allValues.end() && !found; ++it)
-                    found = *it == value;
-                
-                rc = !found;   
-            }
+            bool found = false;
+            std::shared_ptr<EnvironmentNode> pEnvNode = m_pMyEnvNode.lock();
+            std::vector<std::string> allValues = pEnvNode->getAllFieldValues(m_pCfgValue->getName());
+            for (auto it = allValues.begin(); it != allValues.end() && !found; ++it)
+                found = *it == value;
+
+            rc = !found;
         }
 
         //
-        // Not a key value, so it's good.
+        // key ref? key ref must be defined in the set of referenced attributes
+        else if (m_pCfgValue->hasKeyReference())
+        {
+            bool found = false;
+            std::shared_ptr<CfgValue> pRefCfgValue = m_pCfgValue->getKeyRef();
+            std::vector<std::string> allValues = pRefCfgValue->getEnvValues();
+            for (auto it = allValues.begin(); it != allValues.end() && !found; ++it)
+                found = *it == value;
+
+            rc = found;
+        }
         else
+        {
             rc = true;
+        }
     }
     return rc;
 }

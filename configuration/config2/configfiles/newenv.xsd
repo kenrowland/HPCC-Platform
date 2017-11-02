@@ -21,6 +21,7 @@
     xmlns:hpcc="something hpcc.xsd">
   <xs:include schemaLocation="types.xsd"/>
   <xs:include schemaLocation="hardware.xsd"/>
+  <xs:include schemaLocation="esp.xsd"/>
   <xs:include schemaLocation="dafilesrv.xsd"/>
   <xs:include schemaLocation="eclagent.xsd"/>
   <xs:element name="Environment" hpcc:category="root" hpcc:class="category">
@@ -34,7 +35,8 @@
           <xs:complexType>
             <xs:sequence>
               <xs:element type="dafilesrv"/>
-              <xs:element type="eclagent"/>
+              <xs:element type="eclAgent"/>
+              <xs:element type="espProcess"/>
             </xs:sequence>
           </xs:complexType>
         </xs:element>

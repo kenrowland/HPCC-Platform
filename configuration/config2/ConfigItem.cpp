@@ -22,6 +22,10 @@
 #include <algorithm>
 
 
+// static class variables
+std::map<std::string, std::shared_ptr<CfgValue>> ConfigItem::m_keyDefs;
+
+
 ConfigItem::ConfigItem(const std::string &name, const std::string &className, const std::shared_ptr<ConfigItem> &pParent) :
 	m_className(className), 
 	m_name(name), 
@@ -70,7 +74,7 @@ const std::shared_ptr<CfgType> &ConfigItem::getType(const std::string &typeName)
     //
     // Did not find the type
     std::string msg = "Unable to find type: " + typeName;
-    throw(new ParseException(msg));
+    throw(ParseException(msg));
 }
 
 
@@ -90,7 +94,7 @@ void ConfigItem::addConfigType(const std::shared_ptr<ConfigItem> &pItem, const s
     }
     else
     {
-        throw(new ParseException("Duplicate config type found: " + pItem->getName()));
+        throw(ParseException("Duplicate config type found: " + pItem->getName()));
     }
 }
 
@@ -117,7 +121,7 @@ std::shared_ptr<ConfigItem> ConfigItem::getConfigType(const std::string &name, b
     if (throwIfNotPresent)
     {
         std::string msg = "Unable to find config type: " + name;
-        throw(new ParseException(msg));
+        throw(ParseException(msg));
     }
     return pItem;
 }
@@ -128,7 +132,7 @@ void ConfigItem::addAttribute(const std::shared_ptr<CfgValue> &pCfgValue)
 	auto retVal = m_attributes.insert({ pCfgValue->getName(), pCfgValue });
 	if (!retVal.second)
 	{
-		throw(new ParseException("Duplicate attribute (" + pCfgValue->getName() + ") found for element " + m_name));
+		throw(ParseException("Duplicate attribute (" + pCfgValue->getName() + ") found for element " + m_name));
 	}
 }
 
@@ -155,34 +159,51 @@ std::shared_ptr<CfgValue> ConfigItem::getAttribute(const std::string &name) cons
 }
 
 
-void ConfigItem::addKey(const std::string &keyName, const std::string &elementName, const std::string &attributeName)
+void ConfigItem::addKey(const std::string &keyName, const std::string &elementPath, const std::string &attributeName)
 {
-    std::shared_ptr<ConfigItem> pCfgItem = getChild(elementName);  // todo: validate pCfgItem found
-    std::shared_ptr<CfgValue> pAttribute = pCfgItem->getAttribute(attributeName);  
-    if (pAttribute)
+    auto it = m_keyDefs.find(keyName);
+    if (it == m_keyDefs.end())
     {
-        pAttribute->setKey(true);
-        auto result = m_keyDefs.insert({ keyName, pAttribute });
-        if (!result.second)
+        //std::shared_ptr<ConfigItem> pCfgItem = getChild(elementName);  // todo: validate pCfgItem found
+        std::string cfgValuePath = elementPath + "@" + attributeName;
+        std::shared_ptr<CfgValue> pAttribute = findCfgValue(cfgValuePath);  //pCfgItem->getAttribute(attributeName);
+        if (pAttribute)
         {
-            throw(new ParseException("Duplicate key (" + keyName + ") found for element " + m_name));
+            pAttribute->setKeyedValue(true);
+            m_keyDefs.insert({ keyName, pAttribute });  // save the keydef attribute 
         }
+        else
+        {
+            throw(ParseException("Attribute " + attributeName + "not found for key " + keyName));
+        }
+    }
+    else
+    {
+        throw(ParseException("Duplicate key (" + keyName + ") found for element " + m_name));
     }
 }
 
 
-void ConfigItem::addKeyRef(const std::string &keyName, const std::string &elementName, const std::string &attributeName)
+void ConfigItem::addKeyRef(const std::string &keyName, const std::string &elementPath, const std::string &attributeName)
 {
     auto keyIt = m_keyDefs.find(keyName);
     if (keyIt != m_keyDefs.end())
     {
-        std::shared_ptr<CfgValue> pKeyRefAttribute = keyIt->second;
-        std::shared_ptr<ConfigItem> pCfgItem = getChild(elementName);   // todo: validate pCfgItem
-        std::shared_ptr<CfgValue> pAttribute = pCfgItem->getAttribute(attributeName); 
+        std::shared_ptr<CfgValue> pKeyRefAttribute = keyIt->second;     // this is the reference attribute from which attributeName must be a member
+        std::string cfgValuePath = elementPath + "@" + attributeName;
+        std::shared_ptr<CfgValue> pAttribute = findCfgValue(cfgValuePath);
         if (pAttribute)
         {
             pAttribute->setKeyRef(pKeyRefAttribute);
         }
+        else
+        {
+            throw(ParseException("Attribute " + attributeName + "not found when adding keyRef for key " + keyName));
+        }
+    }
+    else
+    {
+        throw(ParseException("Keyref to key '" + keyName + "' was not found"));
     }
 }
 
@@ -221,6 +242,7 @@ void ConfigItem::resetEnvironment()
         it->second->resetEnvironment();
     }
 }
+
 
 
 std::shared_ptr<CfgValue> ConfigItem::findCfgValue(const std::string &path)

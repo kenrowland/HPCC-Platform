@@ -68,6 +68,7 @@ class ConfigItem : public std::enable_shared_from_this<ConfigItem>
         //virtual std::vector<std::shared_ptr<ConfigItem>> getChildren() const;
         const std::map<std::string, std::shared_ptr<ConfigItem>> &getChildren() const { return m_children; }
         std::shared_ptr<ConfigItem> getChild(const std::string &name);
+        std::shared_ptr<CfgValue> findCfgValue(const std::string &path);
 
         virtual void setItemCfgValue(const std::shared_ptr<CfgValue> &pValue) { m_pValue = pValue; }
         virtual std::shared_ptr<CfgValue> getItemCfgValue() const { return m_pValue; }
@@ -82,7 +83,6 @@ class ConfigItem : public std::enable_shared_from_this<ConfigItem>
         virtual void resetEnvironment(); 
 
 		bool isConfigurable() const { return m_isConfigurable; }
-        std::shared_ptr<CfgValue> findCfgValue(const std::string &path);
 
         virtual void postProcessConfig();
 
@@ -104,12 +104,12 @@ class ConfigItem : public std::enable_shared_from_this<ConfigItem>
 
         std::map<std::string, std::shared_ptr<CfgType>> m_types;
         std::map<std::string, std::shared_ptr<ConfigItem>> m_configTypes;                // reusable types
-        
-        std::map<std::string, std::shared_ptr<CfgValue>> m_keyDefs;
 
         int m_minInstances;
         int m_maxInstances;
 		int m_version;
+
+        static std::map<std::string, std::shared_ptr<CfgValue>> m_keyDefs;    // key defs across the class
         
 
     private:

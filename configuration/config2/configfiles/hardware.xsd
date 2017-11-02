@@ -67,7 +67,7 @@
           </xs:sequence>
         </xs:complexType>
 
-		    <xs:key name="domainKey">
+		<xs:key name="domainKey">
           <xs:selector xpath="Domain" />
           <xs:field xpath="@name" />
         </xs:key>

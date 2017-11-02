@@ -64,3 +64,14 @@ void CfgValue::setMirroredEnvValues(const std::string &oldValue, const std::stri
         }
     }
 }
+
+
+std::vector<std::string> CfgValue::getEnvValues() const
+{
+    std::vector<std::string> values;
+    for (auto it = m_envValues.begin(); it != m_envValues.end(); ++it)
+    {
+        values.push_back((*it).lock()->getValue());
+    }
+    return values;
+}

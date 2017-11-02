@@ -126,7 +126,7 @@ void XSDComponentParser::parseKey(const pt::ptree &keyTree)
 
 void XSDComponentParser::parseKeyRef(const pt::ptree &keyTree)
 {
-    std::string keyRefName = getXSDAttributeValue(keyTree, "<xmlattr>.refer");
+    std::string keyName = getXSDAttributeValue(keyTree, "<xmlattr>.refer");
     std::string elementName = getXSDAttributeValue(keyTree, "xs:selector.<xmlattr>.xpath", false, "");
     std::string attrName = getXSDAttributeValue(keyTree, "xs:field.<xmlattr>.xpath", false, "");
     std::string attributeName;
@@ -140,6 +140,6 @@ void XSDComponentParser::parseKeyRef(const pt::ptree &keyTree)
         attributeName = attrName;
     }
 
-    m_pConfig->addKeyRef(keyRefName, elementName, attributeName);
+    m_pConfig->addKeyRef(keyName, elementName, attributeName);
 }
 

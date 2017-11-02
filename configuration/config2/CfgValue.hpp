@@ -31,7 +31,7 @@ class CfgValue
         CfgValue(const std::string &name, bool isDefined=true) : 
             m_name(name), m_displayName(name), m_required(false), m_readOnly(false), 
             m_hidden(false), m_defaultSet(false), m_deprecated(false), m_forceOutput(false), 
-            m_isKey(false) { }
+            m_isKeyedValue(false) { }
         virtual ~CfgValue() { }
         void setType(const std::shared_ptr<CfgType> pType) { m_pType = pType; }
         const std::shared_ptr<CfgType> &getType() const { return m_pType; }
@@ -58,9 +58,11 @@ class CfgValue
         void setModifiers(const std::vector<std::string> &list) { m_modifiers = list;  }
         const std::vector<std::string> &getModifiers() const { return m_modifiers; }
         bool hasModifiers() const { return m_modifiers.size() != 0; }
-        void setKey(bool isKey) { m_isKey = isKey; }
-        bool isKey() const { return m_isKey;  }
-        void setKeyRef(const std::shared_ptr<CfgValue> &pValue) { m_pKeyRefValue = pValue; }
+        void setKeyedValue(bool isKey) { m_isKeyedValue = isKey; }
+        bool isKeyedValue() const { return m_isKeyedValue;  }
+        void setKeyRef(const std::shared_ptr<CfgValue> &pValue) { m_pKeyRefCfgValue = pValue; }
+        bool hasKeyReference() const { return !m_pKeyRefCfgValue.expired(); }
+        std::shared_ptr<CfgValue> getKeyRef() const { return m_pKeyRefCfgValue.lock();  }  //todo: should make sure weak pointer is valid and throw if not
         bool isDefined() const { return m_isDefined;  }
         void resetEnvironment();
         void setMirrorFromPath(const std::string &path) { m_mirrorFromPath = path;  }
@@ -68,6 +70,7 @@ class CfgValue
         bool isMirroredValue() const { return m_mirrorFromPath.length() != 0; }
         void addMirroredCfgValue(const std::shared_ptr<CfgValue> &pVal) { m_mirrorToCfgValues.push_back(pVal); }
         void addEnvValue(const std::shared_ptr<EnvValue> &pEnvValue) { m_envValues.push_back(pEnvValue); }
+        std::vector<std::string> getEnvValues() const;
         void mirrorValue(const std::string &oldValue, const std::string &newValue);
         void setMirroredEnvValues(const std::string &oldValue, const std::string &newValue);
         void validate(Status &status, const std::string &id, const std::string &value) const;
@@ -87,12 +90,12 @@ class CfgValue
         bool m_defaultSet;
         bool m_deprecated;
         bool m_forceOutput;
-        bool m_isKey;
+        bool m_isKeyedValue;
         bool m_isDefined;  // false indicates a value for which there is no defined configuration
         std::string m_default;
         std::string m_tooltip;
         std::vector<std::string> m_modifiers;
-        std::shared_ptr<CfgValue> m_pKeyRefValue;    // this value serves as the key from which values are valid
+        std::weak_ptr<CfgValue> m_pKeyRefCfgValue;    // this value serves as the key from which values are valid
 };
 
 #endif // _CONFIG2_VALUE_HPP_

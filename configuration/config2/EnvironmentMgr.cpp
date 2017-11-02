@@ -41,12 +41,17 @@ EnvironmentMgr::EnvironmentMgr(const std::string &configPath) :
 }
 
 
-bool EnvironmentMgr::loadConfig(const std::vector<std::string> &cfgParms)
+bool EnvironmentMgr::loadConfig(const std::vector<std::string> &cfgParms)  // todo: add a status object here for return
 {
+    bool rc = false;
+    Status status;
     createParser(cfgParms);
-    m_pConfigParser->parseEnvironmentConfig(cfgParms);
-    m_pConfig->postProcessConfig();
-    return true;
+    rc = m_pConfigParser->parseEnvironmentConfig(cfgParms, status);
+    if (rc)
+    {
+        m_pConfig->postProcessConfig();
+    }
+    return rc;
 }
 
 
@@ -81,7 +86,7 @@ void EnvironmentMgr::addPath(const std::shared_ptr<EnvironmentNode> pNode)
 	auto retVal = m_nodeIds.insert({pNode->getId(), pNode });
 	if (!retVal.second)
 	{
-		throw (new ParseException("Attempted to insert duplicate path name " + pNode->getId() + " for node "));
+		throw (ParseException("Attempted to insert duplicate path name " + pNode->getId() + " for node "));
 	}
 }
 
