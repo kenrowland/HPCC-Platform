@@ -25,7 +25,7 @@ class CfgStringLimits : public CfgLimits
 {
     public:
 
-        CfgStringLimits() : m_removeWhiteSpace(true) { m_minInclusive = 0; };
+        CfgStringLimits() : m_removeWhiteSpace(true) { m_minInclusive = 0; }
         virtual ~CfgStringLimits() { };
         void setRemoveWhiteSpace(bool remove) { m_removeWhiteSpace = true; }
         int getMin() const override { return m_minLength; }
