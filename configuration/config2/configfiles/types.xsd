@@ -68,26 +68,20 @@
         <xs:attribute name="computer" type="nodeName" use="required" hpcc:readOnly="true" hpcc:mirrorFrom="/Environment/Hardware/Computer@name"/> 
         <xs:attribute name="netAddress" type="ipV4Address" use="required" hpcc:readOnly="true" hpcc:mirrorFrom="/Environment/Hardware/Computer@netAddress"/>
     </xs:attributeGroup>
-    <xs:complexType name="usernotes" hpcc:displayName="Notes">
+    <xs:complexType name="usernotes">
         <xs:sequence>
-            <xs:element name="Notes" maxOccurs="unbounded">
-                <xs:complexType>
-                    <xs:sequence>
-                        <xs:element name="Note" type="xs:string" minOccurs="0"/>
-                    </xs:sequence>
-                    <xs:attribute name="severity" use="optional" default="Minor" hpcc:displayName="Severity" hpcc:tooltip="Significance of this note">
-                        <xs:simpleType>
-                            <xs:restriction base="xs:string">
-                                <xs:enumeration value="Minor"/>
-                                <xs:enumeration value="Normal"/>
-                                <xs:enumeration value="Critical"/>
-                            </xs:restriction>
-                        </xs:simpleType>
-                    </xs:attribute>
-                    <xs:attribute name="date" type="AutoTimeStampType" use="optional" hpcc:displayName="Date/Time" hpcc:readOnly="true" hpcc:tooltip="Date and time this note was entered"/>
-                    <xs:attribute name="user" type="AutoUseridType" use="optional" hpcc:displayName="User" hpcc:readOnly="true" hpcc:tooltip="User account from which this note was entered"/>
-                </xs:complexType>
-            </xs:element>
+            <xs:element name="Note" type="xs:string" minOccurs="0"/>
         </xs:sequence>
+        <xs:attribute name="severity" use="optional" default="Minor" hpcc:displayName="Severity" hpcc:tooltip="Significance of this note">    
+            <xs:simpleType>
+                <xs:restriction base="xs:string">
+                    <xs:enumeration value="Minor"/>
+                    <xs:enumeration value="Normal"/>
+                    <xs:enumeration value="Critical"/>
+                </xs:restriction>
+            </xs:simpleType>
+        </xs:attribute>
+        <xs:attribute name="date" type="AutoTimeStampType" use="optional" hpcc:displayName="Date/Time" hpcc:readOnly="true" hpcc:tooltip="Date and time this note was entered"/>
+        <xs:attribute name="user" type="AutoUseridType" use="optional" hpcc:displayName="User" hpcc:readOnly="true" hpcc:tooltip="User account from which this note was entered"/>
     </xs:complexType>
 </xs:schema>

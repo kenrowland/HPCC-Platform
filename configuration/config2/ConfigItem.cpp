@@ -55,8 +55,9 @@ void ConfigItem::addType(const std::shared_ptr<CfgType> &pType)
 }
 
 
-const std::shared_ptr<CfgType> &ConfigItem::getType(const std::string &typeName) const
+std::shared_ptr<CfgType> ConfigItem::getType(const std::string &typeName, bool throwIfNotPresent) const
 {
+    std::shared_ptr<CfgType> pType;
     auto it = m_types.find(typeName);
     if (it != m_types.end())
     {
@@ -67,14 +68,18 @@ const std::shared_ptr<CfgType> &ConfigItem::getType(const std::string &typeName)
         std::shared_ptr<ConfigItem> pParent = m_pParent.lock();
         if (pParent)
         {
-            return pParent->getType(typeName);
+            return pParent->getType(typeName, throwIfNotPresent);
         }
     }
 
     //
     // Did not find the type
-    std::string msg = "Unable to find type: " + typeName;
-    throw(ParseException(msg));
+    if (throwIfNotPresent)
+    {
+        std::string msg = "Unable to find type: " + typeName;
+        throw(ParseException(msg));
+    }
+    return pType;
 }
 
 
@@ -112,7 +117,7 @@ std::shared_ptr<ConfigItem> ConfigItem::getConfigType(const std::string &name, b
         std::shared_ptr<ConfigItem> pParent = m_pParent.lock();
         if (pParent)
         {
-            return pParent->getConfigType(name);
+            return pParent->getConfigType(name, throwIfNotPresent);
         }
     }
 
@@ -124,6 +129,41 @@ std::shared_ptr<ConfigItem> ConfigItem::getConfigType(const std::string &name, b
         throw(ParseException(msg));
     }
     return pItem;
+}
+
+
+void ConfigItem::insertConfigType(const std::shared_ptr<ConfigItem> pTypeItem)
+{
+    //
+    // To insert a config type (most likely previously defined by a complexType name="" XSD definition
+    // loop through each set of configurable pieces of the input type, make a copy of each, and add it to 
+    // this element.
+
+    //
+    // Children
+    const std::map<std::string, std::shared_ptr<ConfigItem>> &typeChildren = pTypeItem->getChildren();
+    for (auto childIt = typeChildren.begin(); childIt != typeChildren.end(); ++childIt)
+    {
+        std::shared_ptr<ConfigItem> pNewItem = std::make_shared<ConfigItem>(*(childIt->second));
+        addChild(pNewItem);
+    }
+
+    //
+    // Attributes
+    const std::map<std::string, std::shared_ptr<CfgValue>> &typeAttributes = pTypeItem->getAttributes();
+    for (auto attrIt = typeAttributes.begin(); attrIt != typeAttributes.end(); ++attrIt)
+    {
+        std::shared_ptr<CfgValue> pNewAttr = std::make_shared<CfgValue>(*(attrIt->second));
+        addAttribute(pNewAttr);
+    }
+
+    //
+    // Type main value
+    if (pTypeItem->getItemCfgValue() != nullptr)
+    {
+        std::shared_ptr<CfgValue> pNewItemCfgValue = std::make_shared<CfgValue>(*(pTypeItem->getItemCfgValue()));
+        setItemCfgValue(pNewItemCfgValue);
+    }
 }
 
 

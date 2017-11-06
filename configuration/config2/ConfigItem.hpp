@@ -55,13 +55,14 @@ class ConfigItem : public std::enable_shared_from_this<ConfigItem>
         int getMaxInstances() const { return m_maxInstances; }
 
         virtual void addType(const std::shared_ptr<CfgType> &pType);
-        virtual const std::shared_ptr<CfgType> &getType(const std::string &typeName) const;
+        virtual std::shared_ptr<CfgType> getType(const std::string &typeName, bool throwIfNotPresent = true) const;
 
 		void setVersion(int version) { m_version = version;  }
 		int getVersion() const { return m_version; }
 
         virtual void addConfigType(const std::shared_ptr<ConfigItem> &pItem, const std::string &typeName);
-        virtual std::shared_ptr<ConfigItem> getConfigType(const std::string &name, bool throwIfNotPresent=false) const;
+        virtual std::shared_ptr<ConfigItem> getConfigType(const std::string &name, bool throwIfNotPresent=true) const;
+        virtual void insertConfigType(const std::shared_ptr<ConfigItem> pTypeItem);
 
         virtual void addChild(const std::shared_ptr<ConfigItem> &pItem) { m_children[pItem->getName()] = pItem; }
 		virtual void addChild(const std::shared_ptr<ConfigItem> &pItem, const std::string &name) { m_children[name] = pItem; }
@@ -75,6 +76,7 @@ class ConfigItem : public std::enable_shared_from_this<ConfigItem>
 		virtual void addAttribute(const std::shared_ptr<CfgValue> &pCfgValue);
 		virtual void addAttribute(const std::vector<std::shared_ptr<CfgValue>> &attributes);
 		virtual std::shared_ptr<CfgValue> getAttribute(const std::string &name) const;
+        virtual const std::map<std::string, std::shared_ptr<CfgValue>> &getAttributes() const { return m_attributes;  }
 
         virtual bool addUniqueName(const std::string keyName);
         virtual void addKey(const std::string &keyName, const std::string &elementName, const std::string &attributeName);
