@@ -7,6 +7,7 @@ SET(  SRCS
 	  ConfigItemValueSet.cpp
 	  ConfigItem.cpp
 	  CfgValue.cpp
+	  CfgStringLimits.cpp
 	  EnvironmentNode.cpp
 	  EnvValue.cpp
 	  XSDComponentParser.cpp
