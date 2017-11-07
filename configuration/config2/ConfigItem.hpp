@@ -70,8 +70,8 @@ class ConfigItem : public std::enable_shared_from_this<ConfigItem>
 
         virtual void addChild(const std::shared_ptr<ConfigItem> &pItem) { m_children.insert({ pItem->getName(), pItem }); }
         virtual void addChild(const std::shared_ptr<ConfigItem> &pItem, const std::string &name) { m_children.insert({ name, pItem }); }
-        virtual std::vector<std::shared_ptr<ConfigItem>> getChildren() const;
-        //const std::multimap<std::string, std::shared_ptr<ConfigItem>> &getChildren() const { return m_children; }
+        //virtual std::vector<std::shared_ptr<ConfigItem>> getChildren() const;
+        const std::multimap<std::string, std::shared_ptr<ConfigItem>> &getChildren() const { return m_children; }
         std::shared_ptr<ConfigItem> getChild(const std::string &name);
         std::shared_ptr<ConfigItem> getChildByComponent(const std::string &name, std::string &componentName);
         

@@ -140,10 +140,10 @@ void ConfigItem::insertConfigType(const std::shared_ptr<ConfigItem> pTypeItem)
 
     //
     // Children
-    std::vector<std::shared_ptr<ConfigItem>> typeChildren = pTypeItem->getChildren();
+    std::multimap<std::string, std::shared_ptr<ConfigItem>> typeChildren = pTypeItem->getChildren();
     for (auto childIt = typeChildren.begin(); childIt != typeChildren.end(); ++childIt)
     {
-        std::shared_ptr<ConfigItem> pNewItem = std::make_shared<ConfigItem>(*(*childIt));
+        std::shared_ptr<ConfigItem> pNewItem = std::make_shared<ConfigItem>(*(childIt->second));
         addChild(pNewItem);
     }
 
@@ -248,13 +248,13 @@ void ConfigItem::addKeyRef(const std::string &keyName, const std::string &elemen
 }
 
 
-std::vector<std::shared_ptr<ConfigItem>> ConfigItem::getChildren() const
-{
-    std::vector<std::shared_ptr<ConfigItem>> children;
-    for (auto it = m_children.begin(); it != m_children.end(); ++it)
-        children.push_back(it->second);
-    return children;
-}
+//std::vector<std::shared_ptr<ConfigItem>> ConfigItem::getChildren() const
+//{
+//    std::vector<std::shared_ptr<ConfigItem>> children;
+//    for (auto it = m_children.begin(); it != m_children.end(); ++it)
+//        children.push_back(it->second);
+//    return children;
+//}
 
 
 std::shared_ptr<ConfigItem> ConfigItem::getChild(const std::string &name)
