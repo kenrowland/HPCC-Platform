@@ -91,7 +91,7 @@ bool Cws_config2Ex::ongetNode(IEspContext &context, IEspGetNodeRequest &req, IEs
         //
         // Now the children
         const std::shared_ptr<ConfigItem> &pNodeConfigItem = pNode->getConfigItem();
-        std::map<std::string, std::shared_ptr<ConfigItem>> nodeConfigChildren = pNodeConfigItem->getChildren();
+        std::multimap<std::string, std::shared_ptr<ConfigItem>> nodeConfigChildren = pNodeConfigItem->getChildren();
         if (pNode->hasChildren())
         {
             std::map<std::string, std::vector<std::shared_ptr<EnvironmentNode>>> children = pNode->getChildrenByName();
