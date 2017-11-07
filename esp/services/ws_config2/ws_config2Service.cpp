@@ -108,6 +108,10 @@ bool Cws_config2Ex::ongetNode(IEspContext &context, IEspGetNodeRequest &req, IEs
                 pElement->setNumRequiredInstances(pConfigItem->getMinInstances());
                 pElement->updateDoc().setTooltip("");
                 
+                //
+                // the node iteration below needs to look at each node and somehow compare it to a specific entry in the
+                // nodeConfigChildren multimap, beyond just name, and remove the match. The reason is there can be
+                // more than one entry in nodeConfigChildren with the sane name
 
                 StringArray ids;
                 int numChildren = 0;
