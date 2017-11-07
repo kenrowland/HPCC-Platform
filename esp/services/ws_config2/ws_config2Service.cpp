@@ -91,9 +91,9 @@ bool Cws_config2Ex::ongetNode(IEspContext &context, IEspGetNodeRequest &req, IEs
         //
         // Now the children
         const std::shared_ptr<ConfigItem> &pNodeConfigItem = pNode->getConfigItem();
-        std::multimap<std::string, std::shared_ptr<ConfigItem>> nodeConfigChildren = pNodeConfigItem->getChildren();
         if (pNode->hasChildren())
         {
+            std::multimap<std::string, std::shared_ptr<ConfigItem>> nodeConfigChildren = pNodeConfigItem->getChildren();
             std::map<std::string, std::vector<std::shared_ptr<EnvironmentNode>>> children = pNode->getChildrenByName();
             for (auto it=children.begin(); it!=children.end(); ++it)
             {
@@ -130,9 +130,10 @@ bool Cws_config2Ex::ongetNode(IEspContext &context, IEspGetNodeRequest &req, IEs
             //
             // Now add any configuration elements that don't have instantiations in the environment. These all get empty id lists
             // indicating that they don't exist yet, but can be added
+            
             for (auto it=nodeConfigChildren.begin(); it!=nodeConfigChildren.end(); ++it)
             {
-                std::shared_ptr<ConfigItem> pConfigItem = it->second;
+                std::shared_ptr<ConfigItem> pConfigItem = *it;
                 Owned<IEspelementType> pElement = createelementType();
                 pElement->updateItemInfo().setName(pConfigItem->getName().c_str());
                 pElement->updateItemInfo().setDisplayName(pConfigItem->getDisplayName().c_str());

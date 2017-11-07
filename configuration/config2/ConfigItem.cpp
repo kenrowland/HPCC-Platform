@@ -140,7 +140,7 @@ void ConfigItem::insertConfigType(const std::shared_ptr<ConfigItem> pTypeItem)
 
     //
     // Children
-    std::vector<std::shared_ptr<ConfigItem>> &typeChildren = pTypeItem->getChildren();
+    std::vector<std::shared_ptr<ConfigItem>> typeChildren = pTypeItem->getChildren();
     for (auto childIt = typeChildren.begin(); childIt != typeChildren.end(); ++childIt)
     {
         std::shared_ptr<ConfigItem> pNewItem = std::make_shared<ConfigItem>(*(*childIt));
