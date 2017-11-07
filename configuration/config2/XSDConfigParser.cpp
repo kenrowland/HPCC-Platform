@@ -215,6 +215,7 @@ void XSDConfigParser::parseComplexType(const pt::ptree &typeTree)
     std::string complexTypeName = getXSDAttributeValue(typeTree, "<xmlattr>.name", false, "");
     std::string className = typeTree.get("<xmlattr>.hpcc:class", "");
     std::string catName = typeTree.get("<xmlattr>.hpcc:category", "");
+    std::string componentName = typeTree.get("<xmlattr>.hpcc:componentName", "");
     std::string displayName = typeTree.get("<xmlattr>.hpcc:displayName", "");
 
     if (complexTypeName != "")
@@ -225,6 +226,7 @@ void XSDConfigParser::parseComplexType(const pt::ptree &typeTree)
             {
                 std::shared_ptr<ConfigItemComponent> pComponent = std::make_shared<ConfigItemComponent>(complexTypeName, m_pConfig);
                 pComponent->setCategory(catName);
+                pComponent->setComponentName(componentName);
                 pComponent->setDisplayName(displayName);
                 pt::ptree componentTree = typeTree.get_child("", pt::ptree());
                 if (!componentTree.empty())
@@ -323,6 +325,9 @@ void XSDConfigParser::parseElement(const pt::ptree &elemTree)
                     if (pConfigType->getClassName() == "component")
                     {
                         pConfigElement->setName(pConfigType->getName());
+                        pConfigElement->setClassName(pConfigType->getClassName());
+                        pConfigElement->setCategory(pConfigType->getCategory());
+                        pConfigElement->setComponentName(pConfigType->getComponentName());  // for components, the config type name is used as the component name
                     }
                 }
                 else

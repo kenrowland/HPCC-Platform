@@ -28,7 +28,7 @@ class ConfigItemValueSet : public ConfigItem
 {
     public:
 
-		ConfigItemValueSet(const std::string &name, std::shared_ptr<ConfigItem> pParent) : ConfigItem(name, "valueset", pParent) { m_isConfigurable = true; };
+		ConfigItemValueSet(const std::string &name, std::shared_ptr<ConfigItem> pParent) : ConfigItem(name, "valueset", pParent) { }
         virtual ~ConfigItemValueSet() { };
 
         void addCfgValue(const std::shared_ptr<CfgValue> pValue);

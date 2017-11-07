@@ -33,7 +33,6 @@ ConfigItem::ConfigItem(const std::string &name, const std::string &className, co
 	m_displayName(name),
 	m_minInstances(1), 
 	m_maxInstances(1), 
-	m_isConfigurable(false), 
 	m_version(-1) 
 {
 	//
@@ -141,7 +140,7 @@ void ConfigItem::insertConfigType(const std::shared_ptr<ConfigItem> pTypeItem)
 
     //
     // Children
-    const std::map<std::string, std::shared_ptr<ConfigItem>> &typeChildren = pTypeItem->getChildren();
+    const std::multimap<std::string, std::shared_ptr<ConfigItem>> &typeChildren = pTypeItem->getChildren();
     for (auto childIt = typeChildren.begin(); childIt != typeChildren.end(); ++childIt)
     {
         std::shared_ptr<ConfigItem> pNewItem = std::make_shared<ConfigItem>(*(childIt->second));
@@ -192,7 +191,8 @@ std::shared_ptr<CfgValue> ConfigItem::getAttribute(const std::string &name) cons
 		pCfgValue = it->second;
 	else
 	{
-		pCfgValue = std::make_shared<CfgValue>(name);
+        // not found, build a default cfg value for the undefined attribute
+		pCfgValue = std::make_shared<CfgValue>(name, false); 
 		pCfgValue->setType(getType("default"));
 	}
 	return pCfgValue;
@@ -261,17 +261,30 @@ void ConfigItem::addKeyRef(const std::string &keyName, const std::string &elemen
 
 std::shared_ptr<ConfigItem> ConfigItem::getChild(const std::string &name)
 {
-	std::shared_ptr<ConfigItem> pItem;
-	auto it = m_children.find(name);
+	std::shared_ptr<ConfigItem> pItem = std::make_shared<ConfigItem>(name, "default", shared_from_this());
+	auto it = m_children.find(name);  // only return the first one
 	if (it != m_children.end())
 	{
 		pItem = it->second;
 	}
-	else
-	{
-		pItem = std::make_shared<ConfigItem>(name, "default", shared_from_this());
-	}
 	return pItem;
+}
+
+
+std::shared_ptr<ConfigItem> ConfigItem::getChildByComponent(const std::string &name, std::string &componentName)
+{
+    std::shared_ptr<ConfigItem> pItem = std::make_shared<ConfigItem>(name, "default", shared_from_this());  
+    auto childItRange = m_children.equal_range(name);
+    for (auto childIt = childItRange.first; childIt != childItRange.second; ++childIt)
+    {
+        if (childIt->second->getComponentName() == componentName)
+        {
+            pItem = childIt->second;
+            break;
+        }
+    }
+
+    return pItem;
 }
 
 

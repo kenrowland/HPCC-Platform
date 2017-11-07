@@ -36,7 +36,7 @@
             <xs:sequence>
               <xs:element type="dafilesrv"/>
               <xs:element type="eclAgent"/>
-              <xs:element type="espProcess"/>
+              <xs:element type="espProcess"/> 
             </xs:sequence>
           </xs:complexType>
         </xs:element>
