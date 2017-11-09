@@ -29,12 +29,13 @@ class EnvValue
 	public:
 
 		EnvValue(const std::shared_ptr<EnvironmentNode> &pMyNode, const std::shared_ptr<CfgValue> &pCfgValue, const std::string &name="") : 
-			m_pMyEnvNode(pMyNode), m_pCfgValue(pCfgValue), m_name(name), m_forcedSet(false) { }
+			m_pMyEnvNode(pMyNode), m_pCfgValue(pCfgValue), m_name(name), m_forcedSet(false), m_valueSet(false) { }
 		EnvValue(const std::shared_ptr<EnvironmentNode> &pMyNode, const std::shared_ptr<CfgValue> &pCfgValue, const std::string &name, const std::string initValue) :
-			EnvValue(pMyNode, pCfgValue, name) { m_value = initValue;  }
+			EnvValue(pMyNode, pCfgValue, name) { m_value = initValue; m_valueSet = true; }
 
 		~EnvValue() { }
 		bool setValue(const std::string &value, Status *pStatus, bool forceSet=false);
+		bool isValueSet() const { return m_valueSet; }
 		bool checkCurrentValue();
 		const std::string &getValue() const { return m_value;  }
 		const std::string &getDefaultValue() const { return m_pCfgValue->getDefaultValue(); }
@@ -49,6 +50,7 @@ class EnvValue
 	private:
 
 		bool m_forcedSet;     // true when last set value was a forced set
+		bool m_valueSet;
 		std::string m_name;
 		std::string m_value;
 		std::shared_ptr<CfgValue> m_pCfgValue;   

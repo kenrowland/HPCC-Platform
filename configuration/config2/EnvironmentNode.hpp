@@ -48,13 +48,12 @@ class EnvironmentNode : public std::enable_shared_from_this<EnvironmentNode>
 		bool setValue(const std::string &value, Status &status, bool force = false);
 		void setNodeEnvValue(const std::shared_ptr<EnvValue> &pEnvValue) { m_pNodeValue = pEnvValue;  }
 		const std::shared_ptr<EnvValue> &getNodeEnvValue() const { return m_pNodeValue;  }
+		bool isNodeValueSet() const { return m_pNodeValue != nullptr; }
 		std::vector<std::shared_ptr<EnvValue>> getAttributes() const;
 		const std::shared_ptr<EnvValue> getAttribute(const std::string &name) const;
 		bool hasAttributes() const { return m_attributes.size() != 0; }
 		void setId(const std::string &id) { m_id = id; } 
 		const std::string &getId() const { return m_id;  }
-		const std::string &getMessage() const { return m_msg; }
-		void setMessage(const std::string &msg) { m_msg = msg; }
         void validate(Status &status, bool includeChildren=false) const;
 		std::vector<std::string> getAllFieldValues(const std::string &fieldName) const;
 		const std::shared_ptr<ConfigItem> &getConfigItem() const { return m_pConfigItem; }
@@ -62,7 +61,6 @@ class EnvironmentNode : public std::enable_shared_from_this<EnvironmentNode>
 
 	protected:
 
-		std::string m_msg;           // error or warning message
 		std::string m_name;   
 		std::shared_ptr<ConfigItem> m_pConfigItem;  
 		std::weak_ptr<EnvironmentNode> m_pParent;

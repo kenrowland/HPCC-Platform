@@ -28,11 +28,13 @@ bool EnvValue::setValue(const std::string &value, Status *pStatus, bool forceSet
         if (m_pCfgValue->isValueValid(value))
         {
             m_value = value;
+            m_valueSet = true;
             m_pCfgValue->mirrorValue(oldValue, value);
         }
         else if (forceSet)
         {
             m_value = value;
+            m_valueSet = true;
             m_forcedSet = true;
             m_pCfgValue->mirrorValue(oldValue, value);
             if (pStatus != nullptr)

@@ -75,8 +75,9 @@ class ConfigItem : public std::enable_shared_from_this<ConfigItem>
         std::shared_ptr<ConfigItem> getChild(const std::string &name);
         std::shared_ptr<ConfigItem> getChildByComponent(const std::string &name, std::string &componentName);
         
-        virtual void setItemCfgValue(const std::shared_ptr<CfgValue> &pValue) { m_pValue = pValue; }
-        virtual std::shared_ptr<CfgValue> getItemCfgValue() const { return m_pValue; }
+        virtual void setItemCfgValue(const std::shared_ptr<CfgValue> &pValue) { m_pItemCfgValue = pValue; }
+        virtual std::shared_ptr<CfgValue> getItemCfgValue() const { return m_pItemCfgValue; }
+        virtual bool isItemValueDefined() { return m_pItemCfgValue != nullptr; }
         std::shared_ptr<CfgValue> findCfgValue(const std::string &path);
 
         virtual void addAttribute(const std::shared_ptr<CfgValue> &pCfgValue);
@@ -103,7 +104,7 @@ class ConfigItem : public std::enable_shared_from_this<ConfigItem>
         std::string m_category;  // used for further subdividing to the user
         std::string m_componentName;   
         std::multimap<std::string, std::shared_ptr<ConfigItem>> m_children; 
-        std::shared_ptr<CfgValue> m_pValue;   // value for this item (think of it as the VALUE for an element <xx attr= att1=>VALUE</xx>)
+        std::shared_ptr<CfgValue> m_pItemCfgValue;   // value for this item (think of it as the VALUE for an element <xx attr= att1=>VALUE</xx>)
         std::map<std::string, std::shared_ptr<CfgValue>> m_attributes;   // attributes for this item (think in xml terms <m_name attr1="val" attr2="val" .../> where attrN is in this vector
         std::set<std::string> m_keys;   // generic set of key values for use by any component to prevent duplicate operations
         std::weak_ptr<ConfigItem> m_pParent;

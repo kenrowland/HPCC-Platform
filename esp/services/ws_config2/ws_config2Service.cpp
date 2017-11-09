@@ -36,6 +36,8 @@ bool Cws_config2Ex::ongetNode(IEspContext &context, IEspGetNodeRequest &req, IEs
 
     if (pNode)
     {
+        std::string nodeDisplayName = pNode->getName();    // default node name (if name= attribute found, that becomes the name)
+        const std::shared_ptr<ConfigItem> &pNodeConfigItem = pNode->getConfigItem();
         IArrayOf<IEspelementType> elements;
 
         //
@@ -50,8 +52,14 @@ bool Cws_config2Ex::ongetNode(IEspContext &context, IEspGetNodeRequest &req, IEs
                 Owned<IEspattributeType> pAttribute = createattributeType();
                 
                 const std::shared_ptr<CfgValue> &pCfgValue = pAttr->getCfgValue();
-                pAttribute->updateItemInfo().setName(pAttr->getName().c_str());
+                std::string attributeName = pAttr->getName();
+                pAttribute->updateItemInfo().setName(attributeName.c_str());
                 pAttribute->updateItemInfo().setDisplayName(pCfgValue->getDisplayName().c_str());
+                if (attributeName == "name" && pAttr->isValueSet())
+                {
+                    nodeDisplayName = pAttr->getValue();
+                }
+
                 pAttribute->updateDoc().setTooltip(pCfgValue->getTooltip().c_str());
                 
                 const std::shared_ptr<CfgType> &pType = pCfgValue->getType();
@@ -80,17 +88,19 @@ bool Cws_config2Ex::ongetNode(IEspContext &context, IEspGetNodeRequest &req, IEs
                 }
 
                 pAttribute->setCurrentValue(pAttr->getValue().c_str());
-                pAttribute->setDefaultValue("");
+                pAttribute->setDefaultValue(pCfgValue->getDefaultValue().c_str());
+                pAttribute->setDefaultValid(pCfgValue->hasDefaultValue());
                 
                 
                 nodeAttributes.append(*pAttribute.getLink());
             }
         }
         resp.setAttributes(nodeAttributes); 
+        resp.setNodeName(nodeDisplayName.c_str());
 
         //
         // Now the children
-        const std::shared_ptr<ConfigItem> &pNodeConfigItem = pNode->getConfigItem();
+        
         if (pNode->hasChildren())
         {
             std::multimap<std::string, std::shared_ptr<ConfigItem>> nodeConfigChildren = pNodeConfigItem->getChildren();
@@ -107,7 +117,7 @@ bool Cws_config2Ex::ongetNode(IEspContext &context, IEspGetNodeRequest &req, IEs
                 pElement->setNumAllowedInstances(pConfigItem->getMaxInstances());
                 pElement->setNumRequiredInstances(pConfigItem->getMinInstances());
                 pElement->updateDoc().setTooltip("");
-                
+
                 //
                 // the node iteration below needs to look at each node and somehow compare it to a specific entry in the
                 // nodeConfigChildren multimap, beyond just name, and remove the match. The reason is there can be
@@ -137,7 +147,7 @@ bool Cws_config2Ex::ongetNode(IEspContext &context, IEspGetNodeRequest &req, IEs
             
             for (auto it=nodeConfigChildren.begin(); it!=nodeConfigChildren.end(); ++it)
             {
-                std::shared_ptr<ConfigItem> pConfigItem = *it;
+                std::shared_ptr<ConfigItem> pConfigItem = it->second;
                 Owned<IEspelementType> pElement = createelementType();
                 pElement->updateItemInfo().setName(pConfigItem->getName().c_str());
                 pElement->updateItemInfo().setDisplayName(pConfigItem->getDisplayName().c_str());
@@ -154,6 +164,25 @@ bool Cws_config2Ex::ongetNode(IEspContext &context, IEspGetNodeRequest &req, IEs
             }
         }
         resp.setChildren(elements); 
+
+        if (pNodeConfigItem->isItemValueDefined())
+        {
+            resp.setNodeValueDefined(true);  
+
+            const std::shared_ptr<CfgValue> &pNodeCfgValue = pNodeConfigItem->getItemCfgValue();
+            const std::shared_ptr<CfgType> &pType = pNodeCfgValue->getType();
+            resp.updateValue().updateType().setName(pType->getName().c_str());
+            resp.updateValue().updateType().updateLimits().setMin(pType->getLimits()->getMin());
+            resp.updateValue().updateType().updateLimits().setMax(pType->getLimits()->getMin());
+
+            if (pNode->isNodeValueSet())
+            {
+                const std::shared_ptr<EnvValue> &pNodeValue = pNode->getNodeEnvValue();
+                resp.setNodeValueSet(true);
+                resp.updateValue().setCurrentValue(pNodeValue->getValue().c_str());
+            }
+       }
+
         rc = true;
     }
     else
