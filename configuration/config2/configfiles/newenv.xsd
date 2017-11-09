@@ -22,6 +22,8 @@
   <xs:include schemaLocation="types.xsd"/>
   <xs:include schemaLocation="hardware.xsd"/>
   <xs:include schemaLocation="esp.xsd"/>
+  <xs:include schemaLocation="esp_service_wsecl2.xsd"/>
+  <xs:include schemaLocation="esp_service_smc.xsd"/>
   <xs:include schemaLocation="dafilesrv.xsd"/>
   <xs:include schemaLocation="eclagent.xsd"/>
   <xs:element name="Environment" hpcc:category="root" hpcc:class="category">
@@ -37,6 +39,8 @@
               <xs:element type="dafilesrv"/>
               <xs:element type="eclAgent"/>
               <xs:element type="espProcess"/> 
+              <xs:element type="ws_ecl"/> 
+              <xs:element type="espsmc"/> 
             </xs:sequence>
           </xs:complexType>
         </xs:element>

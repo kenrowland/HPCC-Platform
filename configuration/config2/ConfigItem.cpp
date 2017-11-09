@@ -205,7 +205,7 @@ void ConfigItem::addKey(const std::string &keyName, const std::string &elementPa
     if (it == m_keyDefs.end())
     {
         //std::shared_ptr<ConfigItem> pCfgItem = getChild(elementName);  // todo: validate pCfgItem found
-        std::string cfgValuePath = elementPath + "@" + attributeName;
+        std::string cfgValuePath = ((elementPath != ".") ? elementPath : "") + "@" + attributeName;
         std::shared_ptr<CfgValue> pAttribute = findCfgValue(cfgValuePath);  //pCfgItem->getAttribute(attributeName);
         if (pAttribute)
         {
@@ -214,7 +214,7 @@ void ConfigItem::addKey(const std::string &keyName, const std::string &elementPa
         }
         else
         {
-            throw(ParseException("Attribute " + attributeName + "not found for key " + keyName));
+            throw(ParseException("Attribute " + attributeName + " not found for key " + keyName));
         }
     }
     else
@@ -238,7 +238,7 @@ void ConfigItem::addKeyRef(const std::string &keyName, const std::string &elemen
         }
         else
         {
-            throw(ParseException("Attribute " + attributeName + "not found when adding keyRef for key " + keyName));
+            throw(ParseException("Attribute " + attributeName + " not found when adding keyRef for key " + keyName));
         }
     }
     else

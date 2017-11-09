@@ -92,12 +92,12 @@
           <xs:field xpath="@computerType" />
         </xs:keyref>
 		
-		    <xs:keyref name="Computer_domainRef" refer="domainKey">
+		<xs:keyref name="Computer_domainRef" refer="domainKey">
           <xs:selector xpath="Computer"/>
           <xs:field xpath="@domain" />
         </xs:keyref>
 
-		    <xs:key name="switchNameKey">
+		<xs:key name="switchNameKey">
           <xs:selector xpath="Switch" />
           <xs:field xpath="@name" />
         </xs:key>

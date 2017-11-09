@@ -167,8 +167,7 @@
                         <xs:element name="Notes" type="usernotes"  hpcc:displayName="Notes"/>
                     </xs:sequence>
                     
-                    <xs:attribute name="build" type="xs:string" use="required" hpcc:hidden="true" />
-                    <xs:attribute name="buildSet" type="xs:string" use="required" hpcc:hidden="true"/>
+                    <xs:attributeGroup ref="buildInfo"/>
                     <xs:attribute name="name" type="xs:string" use="required" hpcc:displayName="Name" hpcc:autoName="autoincrement=pathto where to count" hpcc:tooltip="Name for this process"/>
                     <xs:attribute name="description" type="xs:string" use="optional" default="ESP server" hpcc:displayName="Description" hpcc:tooltip="Description for this process"/>
                     <xs:attribute name="daliServers" type="xs:string" use="required" hpcc:displayName="Dali Servers" hpcc:tooltip="Specifies the dali server to which this ESP is attached"/>

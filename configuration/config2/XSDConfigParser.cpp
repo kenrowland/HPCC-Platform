@@ -77,6 +77,12 @@ bool XSDConfigParser::doParse(const std::vector<std::string> &cfgParms)
 		pType->setLimits(pIntLimits);
 		m_pConfig->addType(pType);
 
+        pType = std::make_shared<CfgType>("xs:unsignedInt");
+        pIntLimits = std::make_shared<CfgIntegerLimits>();
+        pIntLimits->setMinInclusive(0);
+        pType->setLimits(pIntLimits);
+        m_pConfig->addType(pType);
+
         m_buildsetFilename = cfgParms[1];
         parseXSD(cfgParms[0]);
     }
