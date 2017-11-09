@@ -38,11 +38,22 @@
             <xs:sequence>
               <xs:element type="dafilesrv"/>
               <xs:element type="eclAgent"/>
-              <xs:element type="espProcess"/> 
               <xs:element type="ws_ecl"/> 
               <xs:element type="espsmc"/> 
+              <xs:element type="espProcess"/> 
             </xs:sequence>
           </xs:complexType>
+          
+          <xs:key name="espservice_name_key">
+            <xs:selector xpath="EspService" />
+            <xs:field xpath="@name" />
+          </xs:key> 
+          
+          <xs:keyref name="esp_servicename_keyref" refer="espservice_name_key">
+            <xs:selector xpath="EspProcess" />
+            <xs:field xpath="@name" />
+          </xs:keyref>
+          
         </xs:element>
       </xs:sequence>
     </xs:complexType>

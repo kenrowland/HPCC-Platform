@@ -30,8 +30,7 @@ class CfgValue
 
         CfgValue(const std::string &name, bool isDefined=true) : 
             m_name(name), m_displayName(name), m_required(false), m_readOnly(false), 
-            m_hidden(false), m_defaultSet(false), m_deprecated(false), m_forceOutput(false), 
-            m_isKeyedValue(false) { }
+            m_hidden(false), m_defaultSet(false), m_deprecated(false), m_isKeyedValue(false) { }
         virtual ~CfgValue() { }
         void setType(const std::shared_ptr<CfgType> pType) { m_pType = pType; }
         const std::shared_ptr<CfgType> &getType() const { return m_pType; }
@@ -50,8 +49,6 @@ class CfgValue
         bool isHidden() const { return m_hidden; }
         void setDeprecated(bool deprecated) { m_deprecated = deprecated; }
         bool isDeprecated() const { return m_deprecated; }
-        void setForceOutput(bool force) { m_forceOutput = force; }
-        bool isForceOutput() const { return m_forceOutput;  }
         void setTooltip(const std::string &tooltip) { m_tooltip = tooltip; }
         const std::string &getTooltip() const { return m_tooltip; }
         void addModifer(const std::string &mod) { m_modifiers.push_back(mod); }
@@ -89,7 +86,6 @@ class CfgValue
         bool m_hidden;
         bool m_defaultSet;
         bool m_deprecated;
-        bool m_forceOutput;
         bool m_isKeyedValue;
         bool m_isDefined;  // false indicates a value for which there is no defined configuration
         std::string m_default;

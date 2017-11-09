@@ -40,10 +40,6 @@
                
                 </xs:complexType>
                 
-                <xs:key name="espservice_wsecl_name">
-                    <xs:selector xpath="." />
-                    <xs:field xpath="@name" />
-                </xs:key> 
  			</xs:element>
         </xs:sequence>
     </xs:complexType>

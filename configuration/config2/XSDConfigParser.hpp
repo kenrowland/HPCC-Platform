@@ -55,6 +55,8 @@ class XSDConfigParser : public ConfigParser
         virtual std::shared_ptr<CfgType> getCfgType(const pt::ptree &typeTree, bool nameRequired=true);
         virtual std::shared_ptr<CfgValue> getCfgValue(const pt::ptree &attr);
         
+        virtual void parseKey(const pt::ptree &keyTree);
+        virtual void parseKeyRef(const pt::ptree &keyTree);
 
     protected:
     

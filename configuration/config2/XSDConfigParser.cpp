@@ -157,6 +157,14 @@ void XSDConfigParser::parseXSD(const pt::ptree &keys)
         {
             parseElement(it->second);
         }
+        else if (elemType == "xs:key")
+        {
+            parseKey(it->second);
+        }
+        else if (elemType == "xs:keyref")
+        {
+            parseKeyRef(it->second);
+        }
     }
 }
 
@@ -360,131 +368,6 @@ void XSDConfigParser::parseElement(const pt::ptree &elemTree)
 }
 
 
-//void XSDConfigParser::parseElementOld(const pt::ptree &elemTree)
-//{
-//    std::string elementName = elemTree.get("<xmlattr>.name", "");
-//    std::string className = elemTree.get("<xmlattr>.hpcc:class", "");
-//    std::string category = elemTree.get("<xmlattr>.hpcc:category", "");
-//    std::string displayName = elemTree.get("<xmlattr>.hpcc:displayName", "");
-//    std::string refName = elemTree.get("<xmlattr>.ref", "");
-//    std::string typeName = elemTree.get("<xmlattr>.type", "");
-//    int minOccurs = elemTree.get("<xmlattr>.minOccurs", 1);
-//    std::string maxOccursStr = elemTree.get("<xmlattr>.maxOccurs", "1");
-//    int maxOccurs = (maxOccursStr != "unbounded") ? stoi(maxOccursStr) : -1;
-//        
-//    //std::shared_ptr<ConfigItemComponent> pTypeConfigItem;
-//    std::shared_ptr<ConfigItem> pTypeConfigItem;
-//
-//    //
-//    // If we have a type name specififed, then the element is based on the type.
-//    // Get the type and add it.
-//    if (typeName != "")
-//    {
-//        std::shared_ptr<ConfigItem> pConfigItem = m_pConfig->getConfigType(typeName);
-//        if (pConfigItem)
-//        {
-//            std::shared_ptr<ConfigItem> pConfigElement = std::make_shared<ConfigItem>(elementName, "category", m_pConfig);
-//            pConfigElement->setDisplayName(displayName);
-//            pConfigElement->setMinInstances(minOccurs);
-//            pConfigElement->setMaxInstances(maxOccurs);
-//            //std::shared_ptr<XSDConfigParser> pXSDParaser = std::make_shared<XSDConfigParser>(m_basePath, pConfigItem);  don't support parsing into it ? or maybe do it after the insert
-//
-//            pConfigElement->insertConfigType(pConfigItem);
-//            m_pConfig->addChild(pConfigElement);
-//
-//            //std::shared_ptr<ConfigItemComponent> pComponent = std::dynamic_pointer_cast<ConfigItemComponent>(pConfigItem);
-//            //if (pComponent)
-//            //{
-//            //    pTypeConfigItem = std::make_shared<ConfigItemComponent>(*pComponent);
-//            //    pTypeConfigItem->setCategory(category);
-//            //    pTypeConfigItem->setDisplayName(displayName);
-//            //    pTypeConfigItem->setMinInstances(minOccurs);
-//            //    pTypeConfigItem->setMaxInstances(maxOccurs);
-//            //    pTypeConfigItem->setVersion(elemTree.get("<xmlattr>.hpcc:version", -1));
-//            //}
-//            //else
-//            //{
-//            //    throw(ParseException("Element reference is not a compoenent: " + refName));
-//            //}
-//
-//            //pTypeConfigItem = std::make_shared<ConfigItem>(*pConfigItem);
-//            //pTypeConfigItem->setCategory(category);
-//            //pTypeConfigItem->setDisplayName(displayName);
-//            //pTypeConfigItem->setMinInstances(minOccurs);
-//            //pTypeConfigItem->setMaxInstances(maxOccurs);
-//            //pTypeConfigItem->setVersion(elemTree.get("<xmlattr>.hpcc:version", -1));
-//        }
-//    }
-//
-//
-//    //
-//    // A category?
-//    else if (className == "category")
-//    {
-//        //
-//        // If we have a type config we found before, add it
-//        if (pTypeConfigItem)
-//        {   
-//            m_pConfig->addChild(pTypeConfigItem);
-//        }
-//        else
-//        {
-//            pt::ptree childTree = elemTree.get_child("", pt::ptree());
-//            if (category == "root")
-//            {
-//                m_pConfig->setName(elementName);
-//                parseXSD(childTree);
-//            }
-//            else
-//            {
-//                std::shared_ptr<ConfigItem> pConfigItem = std::make_shared<ConfigItem>(elementName, "category", m_pConfig);
-//                std::shared_ptr<XSDConfigParser> pXSDParaser = std::make_shared<XSDConfigParser>(m_basePath, pConfigItem);
-//                pXSDParaser->parseXSD(childTree);
-//                m_pConfig->addChild(pConfigItem);
-//            }
-//        }
-//    }
-//    else if (elementName != "")
-//    {
-//		//
-//		// We have an element. Create a new config Item for it
-//		std::shared_ptr<ConfigItem> pConfigElement = std::make_shared<ConfigItem>(elementName, "element", m_pConfig);   // class name of element 
-//		
-//		//
-//		// Does the element have a type? If so, process it and move on
-//		if (typeName != "")
-//		{
-//			std::shared_ptr<CfgValue> pCfgValue = std::make_shared<CfgValue>("");  // no name value since it's the element's value 
-//			pCfgValue->setType(m_pConfig->getType(typeName));                      // will throw if type is not defined
-//			pConfigElement->setItemCfgValue(pCfgValue);
-//		}
-//		else
-//		{
-//			//
-//			// Go ahead and parse the contents of the element. This will pick up any attributes, or if a simple type is defined for it
-//			std::shared_ptr<XSDConfigParser> pXSDParaser = std::make_shared<XSDConfigParser>(m_basePath, pConfigElement);    
-//			pXSDParaser->parseXSD(elemTree.get_child("", pt::ptree()));
-//		}
-//
-//		pConfigElement->setDisplayName(displayName);
-//		pConfigElement->setMinInstances(minOccurs);
-//		pConfigElement->setMaxInstances(maxOccurs);
-//		m_pConfig->addChild(pConfigElement);  
-//    }
-//    else
-//    {
-//        if (pTypeConfigItem)
-//        {
-//            m_pConfig->addChild(pTypeConfigItem);
-//        }
-//        else
-//        {
-//            throw(ParseException("Only component elements are supported at the top level"));
-//        }
-//    }
-//}
-
-
 std::shared_ptr<CfgType> XSDConfigParser::getCfgType(const pt::ptree &typeTree, bool nameRequired)
 {
     std::string typeName = getXSDAttributeValue(typeTree, "<xmlattr>.name", nameRequired, "");
@@ -557,13 +440,17 @@ std::shared_ptr<CfgValue> XSDConfigParser::getCfgValue(const pt::ptree &attr)
     std::shared_ptr<CfgValue> pCfgValue = std::make_shared<CfgValue>(attrName);
     pCfgValue->setDisplayName(attr.get("<xmlattr>.hpcc:displayName", attrName));
     pCfgValue->setRequired(attr.get("<xmlattr>.use", "optional") == "required");
-    pCfgValue->setForceOutput(attr.get("<xmlattr>.forceOutput", true));
     pCfgValue->setTooltip(attr.get("<xmlattr>.hpcc:tooltip", ""));
     pCfgValue->setReadOnly(attr.get("<xmlattr>.hpcc:readOnly", "false") == "true");
     pCfgValue->setHidden(attr.get("<xmlattr>.hpcc:hidden", "false") == "true");
-    pCfgValue->setDefault(attr.get("<xmlattr>.default", ""));
     pCfgValue->setDeprecated(attr.get("<xmlattr>.hpcc:deprecated", "false") == "true");
     pCfgValue->setMirrorFromPath(attr.get("<xmlattr>.hpcc:mirrorFrom", ""));
+
+    std::string defaultValue = attr.get("<xmlattr>.default", "notsetnotsetAAAnotsetnotset");
+    if (defaultValue != "notsetnotsetAAAnotsetnotset")
+    {
+        pCfgValue->setDefault(defaultValue);
+    }
 
     std::string modList = attr.get("<xmlattr>.hpcc:modifiers", "");
     if (modList.length())
@@ -588,3 +475,41 @@ std::shared_ptr<CfgValue> XSDConfigParser::getCfgValue(const pt::ptree &attr)
     return pCfgValue;
 }
 
+void XSDConfigParser::parseKey(const pt::ptree &keyTree)
+{
+    std::string keyName = getXSDAttributeValue(keyTree, "<xmlattr>.name");
+    std::string elementName = getXSDAttributeValue(keyTree, "xs:selector.<xmlattr>.xpath", false, "");
+    std::string attrName = getXSDAttributeValue(keyTree, "xs:field.<xmlattr>.xpath", false, "");
+    std::string attributeName;
+
+    if (attrName.find_first_of('@') != std::string::npos)
+    {
+        attributeName = attrName.substr(attrName.find_first_of('@') + 1);
+    }
+    else
+    {
+        attributeName = attrName;
+    }
+
+    m_pConfig->addKey(keyName, elementName, attributeName);
+}
+
+
+void XSDConfigParser::parseKeyRef(const pt::ptree &keyTree)
+{
+    std::string keyName = getXSDAttributeValue(keyTree, "<xmlattr>.refer");
+    std::string elementName = getXSDAttributeValue(keyTree, "xs:selector.<xmlattr>.xpath", false, "");
+    std::string attrName = getXSDAttributeValue(keyTree, "xs:field.<xmlattr>.xpath", false, "");
+    std::string attributeName;
+
+    if (attrName.find_first_of('@') != std::string::npos)
+    {
+        attributeName = attrName.substr(attrName.find_first_of('@') + 1);
+    }
+    else
+    {
+        attributeName = attrName;
+    }
+
+    m_pConfig->addKeyRef(keyName, elementName, attributeName);
+}

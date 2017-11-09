@@ -35,10 +35,6 @@
                     <xs:attributeGroup ref="Monitoring"/>
                 </xs:complexType>
                 
-                <xs:key name="espservice_espsmc_name">
-                    <xs:selector xpath="." />
-                    <xs:field xpath="@name" />
-                </xs:key> 
  			</xs:element>
         </xs:sequence>
     </xs:complexType>

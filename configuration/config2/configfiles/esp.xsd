@@ -12,7 +12,7 @@
                 <xs:complexType>
                     <xs:sequence>
                         
-                        <xs:element name="EspBinding" maxOccurs="unbounded" hpcc:displayName="ESP Service Bindings" hpcc:class="valueSet" hpcc:category="select" hpcc:keyref="esp_servicename_keyref">
+                        <xs:element name="EspBinding" maxOccurs="unbounded" hpcc:displayName="ESP Service Bindings" hpcc:class="valueSet" hpcc:keyref="esp_servicename_keyref">
                             <xs:complexType>
                                 <xs:element name="Authenticate" minOccurs="0" maxOccurs="unbounded" hpcc:displayName="URL Authentication" hpcc:docid="ESP.t1">
                                     <xs:complexType>
@@ -76,10 +76,7 @@
                             <xs:attribute name="workunitsBasedn" type="xs:string" use="optional" default="ou=workunits,ou=ecl" hpcc:displayName="WorkUnits BaseDn" hpcc:tooltip="Base location for workunit resources (used with ldap security)" hpcc:requiredIf="xpath,xpath..."/>
                             <xs:attribute name="wsdlServiceAddress" type="xs:string" use="optional"hpcc:displayName="wsdlServiceAddress" hpcc:tooltip="Overrides the address used by client applications to connect to the service"/>
                             
-                            <xs:key name="esp_servicename_keyref" refer="espservice_name_key">
-                                <xs:selector xpath="/Software/EspService" />
-                                <xs:field xpath="@name" />
-                            </xs:key>
+                            
                              
                             <xs:key name="esp_custombindingparameter_key">
                                 <xs:selector xpath="CustomBindingParameter" />
