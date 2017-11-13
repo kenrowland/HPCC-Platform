@@ -14,6 +14,7 @@ SET(  SRCS
 	  XSDConfigParser.cpp
 	  XSDValueSetParser.cpp
 	  Status.cpp
+	  CfgLimits.cpp
 )
 
 INCLUDE_DIRECTORIES(

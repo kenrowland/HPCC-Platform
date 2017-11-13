@@ -43,7 +43,7 @@ class CfgType
 		void setAutoValueType(const std::string &valueType) { m_autoValueType = valueType;  }
         bool isEnumerated() const { return m_pLimits->isEnumerated(); }
         bool isUnique() const { return m_pLimits->isUnique(); }
-        const std::vector<AllowedValue> &getAllowedValues(const std::shared_ptr<EnvValue> &pEnvValue) const { return m_pLimits->getAllowedValues(pEnvValue); }
+        const std::vector<AllowedValue> getAllowedValues(const std::shared_ptr<EnvValue> &pEnvValue) const { return m_pLimits->getAllowedValues(pEnvValue); }
 		
 
     private:

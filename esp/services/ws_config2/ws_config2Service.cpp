@@ -83,7 +83,7 @@ bool Cws_config2Ex::ongetNode(IEspContext &context, IEspGetNodeRequest &req, IEs
                 if (pType->isEnumerated())
                 {
                     IArrayOf<IEspchoiceType> choices;
-                    const std::vector<AllowedValue> &allowedValues = pType->getAllowedValues();
+                    const std::vector<AllowedValue> allowedValues = pType->getAllowedValues(pAttr);
                     for (auto valueIt=allowedValues.begin(); valueIt!=allowedValues.end(); ++valueIt)
                     {
                         Owned<IEspchoiceType> pChoice = createchoiceType();
