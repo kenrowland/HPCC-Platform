@@ -86,8 +86,9 @@ class ConfigItem : public std::enable_shared_from_this<ConfigItem>
         virtual const std::map<std::string, std::shared_ptr<CfgValue>> &getAttributes() const { return m_attributes;  }
 
         virtual bool addUniqueName(const std::string keyName);
-        virtual void addKey(const std::string &keyName, const std::string &elementName, const std::string &attributeName);
+        virtual void addKey(const std::string &keyName, const std::string &elementName, const std::string &attributeName, bool duplicateOk = false);
         virtual void addKeyRef(const std::string &keyName, const std::string &elementName, const std::string &attributeName);
+        virtual void processKeyRefs();
 
         virtual void resetEnvironment(); 
 
@@ -116,7 +117,17 @@ class ConfigItem : public std::enable_shared_from_this<ConfigItem>
         int m_maxInstances;
         int m_version;
 
-        static std::map<std::string, std::shared_ptr<CfgValue>> m_keyDefs;    // key defs across the class
+        static std::map<std::string, std::vector<std::shared_ptr<CfgValue>>> m_keyDefs;    // key defs across the class
+
+        struct KeyRef {
+            KeyRef(const std::string &keyName, const std::string &elementPath, const std::string &attributeName) :
+                m_keyName(keyName), m_elementPath(elementPath), m_attributeName(attributeName) { }
+            std::string m_keyName; 
+            std::string m_elementPath; 
+            std::string m_attributeName;
+        };
+
+        std::map<std::string, KeyRef> m_keyRefs;   // these are stored during parsing, then processed during post processing
         
 
     private:

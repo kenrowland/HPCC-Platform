@@ -57,9 +57,9 @@ class CfgValue
         bool hasModifiers() const { return m_modifiers.size() != 0; }
         void setKeyedValue(bool isKey) { m_isKeyedValue = isKey; }
         bool isKeyedValue() const { return m_isKeyedValue;  }
-        void setKeyRef(const std::shared_ptr<CfgValue> &pValue) { m_pKeyRefCfgValue = pValue; }
-        bool hasKeyReference() const { return !m_pKeyRefCfgValue.expired(); }
-        std::shared_ptr<CfgValue> getKeyRef() const { return m_pKeyRefCfgValue.lock();  }  //todo: should make sure weak pointer is valid and throw if not
+        void setKeyRef(const std::shared_ptr<CfgValue> &pValue) { m_pKeyRefCfgValues.push_back(pValue); }
+        bool hasKeyReference() const { return !m_pKeyRefCfgValues.empty(); }
+        std::vector<std::weak_ptr<CfgValue>> getKeyRefs() const { return m_pKeyRefCfgValues;  }  //todo: should make sure weak pointer is valid and throw if not
         bool isDefined() const { return m_isDefined;  }
         void resetEnvironment();
         void setMirrorFromPath(const std::string &path) { m_mirrorFromPath = path;  }
@@ -91,7 +91,7 @@ class CfgValue
         std::string m_default;
         std::string m_tooltip;
         std::vector<std::string> m_modifiers;
-        std::weak_ptr<CfgValue> m_pKeyRefCfgValue;    // this value serves as the key from which values are valid
+        std::vector<std::weak_ptr<CfgValue>> m_pKeyRefCfgValues;    // this value serves as the key from which values are valid
 };
 
 #endif // _CONFIG2_VALUE_HPP_

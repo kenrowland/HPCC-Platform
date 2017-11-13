@@ -23,7 +23,8 @@
 
 
 // static class variables
-std::map<std::string, std::shared_ptr<CfgValue>> ConfigItem::m_keyDefs;
+std::map<std::string, std::vector<std::shared_ptr<CfgValue>>> ConfigItem::m_keyDefs;
+//std::map<std::string, ConfigItem::KeyRef> ConfigItem::m_keyRefs;
 
 
 ConfigItem::ConfigItem(const std::string &name, const std::string &className, const std::shared_ptr<ConfigItem> &pParent) :
@@ -163,6 +164,13 @@ void ConfigItem::insertConfigType(const std::shared_ptr<ConfigItem> pTypeItem)
         std::shared_ptr<CfgValue> pNewItemCfgValue = std::make_shared<CfgValue>(*(pTypeItem->getItemCfgValue()));
         setItemCfgValue(pNewItemCfgValue);
     }
+
+    //
+    // KeyRefs
+    for (auto refIt = pTypeItem->m_keyRefs.begin(); refIt != pTypeItem->m_keyRefs.end(); ++refIt)
+    {
+        m_keyRefs.insert({ refIt->first, refIt->second });
+    }
 }
 
 
@@ -199,10 +207,11 @@ std::shared_ptr<CfgValue> ConfigItem::getAttribute(const std::string &name) cons
 }
 
 
-void ConfigItem::addKey(const std::string &keyName, const std::string &elementPath, const std::string &attributeName)
+void ConfigItem::addKey(const std::string &keyName, const std::string &elementPath, const std::string &attributeName, bool duplicateOk)
 {
     auto it = m_keyDefs.find(keyName);
-    if (it == m_keyDefs.end())
+    bool keyDefExists = it != m_keyDefs.end();
+    if (!keyDefExists || duplicateOk)
     {
         //std::shared_ptr<ConfigItem> pCfgItem = getChild(elementName);  // todo: validate pCfgItem found
         std::string cfgValuePath = ((elementPath != ".") ? elementPath : "") + "@" + attributeName;
@@ -210,10 +219,32 @@ void ConfigItem::addKey(const std::string &keyName, const std::string &elementPa
         findCfgValues(cfgValuePath, cfgValues); 
         if (!cfgValues.empty())
         {
+            //
+            // For each attribute, if it does not already exist in the list of attributes making up this
+            // key value, add it.
             for (auto attrIt = cfgValues.begin(); attrIt != cfgValues.end(); ++attrIt)
             {
                 (*attrIt)->setKeyedValue(true);
-                m_keyDefs.insert({ keyName, *attrIt });  // save the keydef attribute 
+
+                if (!keyDefExists)
+                {
+                    std::vector<std::shared_ptr<CfgValue>> values;
+                    values.push_back(*attrIt);
+                    it = m_keyDefs.insert({ keyName, values }).first;  // so the else condition will work
+                    keyDefExists = true;  // Now, it does exist
+                    //it = m_keyDefs.find(keyName);  
+                }
+                else
+                {
+                    std::vector<std::shared_ptr<CfgValue>> &values = it->second;
+                    bool found = false;
+                    for (auto cfgIt = values.begin(); cfgIt != values.end() && !found; ++cfgIt)
+                    {
+                        found = *cfgIt == *attrIt;
+                    }
+                    if (!found)
+                        values.push_back(*attrIt);
+                }
             }
         }
         else
@@ -230,28 +261,42 @@ void ConfigItem::addKey(const std::string &keyName, const std::string &elementPa
 
 void ConfigItem::addKeyRef(const std::string &keyName, const std::string &elementPath, const std::string &attributeName)
 {
-    auto keyIt = m_keyDefs.find(keyName);
-    if (keyIt != m_keyDefs.end())
+    m_keyRefs.insert({ keyName, KeyRef(keyName, elementPath, attributeName) });   // these are processed later
+}
+
+
+
+void ConfigItem::processKeyRefs()
+{
+    for (auto keyRefIt = m_keyRefs.begin(); keyRefIt != m_keyRefs.end(); ++keyRefIt)
     {
-        std::shared_ptr<CfgValue> pKeyRefAttribute = keyIt->second;     // this is the reference attribute from which attributeName must be a member
-        std::string cfgValuePath = ((elementPath != ".") ? elementPath : "") + "@" + attributeName;
-        std::vector<std::shared_ptr<CfgValue>> cfgValues;
-        findCfgValues(cfgValuePath, cfgValues);
-        if (!cfgValues.empty())
+        
+        auto keyIt = m_keyDefs.find(keyRefIt->second.m_keyName);
+        if (keyIt != m_keyDefs.end())
         {
-            for (auto attrIt = cfgValues.begin(); attrIt != cfgValues.end(); ++attrIt)
+            for (auto cfgIt = keyIt->second.begin(); cfgIt != keyIt->second.end(); ++cfgIt)
             {
-                (*attrIt)->setKeyRef(pKeyRefAttribute);
+                std::shared_ptr<CfgValue> pKeyRefAttribute = *cfgIt;     // this is the reference attribute from which attributeName must be a member
+                std::string cfgValuePath = ((keyRefIt->second.m_elementPath != ".") ? keyRefIt->second.m_elementPath : "") + "@" + keyRefIt->second.m_attributeName;
+                std::vector<std::shared_ptr<CfgValue>> cfgValues;
+                findCfgValues(cfgValuePath, cfgValues);
+                if (!cfgValues.empty())
+                {
+                    for (auto attrIt = cfgValues.begin(); attrIt != cfgValues.end(); ++attrIt)
+                    {
+                        (*attrIt)->setKeyRef(pKeyRefAttribute);
+                    }
+                }
+                else
+                {
+                    throw(ParseException("Attribute " + (keyRefIt->second.m_attributeName + " not found when adding keyRef for key " + (keyRefIt->second.m_keyName))));
+                }
             }
         }
         else
         {
-            throw(ParseException("Attribute " + attributeName + " not found when adding keyRef for key " + keyName));
+            throw(ParseException("Keyref to key '" + (keyRefIt->second.m_keyName + "' was not found")));
         }
-    }
-    else
-    {
-        throw(ParseException("Keyref to key '" + keyName + "' was not found"));
     }
 }
 
@@ -362,6 +407,13 @@ void ConfigItem::findCfgValues(const std::string &path, std::vector<std::shared_
 
 void ConfigItem::postProcessConfig()
 {
+    //
+    // If we are the root, process the keyRefs
+    //if (m_pParent.expired())
+    //{
+        processKeyRefs();
+    //}
+
     //
     // Post process the attributes
     for (auto it = m_attributes.begin(); it != m_attributes.end(); ++it)

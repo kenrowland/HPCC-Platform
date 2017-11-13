@@ -44,16 +44,6 @@
             </xs:sequence>
           </xs:complexType>
           
-          <xs:key name="espservice_name_key">
-            <xs:selector xpath="EspService" />
-            <xs:field xpath="@name" />
-          </xs:key> 
-          
-          <xs:keyref name="esp_servicename_keyref" refer="espservice_name_key">
-            <xs:selector xpath="EspProcess" />
-            <xs:field xpath="@name" />
-          </xs:keyref>
-          
         </xs:element>
       </xs:sequence>
     </xs:complexType>

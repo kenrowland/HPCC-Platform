@@ -70,28 +70,19 @@
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:attribute>
-                            <xs:attribute name="resourcesBasedn" type="xs:string" use="optional" hpcc:displayName="" hpcc:tooltip="Base location for resources (used with ldap security)">
-                            <xs:attribute name="service" use="required" hpcc:displayName="Service" hpcc:selectkeyref=""/>
-								<xs:simpleType name="selectList">
-									<xs:restriction base="xs:string">
-										<xs:enumeration value="" hpcc:enumerationType="keyref" hpcc:keyref="espservice_name_key" hpcc:unique="false">
-									</xs:restriction>
-								</xs:simpleType>
-							</xs:attribute>
+                            <xs:attribute name="resourcesBasedn" type="xs:string" use="optional" hpcc:displayName="" hpcc:tooltip="Base location for resources (used with ldap security)"/>
+                            <xs:attribute name="service" type="xs:string" use="required" hpcc:displayName="Service"/>
                             <xs:attribute name="type" type="xs:string" use="optional" hpcc:displayName="Security Manager Plugin" hpcc:tooltip="The Security Manager to be used by the Esp Service"/>
                             <xs:attribute name="workunitsBasedn" type="xs:string" use="optional" default="ou=workunits,ou=ecl" hpcc:displayName="WorkUnits BaseDn" hpcc:tooltip="Base location for workunit resources (used with ldap security)" hpcc:requiredIf="xpath,xpath..."/>
                             <xs:attribute name="wsdlServiceAddress" type="xs:string" use="optional"hpcc:displayName="wsdlServiceAddress" hpcc:tooltip="Overrides the address used by client applications to connect to the service"/>
                             
-                            
-                             
                             <xs:key name="esp_custombindingparameter_key">
                                 <xs:selector xpath="CustomBindingParameter" />
                                 <xs:field xpath="@key" />
                             </xs:key>
                              
                         </xs:element>
-                        
-                        
+                          
                         <xs:element name="Authentication" hpcc:docid="ESP.t4" hpcc:displayName="Authentication">
                             <xs:complexType>
                                 <xs:attribute name="method" use="required" default="none" hpcc:displayName="Method" hpcc:tooltip="The protocol to use for authenticating the service">
@@ -192,6 +183,16 @@
                     <xs:attribute name="memCachedOptionString" type="xs:string" use="optional" hpcc:displayName="memcached Option String" hpcc:tooltip="Option string used by ESP memcached client" />
                     
                 </xs:complexType>
+                
+                <xs:key name="espprocess_name_key">
+                    <xs:selector xpath="." />
+                    <xs:field xpath="@name" />
+                </xs:key>
+                
+                <xs:keyref name="esp_servicename_keyref" refer="espservice_name_key">
+                    <xs:selector xpath="EspBinding" />
+                    <xs:field xpath="@service" />
+                </xs:keyref>
                 
                 <xs:keyref name="espprocess_Instance_keyref" refer="computerNameKey">
                     <xs:selector xpath="Instance"/>

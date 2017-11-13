@@ -101,7 +101,8 @@ void XSDConfigParser::parseXSD(const std::string &filename)
     }
     catch (const std::exception &e)
     {
-        throw(ParseException("Input configuration file is not valid: " + *e.what()));
+        std::string xmlError = e.what();
+        throw(ParseException("Input configuration file is not valid: " + xmlError));
     }
 
     try
@@ -501,6 +502,7 @@ std::shared_ptr<CfgValue> XSDConfigParser::getCfgValue(const pt::ptree &attr)
 void XSDConfigParser::parseKey(const pt::ptree &keyTree)
 {
     std::string keyName = getXSDAttributeValue(keyTree, "<xmlattr>.name");
+    bool duplicateOk = keyTree.get("<xmlattr>.hpcc:allowDuplicate", "false") == "true";
     std::string elementName = getXSDAttributeValue(keyTree, "xs:selector.<xmlattr>.xpath", false, "");
     std::string attrName = getXSDAttributeValue(keyTree, "xs:field.<xmlattr>.xpath", false, "");
     std::string attributeName;
@@ -514,7 +516,7 @@ void XSDConfigParser::parseKey(const pt::ptree &keyTree)
         attributeName = attrName;
     }
 
-    m_pConfig->addKey(keyName, elementName, attributeName);
+    m_pConfig->addKey(keyName, elementName, attributeName, duplicateOk);
 }
 
 

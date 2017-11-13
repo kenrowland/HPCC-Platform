@@ -40,6 +40,11 @@
                
                 </xs:complexType>
                 
+                <xs:key name="espservice_name_key" hpcc:allowDuplicate="true">
+                    <xs:selector xpath="." />
+                    <xs:field xpath="@name" />
+                </xs:key> 
+                
  			</xs:element>
         </xs:sequence>
     </xs:complexType>

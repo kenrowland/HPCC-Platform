@@ -103,11 +103,14 @@ bool EnvValue::isValueValid(const std::string &value) const
         else if (m_pCfgValue->hasKeyReference())
         {
             bool found = false;
-            std::shared_ptr<CfgValue> pRefCfgValue = m_pCfgValue->getKeyRef();
-            std::vector<std::string> allValues = pRefCfgValue->getEnvValues();
-            for (auto it = allValues.begin(); it != allValues.end() && !found; ++it)
-                found = *it == value;
-
+            std::vector<std::weak_ptr<CfgValue>> refCfgValues = m_pCfgValue->getKeyRefs();
+            for (auto refCfgValueIt = refCfgValues.begin(); refCfgValueIt != refCfgValues.end() && !found; ++refCfgValueIt)
+            {
+                std::shared_ptr<CfgValue> pRefCfgValue = (*refCfgValueIt).lock();
+                std::vector<std::string> allValues = pRefCfgValue->getEnvValues();
+                for (auto it = allValues.begin(); it != allValues.end() && !found; ++it)
+                    found = *it == value;
+            }
             rc = found;
         }
         else
