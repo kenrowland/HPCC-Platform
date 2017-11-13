@@ -45,6 +45,7 @@ class EnvValue
 		bool wasForced() const { return m_forcedSet; }
 		bool isValueValid(const std::string &value) const;
         void validate(Status &status, const std::string &myId) const;
+        std::vector<std::string> getAllValues() const;
 	
 
 	private:

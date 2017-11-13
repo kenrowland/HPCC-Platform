@@ -58,7 +58,7 @@
                          
                             </xs:complexType>
 
-                            <xs:attribute name="name" type="xs:string" use="required" hpcc:displayName="Name" hpcc:autoName="" />
+                            <xs:attribute name="name" type="xs:string" use="required" hpcc:displayName="Binding Name" hpcc:autoName="" />
                             <xs:attribute name="defaultServiceVersion" type="version" use="optional" hpcc:displayName="Default Service Version" hpcc:tooltip="The default version for WSDL, XSD and the ESP form"/>
                             <xs:attribute name="defaultForPort" type="xs:boolean" use="required" default="true" hpcc:displayName="Default for port" hpcc:tooltip="This binding is determines root access"/>
                             <xs:attribute name="port" type="xs:nonNegativeInteger" use="required" hpcc:displayName="Port" hpcc:tooltip="Port to which the service is bound"/>
@@ -70,8 +70,14 @@
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:attribute>
-                            <xs:attribute name="resourcesBasedn" type="xs:string" use="optional" hpcc:displayName="" hpcc:tooltip="Base location for resources (used with ldap security)"/>
-                            <xs:attribute name="service" type="xs:string" use="required" hpcc:displayName="Service" hpcc:firsttoselect=""/>
+                            <xs:attribute name="resourcesBasedn" type="xs:string" use="optional" hpcc:displayName="" hpcc:tooltip="Base location for resources (used with ldap security)">
+                            <xs:attribute name="service" use="required" hpcc:displayName="Service" hpcc:selectkeyref=""/>
+								<xs:simpleType name="selectList">
+									<xs:restriction base="xs:string">
+										<xs:enumeration value="" hpcc:enumerationType="keyref" hpcc:keyref="espservice_name_key" hpcc:unique="false">
+									</xs:restriction>
+								</xs:simpleType>
+							</xs:attribute>
                             <xs:attribute name="type" type="xs:string" use="optional" hpcc:displayName="Security Manager Plugin" hpcc:tooltip="The Security Manager to be used by the Esp Service"/>
                             <xs:attribute name="workunitsBasedn" type="xs:string" use="optional" default="ou=workunits,ou=ecl" hpcc:displayName="WorkUnits BaseDn" hpcc:tooltip="Base location for workunit resources (used with ldap security)" hpcc:requiredIf="xpath,xpath..."/>
                             <xs:attribute name="wsdlServiceAddress" type="xs:string" use="optional"hpcc:displayName="wsdlServiceAddress" hpcc:tooltip="Overrides the address used by client applications to connect to the service"/>

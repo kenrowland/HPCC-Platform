@@ -16,6 +16,7 @@
 ############################################################################## */
 
 #include "CfgStringLimits.hpp"
+#include "EnvValue.hpp"
 
 std::string CfgStringLimits::getString() const
 {
@@ -42,4 +43,17 @@ std::string CfgStringLimits::getString() const
     }
 
     return limitStr;
+}
+
+
+std::vector<AllowedValue> CfgStringLimits::getEnumeratedKeyValues(const std::shared_ptr<EnvValue> &pEnvValue) const
+{
+    std::vector<AllowedValue> allowedValues;
+    std::vector<std::string> allValues = pEnvValue->getAllValues();
+
+    for (auto it = allValues.begin(); it != allValues.end(); ++it)
+    {
+        allowedValues.push_back(AllowedValue(*it));
+    }
+    return allowedValues;
 }

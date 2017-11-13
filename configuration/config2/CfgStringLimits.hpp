@@ -35,6 +35,10 @@ class CfgStringLimits : public CfgLimits
 
     protected:
 
+        virtual std::vector<AllowedValue> getEnumeratedKeyValues(const std::shared_ptr<EnvValue> &pEnvValue) const;
+
+    protected:
+
         bool m_removeWhiteSpace;
 
 };

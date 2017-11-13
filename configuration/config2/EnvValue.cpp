@@ -70,6 +70,13 @@ bool EnvValue::checkCurrentValue()
 }
 
 
+std::vector<std::string> EnvValue::getAllValues() const
+{
+    std::shared_ptr<EnvironmentNode> pEnvNode = m_pMyEnvNode.lock();
+    return pEnvNode->getAllFieldValues(m_pCfgValue->getName());
+}
+
+
 bool EnvValue::isValueValid(const std::string &value) const
 {
     bool rc = false;
@@ -84,7 +91,7 @@ bool EnvValue::isValueValid(const std::string &value) const
         {
             bool found = false;
             std::shared_ptr<EnvironmentNode> pEnvNode = m_pMyEnvNode.lock();
-            std::vector<std::string> allValues = pEnvNode->getAllFieldValues(m_pCfgValue->getName());
+            std::vector<std::string> allValues = getAllValues();
             for (auto it = allValues.begin(); it != allValues.end() && !found; ++it)
                 found = *it == value;
 

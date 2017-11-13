@@ -78,7 +78,7 @@ class ConfigItem : public std::enable_shared_from_this<ConfigItem>
         virtual void setItemCfgValue(const std::shared_ptr<CfgValue> &pValue) { m_pItemCfgValue = pValue; }
         virtual std::shared_ptr<CfgValue> getItemCfgValue() const { return m_pItemCfgValue; }
         virtual bool isItemValueDefined() { return m_pItemCfgValue != nullptr; }
-        std::shared_ptr<CfgValue> findCfgValue(const std::string &path);
+        void findCfgValues(const std::string &path, std::vector<std::shared_ptr<CfgValue>> &cfgValues);
 
         virtual void addAttribute(const std::shared_ptr<CfgValue> &pCfgValue);
         virtual void addAttribute(const std::vector<std::shared_ptr<CfgValue>> &attributes);

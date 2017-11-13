@@ -206,11 +206,15 @@ void ConfigItem::addKey(const std::string &keyName, const std::string &elementPa
     {
         //std::shared_ptr<ConfigItem> pCfgItem = getChild(elementName);  // todo: validate pCfgItem found
         std::string cfgValuePath = ((elementPath != ".") ? elementPath : "") + "@" + attributeName;
-        std::shared_ptr<CfgValue> pAttribute = findCfgValue(cfgValuePath);  //pCfgItem->getAttribute(attributeName);
-        if (pAttribute)
+        std::vector<std::shared_ptr<CfgValue>> cfgValues;
+        findCfgValues(cfgValuePath, cfgValues); 
+        if (!cfgValues.empty())
         {
-            pAttribute->setKeyedValue(true);
-            m_keyDefs.insert({ keyName, pAttribute });  // save the keydef attribute 
+            for (auto attrIt = cfgValues.begin(); attrIt != cfgValues.end(); ++attrIt)
+            {
+                (*attrIt)->setKeyedValue(true);
+                m_keyDefs.insert({ keyName, *attrIt });  // save the keydef attribute 
+            }
         }
         else
         {
@@ -230,11 +234,15 @@ void ConfigItem::addKeyRef(const std::string &keyName, const std::string &elemen
     if (keyIt != m_keyDefs.end())
     {
         std::shared_ptr<CfgValue> pKeyRefAttribute = keyIt->second;     // this is the reference attribute from which attributeName must be a member
-        std::string cfgValuePath = elementPath + "@" + attributeName;
-        std::shared_ptr<CfgValue> pAttribute = findCfgValue(cfgValuePath);
-        if (pAttribute)
+        std::string cfgValuePath = ((elementPath != ".") ? elementPath : "") + "@" + attributeName;
+        std::vector<std::shared_ptr<CfgValue>> cfgValues;
+        findCfgValues(cfgValuePath, cfgValues);
+        if (!cfgValues.empty())
         {
-            pAttribute->setKeyRef(pKeyRefAttribute);
+            for (auto attrIt = cfgValues.begin(); attrIt != cfgValues.end(); ++attrIt)
+            {
+                (*attrIt)->setKeyRef(pKeyRefAttribute);
+            }
         }
         else
         {
@@ -296,7 +304,7 @@ void ConfigItem::resetEnvironment()
 
 
 
-std::shared_ptr<CfgValue> ConfigItem::findCfgValue(const std::string &path)
+void ConfigItem::findCfgValues(const std::string &path, std::vector<std::shared_ptr<CfgValue>> &cfgValues)
 {
     bool rootPath = path[0] == '/';
     //
@@ -306,7 +314,7 @@ std::shared_ptr<CfgValue> ConfigItem::findCfgValue(const std::string &path)
         std::shared_ptr<ConfigItem> pParent = m_pParent.lock();
         if (pParent)
         {
-            return pParent->findCfgValue(path);
+            return pParent->findCfgValues(path, cfgValues);
         }
     }
 
@@ -320,7 +328,7 @@ std::shared_ptr<CfgValue> ConfigItem::findCfgValue(const std::string &path)
         {
             if (m_name == elem)
             {
-                return findCfgValue(path.substr(end + 1));
+                return findCfgValues(path.substr(end + 1), cfgValues);
             }
             else
             {
@@ -331,33 +339,24 @@ std::shared_ptr<CfgValue> ConfigItem::findCfgValue(const std::string &path)
         if (path[0] == '@')
         {
             std::string attrName = path.substr(1);
-            auto attrIt = m_attributes.find(attrName);
-            if (attrIt != m_attributes.end())
+            auto rangeIt = m_attributes.equal_range(attrName);
+            for (auto it = rangeIt.first; it != rangeIt.second; ++it)
             {
-                return attrIt->second;
-            }
-            else
-            {
-                // todo: throw
+                cfgValues.push_back(it->second);
             }
         }
 
         else
         {
-            auto cfgChild = m_children.find(elem);
-            if (cfgChild != m_children.end())
+            auto rangeIt = m_children.equal_range(elem);
+            for (auto it = rangeIt.first; it != rangeIt.second; ++it)
             {
-                return cfgChild->second->findCfgValue(path.substr(end + ((path[end]=='/') ? 1 : 0)));
-            }
-            else
-            {
-                // todo: throw
+                return it->second->findCfgValues(path.substr(end + ((path[end] == '/') ? 1 : 0)), cfgValues);
             }
         }
-        
     }
 
-    return std::shared_ptr<CfgValue>(); 
+    return;
 }
 
 
@@ -372,14 +371,22 @@ void ConfigItem::postProcessConfig()
         // it is replicated to us.
         if (it->second->isMirroredValue())
         {
-            std::shared_ptr<CfgValue> pSrcCfgValue = findCfgValue(it->second->getMirrorFromPath());
-            if (pSrcCfgValue)
+            std::vector<std::shared_ptr<CfgValue>> cfgValues;
+            findCfgValues(it->second->getMirrorFromPath(), cfgValues);
+            if (!cfgValues.empty() && cfgValues.size() == 1)
             {
-                pSrcCfgValue->addMirroredCfgValue(it->second);
+                if (cfgValues.size() == 1)
+                {
+                    it->second->addMirroredCfgValue(cfgValues[0]);
+                }
+                else
+                {
+                    throw(ParseException("Multiple sources found for mirror from path for attribute " + it->second->getName() + " (path=" + it->second->getMirrorFromPath()));
+                }
             }
             else
             {
-                // todo: throw a not found exception for the mirror source
+                throw(ParseException("Mirrored from source not found for attribute " + it->second->getName() + " path=" + it->second->getMirrorFromPath()));
             }
         }
     }

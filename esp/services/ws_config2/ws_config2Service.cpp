@@ -73,6 +73,13 @@ bool Cws_config2Ex::ongetNode(IEspContext &context, IEspGetNodeRequest &req, IEs
                 //excludeList.append("username");
                 pAttribute->updateType().updateLimits().setDisallowList(excludeList);
 
+                //
+                // when processing keyref not in a component, or anywhere really, use the xpath and attribute to find all
+                // matches. to each add the keyref to the named attribute.
+                // Then, isEnumerated, probably passing either the envionment node (pNode) or the attribute (pAttr), needs to
+                // look and see if there is a keyref. If so, it is an enumerated list, use the attribute to get the list
+                // of valid values (see the envValue validation method)
+
                 if (pType->isEnumerated())
                 {
                     IArrayOf<IEspchoiceType> choices;

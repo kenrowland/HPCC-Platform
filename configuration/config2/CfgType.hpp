@@ -21,6 +21,7 @@
 #include <string>
 #include <memory>
 #include <map>
+#include <vector>
 #include "CfgLimits.hpp"
 
 
@@ -41,7 +42,8 @@ class CfgType
 		const std::string &getAutoValue() const { return m_autoValueType;  }  // todo: this is to be expanded to the supported types
 		void setAutoValueType(const std::string &valueType) { m_autoValueType = valueType;  }
         bool isEnumerated() const { return m_pLimits->isEnumerated(); }
-        const std::vector<AllowedValue> &getAllowedValues() const { return m_pLimits->getAllowedValues(); }
+        bool isUnique() const { return m_pLimits->isUnique(); }
+        const std::vector<AllowedValue> &getAllowedValues(const std::shared_ptr<EnvValue> &pEnvValue) const { return m_pLimits->getAllowedValues(pEnvValue); }
 		
 
     private:
