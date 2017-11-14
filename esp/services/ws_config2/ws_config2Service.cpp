@@ -80,10 +80,10 @@ bool Cws_config2Ex::ongetNode(IEspContext &context, IEspGetNodeRequest &req, IEs
                 // look and see if there is a keyref. If so, it is an enumerated list, use the attribute to get the list
                 // of valid values (see the envValue validation method)
 
-                if (pType->isEnumerated())
+                std::vector<AllowedValue> allowedValues = pCfgValue->getAllowedValues(pAttr.get());
+                if (!allowedValues.empty())
                 {
                     IArrayOf<IEspchoiceType> choices;
-                    const std::vector<AllowedValue> allowedValues = pType->getAllowedValues(pAttr);
                     for (auto valueIt=allowedValues.begin(); valueIt!=allowedValues.end(); ++valueIt)
                     {
                         Owned<IEspchoiceType> pChoice = createchoiceType();
