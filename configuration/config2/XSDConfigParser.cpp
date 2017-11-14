@@ -415,27 +415,7 @@ std::shared_ptr<CfgType> XSDConfigParser::getCfgType(const pt::ptree &typeTree, 
                         pLimits->addPattern(it->second.get("<xmlattr>.value", "0"));
                     else if (restrictionType == "xs:enumeration")
                     {
-                        std::string enumerationType = it->second.get("<xmlattr>.hpcc:enumerationType", "value");
-                        if (enumerationType == "value")
-                        {
-                            pLimits->addAllowedValue(it->second.get("<xmlattr>.value", "badbadbad"), it->second.get("<xmlattr>.hpcc:description", ""));
-                        }
-                        else 
-                        {
-                            if (enumerationType == "keyref")
-                            {
-                                std::string keyref = it->second.get("<xmlattr>.hpcc:keyref", "");
-                                if (keyref == "")
-                                    throw(ParseException("Missing keyref for enumerated type " + typeName));
-                                pLimits->setEnumerationKey(keyref);
-
-                                bool unique = it->second.get("<xmlattr>.hpcc:unique", "false") == "true";
-                                pLimits->setUniqueEnumeration(unique);
-                            }
-                        }
-
-                        
-                        
+                        pLimits->addAllowedValue(it->second.get("<xmlattr>.value", "badbadbad"), it->second.get("<xmlattr>.hpcc:description", ""));
                     }
                     else if (restrictionType.find("xs:") != std::string::npos)
                     {

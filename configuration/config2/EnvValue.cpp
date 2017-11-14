@@ -79,46 +79,7 @@ std::vector<std::string> EnvValue::getAllValues() const
 
 bool EnvValue::isValueValid(const std::string &value) const
 {
-    bool rc = false;
-    
-    //
-    // Check the value against the type
-    if (m_pCfgValue->isValueValid(value))
-    {
-        //
-        // Handle keyed value. If keyed, the value must be unique
-        if (m_pCfgValue->isKeyedValue())
-        {
-            bool found = false;
-            std::shared_ptr<EnvironmentNode> pEnvNode = m_pMyEnvNode.lock();
-            std::vector<std::string> allValues = getAllValues();
-            for (auto it = allValues.begin(); it != allValues.end() && !found; ++it)
-                found = *it == value;
-
-            rc = !found;
-        }
-
-        //
-        // key ref? key ref must be defined in the set of referenced attributes
-        else if (m_pCfgValue->hasKeyReference())
-        {
-            bool found = false;
-            std::vector<std::weak_ptr<CfgValue>> refCfgValues = m_pCfgValue->getKeyRefs();
-            for (auto refCfgValueIt = refCfgValues.begin(); refCfgValueIt != refCfgValues.end() && !found; ++refCfgValueIt)
-            {
-                std::shared_ptr<CfgValue> pRefCfgValue = (*refCfgValueIt).lock();
-                std::vector<std::string> allValues = pRefCfgValue->getEnvValues();
-                for (auto it = allValues.begin(); it != allValues.end() && !found; ++it)
-                    found = *it == value;
-            }
-            rc = found;
-        }
-        else
-        {
-            rc = true;
-        }
-    }
-    return rc;
+    return m_pCfgValue->isValueValid(value, this);
 }
 
 
@@ -132,6 +93,6 @@ void EnvValue::validate(Status &status, const std::string &myId) const
         status.addStatusMsg(statusMsg::warning, myId, m_name, "", "Current value was force set");
 
     // Will generate status based on current value and type
-    m_pCfgValue->validate(status, myId, m_value);
+    m_pCfgValue->validate(status, myId, this);
 }
 

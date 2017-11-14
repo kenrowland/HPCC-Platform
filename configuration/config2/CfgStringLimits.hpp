@@ -31,11 +31,8 @@ class CfgStringLimits : public CfgLimits
         int getMin() const override { return m_minLength; }
         int getMax() const override { return m_maxLength; }
         std::string getString() const override;
+        virtual bool isValueValid(const std::string &testValue) const;
 
-
-    protected:
-
-        virtual std::vector<AllowedValue> getEnumeratedKeyValues(const std::shared_ptr<EnvValue> &pEnvValue) const;
 
     protected:
 

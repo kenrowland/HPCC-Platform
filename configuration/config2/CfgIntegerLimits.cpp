@@ -15,10 +15,14 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ############################################################################## */
 
-#include "CfgLimits.hpp"
+#include "CfgIntegerLimits.hpp"
 
-std::vector<AllowedValue> CfgLimits::getAllowedValues() const 
-{ 
-    return m_allowedValues; 
+bool CfgIntegerLimits::isValueValid(const std::string &value)
+{
+    bool isValid = true;
+    int testValue = std::stoi(value);
+
+    isValid = testValue >= getMin() && testValue <= getMax();
+
+    return isValid;
 }
-

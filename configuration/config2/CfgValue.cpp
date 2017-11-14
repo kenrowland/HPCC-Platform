@@ -19,15 +19,44 @@
 #include "EnvValue.hpp"
 
 
-bool CfgValue::isValueValid(const std::string &newValue) const
+bool CfgValue::isValueValid(const std::string &value, const EnvValue *pEnvValue) const
 {
-    return m_pType->isValueValid(newValue);
+    bool isValid = true;   // assume valid
+
+    //
+    // Check the type
+    isValid = m_pType->isValueValid(value);
+
+    //
+    // Keyed ?, then value must NOT be in the current list.
+    if (isValid && isKeyedValue() && pEnvValue != nullptr)
+    {
+        bool found = false;
+        std::vector<std::string> allValues = pEnvValue->getAllValues();
+        for (auto it = allValues.begin(); it != allValues.end() && !found; ++it)
+            found = *it == value;
+
+        isValid = !found;
+    }
+
+    //
+    // Keyref ?, then the value must be from another set
+    if (isValid && hasKeyReference() && pEnvValue != nullptr)
+    {
+        bool found = false;
+        std::vector<std::string> allValues = getAllKeyRefValues(pEnvValue);
+        for (auto it = allValues.begin(); it != allValues.end() && !found; ++it)
+            found = *it == value;
+        isValid = found;  
+    }
+    return isValid;
 }
 
 
-void CfgValue::validate(Status &status, const std::string &id, const std::string &value) const
+void CfgValue::validate(Status &status, const std::string &id, const EnvValue *pEnvValue) const
 {
-
+    // get currentvalue from pEnvValue
+    // for keyed, make sure all values are unique
     // call pType with value to see if good
     // call pType->limits->toString(value) if bad to get message about whats bad
     // add to status
@@ -66,7 +95,7 @@ void CfgValue::setMirroredEnvValues(const std::string &oldValue, const std::stri
 }
 
 
-std::vector<std::string> CfgValue::getEnvValues() const
+std::vector<std::string> CfgValue::getAllEnvValues() const
 {
     std::vector<std::string> values;
     for (auto it = m_envValues.begin(); it != m_envValues.end(); ++it)
@@ -74,4 +103,40 @@ std::vector<std::string> CfgValue::getEnvValues() const
         values.push_back((*it).lock()->getValue());
     }
     return values;
+}
+
+
+std::vector<AllowedValue> CfgValue::getAllowedValues(const EnvValue *pEnvValue) const
+{
+    std::vector<AllowedValue> allowedValues;
+
+    //
+    // Either the type is enumerated, or there is a keyref.
+    if (m_pType->isEnumerated())
+    {
+        allowedValues = m_pType->getAllowedValues();
+    }
+    else if (hasKeyReference() && pEnvValue != nullptr)
+    {
+        std::vector<std::string> refValues = getAllKeyRefValues(pEnvValue);
+        for (auto it = refValues.begin(); it != refValues.end(); ++it)
+        {
+            allowedValues.push_back({ *it, "" });
+        }
+    }
+    return allowedValues;
+}
+
+
+std::vector<std::string> CfgValue::getAllKeyRefValues(const EnvValue *pEnvValue) const
+{
+    std::vector<std::string> keyRefValues;
+    std::vector<std::weak_ptr<CfgValue>> refCfgValues = getKeyRefs();
+    for (auto refCfgValueIt = refCfgValues.begin(); refCfgValueIt != refCfgValues.end(); ++refCfgValueIt)
+    {
+        std::shared_ptr<CfgValue> pRefCfgValue = (*refCfgValueIt).lock();
+        std::vector<std::string> allValues = pRefCfgValue->getAllEnvValues();
+        keyRefValues.insert(keyRefValues.end(), allValues.begin(), allValues.end());
+    }
+    return keyRefValues;
 }

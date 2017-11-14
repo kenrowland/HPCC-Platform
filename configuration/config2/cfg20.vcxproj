@@ -129,6 +129,7 @@
     <ClInclude Include="XSDValueSetParser.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="CfgIntegerLimits.cpp" />
     <ClCompile Include="CfgLimits.cpp" />
     <ClCompile Include="CfgStringLimits.cpp" />
     <ClCompile Include="CfgValue.cpp" />

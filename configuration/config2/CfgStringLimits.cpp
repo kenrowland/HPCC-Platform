@@ -46,14 +46,30 @@ std::string CfgStringLimits::getString() const
 }
 
 
-std::vector<AllowedValue> CfgStringLimits::getEnumeratedKeyValues(const std::shared_ptr<EnvValue> &pEnvValue) const
+bool CfgStringLimits::isValueValid(const std::string &testValue) const
 {
-    std::vector<AllowedValue> allowedValues;
-    std::vector<std::string> allValues = pEnvValue->getAllValues();
+    bool isValid = true;
 
-    for (auto it = allValues.begin(); it != allValues.end(); ++it)
+    std::size_t len = testValue.length();
+
+    isValid = len >= getMin() && len <= getMax();
+
+    if (isValid)
     {
-        allowedValues.push_back(AllowedValue(*it));
+        if (!m_allowedValues.empty())
+        {
+            bool found = false;
+            for (auto valueIt = m_allowedValues.begin(); valueIt != m_allowedValues.end() && !found; ++valueIt)
+            {
+                found = (*valueIt).m_value == testValue;
+            }
+            isValid = found;
+            // lastErrorString - not in enumerated list?
+        }
     }
-    return allowedValues;
+
+    // should do a pattern test here
+
+    return isValid;
+
 }

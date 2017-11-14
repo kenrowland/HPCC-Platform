@@ -42,8 +42,7 @@ class CfgLimits
             m_maxInclusive(INT_MAX),
             m_minExclusive(INT_MIN),
             m_maxExclusive(INT_MAX),
-            m_length(0),
-            m_unique(false) { }
+            m_length(0) { }
         virtual ~CfgLimits() { }
         void setMinInclusive(int v)  { m_minInclusive = v; } 
         void setMinExclusive(int v)  { m_minExclusive = v; } 
@@ -54,21 +53,12 @@ class CfgLimits
         void setMaxLength(int v)     { m_maxLength    = v; }
         void addPattern(const std::string &pattern) { m_patterns.push_back(pattern); }
         void addAllowedValue(const std::string &value, const std::string &desc="") { m_allowedValues.push_back(AllowedValue(value, desc)); }
-        std::vector<AllowedValue> getAllowedValues(const std::shared_ptr<EnvValue> &pEnvValue) const;
-        bool isEnumerated() const { return !m_allowedValues.empty() || m_enumerationKey!=""; }
-        bool isUnique() const { return m_unique;  }
-        bool isValueValid(const std::string &testValue) { return true; }
-
-        virtual void setEnumerationKey(const std::string &keyName) { m_enumerationKey = keyName; }
-        virtual void setUniqueEnumeration(bool unique) { m_unique = unique;  }
+        std::vector<AllowedValue> getAllowedValues() const;
+        bool isEnumerated() const { return !m_allowedValues.empty();  }
+        virtual bool isValueValid(const std::string &testValue) { return true; }
 		virtual int getMin() const { return m_minInclusive; }
         virtual int getMax() const { return m_maxInclusive; }
         virtual std::string getString() const { return ""; }
-
-
-    protected:
-
-        virtual std::vector<AllowedValue> getEnumeratedKeyValues(const std::shared_ptr<EnvValue> &pEnvValue) const;
 
 
     protected:
@@ -82,8 +72,6 @@ class CfgLimits
         int m_maxLength;
         std::vector<std::string> m_patterns;
         std::vector<AllowedValue> m_allowedValues;
-        std::string m_enumerationKey;
-        bool m_unique;
 };
 
 

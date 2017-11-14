@@ -22,8 +22,6 @@
 #include "CfgType.hpp"
 #include "Status.hpp"
 
-class EnvValue;
-
 class CfgValue 
 {
     public:
@@ -35,7 +33,7 @@ class CfgValue
         void setType(const std::shared_ptr<CfgType> pType) { m_pType = pType; }
         const std::shared_ptr<CfgType> &getType() const { return m_pType; }
         const std::string &getName() const { return m_name; }
-        bool isValueValid(const std::string &newValue) const;
+        bool isValueValid(const std::string &newValue, const EnvValue *pEnvValue = nullptr) const;
         void setDisplayName(const std::string &displayName) { m_displayName = displayName; }
         const std::string &getDisplayName() const { return m_displayName; }
         void setRequired(bool reqd) { m_required = reqd; }
@@ -57,7 +55,7 @@ class CfgValue
         bool hasModifiers() const { return m_modifiers.size() != 0; }
         void setKeyedValue(bool isKey) { m_isKeyedValue = isKey; }
         bool isKeyedValue() const { return m_isKeyedValue;  }
-        void setKeyRef(const std::shared_ptr<CfgValue> &pValue) { m_pKeyRefCfgValues.push_back(pValue); }
+        void setKeyRef(const std::shared_ptr<CfgValue> &pValue) { m_pKeyRefCfgValues.push_back(pValue);  }
         bool hasKeyReference() const { return !m_pKeyRefCfgValues.empty(); }
         std::vector<std::weak_ptr<CfgValue>> getKeyRefs() const { return m_pKeyRefCfgValues;  }  //todo: should make sure weak pointer is valid and throw if not
         bool isDefined() const { return m_isDefined;  }
@@ -67,10 +65,17 @@ class CfgValue
         bool isMirroredValue() const { return m_mirrorFromPath.length() != 0; }
         void addMirroredCfgValue(const std::shared_ptr<CfgValue> &pVal) { m_mirrorToCfgValues.push_back(pVal); }
         void addEnvValue(const std::shared_ptr<EnvValue> &pEnvValue) { m_envValues.push_back(pEnvValue); }
-        std::vector<std::string> getEnvValues() const;
+        std::vector<std::string> getAllEnvValues() const;
         void mirrorValue(const std::string &oldValue, const std::string &newValue);
         void setMirroredEnvValues(const std::string &oldValue, const std::string &newValue);
-        void validate(Status &status, const std::string &id, const std::string &value) const;
+        //void validate(Status &status, const std::string &id, const std::string &value, const EnvValue *pEnvValue = nullptr) const;
+        void validate(Status &status, const std::string &id, const EnvValue *pEnvValue = nullptr) const;
+        std::vector<AllowedValue> getAllowedValues(const EnvValue *pEnvValue = nullptr) const;
+
+
+    protected:
+
+        std::vector<std::string> getAllKeyRefValues(const EnvValue *pEnvValue) const;
 
 
     protected:
