@@ -50,9 +50,22 @@ int main()
 
         // 158
         //auto pNode = envMgr.getNodeFromPath("158");
-        auto pNode = pEnvMgr->getEnvironmentNode("29");     // 29 is Hardware/Computer
+        auto pNode = pEnvMgr->getEnvironmentNode("74");     // 29 is Hardware/Computer
 
         auto x = pNode->getAllFieldValues("name");
+
+        auto attributes = pNode->getAttributes();
+        for (auto it = attributes.begin(); it != attributes.end(); ++it)
+        {
+            if ((*it)->getName() == "service")
+            {
+                std::shared_ptr<EnvValue> pEnvValue = *it;
+                const std::shared_ptr<CfgValue> &pCfgValue = pEnvValue->getCfgValue();
+                auto values = pCfgValue->getAllowedValues(pEnvValue.get());
+                int i = 3;
+            }
+        }
+
 
         // keyref needs to look local first, then search the config tree, but field is ALWAYS local
         // Used during validation. 

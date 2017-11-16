@@ -337,6 +337,7 @@ void XSDConfigParser::parseElement(const pt::ptree &elemTree)
                 if (pConfigType != nullptr)
                 {
                     pConfigElement->insertConfigType(pConfigType);
+ 
                     if (pConfigType->getClassName() == "component")
                     {
                         pConfigElement->setName(pConfigType->getName());
@@ -496,7 +497,7 @@ void XSDConfigParser::parseKey(const pt::ptree &keyTree)
         attributeName = attrName;
     }
 
-    m_pConfig->addKey(keyName, elementName, attributeName, duplicateOk);
+    m_pConfig->setAttributeValueUnique(keyName, elementName, attributeName, duplicateOk);
 }
 
 
@@ -516,5 +517,5 @@ void XSDConfigParser::parseKeyRef(const pt::ptree &keyTree)
         attributeName = attrName;
     }
 
-    m_pConfig->addKeyRef(keyName, elementName, attributeName);
+    m_pConfig->addAttributeUniqueSetDependency(keyName, elementName, attributeName);
 }

@@ -49,6 +49,7 @@ bool EnvironmentMgr::loadConfig(const std::vector<std::string> &cfgParms)  // to
     rc = m_pConfigParser->parseEnvironmentConfig(cfgParms, status);
     if (rc)
     {
+        m_pConfig->processUniqueAttributeValueSets();  // really a pre-post processing requirement
         m_pConfig->postProcessConfig();
     }
     return rc;
