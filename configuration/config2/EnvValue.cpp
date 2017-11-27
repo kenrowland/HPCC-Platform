@@ -86,7 +86,7 @@ bool EnvValue::isValueValid(const std::string &value) const
 void EnvValue::validate(Status &status, const std::string &myId) const
 {
 
-    if (!m_pCfgValue->isDefined())
+    if (!m_pCfgValue->isConfigured())
         status.addStatusMsg(statusMsg::warning, myId, m_name, "", "No configuration exists for this value");
 
     if (m_forcedSet)

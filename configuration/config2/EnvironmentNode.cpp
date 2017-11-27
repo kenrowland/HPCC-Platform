@@ -124,7 +124,7 @@ void EnvironmentNode::setAttributeValue(const std::string &attrName, const std::
         std::shared_ptr<CfgValue> pCfgValue = m_pConfigItem->getAttribute(attrName);
         pEnvValue = std::make_shared<EnvValue>(shared_from_this(), pCfgValue, attrName);
         addAttribute(attrName, pEnvValue);
-        if (!pCfgValue->isDefined())
+        if (!pCfgValue->isConfigured())
         {
             status.addStatusMsg(statusMsg::warning, getId(), attrName, "", "Undefined attribute did not exist in configuration, was created");
         }

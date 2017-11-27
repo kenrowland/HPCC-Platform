@@ -26,9 +26,10 @@ class CfgValue
 {
     public:
 
-        CfgValue(const std::string &name, bool isDefined=true) : 
+        CfgValue(const std::string &name, bool isConfigured =true) :
             m_name(name), m_displayName(name), m_required(false), m_readOnly(false), 
-            m_hidden(false), m_defaultSet(false), m_deprecated(false), m_isKeyedValue(false) { }
+            m_hidden(false), m_defaultSet(false), m_deprecated(false), m_isUnique(false),
+            m_isConfigured(isConfigured) { }
         virtual ~CfgValue() { }
         void setType(const std::shared_ptr<CfgType> pType) { m_pType = pType; }
         const std::shared_ptr<CfgType> &getType() const { return m_pType; }
@@ -53,12 +54,12 @@ class CfgValue
         void setModifiers(const std::vector<std::string> &list) { m_modifiers = list;  }
         const std::vector<std::string> &getModifiers() const { return m_modifiers; }
         bool hasModifiers() const { return m_modifiers.size() != 0; }
-        void setKeyedValue(bool isKey) { m_isKeyedValue = isKey; }
-        bool isKeyedValue() const { return m_isKeyedValue;  }
-        void setKeyRef(const std::shared_ptr<CfgValue> &pValue) { m_pKeyRefCfgValues.push_back(pValue);  }
-        bool hasKeyReference() const { return !m_pKeyRefCfgValues.empty(); }
-        std::vector<std::weak_ptr<CfgValue>> getKeyRefs() const { return m_pKeyRefCfgValues;  }  //todo: should make sure weak pointer is valid and throw if not
-        bool isDefined() const { return m_isDefined;  }
+        void setUniqueValue(bool isUnique) { m_isUnique = isUnique; }
+        bool isUniqueValue() const { return m_isUnique;  }
+        void setUniqueValueSetRef(const std::shared_ptr<CfgValue> &pValue) { m_pUniqueValueSetRefs.push_back(pValue);  }
+        bool isFromUniqueValueSet() const { return !m_pUniqueValueSetRefs.empty(); }
+        std::vector<std::weak_ptr<CfgValue>> getUniqueValueSetRefs() const { return m_pUniqueValueSetRefs;  }  
+        bool isConfigured() const { return m_isConfigured;  }
         void resetEnvironment();
         void setMirrorFromPath(const std::string &path) { m_mirrorFromPath = path;  }
         const std::string &getMirrorFromPath() const { return m_mirrorFromPath;  }
@@ -91,12 +92,12 @@ class CfgValue
         bool m_hidden;
         bool m_defaultSet;
         bool m_deprecated;
-        bool m_isKeyedValue;
-        bool m_isDefined;  // false indicates a value for which there is no defined configuration
+        bool m_isUnique;
+        bool m_isConfigured;  // false indicates a value for which there is no defined configuration
         std::string m_default;
         std::string m_tooltip;
         std::vector<std::string> m_modifiers;
-        std::vector<std::weak_ptr<CfgValue>> m_pKeyRefCfgValues;    // this value serves as the key from which values are valid
+        std::vector<std::weak_ptr<CfgValue>> m_pUniqueValueSetRefs;    // this value serves as the key from which values are valid
 };
 
 #endif // _CONFIG2_VALUE_HPP_

@@ -497,7 +497,7 @@ void XSDConfigParser::parseKey(const pt::ptree &keyTree)
         attributeName = attrName;
     }
 
-    m_pConfig->setAttributeValueUnique(keyName, elementName, attributeName, duplicateOk);
+    m_pConfig->addUniqueAttributeValueSetDefinition(keyName, elementName, attributeName, duplicateOk);
 }
 
 
@@ -517,5 +517,5 @@ void XSDConfigParser::parseKeyRef(const pt::ptree &keyTree)
         attributeName = attrName;
     }
 
-    m_pConfig->addAttributeUniqueSetDependency(keyName, elementName, attributeName);
+    m_pConfig->addReferenceToUniqueAttributeValueSet(keyName, elementName, attributeName);
 }

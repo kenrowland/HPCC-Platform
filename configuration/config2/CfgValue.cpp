@@ -29,7 +29,7 @@ bool CfgValue::isValueValid(const std::string &value, const EnvValue *pEnvValue)
 
     //
     // Keyed ?, then value must NOT be in the current list.
-    if (isValid && isKeyedValue() && pEnvValue != nullptr)
+    if (isValid && isUniqueValue() && pEnvValue != nullptr)
     {
         bool found = false;
         std::vector<std::string> allValues = pEnvValue->getAllValues();
@@ -41,7 +41,7 @@ bool CfgValue::isValueValid(const std::string &value, const EnvValue *pEnvValue)
 
     //
     // Keyref ?, then the value must be from another set
-    if (isValid && hasKeyReference() && pEnvValue != nullptr)
+    if (isValid && isFromUniqueValueSet() && pEnvValue != nullptr)
     {
         bool found = false;
         std::vector<std::string> allValues = getAllKeyRefValues(pEnvValue);
@@ -116,7 +116,7 @@ std::vector<AllowedValue> CfgValue::getAllowedValues(const EnvValue *pEnvValue) 
     {
         allowedValues = m_pType->getAllowedValues();
     }
-    else if (hasKeyReference() && pEnvValue != nullptr)
+    else if (isFromUniqueValueSet() && pEnvValue != nullptr)
     {
         std::vector<std::string> refValues = getAllKeyRefValues(pEnvValue);
         for (auto it = refValues.begin(); it != refValues.end(); ++it)
@@ -131,7 +131,7 @@ std::vector<AllowedValue> CfgValue::getAllowedValues(const EnvValue *pEnvValue) 
 std::vector<std::string> CfgValue::getAllKeyRefValues(const EnvValue *pEnvValue) const
 {
     std::vector<std::string> keyRefValues;
-    std::vector<std::weak_ptr<CfgValue>> refCfgValues = getKeyRefs();
+    std::vector<std::weak_ptr<CfgValue>> refCfgValues = getUniqueValueSetRefs();
     for (auto refCfgValueIt = refCfgValues.begin(); refCfgValueIt != refCfgValues.end(); ++refCfgValueIt)
     {
         std::shared_ptr<CfgValue> pRefCfgValue = (*refCfgValueIt).lock();

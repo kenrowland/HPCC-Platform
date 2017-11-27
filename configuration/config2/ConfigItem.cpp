@@ -23,7 +23,7 @@
 
 
 // static class variables
-std::map<std::string, std::vector<std::shared_ptr<CfgValue>>> ConfigItem::m_uniqueAttributeSets;
+std::map<std::string, std::vector<std::shared_ptr<CfgValue>>> ConfigItem::m_uniqueAttributeValueSets;
 //std::map<std::string, ConfigItem::KeyRef> ConfigItem::m_keyRefs;
 
 
@@ -37,10 +37,11 @@ ConfigItem::ConfigItem(const std::string &name, const std::string &className, co
 	m_version(-1) 
 {
 	//
-	// If this is a root node (no parent), then do some additional init so that default nodes
-	// throughout the configuration can present a set of objects, even for non configured elements
+	// If this is a root node (no parent), then do some additional init 
 	if (m_pParent.expired())
 	{
+        //
+        // Create a default type so that all values have a type
 		std::shared_ptr<CfgType> pDefaultType = std::make_shared<CfgType>("default");
 		std::shared_ptr<CfgLimits> pDefaultLimits = std::make_shared<CfgLimits>();
 		pDefaultType->setLimits(pDefaultLimits);
@@ -86,7 +87,7 @@ std::shared_ptr<CfgType> ConfigItem::getType(const std::string &typeName, bool t
 bool ConfigItem::addUniqueName(const std::string keyName)
 {
     auto result = m_keys.insert(keyName);
-    return result.second;
+    return result.second;  // true if keyName did not already exist
 }
 
 
@@ -132,10 +133,12 @@ std::shared_ptr<ConfigItem> ConfigItem::getConfigType(const std::string &name, b
 }
 
 
+//
+// Inserts a previously added configType to the config item
 void ConfigItem::insertConfigType(const std::shared_ptr<ConfigItem> pTypeItem)
 {
     //
-    // To insert a config type (most likely previously defined by a complexType name="" XSD definition
+    // To insert a config type (most likely previously defined by a complexType name="" XSD definition)
     // loop through each set of configurable pieces of the input type, make a copy of each, and add it to 
     // this element.
 
@@ -166,17 +169,17 @@ void ConfigItem::insertConfigType(const std::shared_ptr<ConfigItem> pTypeItem)
     }
 
     //
-    // Keys
+    // Unique attribute sets
     for (auto setIt = pTypeItem->m_uniqueAttributeValueSetDefs.begin(); setIt != pTypeItem->m_uniqueAttributeValueSetDefs.end(); ++setIt)
     {
         m_uniqueAttributeValueSetDefs.insert({ setIt->first, setIt->second });
     }
 
     //
-    // KeyRefs
-    for (auto it = pTypeItem->m_uniqueAttributeValueDependencies.begin(); it != pTypeItem->m_uniqueAttributeValueDependencies.end(); ++it)
+    // Unique attribute reference sets
+    for (auto it = pTypeItem->m_uniqueAttributeValueSetReferences.begin(); it != pTypeItem->m_uniqueAttributeValueSetReferences.end(); ++it)
     {
-        m_uniqueAttributeValueDependencies.insert({ it->first, it->second });
+        m_uniqueAttributeValueSetReferences.insert({ it->first, it->second });
     }
 }
 
@@ -214,25 +217,25 @@ std::shared_ptr<CfgValue> ConfigItem::getAttribute(const std::string &name) cons
 }
 
 
-void ConfigItem::setAttributeValueUnique(const std::string &setName, const std::string &elementPath, const std::string &attributeName, bool duplicateOk)
+void ConfigItem::addUniqueAttributeValueSetDefinition(const std::string &setName, const std::string &elementPath, const std::string &attributeName, bool duplicateOk)
 {
     m_uniqueAttributeValueSetDefs.insert({ setName, SetInfo(setName, elementPath, attributeName, duplicateOk) });   // these are processed later
 }
 
 
-void ConfigItem::addAttributeUniqueSetDependency(const std::string &keyName, const std::string &elementPath, const std::string &attributeName)
+void ConfigItem::addReferenceToUniqueAttributeValueSet(const std::string &setName, const std::string &elementPath, const std::string &attributeName)
 {
-    m_uniqueAttributeValueDependencies.insert({ keyName, SetInfo(keyName, elementPath, attributeName) });   // these are processed later
+    m_uniqueAttributeValueSetReferences.insert({ setName, SetInfo(setName, elementPath, attributeName) });   // these are processed later
 }
 
 
 
-void ConfigItem::processUniqueAttributeValueDependencies()
+void ConfigItem::processUniqueAttributeValueSetReferences()
 {
-    for (auto setRefIt = m_uniqueAttributeValueDependencies.begin(); setRefIt != m_uniqueAttributeValueDependencies.end(); ++setRefIt)
+    for (auto setRefIt = m_uniqueAttributeValueSetReferences.begin(); setRefIt != m_uniqueAttributeValueSetReferences.end(); ++setRefIt)
     {  
-        auto keyIt = m_uniqueAttributeSets.find(setRefIt->second.m_setName);
-        if (keyIt != m_uniqueAttributeSets.end())
+        auto keyIt = m_uniqueAttributeValueSets.find(setRefIt->second.m_setName);
+        if (keyIt != m_uniqueAttributeValueSets.end())
         {
             for (auto cfgIt = keyIt->second.begin(); cfgIt != keyIt->second.end(); ++cfgIt)
             {
@@ -244,7 +247,7 @@ void ConfigItem::processUniqueAttributeValueDependencies()
                 {
                     for (auto attrIt = cfgValues.begin(); attrIt != cfgValues.end(); ++attrIt)
                     {
-                        (*attrIt)->setKeyRef(pKeyRefAttribute);
+                        (*attrIt)->setUniqueValueSetRef(pKeyRefAttribute);
                     }
                 }
                 else
@@ -369,8 +372,8 @@ void ConfigItem::processUniqueAttributeValueSets()
 {
     for (auto setIt = m_uniqueAttributeValueSetDefs.begin(); setIt != m_uniqueAttributeValueSetDefs.end(); ++setIt)
     {
-        auto it = m_uniqueAttributeSets.find(setIt->first);
-        bool keyDefExists = it != m_uniqueAttributeSets.end();
+        auto it = m_uniqueAttributeValueSets.find(setIt->first);
+        bool keyDefExists = it != m_uniqueAttributeValueSets.end();
         if (!keyDefExists || setIt->second.m_duplicateOk)
         {
             //std::shared_ptr<ConfigItem> pCfgItem = getChild(elementName);  // todo: validate pCfgItem found
@@ -384,13 +387,13 @@ void ConfigItem::processUniqueAttributeValueSets()
                 // key value, add it.
                 for (auto attrIt = cfgValues.begin(); attrIt != cfgValues.end(); ++attrIt)
                 {
-                    (*attrIt)->setKeyedValue(true);
+                    (*attrIt)->setUniqueValue(true);
 
                     if (!keyDefExists)
                     {
                         std::vector<std::shared_ptr<CfgValue>> values;
                         values.push_back(*attrIt);
-                        it = m_uniqueAttributeSets.insert({ setIt->second.m_setName, values }).first;  // so the else condition will work
+                        it = m_uniqueAttributeValueSets.insert({ setIt->second.m_setName, values }).first;  // so the else condition will work
                         keyDefExists = true;  // Now, it does exist
                     }
                     else
@@ -430,7 +433,7 @@ void ConfigItem::processUniqueAttributeValueSets()
 void ConfigItem::postProcessConfig()
 {
 
-    processUniqueAttributeValueDependencies();
+    processUniqueAttributeValueSetReferences();
 
 
     //

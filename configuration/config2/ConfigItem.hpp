@@ -86,10 +86,10 @@ class ConfigItem : public std::enable_shared_from_this<ConfigItem>
         virtual const std::map<std::string, std::shared_ptr<CfgValue>> &getAttributes() const { return m_attributes;  }
 
         virtual bool addUniqueName(const std::string keyName);
-        virtual void setAttributeValueUnique(const std::string &setName, const std::string &elementPath, const std::string &attributeName, bool duplicateOk = false);
-        virtual void addAttributeUniqueSetDependency(const std::string &setName, const std::string &elementPath, const std::string &attributeName);
+        virtual void addUniqueAttributeValueSetDefinition(const std::string &setName, const std::string &elementPath, const std::string &attributeName, bool duplicateOk = false);
+        virtual void addReferenceToUniqueAttributeValueSet(const std::string &setName, const std::string &elementPath, const std::string &attributeName);
         virtual void processUniqueAttributeValueSets();
-        virtual void processUniqueAttributeValueDependencies();
+        virtual void processUniqueAttributeValueSetReferences();
 
         virtual void resetEnvironment(); 
 
@@ -118,7 +118,7 @@ class ConfigItem : public std::enable_shared_from_this<ConfigItem>
         int m_maxInstances;
         int m_version;
 
-        // This struct handles both key and keyref
+        // This struct handles both unique attribute sets and references to same
         struct SetInfo {
             SetInfo(const std::string &setName, const std::string &elementPath, const std::string &attributeName) :
                 m_setName(setName), m_elementPath(elementPath), m_attributeName(attributeName), m_duplicateOk(false) { }
@@ -130,12 +130,12 @@ class ConfigItem : public std::enable_shared_from_this<ConfigItem>
             bool m_duplicateOk;
         };
 
-        // both key and keyref are stored and post processed after parsing is complete
-        std::map<std::string, SetInfo> m_uniqueAttributeValueDependencies;
+        // Attribute unique sets and references to unique sets are stored during parsing and post processed
+        std::map<std::string, SetInfo> m_uniqueAttributeValueSetReferences;
         std::map<std::string, SetInfo> m_uniqueAttributeValueSetDefs;
 
-
-        static std::map<std::string, std::vector<std::shared_ptr<CfgValue>>> m_uniqueAttributeSets;    // key defs across the class
+        // These are the attribute value sets whose members must be unique
+        static std::map<std::string, std::vector<std::shared_ptr<CfgValue>>> m_uniqueAttributeValueSets;    
 
     private:
 

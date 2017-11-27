@@ -50,7 +50,7 @@ bool CfgStringLimits::isValueValid(const std::string &testValue) const
 {
     bool isValid = true;
 
-    std::size_t len = testValue.length();
+    int len = testValue.length();
 
     isValid = len >= getMin() && len <= getMax();
 
