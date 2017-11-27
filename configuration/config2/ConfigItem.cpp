@@ -144,10 +144,10 @@ void ConfigItem::insertConfigType(const std::shared_ptr<ConfigItem> pTypeItem)
 
     //
     // Children
-    std::multimap<std::string, std::shared_ptr<ConfigItem>> typeChildren = pTypeItem->getChildren();
+    std::vector<std::shared_ptr<ConfigItem>> typeChildren = pTypeItem->getChildren();
     for (auto childIt = typeChildren.begin(); childIt != typeChildren.end(); ++childIt)
     {
-        std::shared_ptr<ConfigItem> pNewItem = std::make_shared<ConfigItem>(*(childIt->second));
+        std::shared_ptr<ConfigItem> pNewItem = std::make_shared<ConfigItem>(*(*childIt));
         addChild(pNewItem);
     }
 
@@ -264,13 +264,13 @@ void ConfigItem::processUniqueAttributeValueSetReferences()
 }
 
 
-//std::vector<std::shared_ptr<ConfigItem>> ConfigItem::getChildren() const
-//{
-//    std::vector<std::shared_ptr<ConfigItem>> children;
-//    for (auto it = m_children.begin(); it != m_children.end(); ++it)
-//        children.push_back(it->second);
-//    return children;
-//}
+std::vector<std::shared_ptr<ConfigItem>> ConfigItem::getChildren()
+{
+    std::vector<std::shared_ptr<ConfigItem>> children;
+    for (auto it = m_children.begin(); it != m_children.end(); ++it)
+        children.push_back(it->second);
+    return children;
+}
 
 
 std::shared_ptr<ConfigItem> ConfigItem::getChild(const std::string &name)
@@ -471,4 +471,17 @@ void ConfigItem::postProcessConfig()
     {
         it->second->postProcessConfig();
     }
+}
+
+
+const std::string &ConfigItem::getItemType() const
+{
+    //
+    // Return itemType based on this set of rules
+    if (m_itemType != "")
+        return m_itemType;
+    else if (m_componentName != "")
+        return m_componentName;
+
+    return m_name;
 }

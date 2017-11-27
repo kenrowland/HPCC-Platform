@@ -298,7 +298,6 @@ void XSDConfigParser::parseElement(const pt::ptree &elemTree)
     std::string className = elemTree.get("<xmlattr>.hpcc:class", "");
     std::string category = elemTree.get("<xmlattr>.hpcc:category", "");
     std::string displayName = elemTree.get("<xmlattr>.hpcc:displayName", "");
-    //std::string refName = elemTree.get("<xmlattr>.ref", "");
     std::string typeName = elemTree.get("<xmlattr>.type", "");
     int minOccurs = elemTree.get("<xmlattr>.minOccurs", 1);
     std::string maxOccursStr = elemTree.get("<xmlattr>.maxOccurs", "1");
@@ -338,12 +337,15 @@ void XSDConfigParser::parseElement(const pt::ptree &elemTree)
                 {
                     pConfigElement->insertConfigType(pConfigType);
  
+                    //
+                    // If a component, then set element data (allow overriding with locally parsed values)
                     if (pConfigType->getClassName() == "component")
                     {
-                        pConfigElement->setName(pConfigType->getName());
-                        pConfigElement->setClassName(pConfigType->getClassName());
-                        pConfigElement->setCategory(pConfigType->getCategory());
-                        pConfigElement->setComponentName(pConfigType->getComponentName());  // for components, the config type name is used as the component name
+                        pConfigElement->setName((elementName != "") ? elementName : pConfigType->getName());
+                        pConfigElement->setClassName((className != "") ? className : pConfigType->getClassName());
+                        pConfigElement->setCategory((category != "") ? category : pConfigType->getCategory());
+                        pConfigElement->setDisplayName((displayName != "") ? displayName : pConfigType->getDisplayName());
+                        pConfigElement->setComponentName(pConfigType->getComponentName());  
                     }
                 }
                 else

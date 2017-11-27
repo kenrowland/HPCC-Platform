@@ -52,6 +52,9 @@ class ConfigItem : public std::enable_shared_from_this<ConfigItem>
         virtual void setCategory(const std::string &category) { m_category = category; }
         virtual const std::string &getCategory() const { return m_category; }
 
+        virtual void setItemType(const std::string &itemType) { m_itemType = itemType;  }
+        virtual const std::string &getItemType() const;
+
         void setMinInstances(int num) { m_minInstances = num; }
         int getMinInstances() const { return m_minInstances; }
         
@@ -70,8 +73,8 @@ class ConfigItem : public std::enable_shared_from_this<ConfigItem>
 
         virtual void addChild(const std::shared_ptr<ConfigItem> &pItem) { m_children.insert({ pItem->getName(), pItem }); }
         virtual void addChild(const std::shared_ptr<ConfigItem> &pItem, const std::string &name) { m_children.insert({ name, pItem }); }
-        //virtual std::vector<std::shared_ptr<ConfigItem>> getChildren() const;
-        const std::multimap<std::string, std::shared_ptr<ConfigItem>> &getChildren() const { return m_children; }
+        virtual std::vector<std::shared_ptr<ConfigItem>> getChildren();
+        //const std::multimap<std::string, std::shared_ptr<ConfigItem>> &getChildren() const { return m_children; }
         std::shared_ptr<ConfigItem> getChild(const std::string &name);
         std::shared_ptr<ConfigItem> getChildByComponent(const std::string &name, std::string &componentName);
         
@@ -105,6 +108,7 @@ class ConfigItem : public std::enable_shared_from_this<ConfigItem>
         std::string m_className;
         std::string m_category;  // used for further subdividing to the user
         std::string m_componentName;   
+        std::string m_itemType;
         std::multimap<std::string, std::shared_ptr<ConfigItem>> m_children; 
         std::shared_ptr<CfgValue> m_pItemCfgValue;   // value for this item (think of it as the VALUE for an element <xx attr= att1=>VALUE</xx>)
         std::map<std::string, std::shared_ptr<CfgValue>> m_attributes;   // attributes for this item (think in xml terms <m_name attr1="val" attr2="val" .../> where attrN is in this vector
