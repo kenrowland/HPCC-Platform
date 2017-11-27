@@ -38,6 +38,7 @@ class EnvironmentNode : public std::enable_shared_from_this<EnvironmentNode>
 		void addChild(std::shared_ptr<EnvironmentNode> pNode);
 		std::vector<std::shared_ptr<EnvironmentNode>> getChildren(const std::string &name="") const;
         std::map<std::string, std::vector<std::shared_ptr<EnvironmentNode>>> getChildrenByName() const;
+        std::map<std::string, std::vector<std::shared_ptr<EnvironmentNode>>> getChildrenByConfigType() const;
 		bool hasChildren() const { return m_children.size() != 0; }
 		int getNumChildren() const { return m_children.size(); }
 		std::shared_ptr<EnvironmentNode> getParent() const;
