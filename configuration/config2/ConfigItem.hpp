@@ -35,6 +35,7 @@ class ConfigItem : public std::enable_shared_from_this<ConfigItem>
     public:
 
         ConfigItem(const std::string &name, const std::string &className = "category", const std::shared_ptr<ConfigItem> &pParent = nullptr);
+        ConfigItem(const ConfigItem &ci);
         virtual ~ConfigItem() { }
 
         virtual const std::string &getClassName() const { return m_className; }
@@ -77,6 +78,7 @@ class ConfigItem : public std::enable_shared_from_this<ConfigItem>
         //const std::multimap<std::string, std::shared_ptr<ConfigItem>> &getChildren() const { return m_children; }
         std::shared_ptr<ConfigItem> getChild(const std::string &name);
         std::shared_ptr<ConfigItem> getChildByComponent(const std::string &name, std::string &componentName);
+        virtual void setParent(const std::shared_ptr<ConfigItem> &pParent) { m_pParent = pParent; }
         
         virtual void setItemCfgValue(const std::shared_ptr<CfgValue> &pValue) { m_pItemCfgValue = pValue; }
         virtual std::shared_ptr<CfgValue> getItemCfgValue() const { return m_pItemCfgValue; }
@@ -109,6 +111,9 @@ class ConfigItem : public std::enable_shared_from_this<ConfigItem>
         std::string m_category;  // used for further subdividing to the user
         std::string m_componentName;   
         std::string m_itemType;
+        int m_minInstances;
+        int m_maxInstances;
+        int m_version;
         std::multimap<std::string, std::shared_ptr<ConfigItem>> m_children; 
         std::shared_ptr<CfgValue> m_pItemCfgValue;   // value for this item (think of it as the VALUE for an element <xx attr= att1=>VALUE</xx>)
         std::map<std::string, std::shared_ptr<CfgValue>> m_attributes;   // attributes for this item (think in xml terms <m_name attr1="val" attr2="val" .../> where attrN is in this vector
@@ -118,9 +123,7 @@ class ConfigItem : public std::enable_shared_from_this<ConfigItem>
         std::map<std::string, std::shared_ptr<CfgType>> m_types;
         std::map<std::string, std::shared_ptr<ConfigItem>> m_configTypes;                // reusable types
 
-        int m_minInstances;
-        int m_maxInstances;
-        int m_version;
+        
 
         // This struct handles both unique attribute sets and references to same
         struct SetInfo {

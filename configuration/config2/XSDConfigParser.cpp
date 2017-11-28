@@ -335,7 +335,14 @@ void XSDConfigParser::parseElement(const pt::ptree &elemTree)
                 std::shared_ptr<ConfigItem> pConfigType = m_pConfig->getConfigType(typeName, false);
                 if (pConfigType != nullptr)
                 {
+                    //
+                    // Insert into this config element the component defined data (attributes, references, etc.)
                     pConfigElement->insertConfigType(pConfigType);
+
+                    //
+                    // Set element min/max instances to that defined by the component type def (ignore values parsed above)
+                    pConfigElement->setMinInstances(pConfigType->getMinInstances());
+                    pConfigElement->setMaxInstances(pConfigType->getMaxInstances());
  
                     //
                     // If a component, then set element data (allow overriding with locally parsed values)
