@@ -106,69 +106,66 @@ bool Cws_config2Ex::ongetNode(IEspContext &context, IEspGetNodeRequest &req, IEs
         resp.setNodeName(nodeDisplayName.c_str());
 
         //
-        // Now the children
-        
+        // Now the children. Get all the possible configured children so that we will know if any are not
+        // instantiated.
+        std::vector<std::shared_ptr<ConfigItem>> nodeConfigChildren = pNode->getConfigItem()->getChildren();
         if (pNode->hasChildren())
         {
-            std::multimap<std::string, std::shared_ptr<ConfigItem>> nodeConfigChildren = pNodeConfigItem->getChildren();
-            std::map<std::string, std::vector<std::shared_ptr<EnvironmentNode>>> children = pNode->getChildrenByName();
+            std::vector<std::shared_ptr<EnvironmentNode>> children = pNode->getChildren();
             for (auto it=children.begin(); it!=children.end(); ++it)
             {
-                const std::vector<std::shared_ptr<EnvironmentNode>> &nodes = it->second;
-                const std::shared_ptr<ConfigItem> pConfigItem = nodes[0]->getConfigItem();
+                std::shared_ptr<EnvironmentNode> pNode = *it;
+                const std::shared_ptr<ConfigItem> pConfigItem = pNode->getConfigItem();
                 Owned<IEspelementType> pElement = createelementType();
-                pElement->updateItemInfo().setName(it->first.c_str());
+                pElement->updateItemInfo().setName(pNode->getName().c_str());
                 pElement->updateItemInfo().setDisplayName(pConfigItem->getDisplayName().c_str());
+                pElement->setElementType(pConfigItem->getItemType().c_str());
                 pElement->setClass(pConfigItem->getClassName().c_str());
                 pElement->setCategory(pConfigItem->getCategory().c_str());
                 pElement->setNumAllowedInstances(pConfigItem->getMaxInstances());
                 pElement->setNumRequiredInstances(pConfigItem->getMinInstances());
                 pElement->updateDoc().setTooltip("");
-
-                //
-                // the node iteration below needs to look at each node and somehow compare it to a specific entry in the
-                // nodeConfigChildren multimap, beyond just name, and remove the match. The reason is there can be
-                // more than one entry in nodeConfigChildren with the sane name
-
-                StringArray ids;
-                int numChildren = 0;
-                for (auto nodeIt=nodes.begin(); nodeIt!=nodes.end(); ++nodeIt)
-                {
-                    ids.append((*nodeIt)->getId().c_str());
-                    numChildren += (*nodeIt)->getNumChildren();
-                }
-                pElement->setNumChildren(numChildren);
-                pElement->setNodeIdList(ids);
+                pElement->setNodeId(pNode->getId().c_str());
+                pElement->setNumChildren(pNode->getNumChildren());
                 elements.append(*pElement.getLink());
 
                 //
                 // Remove the node we just added from the node's configuration children because at least one is configured. Note
                 // that a previous iteration of this loop may have already removed it in the case where there is more than one
                 // occurance of a node in the environment for a config item
-                nodeConfigChildren.erase(it->first);
+                for (auto typeIt=nodeConfigChildren.begin(); typeIt!=nodeConfigChildren.end(); ++typeIt)
+                {
+                    if ((*typeIt)->getItemType() == pConfigItem->getItemType())
+                    {
+                        nodeConfigChildren.erase(typeIt);
+                        break;
+                    }
+                }
             }
 
-            //
-            // Now add any configuration elements that don't have instantiations in the environment. These all get empty id lists
-            // indicating that they don't exist yet, but can be added
             
-            for (auto it=nodeConfigChildren.begin(); it!=nodeConfigChildren.end(); ++it)
-            {
-                std::shared_ptr<ConfigItem> pConfigItem = it->second;
-                Owned<IEspelementType> pElement = createelementType();
-                pElement->updateItemInfo().setName(pConfigItem->getName().c_str());
-                pElement->updateItemInfo().setDisplayName(pConfigItem->getDisplayName().c_str());
-                pElement->setClass(pConfigItem->getClassName().c_str());
-                pElement->setCategory(pConfigItem->getCategory().c_str());
-                pElement->setNumAllowedInstances(pConfigItem->getMaxInstances());
-                pElement->setNumRequiredInstances(pConfigItem->getMinInstances());
-                pElement->updateDoc().setTooltip("");
-                
-                StringArray ids;
-                pElement->setNodeIdList(ids);
-                pElement->setNumChildren(0);
-                elements.append(*pElement.getLink());
-            }
+        }
+
+        //
+        // Now add any configuration elements that don't have instantiations in the environment. These get an empty nodeId 
+        // to indicate that no configured environment item exists and that it can be added
+        
+        for (auto it=nodeConfigChildren.begin(); it!=nodeConfigChildren.end(); ++it)
+        {
+            std::shared_ptr<ConfigItem> pConfigItem = *it;
+            Owned<IEspelementType> pElement = createelementType();
+            pElement->updateItemInfo().setName(pConfigItem->getName().c_str());
+            pElement->updateItemInfo().setDisplayName(pConfigItem->getDisplayName().c_str());
+            pElement->setElementType(pConfigItem->getItemType().c_str());
+            pElement->setClass(pConfigItem->getClassName().c_str());
+            pElement->setCategory(pConfigItem->getCategory().c_str());
+            pElement->setNumAllowedInstances(pConfigItem->getMaxInstances());
+            pElement->setNumRequiredInstances(pConfigItem->getMinInstances());
+            pElement->updateDoc().setTooltip("");
+         
+            pElement->setNodeId("");
+            pElement->setNumChildren(0);
+            elements.append(*pElement.getLink());
         }
         resp.setChildren(elements); 
 

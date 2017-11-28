@@ -88,9 +88,11 @@ ESPstruct itemInfoType
 ESPstruct elementType
 {
     ESPstruct itemInfoType itemInfo;
+    string    elementType("");
     string    class("");
     string    category("");
-    ESParray<string, id> nodeIdList;
+    //ESParray<string, id> nodeIdList;
+    string    nodeId;
     ESPstruct docType doc;
     int   numChildren(0);
     int   numAllowedInstances(0);
