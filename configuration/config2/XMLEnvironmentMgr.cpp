@@ -100,7 +100,7 @@ void XMLEnvironmentMgr::parse(const pt::ptree &envTree, const std::shared_ptr<Co
                 //auto x = pCfgValue.get();
                 //std::shared_ptr<CfgValue> pCopyCfg;
                 //pCopyCfg = pCfgValue;
-				pEnvNode->addAttribute(attrIt->first, pEnvValue);
+				pEnvNode->insertAttribute(attrIt->first, pEnvValue);
 			}
 		}
 		else
@@ -121,7 +121,7 @@ void XMLEnvironmentMgr::parse(const pt::ptree &envTree, const std::shared_ptr<Co
 			pElementNode->setId(getUniqueKey());
 			addPath(pElementNode);
 			parse(it->second, pEnvConfig, pElementNode);
-			pEnvNode->addChild(pElementNode);
+			pEnvNode->insertChild(pElementNode);
 		}
 	}
 }

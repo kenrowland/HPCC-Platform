@@ -35,7 +35,7 @@ class ConfigItem : public std::enable_shared_from_this<ConfigItem>
     public:
 
         ConfigItem(const std::string &name, const std::string &className = "category", const std::shared_ptr<ConfigItem> &pParent = nullptr);
-        ConfigItem(const ConfigItem &ci);
+        //ConfigItem(const ConfigItem &ci);
         virtual ~ConfigItem() { }
 
         virtual const std::string &getClassName() const { return m_className; }
@@ -72,21 +72,21 @@ class ConfigItem : public std::enable_shared_from_this<ConfigItem>
         virtual std::shared_ptr<ConfigItem> getConfigType(const std::string &name, bool throwIfNotPresent=true) const;
         virtual void insertConfigType(const std::shared_ptr<ConfigItem> pTypeItem);
 
-        virtual void addChild(const std::shared_ptr<ConfigItem> &pItem) { m_children.insert({ pItem->getName(), pItem }); }
-        virtual void addChild(const std::shared_ptr<ConfigItem> &pItem, const std::string &name) { m_children.insert({ name, pItem }); }
+        virtual void insertChild(const std::shared_ptr<ConfigItem> &pItem) { m_children.insert({ pItem->getName(), pItem }); }
+        virtual void insertChild(const std::shared_ptr<ConfigItem> &pItem, const std::string &name) { m_children.insert({ name, pItem }); }
         virtual std::vector<std::shared_ptr<ConfigItem>> getChildren();
         //const std::multimap<std::string, std::shared_ptr<ConfigItem>> &getChildren() const { return m_children; }
         std::shared_ptr<ConfigItem> getChild(const std::string &name);
         std::shared_ptr<ConfigItem> getChildByComponent(const std::string &name, std::string &componentName);
-        virtual void setParent(const std::shared_ptr<ConfigItem> &pParent) { m_pParent = pParent; }
+        //virtual void setParent(const std::shared_ptr<ConfigItem> &pParent) { m_pParent = pParent; }
         
         virtual void setItemCfgValue(const std::shared_ptr<CfgValue> &pValue) { m_pItemCfgValue = pValue; }
         virtual std::shared_ptr<CfgValue> getItemCfgValue() const { return m_pItemCfgValue; }
         virtual bool isItemValueDefined() { return m_pItemCfgValue != nullptr; }
         void findCfgValues(const std::string &path, std::vector<std::shared_ptr<CfgValue>> &cfgValues);
 
-        virtual void addAttribute(const std::shared_ptr<CfgValue> &pCfgValue);
-        virtual void addAttribute(const std::vector<std::shared_ptr<CfgValue>> &attributes);
+        virtual void insertAttribute(const std::shared_ptr<CfgValue> &pCfgValue);
+        virtual void insertAttribute(const std::vector<std::shared_ptr<CfgValue>> &attributes);
         virtual std::shared_ptr<CfgValue> getAttribute(const std::string &name) const;
         virtual const std::map<std::string, std::shared_ptr<CfgValue>> &getAttributes() const { return m_attributes;  }
 
@@ -99,6 +99,10 @@ class ConfigItem : public std::enable_shared_from_this<ConfigItem>
         virtual void resetEnvironment(); 
 
         virtual void postProcessConfig();
+        bool isInsertable() const { return (m_minInstances == 0) || (m_maxInstances > m_minInstances); }
+
+
+    protected:
 
         ConfigItem() { };
 

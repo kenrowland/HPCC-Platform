@@ -17,13 +17,13 @@ limitations under the License.
 
 #include "EnvironmentNode.hpp"
 
-void EnvironmentNode::addChild(std::shared_ptr<EnvironmentNode> pNode)
+void EnvironmentNode::insertChild(std::shared_ptr<EnvironmentNode> pNode)
 {
     m_children.insert(std::make_pair(pNode->getName(), pNode));
 }
 
 
-void EnvironmentNode::addAttribute(const std::string &name, std::shared_ptr<EnvValue> pValue)
+void EnvironmentNode::insertAttribute(const std::string &name, std::shared_ptr<EnvValue> pValue)
 {
     auto retValue = m_attributes.insert(std::make_pair(name, pValue));
     // todo: add check to make sure no duplicate attributes, use retValue to see if value was inserted or not
@@ -144,7 +144,7 @@ void EnvironmentNode::setAttributeValue(const std::string &attrName, const std::
     {
         std::shared_ptr<CfgValue> pCfgValue = m_pConfigItem->getAttribute(attrName);
         pEnvValue = std::make_shared<EnvValue>(shared_from_this(), pCfgValue, attrName);
-        addAttribute(attrName, pEnvValue);
+        insertAttribute(attrName, pEnvValue);
         if (!pCfgValue->isConfigured())
         {
             status.addStatusMsg(statusMsg::warning, getId(), attrName, "", "Undefined attribute did not exist in configuration, was created");

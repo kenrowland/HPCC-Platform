@@ -196,7 +196,7 @@ void XSDConfigParser::parseSimpleType(const pt::ptree &typeTree)
 void XSDConfigParser::parseAttribute(const pt::ptree &attr)
 {
     std::shared_ptr<CfgValue> pCfgValue = getCfgValue(attr);
-	m_pConfig->addAttribute(pCfgValue);
+	m_pConfig->insertAttribute(pCfgValue);
 }
 
 
@@ -218,7 +218,7 @@ void XSDConfigParser::parseAttributeGroup(const pt::ptree &attributeTree)
 			std::shared_ptr<ConfigItemValueSet> pValueSet = std::dynamic_pointer_cast<ConfigItemValueSet>(m_pConfig->getConfigType(refName, true));
 			if (pValueSet)
 			{
-				m_pConfig->addAttribute(pValueSet->getCfgValues());
+				m_pConfig->insertAttribute(pValueSet->getCfgValues());
 			}
 		}
 	}
@@ -373,7 +373,7 @@ void XSDConfigParser::parseElement(const pt::ptree &elemTree)
 
         //
         // Add the element
-        m_pConfig->addChild(pConfigElement);
+        m_pConfig->insertChild(pConfigElement);
       
     }
 }
