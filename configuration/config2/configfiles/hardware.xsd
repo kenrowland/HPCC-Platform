@@ -44,7 +44,7 @@
 
             <xs:element name="Computer" maxOccurs="unbounded" hpcc:class="valueSet" hpcc:doc="Describes a computer that is contained in the environment">
               <xs:complexType>
-				<xs:attribute ref="computerNode"/>
+				<xs:attributeGroup ref="computerNode"/>
                 <xs:attribute name="domain" type="xs:string"/>
                 <xs:attribute name="computerType" type="xs:string"/>
               </xs:complexType>
