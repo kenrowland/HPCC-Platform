@@ -1,18 +1,18 @@
 /*##############################################################################
 
-HPCC SYSTEMS software Copyright (C) 2017 HPCC Systems�.
+    HPCC SYSTEMS software Copyright (C) 2017 HPCC Systems®.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
 
-http://www.apache.org/licenses/LICENSE-2.0
+    http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
 ############################################################################## */
 
 #include "EnvironmentNode.hpp"
@@ -23,7 +23,7 @@ void EnvironmentNode::insertChild(std::shared_ptr<EnvironmentNode> pNode)
 }
 
 
-void EnvironmentNode::insertAttribute(const std::string &name, std::shared_ptr<EnvValue> pValue)
+void EnvironmentNode::insertAttribute(const std::string &name, std::shared_ptr<EnvironmentValue> pValue)
 {
     auto retValue = m_attributes.insert(std::make_pair(name, pValue));
     // todo: add check to make sure no duplicate attributes, use retValue to see if value was inserted or not
@@ -33,7 +33,8 @@ void EnvironmentNode::insertAttribute(const std::string &name, std::shared_ptr<E
 std::vector<std::shared_ptr<EnvironmentNode>> EnvironmentNode::getChildren(const std::string &name) const
 {
     std::vector<std::shared_ptr<EnvironmentNode>> childNodes;
-    if (name == "") {
+    if (name == "") 
+    {
         for (auto nodeIt = m_children.begin(); nodeIt != m_children.end(); ++nodeIt)
         {
             childNodes.push_back(nodeIt->second);
@@ -105,9 +106,9 @@ std::shared_ptr<EnvironmentNode> EnvironmentNode::getParent() const
 }
 
 
-std::vector<std::shared_ptr<EnvValue>> EnvironmentNode::getAttributes() const
+std::vector<std::shared_ptr<EnvironmentValue>> EnvironmentNode::getAttributes() const
 {
-    std::vector<std::shared_ptr<EnvValue>> attributes;
+    std::vector<std::shared_ptr<EnvironmentValue>> attributes;
 
     for (auto attrIt = m_attributes.begin(); attrIt != m_attributes.end(); ++attrIt)
     {
@@ -129,7 +130,7 @@ void EnvironmentNode::setAttributeValues(const std::vector<ValueDef> &values, St
 // should probably return a status object, and put path/valueName in there
 void EnvironmentNode::setAttributeValue(const std::string &attrName, const std::string &value, Status &status, bool allowInvalid, bool forceCreate)
 {
-    std::shared_ptr<EnvValue> pEnvValue;
+    std::shared_ptr<EnvironmentValue> pEnvValue;
 
     auto it = m_attributes.find(attrName);
     if (it != m_attributes.end())
@@ -142,8 +143,8 @@ void EnvironmentNode::setAttributeValue(const std::string &attrName, const std::
     // If not and the forceCreate flag is set, create it. 
     else
     {
-        std::shared_ptr<CfgValue> pCfgValue = m_pConfigItem->getAttribute(attrName);
-        pEnvValue = std::make_shared<EnvValue>(shared_from_this(), pCfgValue, attrName);
+        std::shared_ptr<ConfigValue> pCfgValue = m_pConfigItem->getAttribute(attrName);
+        pEnvValue = std::make_shared<EnvironmentValue>(shared_from_this(), pCfgValue, attrName);
         insertAttribute(attrName, pEnvValue);
         if (!pCfgValue->isConfigured())
         {
@@ -170,7 +171,7 @@ void EnvironmentNode::setAttributeValue(const std::string &attrName, const std::
 std::string EnvironmentNode::getAttributeValue(const std::string &name) const
 {
     std::string value;
-    std::shared_ptr<EnvValue> pAttribute = getAttribute(name);
+    std::shared_ptr<EnvironmentValue> pAttribute = getAttribute(name);
     if (pAttribute)
         value = pAttribute->getValue();
     return value;
@@ -187,9 +188,9 @@ bool EnvironmentNode::setValue(const std::string &value, Status &status, bool fo
     }
     else
     {
-        std::shared_ptr<CfgValue> pCfgValue = m_pConfigItem->getItemCfgValue();
+        std::shared_ptr<ConfigValue> pCfgValue = m_pConfigItem->getItemCfgValue();
         
-        m_pNodeValue = std::make_shared<EnvValue>(shared_from_this(), pCfgValue, "");  // node's value has no name
+        m_pNodeValue = std::make_shared<EnvironmentValue>(shared_from_this(), pCfgValue, "");  // node's value has no name
         rc = m_pNodeValue->setValue(value, &status, force);
     }
     return rc;
@@ -247,9 +248,9 @@ std::vector<std::string> EnvironmentNode::getAllFieldValues(const std::string &f
 }
 
 
-const std::shared_ptr<EnvValue> EnvironmentNode::getAttribute(const std::string &name) const
+const std::shared_ptr<EnvironmentValue> EnvironmentNode::getAttribute(const std::string &name) const
 {
-    std::shared_ptr<EnvValue> pValue;
+    std::shared_ptr<EnvironmentValue> pValue;
     auto it = m_attributes.find(name);
     if (it != m_attributes.end())
     {

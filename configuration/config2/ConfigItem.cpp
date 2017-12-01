@@ -17,13 +17,13 @@
 
 #include "ConfigItem.hpp"
 #include "ConfigExceptions.hpp"
-#include "CfgStringLimits.hpp"
-#include "CfgIntegerLimits.hpp"
+#include "ConfigTypeStringLimits.hpp"
+#include "ConfigTypeIntegerLimits.hpp"
 #include <algorithm>
 
 
 // static class variables
-std::map<std::string, std::vector<std::shared_ptr<CfgValue>>> ConfigItem::m_uniqueAttributeValueSets;
+std::map<std::string, std::vector<std::shared_ptr<ConfigValue>>> ConfigItem::m_uniqueAttributeValueSets;
 //std::map<std::string, ConfigItem::KeyRef> ConfigItem::m_keyRefs;
 
 
@@ -42,8 +42,8 @@ ConfigItem::ConfigItem(const std::string &name, const std::string &className, co
 	{
         //
         // Create a default type so that all values have a type
-		std::shared_ptr<CfgType> pDefaultType = std::make_shared<CfgType>("default");
-		std::shared_ptr<CfgLimits> pDefaultLimits = std::make_shared<CfgLimits>();
+		std::shared_ptr<ConfigValueType> pDefaultType = std::make_shared<ConfigValueType>("default");
+		std::shared_ptr<ConfigTypeLimits> pDefaultLimits = std::make_shared<ConfigTypeLimits>();
 		pDefaultType->setLimits(pDefaultLimits);
 		addType(pDefaultType);
 	}
@@ -105,15 +105,15 @@ ConfigItem::ConfigItem(const std::string &name, const std::string &className, co
 //}
 
 
-void ConfigItem::addType(const std::shared_ptr<CfgType> &pType)
+void ConfigItem::addType(const std::shared_ptr<ConfigValueType> &pType)
 {
     m_types[pType->getName()] = pType;
 }
 
 
-std::shared_ptr<CfgType> ConfigItem::getType(const std::string &typeName, bool throwIfNotPresent) const
+std::shared_ptr<ConfigValueType> ConfigItem::getType(const std::string &typeName, bool throwIfNotPresent) const
 {
-    std::shared_ptr<CfgType> pType;
+    std::shared_ptr<ConfigValueType> pType;
     auto it = m_types.find(typeName);
     if (it != m_types.end())
     {
@@ -208,10 +208,10 @@ void ConfigItem::insertConfigType(const std::shared_ptr<ConfigItem> pTypeItem)
 
     //
     // Attributes
-    const std::map<std::string, std::shared_ptr<CfgValue>> &typeAttributes = pTypeItem->getAttributes();
+    const std::map<std::string, std::shared_ptr<ConfigValue>> &typeAttributes = pTypeItem->getAttributes();
     for (auto attrIt = typeAttributes.begin(); attrIt != typeAttributes.end(); ++attrIt)
     {
-        std::shared_ptr<CfgValue> pNewAttr = std::make_shared<CfgValue>(*(attrIt->second));
+        std::shared_ptr<ConfigValue> pNewAttr = std::make_shared<ConfigValue>(*(attrIt->second));
         insertAttribute(pNewAttr);
     }
 
@@ -219,7 +219,7 @@ void ConfigItem::insertConfigType(const std::shared_ptr<ConfigItem> pTypeItem)
     // Type main value
     if (pTypeItem->getItemCfgValue() != nullptr)
     {
-        std::shared_ptr<CfgValue> pNewItemCfgValue = std::make_shared<CfgValue>(*(pTypeItem->getItemCfgValue()));
+        std::shared_ptr<ConfigValue> pNewItemCfgValue = std::make_shared<ConfigValue>(*(pTypeItem->getItemCfgValue()));
         setItemCfgValue(pNewItemCfgValue);
     }
 
@@ -239,7 +239,7 @@ void ConfigItem::insertConfigType(const std::shared_ptr<ConfigItem> pTypeItem)
 }
 
 
-void ConfigItem::insertAttribute(const std::shared_ptr<CfgValue> &pCfgValue)
+void ConfigItem::insertAttribute(const std::shared_ptr<ConfigValue> &pCfgValue)
 {
 	auto retVal = m_attributes.insert({ pCfgValue->getName(), pCfgValue });
 	if (!retVal.second)
@@ -249,23 +249,23 @@ void ConfigItem::insertAttribute(const std::shared_ptr<CfgValue> &pCfgValue)
 }
 
 
-void ConfigItem::insertAttribute(const std::vector<std::shared_ptr<CfgValue>> &attributes)
+void ConfigItem::insertAttribute(const std::vector<std::shared_ptr<ConfigValue>> &attributes)
 {
 	for (auto it = attributes.begin(); it != attributes.end(); ++it)
 		insertAttribute((*it));
 }
 
 
-std::shared_ptr<CfgValue> ConfigItem::getAttribute(const std::string &name) const
+std::shared_ptr<ConfigValue> ConfigItem::getAttribute(const std::string &name) const
 {
-	std::shared_ptr<CfgValue> pCfgValue;  
+	std::shared_ptr<ConfigValue> pCfgValue;
 	auto it = m_attributes.find(name);
 	if (it != m_attributes.end())
 		pCfgValue = it->second;
 	else
 	{
         // not found, build a default cfg value for the undefined attribute
-		pCfgValue = std::make_shared<CfgValue>(name, false); 
+		pCfgValue = std::make_shared<ConfigValue>(name, false);
 		pCfgValue->setType(getType("default"));
 	}
 	return pCfgValue;
@@ -294,9 +294,9 @@ void ConfigItem::processUniqueAttributeValueSetReferences()
         {
             for (auto cfgIt = keyIt->second.begin(); cfgIt != keyIt->second.end(); ++cfgIt)
             {
-                std::shared_ptr<CfgValue> pKeyRefAttribute = *cfgIt;     // this is the reference attribute from which attributeName must be a member
+                std::shared_ptr<ConfigValue> pKeyRefAttribute = *cfgIt;     // this is the reference attribute from which attributeName must be a member
                 std::string cfgValuePath = ((setRefIt->second.m_elementPath != ".") ? setRefIt->second.m_elementPath : "") + "@" + setRefIt->second.m_attributeName;
-                std::vector<std::shared_ptr<CfgValue>> cfgValues;
+                std::vector<std::shared_ptr<ConfigValue>> cfgValues;
                 findCfgValues(cfgValuePath, cfgValues);
                 if (!cfgValues.empty())
                 {
@@ -367,7 +367,7 @@ void ConfigItem::resetEnvironment()
 
 
 
-void ConfigItem::findCfgValues(const std::string &path, std::vector<std::shared_ptr<CfgValue>> &cfgValues)
+void ConfigItem::findCfgValues(const std::string &path, std::vector<std::shared_ptr<ConfigValue>> &cfgValues)
 {
     bool rootPath = path[0] == '/';
     //
@@ -433,7 +433,7 @@ void ConfigItem::processUniqueAttributeValueSets()
         {
             //std::shared_ptr<ConfigItem> pCfgItem = getChild(elementName);  // todo: validate pCfgItem found
             std::string cfgValuePath = ((setIt->second.m_elementPath != ".") ? setIt->second.m_elementPath : "") + "@" + setIt->second.m_attributeName;
-            std::vector<std::shared_ptr<CfgValue>> cfgValues;
+            std::vector<std::shared_ptr<ConfigValue>> cfgValues;
             findCfgValues(cfgValuePath, cfgValues);
             if (!cfgValues.empty())
             {
@@ -446,14 +446,14 @@ void ConfigItem::processUniqueAttributeValueSets()
 
                     if (!keyDefExists)
                     {
-                        std::vector<std::shared_ptr<CfgValue>> values;
+                        std::vector<std::shared_ptr<ConfigValue>> values;
                         values.push_back(*attrIt);
                         it = m_uniqueAttributeValueSets.insert({ setIt->second.m_setName, values }).first;  // so the else condition will work
                         keyDefExists = true;  // Now, it does exist
                     }
                     else
                     {
-                        std::vector<std::shared_ptr<CfgValue>> &values = it->second;
+                        std::vector<std::shared_ptr<ConfigValue>> &values = it->second;
                         bool found = false;
                         for (auto cfgIt = values.begin(); cfgIt != values.end() && !found; ++cfgIt)
                         {
@@ -513,7 +513,7 @@ void ConfigItem::postProcessConfig()
         // it is replicated to us.
         if (it->second->isMirroredValue())
         {
-            std::vector<std::shared_ptr<CfgValue>> cfgValues;
+            std::vector<std::shared_ptr<ConfigValue>> cfgValues;
             findCfgValues(it->second->getMirrorFromPath(), cfgValues);
             if (!cfgValues.empty() && cfgValues.size() == 1)
             {

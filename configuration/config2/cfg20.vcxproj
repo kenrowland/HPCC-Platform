@@ -109,11 +109,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="CfgIntegerLimits.hpp" />
-    <ClInclude Include="CfgLimits.hpp" />
-    <ClInclude Include="CfgStringLimits.hpp" />
-    <ClInclude Include="CfgType.hpp" />
-    <ClInclude Include="CfgValue.hpp" />
+    <ClInclude Include="ConfigTypeIntegerLimits.hpp" />
+    <ClInclude Include="ConfigTypeLimits.hpp" />
+    <ClInclude Include="ConfigTypeStringLimits.hpp" />
+    <ClInclude Include="ConfigValueType.hpp" />
+    <ClInclude Include="ConfigValue.hpp" />
     <ClInclude Include="ConfigExceptions.hpp" />
     <ClInclude Include="ConfigItem.hpp" />
     <ClInclude Include="ConfigItemComponent.hpp" />
@@ -121,7 +121,7 @@
     <ClInclude Include="ConfigParser.hpp" />
     <ClInclude Include="EnvironmentMgr.hpp" />
     <ClInclude Include="EnvironmentNode.hpp" />
-    <ClInclude Include="EnvValue.hpp" />
+    <ClInclude Include="EnvironmentValue.hpp" />
     <ClInclude Include="Status.hpp" />
     <ClInclude Include="XMLEnvironmentMgr.hpp" />
     <ClInclude Include="XSDComponentParser.hpp" />
@@ -129,17 +129,17 @@
     <ClInclude Include="XSDValueSetParser.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="CfgIntegerLimits.cpp" />
-    <ClCompile Include="CfgLimits.cpp" />
-    <ClCompile Include="CfgStringLimits.cpp" />
-    <ClCompile Include="CfgValue.cpp" />
+    <ClCompile Include="ConfigTypeIntegerLimits.cpp" />
+    <ClCompile Include="ConfigTypeLimits.cpp" />
+    <ClCompile Include="ConfigTypeStringLimits.cpp" />
+    <ClCompile Include="ConfigValue.cpp" />
     <ClCompile Include="ConfigItem.cpp" />
     <ClCompile Include="ConfigItemValueSet.cpp" />
     <ClCompile Include="ConfigParser.cpp" />
     <ClCompile Include="EnvironmentMgr.cpp" />
     <ClCompile Include="EnvironmentNode.cpp" />
-    <ClCompile Include="EnvValue.cpp" />
-    <ClCompile Include="parseXSD.cpp" />
+    <ClCompile Include="EnvironmentValue.cpp" />
+    <ClCompile Include="test.cpp" />
     <ClCompile Include="Status.cpp" />
     <ClCompile Include="XMLEnvironmentMgr.cpp" />
     <ClCompile Include="XSDComponentParser.cpp" />

@@ -22,34 +22,34 @@
 #include <memory>
 #include <map>
 #include <vector>
-#include "CfgLimits.hpp"
+#include "ConfigTypeLimits.hpp"
 
 
 
-class CfgType 
+class ConfigValueType 
 {
     public:
 
-        CfgType(const std::string &name) : m_name(name), m_autoValueType(""), m_pLimits(std::make_shared<CfgLimits>()) { }
-        virtual ~CfgType() { }
+        ConfigValueType(const std::string &name) : m_name(name), m_autoValueType(""), m_pLimits(std::make_shared<ConfigTypeLimits>()) { }
+        virtual ~ConfigValueType() { }
 
-        std::shared_ptr<CfgLimits> &getLimits() { return m_pLimits; }
-        void setLimits(const std::shared_ptr<CfgLimits> &pLimits) { m_pLimits = pLimits; }
+        std::shared_ptr<ConfigTypeLimits> &getLimits() { return m_pLimits; }
+        void setLimits(const std::shared_ptr<ConfigTypeLimits> &pLimits) { m_pLimits = pLimits; }
         bool isComplete() const { return m_pLimits!=nullptr; }
         const std::string &getName() { return m_name; }
         bool isValueValid(const std::string &testValue) { return m_pLimits->isValueValid(testValue); }
-		bool isAutoValueType() const { return m_autoValueType != "" ;  }
-		const std::string &getAutoValue() const { return m_autoValueType;  }  // todo: this is to be expanded to the supported types
-		void setAutoValueType(const std::string &valueType) { m_autoValueType = valueType;  }
+        bool isAutoValueType() const { return m_autoValueType != "" ;  }
+        const std::string &getAutoValue() const { return m_autoValueType;  }  // todo: this is to be expanded to the supported types
+        void setAutoValueType(const std::string &valueType) { m_autoValueType = valueType;  }
         bool isEnumerated() const { return m_pLimits->isEnumerated(); }
         const std::vector<AllowedValue> getAllowedValues() const { return m_pLimits->getAllowedValues(); }
-		
+        
 
     private:
 
         std::string m_name;
-        std::shared_ptr<CfgLimits> m_pLimits;
-		std::string m_autoValueType;
+        std::shared_ptr<ConfigTypeLimits> m_pLimits;
+        std::string m_autoValueType;
 
 };
 

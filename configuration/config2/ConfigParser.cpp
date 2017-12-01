@@ -30,10 +30,6 @@ bool ConfigParser::parseEnvironmentConfig(const std::vector<std::string> &cfgPar
         std::string msg = "The following error was detected while parsing the configuration: " + static_cast<std::string>(pe.what());
         status.addStatusMsg(statusMsg::fatal, "", "", "", msg);
     }
-    catch (...)
-    {
-        int i = 8;
-    }
     return status.isOk();
 }
 

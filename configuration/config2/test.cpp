@@ -59,8 +59,8 @@ int main()
         {
             if ((*it)->getName() == "service")
             {
-                std::shared_ptr<EnvValue> pEnvValue = *it;
-                const std::shared_ptr<CfgValue> &pCfgValue = pEnvValue->getCfgValue();
+                std::shared_ptr<EnvironmentValue> pEnvValue = *it;
+                const std::shared_ptr<ConfigValue> &pCfgValue = pEnvValue->getCfgValue();
                 auto values = pCfgValue->getAllowedValues(pEnvValue.get());
                 int i = 3;
             }

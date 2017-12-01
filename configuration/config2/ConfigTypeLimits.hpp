@@ -18,13 +18,12 @@
 #ifndef _CONFIG2_CFGLIMITS_HPP_
 #define _CONFIG2_CFGLIMITS_HPP_
 
-
 #include <memory>
 #include <vector>
 #include <string>
 #include <limits.h>
 
-class EnvValue;
+class EnvironmentValue;
 
 struct AllowedValue 
 {
@@ -33,17 +32,17 @@ struct AllowedValue
     std::string m_description;
 };
 
-class CfgLimits 
+class ConfigTypeLimits 
 {
     public:
 
-        CfgLimits() :
+        ConfigTypeLimits() :
             m_minInclusive(INT_MIN),
             m_maxInclusive(INT_MAX),
             m_minExclusive(INT_MIN),
             m_maxExclusive(INT_MAX),
             m_length(0) { }
-        virtual ~CfgLimits() { }
+        virtual ~ConfigTypeLimits() { }
         void setMinInclusive(int v)  { m_minInclusive = v; } 
         void setMinExclusive(int v)  { m_minExclusive = v; } 
         void setMaxInclusive(int v)  { m_maxInclusive = v; } 
@@ -56,7 +55,7 @@ class CfgLimits
         std::vector<AllowedValue> getAllowedValues() const;
         bool isEnumerated() const { return !m_allowedValues.empty();  }
         virtual bool isValueValid(const std::string &testValue) { return true; }
-		virtual int getMin() const { return m_minInclusive; }
+        virtual int getMin() const { return m_minInclusive; }
         virtual int getMax() const { return m_maxInclusive; }
         virtual std::string getString() const { return ""; }
 

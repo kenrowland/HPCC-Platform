@@ -15,32 +15,21 @@
     limitations under the License.
 ############################################################################## */
 
-#ifndef _CONFIG2_CFGSTRINGLIMITS_HPP_
-#define _CONFIG2_CFGSTRINGLIMITS_HPP_
+#ifndef _CONFIG2_CFGINTEGERLIMITS_HPP_
+#define _CONFIG2_CFGINTEGERLIMITS_HPP_
 
-#include "CfgLimits.hpp"
+#include "ConfigTypeLimits.hpp"
 
-
-class CfgStringLimits : public CfgLimits
+class ConfigTypeIntegerLimits : public ConfigTypeLimits
 {
     public:
 
-        CfgStringLimits() : m_removeWhiteSpace(true) { m_minInclusive = 0; }
-        virtual ~CfgStringLimits() { };
-        void setRemoveWhiteSpace(bool remove) { m_removeWhiteSpace = true; }
-        int getMin() const override { return m_minLength; }
-        int getMax() const override { return m_maxLength; }
-        std::string getString() const override;
-        virtual bool isValueValid(const std::string &testValue) const;
-
-
-    protected:
-
-        bool m_removeWhiteSpace;
-
+        ConfigTypeIntegerLimits() { };
+        virtual ~ConfigTypeIntegerLimits() { };
+        int getMin() const { return m_minInclusive; }
+        int getMax() const { return m_maxInclusive; }
+        std::string getString() const override { return "integer limit string"; }
+        virtual bool isValueValid(const std::string &testValue);
 };
 
-
-
-
-#endif // _CONFIG2_CFGSTRINGLIMITS_HPP_
+#endif // _CONFIG2_CFGINTEGERLIMITS_HPP_

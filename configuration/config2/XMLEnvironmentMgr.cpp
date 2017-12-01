@@ -1,18 +1,18 @@
 /*##############################################################################
 
-HPCC SYSTEMS software Copyright (C) 2017 HPCC Systems�.
+    HPCC SYSTEMS software Copyright (C) 2017 HPCC Systems®.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
 
-http://www.apache.org/licenses/LICENSE-2.0
+    http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
 ############################################################################## */
 
 #include "XMLEnvironmentMgr.hpp"
@@ -67,8 +67,8 @@ void XMLEnvironmentMgr::parse(const pt::ptree &envTree, const std::shared_ptr<Co
 		value = envTree.get<std::string>("");
 		if (value != "")
 		{
-			std::shared_ptr<CfgValue> pCfgValue = pConfigItem->getItemCfgValue();
-			std::shared_ptr<EnvValue> pEnvValue = std::make_shared<EnvValue>(pEnvNode, pCfgValue, "");  // node's value has no name
+			std::shared_ptr<ConfigValue> pCfgValue = pConfigItem->getItemCfgValue();
+			std::shared_ptr<EnvironmentValue> pEnvValue = std::make_shared<EnvironmentValue>(pEnvNode, pCfgValue, "");  // node's value has no name
 			pEnvValue->setValue(value, nullptr);
 			pEnvNode->setNodeEnvValue(pEnvValue);
 		}
@@ -93,9 +93,9 @@ void XMLEnvironmentMgr::parse(const pt::ptree &envTree, const std::shared_ptr<Co
 		{
 			for (auto attrIt = it->second.begin(); attrIt != it->second.end(); ++attrIt)
 			{
-				std::shared_ptr<CfgValue> pCfgValue = pConfigItem->getAttribute(attrIt->first);
+				std::shared_ptr<ConfigValue> pCfgValue = pConfigItem->getAttribute(attrIt->first);
 				std::string curValue = attrIt->second.get_value<std::string>();
-				std::shared_ptr<EnvValue> pEnvValue = std::make_shared<EnvValue>(pEnvNode, pCfgValue, attrIt->first, curValue);   // this is where we would use a variant
+				std::shared_ptr<EnvironmentValue> pEnvValue = std::make_shared<EnvironmentValue>(pEnvNode, pCfgValue, attrIt->first, curValue);   // this is where we would use a variant
                 pCfgValue->addEnvValue(pEnvValue);
                 //auto x = pCfgValue.get();
                 //std::shared_ptr<CfgValue> pCopyCfg;
@@ -129,13 +129,13 @@ void XMLEnvironmentMgr::parse(const pt::ptree &envTree, const std::shared_ptr<Co
 
 void XMLEnvironmentMgr::serialize(pt::ptree &envTree, std::shared_ptr<EnvironmentNode> &pEnvNode) const
 {
-	std::vector<std::shared_ptr<EnvValue>> attributes = pEnvNode->getAttributes();
+	std::vector<std::shared_ptr<EnvironmentValue>> attributes = pEnvNode->getAttributes();
 	for (auto attrIt = attributes.begin(); attrIt != attributes.end(); ++attrIt)
 	{
 		envTree.put("<xmlattr>." + (*attrIt)->getName(), (*attrIt)->getValue());
 	}
 
-	std::shared_ptr<EnvValue> pNodeValue = pEnvNode->getNodeEnvValue();
+	std::shared_ptr<EnvironmentValue> pNodeValue = pEnvNode->getNodeEnvValue();
 	if (pNodeValue)
 	{
 		envTree.put_value(pNodeValue->getValue()); 

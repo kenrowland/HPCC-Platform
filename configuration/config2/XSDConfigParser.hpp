@@ -52,8 +52,8 @@ class XSDConfigParser : public ConfigParser
         virtual void parseComplexType(const pt::ptree &typeTree);
         virtual void parseElement(const pt::ptree &elemTree);
 
-        virtual std::shared_ptr<CfgType> getCfgType(const pt::ptree &typeTree, bool nameRequired=true);
-        virtual std::shared_ptr<CfgValue> getCfgValue(const pt::ptree &attr);
+        virtual std::shared_ptr<ConfigValueType> getCfgType(const pt::ptree &typeTree, bool nameRequired=true);
+        virtual std::shared_ptr<ConfigValue> getCfgValue(const pt::ptree &attr);
         
         virtual void parseKey(const pt::ptree &keyTree);
         virtual void parseKeyRef(const pt::ptree &keyTree);

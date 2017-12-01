@@ -55,6 +55,6 @@ void XSDValueSetParser::parseAttributeGroup(const pt::ptree &attributeTree)
 
 void XSDValueSetParser::parseAttribute(const pt::ptree &attr)
 {
-    std::shared_ptr<CfgValue> pCfgValue = getCfgValue(attr);
+    std::shared_ptr<ConfigValue> pCfgValue = getCfgValue(attr);
     m_pValueSet->addCfgValue(pCfgValue);
 }

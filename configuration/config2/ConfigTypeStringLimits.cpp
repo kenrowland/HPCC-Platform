@@ -15,10 +15,10 @@
     limitations under the License.
 ############################################################################## */
 
-#include "CfgStringLimits.hpp"
-#include "EnvValue.hpp"
+#include "ConfigTypeStringLimits.hpp"
+#include "EnvironmentValue.hpp"
 
-std::string CfgStringLimits::getString() const
+std::string ConfigTypeStringLimits::getString() const
 {
 
     std::string limitStr = "";
@@ -46,7 +46,7 @@ std::string CfgStringLimits::getString() const
 }
 
 
-bool CfgStringLimits::isValueValid(const std::string &testValue) const
+bool ConfigTypeStringLimits::isValueValid(const std::string &testValue) const
 {
     bool isValid = true;
 

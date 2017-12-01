@@ -1,12 +1,12 @@
 /*##############################################################################
 
-    HPCC SYSTEMS software Copyright (C) 2017 HPCC SystemsÂ®.
+    HPCC SYSTEMS software Copyright (C) 2017 HPCC Systems®.
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
     You may obtain a copy of the License at
 
-       http://www.apache.org/licenses/LICENSE-2.0
+    http://www.apache.org/licenses/LICENSE-2.0
 
     Unless required by applicable law or agreed to in writing, software
     distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,21 +15,23 @@
     limitations under the License.
 ############################################################################## */
 
-#ifndef _CONFIG2_CONFIGITEMCOMPONENT_HPP_
-#define _CONFIG2_CONFIGITEMCOMPONENT_HPP_
+#include "ConfigTypeIntegerLimits.hpp"
 
-#include <memory>
-#include <vector>
-#include "ConfigValue.hpp"
-#include "ConfigItem.hpp"
-
-
-class ConfigItemComponent : public ConfigItem
+bool ConfigTypeIntegerLimits::isValueValid(const std::string &value)
 {
-    public:
+    bool isValid = true;
+    int testValue;
+    try
+    {
+        testValue = std::stoi(value);
+    }
+    catch (...)
+    {
+        isValid = false;
+    }
 
-        ConfigItemComponent(const std::string &name, std::shared_ptr<ConfigItem> pParent) : ConfigItem(name, "component", pParent) { }
-        virtual ~ConfigItemComponent() { }
-};
+    if (isValid)
+        isValid = testValue >= getMin() && testValue <= getMax();
 
-#endif // _CONFIG2_CONFIGITEMCOMPONENT_HPP_
+    return isValid;
+}

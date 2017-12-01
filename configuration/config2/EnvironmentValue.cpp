@@ -1,24 +1,24 @@
 /*##############################################################################
 
-HPCC SYSTEMS software Copyright (C) 2017 HPCC Systems�.
+    HPCC SYSTEMS software Copyright (C) 2017 HPCC Systems®.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
 
-http://www.apache.org/licenses/LICENSE-2.0
+    http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
 ############################################################################## */
 
-#include "EnvValue.hpp"
+#include "EnvironmentValue.hpp"
 #include "EnvironmentNode.hpp"
 
-bool EnvValue::setValue(const std::string &value, Status *pStatus, bool forceSet)
+bool EnvironmentValue::setValue(const std::string &value, Status *pStatus, bool forceSet)
 { 
     bool rc = true;
     std::string oldValue = m_value;
@@ -44,7 +44,7 @@ bool EnvValue::setValue(const std::string &value, Status *pStatus, bool forceSet
         else
         {
             if (pStatus != nullptr)
-                pStatus->addStatusMsg(statusMsg::error, m_pMyEnvNode.lock()->getId(), m_name, "", "New value is not valid");
+                pStatus->addStatusMsg(statusMsg::error, m_pMyEnvNode.lock()->getId(), m_name, "", "Value not set. New value(" + value + ") not valid");
             //todo, use the cfgValue->cfgType->getstring or whatever to get a status message as to why it's not valid (in line after the not valid above)
         }
     }
@@ -52,7 +52,7 @@ bool EnvValue::setValue(const std::string &value, Status *pStatus, bool forceSet
 }
 
 
-bool EnvValue::checkCurrentValue()
+bool EnvironmentValue::checkCurrentValue()
 {
     bool rc = true;
     if (m_pCfgValue)
@@ -70,27 +70,27 @@ bool EnvValue::checkCurrentValue()
 }
 
 
-std::vector<std::string> EnvValue::getAllValues() const
+std::vector<std::string> EnvironmentValue::getAllValues() const
 {
     std::shared_ptr<EnvironmentNode> pEnvNode = m_pMyEnvNode.lock();
     return pEnvNode->getAllFieldValues(m_pCfgValue->getName());
 }
 
 
-bool EnvValue::isValueValid(const std::string &value) const
+bool EnvironmentValue::isValueValid(const std::string &value) const
 {
     return m_pCfgValue->isValueValid(value, this);
 }
 
 
-void EnvValue::validate(Status &status, const std::string &myId) const
+void EnvironmentValue::validate(Status &status, const std::string &myId) const
 {
 
     if (!m_pCfgValue->isConfigured())
-        status.addStatusMsg(statusMsg::warning, myId, m_name, "", "No configuration exists for this value");
+        status.addStatusMsg(statusMsg::warning, myId, m_name, "", "No type information exists");
 
     if (m_forcedSet)
-        status.addStatusMsg(statusMsg::warning, myId, m_name, "", "Current value was force set");
+        status.addStatusMsg(statusMsg::warning, myId, m_name, "", "Current value was force set to an invalid value");
 
     // Will generate status based on current value and type
     m_pCfgValue->validate(status, myId, this);

@@ -20,7 +20,7 @@
 
 #include <memory>
 #include <vector>
-#include "CfgValue.hpp"
+#include "ConfigValue.hpp"
 #include "ConfigItem.hpp"
 
 
@@ -31,19 +31,19 @@ class ConfigItemValueSet : public ConfigItem
 		ConfigItemValueSet(const std::string &name, std::shared_ptr<ConfigItem> pParent) : ConfigItem(name, "valueset", pParent) { }
         virtual ~ConfigItemValueSet() { };
 
-        void addCfgValue(const std::shared_ptr<CfgValue> pValue);
+        void addCfgValue(const std::shared_ptr<ConfigValue> pValue);
         void addCfgValue(const std::shared_ptr<ConfigItemValueSet> &valueSet);
-        const std::vector<std::shared_ptr<CfgValue>> &getCfgValues() const;
+        const std::vector<std::shared_ptr<ConfigValue>> &getCfgValues() const;
 
 
     private:
 
-        std::shared_ptr<CfgValue> findValue(const std::string &valueName, bool throwIfNotFound = true) const;
+        std::shared_ptr<ConfigValue> findValue(const std::string &valueName, bool throwIfNotFound = true) const;
 
 
     protected:
 
-        std::vector<std::shared_ptr<CfgValue>> m_cfgValues;
+        std::vector<std::shared_ptr<ConfigValue>> m_cfgValues;
 
 };
 

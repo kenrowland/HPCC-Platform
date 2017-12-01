@@ -18,13 +18,13 @@
 #include <exception>
 #include "XSDConfigParser.hpp"
 #include "ConfigExceptions.hpp"
-#include "CfgValue.hpp"
+#include "ConfigValue.hpp"
 
 #include "XSDComponentParser.hpp"
 #include "XSDValueSetParser.hpp"
 #include "ConfigItemComponent.hpp"
-#include "CfgStringLimits.hpp"
-#include "CfgIntegerLimits.hpp"
+#include "ConfigTypeStringLimits.hpp"
+#include "ConfigTypeIntegerLimits.hpp"
 
 namespace pt = boost::property_tree;
 
@@ -35,50 +35,50 @@ bool XSDConfigParser::doParse(const std::vector<std::string> &cfgParms)
     {
 		//
 		// Add some default types to the config. Note changing values for limits 
-		std::shared_ptr<CfgLimits> pStringLimits;
-		std::shared_ptr<CfgLimits> pIntLimits;
+		std::shared_ptr<ConfigTypeLimits> pStringLimits;
+		std::shared_ptr<ConfigTypeLimits> pIntLimits;
 
-		std::shared_ptr<CfgType> pType = std::make_shared<CfgType>("xs:string");
-        pStringLimits = std::make_shared<CfgStringLimits>();
+		std::shared_ptr<ConfigValueType> pType = std::make_shared<ConfigValueType>("xs:string");
+        pStringLimits = std::make_shared<ConfigTypeStringLimits>();
 		pType->setLimits(pStringLimits);
 		m_pConfig->addType(pType);
 
-		pType = std::make_shared<CfgType>("xs:token");
-        pStringLimits = std::make_shared<CfgStringLimits>();
+		pType = std::make_shared<ConfigValueType>("xs:token");
+        pStringLimits = std::make_shared<ConfigTypeStringLimits>();
 		pType->setLimits(pStringLimits);
 		m_pConfig->addType(pType);
 
-		pType = std::make_shared<CfgType>("xs:boolean");
-        std::shared_ptr<CfgLimits> pBoolLimits = std::make_shared<CfgStringLimits>();
+		pType = std::make_shared<ConfigValueType>("xs:boolean");
+        std::shared_ptr<ConfigTypeLimits> pBoolLimits = std::make_shared<ConfigTypeStringLimits>();
         pBoolLimits->addAllowedValue("true");
         pBoolLimits->addAllowedValue("false");
 		pType->setLimits(pBoolLimits);
 		m_pConfig->addType(pType);
 
-		pType = std::make_shared<CfgType>("xs:integer");
-        pIntLimits = std::make_shared<CfgIntegerLimits>();
+		pType = std::make_shared<ConfigValueType>("xs:integer");
+        pIntLimits = std::make_shared<ConfigTypeIntegerLimits>();
 		pType->setLimits(pIntLimits);
 		m_pConfig->addType(pType);
 
-		pType = std::make_shared<CfgType>("xs:int");
-        pIntLimits = std::make_shared<CfgIntegerLimits>();
+		pType = std::make_shared<ConfigValueType>("xs:int");
+        pIntLimits = std::make_shared<ConfigTypeIntegerLimits>();
 		pType->setLimits(pIntLimits);
 		m_pConfig->addType(pType);
 
-		pType = std::make_shared<CfgType>("xs:nonNegativeInteger");
-        pIntLimits = std::make_shared<CfgIntegerLimits>();
+		pType = std::make_shared<ConfigValueType>("xs:nonNegativeInteger");
+        pIntLimits = std::make_shared<ConfigTypeIntegerLimits>();
 		pIntLimits->setMinInclusive(0);
 		pType->setLimits(pIntLimits);
 		m_pConfig->addType(pType);
 
-		pType = std::make_shared<CfgType>("xs:positiveInteger");
-        pIntLimits = std::make_shared<CfgIntegerLimits>();
+		pType = std::make_shared<ConfigValueType>("xs:positiveInteger");
+        pIntLimits = std::make_shared<ConfigTypeIntegerLimits>();
 		pIntLimits->setMinInclusive(1);
 		pType->setLimits(pIntLimits);
 		m_pConfig->addType(pType);
 
-        pType = std::make_shared<CfgType>("xs:unsignedInt");
-        pIntLimits = std::make_shared<CfgIntegerLimits>();
+        pType = std::make_shared<ConfigValueType>("xs:unsignedInt");
+        pIntLimits = std::make_shared<ConfigTypeIntegerLimits>();
         pIntLimits->setMinInclusive(0);
         pType->setLimits(pIntLimits);
         m_pConfig->addType(pType);
@@ -188,14 +188,14 @@ std::string XSDConfigParser::getXSDAttributeValue(const pt::ptree &tree, const s
 
 void XSDConfigParser::parseSimpleType(const pt::ptree &typeTree)
 {
-    std::shared_ptr<CfgType> pCfgType = getCfgType(typeTree, true);
+    std::shared_ptr<ConfigValueType> pCfgType = getCfgType(typeTree, true);
     m_pConfig->addType(pCfgType);
 }
 
 
 void XSDConfigParser::parseAttribute(const pt::ptree &attr)
 {
-    std::shared_ptr<CfgValue> pCfgValue = getCfgValue(attr);
+    std::shared_ptr<ConfigValue> pCfgValue = getCfgValue(attr);
 	m_pConfig->insertAttribute(pCfgValue);
 }
 
@@ -323,10 +323,10 @@ void XSDConfigParser::parseElement(const pt::ptree &elemTree)
         // If a type is specified, then either it's a simple value type (which could be previously defined) for this element, or a named complex type. 
         if (typeName != "")
         {
-            const std::shared_ptr<CfgType> pSimpleType = m_pConfig->getType(typeName, false);
+            const std::shared_ptr<ConfigValueType> pSimpleType = m_pConfig->getType(typeName, false);
             if (pSimpleType != nullptr)
             {
-                std::shared_ptr<CfgValue> pCfgValue = std::make_shared<CfgValue>("");  // no name value since it's the element's value 
+                std::shared_ptr<ConfigValue> pCfgValue = std::make_shared<ConfigValue>("");  // no name value since it's the element's value 
                 pCfgValue->setType(pSimpleType);                      // will throw if type is not defined
                 pConfigElement->setItemCfgValue(pCfgValue);
             }
@@ -379,18 +379,18 @@ void XSDConfigParser::parseElement(const pt::ptree &elemTree)
 }
 
 
-std::shared_ptr<CfgType> XSDConfigParser::getCfgType(const pt::ptree &typeTree, bool nameRequired)
+std::shared_ptr<ConfigValueType> XSDConfigParser::getCfgType(const pt::ptree &typeTree, bool nameRequired)
 {
     std::string typeName = getXSDAttributeValue(typeTree, "<xmlattr>.name", nameRequired, "");
 
-    std::shared_ptr<CfgType> pCfgType = std::make_shared<CfgType>(typeName);
-    std::shared_ptr<CfgLimits> pLimits; // = std::make_shared<CfgLimits>();
+    std::shared_ptr<ConfigValueType> pCfgType = std::make_shared<ConfigValueType>(typeName);
+    std::shared_ptr<ConfigTypeLimits> pLimits; // = std::make_shared<CfgLimits>();
     auto restriction = typeTree.find("xs:restriction");
     if (restriction != typeTree.not_found())
     {
         std::string baseType = getXSDAttributeValue(restriction->second, "<xmlattr>.base");
-		std::shared_ptr<CfgType> pType = std::make_shared<CfgType>(*(m_pConfig->getType(baseType)));
-		pLimits = std::make_shared<CfgLimits>(*(pType->getLimits()));
+		std::shared_ptr<ConfigValueType> pType = std::make_shared<ConfigValueType>(*(m_pConfig->getType(baseType)));
+		pLimits = std::make_shared<ConfigTypeLimits>(*(pType->getLimits()));
         if (!pLimits)
         {
             std::string msg = "Unsupported base type(" + baseType + ")";
@@ -447,10 +447,10 @@ std::shared_ptr<CfgType> XSDConfigParser::getCfgType(const pt::ptree &typeTree, 
 }
 
 
-std::shared_ptr<CfgValue> XSDConfigParser::getCfgValue(const pt::ptree &attr)
+std::shared_ptr<ConfigValue> XSDConfigParser::getCfgValue(const pt::ptree &attr)
 {
     std::string attrName = getXSDAttributeValue(attr, "<xmlattr>.name");
-    std::shared_ptr<CfgValue> pCfgValue = std::make_shared<CfgValue>(attrName);
+    std::shared_ptr<ConfigValue> pCfgValue = std::make_shared<ConfigValue>(attrName);
     pCfgValue->setDisplayName(attr.get("<xmlattr>.hpcc:displayName", attrName));
     pCfgValue->setRequired(attr.get("<xmlattr>.use", "optional") == "required");
     pCfgValue->setTooltip(attr.get("<xmlattr>.hpcc:tooltip", ""));
@@ -478,7 +478,7 @@ std::shared_ptr<CfgValue> XSDConfigParser::getCfgValue(const pt::ptree &attr)
     }
     else
     {
-        std::shared_ptr<CfgType> pCfgType = getCfgType(attr.get_child("xs:simpleType", pt::ptree()), false);
+        std::shared_ptr<ConfigValueType> pCfgType = getCfgType(attr.get_child("xs:simpleType", pt::ptree()), false);
         if (!pCfgType->isComplete())
         {
             throw(ParseException("Attribute " + attrName + " does not have a valid type"));

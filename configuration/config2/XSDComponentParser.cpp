@@ -65,7 +65,7 @@ void XSDComponentParser::parseXSD(const pt::ptree &compTree)
             std::string elementDataType = elemTree.get("<xmlattr>.type", "");
             if (elementDataType != "")
             {
-                std::shared_ptr<CfgValue> pItemCfgValue = std::make_shared<CfgValue>("elementData");
+                std::shared_ptr<ConfigValue> pItemCfgValue = std::make_shared<ConfigValue>("elementData");
                 pItemCfgValue->setType(m_pConfig->getType(elementDataType));
                 pItemCfgValue->setDefault(elemTree.get("<xmlattr>.default", ""));
             }
