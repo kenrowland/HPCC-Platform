@@ -15,6 +15,9 @@
     limitations under the License.
 ############################################################################## */
 
+// todo: look at bitmask for booleans
+// todo: look at map for generic string attributes like name, displayName, etc.
+
 #ifndef _CONFIG2_VALUE_HPP_
 #define _CONFIG2_VALUE_HPP_
 
