@@ -27,6 +27,11 @@ Cws_config2Ex::~Cws_config2Ex()
 }
 
 
+bool Cws_config2Ex::onopenSession(IEspContext &context, IEspOpenSessionRequest &req, IEspOpenSessionResponse &resp) { return true; }
+bool Cws_config2Ex::oncloseSession(IEspContext &context, IEspCloseSessionRequest &req, IEspPassFailResponse &resp) { return true; }
+bool Cws_config2Ex::onsetEnvironmentConfig(IEspContext &context, IEspSetEnvironmentConfigRequest &req, IEspPassFailResponse &resp) { return true; }
+bool Cws_config2Ex::ongetEnvironmentFileList(IEspContext &context, IEspGetEnvironmentListRequest &req, IEspGetEnvironmentListResponse &resp) { return true; }
+
 bool Cws_config2Ex::ongetNode(IEspContext &context, IEspGetNodeRequest &req, IEspGetNodeResponse &resp)
 {
     std::string id = req.getNodeId();
@@ -45,16 +50,15 @@ bool Cws_config2Ex::ongetNode(IEspContext &context, IEspGetNodeRequest &req, IEs
         IArrayOf<IEspattributeType> nodeAttributes;
         if (pNode->hasAttributes())
         {
-            std::vector<std::shared_ptr<EnvValue>> attributes = pNode->getAttributes();
+            std::vector<std::shared_ptr<EnvironmentValue>> attributes = pNode->getAttributes();
             for (auto it=attributes.begin(); it!=attributes.end(); ++it)
             {
-                std::shared_ptr<EnvValue> pAttr = *it;
+                std::shared_ptr<EnvironmentValue> pAttr = *it;
                 Owned<IEspattributeType> pAttribute = createattributeType();
                 
-                const std::shared_ptr<CfgValue> &pCfgValue = pAttr->getCfgValue();
+                const std::shared_ptr<ConfigValue> &pCfgValue = pAttr->getCfgValue();
                 std::string attributeName = pAttr->getName();
-                pAttribute->updateItemInfo().setName(attributeName.c_str());
-                pAttribute->updateItemInfo().setDisplayName(pCfgValue->getDisplayName().c_str());
+                pAttribute->setName(pCfgValue->getDisplayName().c_str());
                 if (attributeName == "name" && pAttr->isValueSet())
                 {
                     nodeDisplayName = pAttr->getValue();
@@ -62,8 +66,8 @@ bool Cws_config2Ex::ongetNode(IEspContext &context, IEspGetNodeRequest &req, IEs
 
                 pAttribute->updateDoc().setTooltip(pCfgValue->getTooltip().c_str());
                 
-                const std::shared_ptr<CfgType> &pType = pCfgValue->getType();
-                std::shared_ptr<CfgLimits> &pLimits = pType->getLimits();
+                const std::shared_ptr<ConfigValueType> &pType = pCfgValue->getType();
+                std::shared_ptr<ConfigTypeLimits> &pLimits = pType->getLimits();
                 pAttribute->updateType().setName(pType->getName().c_str());
                 pAttribute->updateType().updateLimits().setMin(pType->getLimits()->getMin());
                 pAttribute->updateType().updateLimits().setMax(pType->getLimits()->getMin());
@@ -117,8 +121,7 @@ bool Cws_config2Ex::ongetNode(IEspContext &context, IEspGetNodeRequest &req, IEs
                 std::shared_ptr<EnvironmentNode> pNode = *it;
                 const std::shared_ptr<ConfigItem> pConfigItem = pNode->getConfigItem();
                 Owned<IEspelementType> pElement = createelementType();
-                pElement->updateItemInfo().setName(pNode->getName().c_str());
-                pElement->updateItemInfo().setDisplayName(pConfigItem->getDisplayName().c_str());
+                pElement->setName(pConfigItem->getDisplayName().c_str());
                 pElement->setElementType(pConfigItem->getItemType().c_str());
                 pElement->setClass(pConfigItem->getClassName().c_str());
                 pElement->setCategory(pConfigItem->getCategory().c_str());
@@ -145,17 +148,18 @@ bool Cws_config2Ex::ongetNode(IEspContext &context, IEspGetNodeRequest &req, IEs
 
             
         }
+        resp.setChildren(elements); 
 
         //
         // Now add any configuration elements that don't have instantiations in the environment. These get an empty nodeId 
         // to indicate that no configured environment item exists and that it can be added
         
+        //IArrayOf<IEspelementType> elements;
         for (auto it=nodeConfigChildren.begin(); it!=nodeConfigChildren.end(); ++it)
         {
             std::shared_ptr<ConfigItem> pConfigItem = *it;
             Owned<IEspelementType> pElement = createelementType();
-            pElement->updateItemInfo().setName(pConfigItem->getName().c_str());
-            pElement->updateItemInfo().setDisplayName(pConfigItem->getDisplayName().c_str());
+            pElement->setName(pConfigItem->getDisplayName().c_str());
             pElement->setElementType(pConfigItem->getItemType().c_str());
             pElement->setClass(pConfigItem->getClassName().c_str());
             pElement->setCategory(pConfigItem->getCategory().c_str());
@@ -167,21 +171,22 @@ bool Cws_config2Ex::ongetNode(IEspContext &context, IEspGetNodeRequest &req, IEs
             pElement->setNumChildren(0);
             elements.append(*pElement.getLink());
         }
-        resp.setChildren(elements); 
+        //resp.setChildren(elements); 
+
 
         if (pNodeConfigItem->isItemValueDefined())
         {
             resp.setNodeValueDefined(true);  
 
-            const std::shared_ptr<CfgValue> &pNodeCfgValue = pNodeConfigItem->getItemCfgValue();
-            const std::shared_ptr<CfgType> &pType = pNodeCfgValue->getType();
+            const std::shared_ptr<ConfigValue> &pNodeCfgValue = pNodeConfigItem->getItemCfgValue();
+            const std::shared_ptr<ConfigValueType> &pType = pNodeCfgValue->getType();
             resp.updateValue().updateType().setName(pType->getName().c_str());
             resp.updateValue().updateType().updateLimits().setMin(pType->getLimits()->getMin());
             resp.updateValue().updateType().updateLimits().setMax(pType->getLimits()->getMin());
 
             if (pNode->isNodeValueSet())
             {
-                const std::shared_ptr<EnvValue> &pNodeValue = pNode->getNodeEnvValue();
+                const std::shared_ptr<EnvironmentValue> &pNodeValue = pNode->getNodeEnvValue();
                 resp.setNodeValueSet(true);
                 resp.updateValue().setCurrentValue(pNodeValue->getValue().c_str());
             }

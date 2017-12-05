@@ -1,6 +1,6 @@
 ##############################################################################
 #
-#    HPCC SYSTEMS software Copyright (C) 2012 HPCC Systems®.
+#    HPCC SYSTEMS software Copyright (C) 2012 HPCC Systemsï¿½.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License");
 #    you may not use this file except in compliance with the License.
@@ -23,12 +23,12 @@ SET(  SRCS
 	  ConfigParser.cpp
 	  ConfigItemValueSet.cpp
 	  ConfigItem.cpp
-	  CfgValue.cpp
-	  CfgLimits.cpp
-	  CfgIntegerLimits.cpp
-	  CfgStringLimits.cpp
+	  ConfigValue.cpp
+	  ConfigTypeLimits.cpp
+	  ConfigTypeIntegerLimits.cpp
+	  ConfigTypeStringLimits.cpp
 	  EnvironmentNode.cpp
-	  EnvValue.cpp
+	  EnvironmentValue.cpp
 	  XSDComponentParser.cpp
 	  XSDConfigParser.cpp
 	  XSDValueSetParser.cpp

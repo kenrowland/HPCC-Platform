@@ -22,6 +22,11 @@ public:
     virtual bool onsetValues(IEspContext &context, IEspSetValuesRequest &req, IEspSetValuesResponse &resp);
     virtual bool ongetParents(IEspContext &context, IEspGetParentsRequest &req, IEspGetParentsResponse &resp);
 
+    virtual bool onopenSession(IEspContext &context, IEspOpenSessionRequest &req, IEspOpenSessionResponse &resp);
+    virtual bool oncloseSession(IEspContext &context, IEspCloseSessionRequest &req, IEspPassFailResponse &resp);
+    virtual bool onsetEnvironmentConfig(IEspContext &context, IEspSetEnvironmentConfigRequest &req, IEspPassFailResponse &resp);
+    virtual bool ongetEnvironmentFileList(IEspContext &context, IEspGetEnvironmentListRequest &req, IEspGetEnvironmentListResponse &resp);
+
 
 private:
 
