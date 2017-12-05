@@ -50,11 +50,15 @@ int main()
 
         // 158
         //auto pNode = envMgr.getNodeFromPath("158");
-        auto pNode = pEnvMgr->getEnvironmentNode("74");     // 29 is Hardware/Computer
+        // auto pNode = pEnvMgr->getEnvironmentNode("74");     // 29 is Hardware/Computer
+        auto pNode = pEnvMgr->getEnvironmentNode("35");     
 
-        auto x = pNode->getAllFieldValues("name");
+        //auto x = pNode->getAllFieldValues("name");
 
-        auto attributes = pNode->getAttributes();
+        auto list = pNode->getInsertableItems();
+
+
+        /*auto attributes = pNode->getAttributes();
         for (auto it = attributes.begin(); it != attributes.end(); ++it)
         {
             if ((*it)->getName() == "service")
@@ -64,7 +68,7 @@ int main()
                 auto values = pCfgValue->getAllowedValues(pEnvValue.get());
                 int i = 3;
             }
-        }
+        }*/
 
 
         // keyref needs to look local first, then search the config tree, but field is ALWAYS local

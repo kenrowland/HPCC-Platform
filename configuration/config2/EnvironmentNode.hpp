@@ -58,6 +58,7 @@ class EnvironmentNode : public std::enable_shared_from_this<EnvironmentNode>
         void validate(Status &status, bool includeChildren=false) const;
 		std::vector<std::string> getAllFieldValues(const std::string &fieldName) const;
 		const std::shared_ptr<ConfigItem> &getConfigItem() const { return m_pConfigItem; }
+        std::vector<std::shared_ptr<ConfigItem>> getInsertableItems() const;
 
 
 	protected:

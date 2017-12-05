@@ -579,7 +579,7 @@
              netAddress="."
              port="8877"/>
   </SashaServerProcess>
-  <!--EspService ActivityInfoCacheSeconds="10"
+  <EspService ActivityInfoCacheSeconds="10"
               allowNewRoxieOnDemandQuery="false"
               AWUsCacheTimeout="15"
               build="_"
@@ -717,7 +717,7 @@
                   required="Read"
                   resource="SmcAccess"/>
    </Properties>
-  </EspService -->
+  </EspService >
   <EspService build="_"
               buildSet="ws_ecl"
               description="WS ECL Service"

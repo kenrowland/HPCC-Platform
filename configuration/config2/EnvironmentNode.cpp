@@ -189,7 +189,7 @@ bool EnvironmentNode::setValue(const std::string &value, Status &status, bool fo
     else
     {
         std::shared_ptr<ConfigValue> pCfgValue = m_pConfigItem->getItemCfgValue();
-        
+
         m_pNodeValue = std::make_shared<EnvironmentValue>(shared_from_this(), pCfgValue, "");  // node's value has no name
         rc = m_pNodeValue->setValue(value, &status, force);
     }
@@ -257,4 +257,49 @@ const std::shared_ptr<EnvironmentValue> EnvironmentNode::getAttribute(const std:
         pValue = it->second;
     }
     return pValue;
+}
+
+
+std::vector<std::shared_ptr<ConfigItem>> EnvironmentNode::getInsertableItems() const
+{
+    std::vector<std::shared_ptr<ConfigItem>> insertableItems;
+    std::map<std::string, unsigned> childCounts;
+
+    //
+    // Iterate over the children and for each, create a childCount entry based on the 
+    // child node's configuration type
+    for (auto childIt = m_children.begin(); childIt != m_children.end(); ++childIt)
+    {
+        std::string itemType = childIt->second->getConfigItem()->getItemType();
+        auto findIt = childCounts.find(itemType);
+        if (findIt != childCounts.end())
+        {
+            ++findIt->second;
+        }
+        else
+        {
+            childCounts.insert({ itemType, 1 });
+        }
+    }
+
+    //
+    // Now get the full list of configurable items, then resolve it against the child counts from 
+    // above to build a vector of insertable items
+    std::vector<std::shared_ptr<ConfigItem>> configChildren = m_pConfigItem->getChildren();
+    for (auto cfgIt = configChildren.begin(); cfgIt != configChildren.end(); ++cfgIt)
+    {
+        auto findIt = childCounts.find((*cfgIt)->getItemType());
+        if (findIt != childCounts.end())
+        {
+            if (findIt->second < (*cfgIt)->getMaxInstances())
+            {
+                insertableItems.push_back(*cfgIt);
+            }
+        }
+        else
+        {
+            insertableItems.push_back(*cfgIt);
+        }
+    }
+    return insertableItems;
 }

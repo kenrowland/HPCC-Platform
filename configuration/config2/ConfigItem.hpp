@@ -49,10 +49,10 @@ class ConfigItem : public std::enable_shared_from_this<ConfigItem>
         virtual const std::string &getCategory() const { return m_category; }
         virtual void setItemType(const std::string &itemType) { m_itemType = itemType;  }
         virtual const std::string &getItemType() const;
-        void setMinInstances(int num) { m_minInstances = num; }
-        int getMinInstances() const { return m_minInstances; }
-        void setMaxInstances(int num) { m_maxInstances = num; }
-        int getMaxInstances() const { return m_maxInstances; }
+        void setMinInstances(unsigned num) { m_minInstances = num; }
+        unsigned getMinInstances() const { return m_minInstances; }
+        void setMaxInstances(unsigned num) { m_maxInstances = num; }
+        unsigned getMaxInstances() const { return m_maxInstances; }
         virtual void addType(const std::shared_ptr<ConfigValueType> &pType);
         virtual std::shared_ptr<ConfigValueType> getType(const std::string &typeName, bool throwIfNotPresent = true) const;
         void setVersion(int version) { m_version = version;  }
@@ -94,8 +94,8 @@ class ConfigItem : public std::enable_shared_from_this<ConfigItem>
         std::string m_category;  // used for further subdividing to the user
         std::string m_componentName;   
         std::string m_itemType;
-        int m_minInstances;
-        int m_maxInstances;
+        unsigned m_minInstances;
+        unsigned m_maxInstances;
         int m_version;
         std::multimap<std::string, std::shared_ptr<ConfigItem>> m_children; 
         std::shared_ptr<ConfigValue> m_pItemCfgValue;   // value for this item (think of it as the VALUE for an element <xx attr= att1=>VALUE</xx>)

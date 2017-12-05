@@ -299,9 +299,9 @@ void XSDConfigParser::parseElement(const pt::ptree &elemTree)
     std::string category = elemTree.get("<xmlattr>.hpcc:category", "");
     std::string displayName = elemTree.get("<xmlattr>.hpcc:displayName", "");
     std::string typeName = elemTree.get("<xmlattr>.type", "");
-    int minOccurs = elemTree.get("<xmlattr>.minOccurs", 1);
+    unsigned minOccurs = elemTree.get("<xmlattr>.minOccurs", 1);
     std::string maxOccursStr = elemTree.get("<xmlattr>.maxOccurs", "1");
-    int maxOccurs = (maxOccursStr != "unbounded") ? stoi(maxOccursStr) : -1;
+    unsigned maxOccurs = (maxOccursStr != "unbounded") ? stoi(maxOccursStr) : UINTMAX_MAX;
 
     std::shared_ptr<ConfigItem> pConfigElement = std::make_shared<ConfigItem>(elementName, className, m_pConfig);
     pConfigElement->setDisplayName(displayName);
