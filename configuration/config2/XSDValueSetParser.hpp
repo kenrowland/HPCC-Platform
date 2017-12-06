@@ -33,8 +33,8 @@ class XSDValueSetParser : public XSDConfigParser
 {
     public:
 
-        XSDValueSetParser(const std::string &basePath, std::shared_ptr<ConfigItem> pValueSet) : 
-            XSDConfigParser(basePath, pValueSet) { m_pValueSet = std::dynamic_pointer_cast<ConfigItemValueSet>(pValueSet);  }
+        XSDValueSetParser(std::shared_ptr<ConfigItem> pValueSet) : 
+            XSDConfigParser(pValueSet) { m_pValueSet = std::dynamic_pointer_cast<ConfigItemValueSet>(pValueSet);  }
         virtual ~XSDValueSetParser() { }
         virtual void parseXSD(const pt::ptree &valueSetTree);
         void parseAttributeGroup(const pt::ptree &attributeTree);

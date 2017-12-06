@@ -21,21 +21,20 @@
 
 
 
-EnvironmentMgr *getEnvironmentMgrInstance(const std::string &envType, const std::string &configPath)
+EnvironmentMgr *getEnvironmentMgrInstance(const std::string &envType)
 {
     EnvironmentMgr *pEnvMgr = NULL;
     if (envType == "XML")
     {
         //std::shared_ptr<ConfigParser> pCfgParser = std::make_shared<XSDConfigParser>(configPath, m_pConfig);
-        pEnvMgr = new XMLEnvironmentMgr(configPath);
+        pEnvMgr = new XMLEnvironmentMgr();
     }
     return pEnvMgr;
 }
 
 
-EnvironmentMgr::EnvironmentMgr(const std::string &configPath) :
-    m_key(0), 
-    m_configPath(configPath)
+EnvironmentMgr::EnvironmentMgr() :
+    m_key(0)
 {
     m_pConfig = std::make_shared<ConfigItem>("root");  // make the root
 }
@@ -61,7 +60,7 @@ bool EnvironmentMgr::loadConfig(const std::vector<std::string> &cfgParms)  // to
 bool EnvironmentMgr::loadEnvironment(const std::string &filename)
 {
     std::ifstream in;
-    std::string fpath = m_configPath + filename;
+    std::string fpath = filename;
     
     in.open(fpath);
     if (in.is_open())

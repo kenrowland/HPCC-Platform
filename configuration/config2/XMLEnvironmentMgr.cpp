@@ -22,7 +22,7 @@
 
 bool XMLEnvironmentMgr::createParser(const std::vector<std::string> &cfgParms)
 {
-    m_pConfigParser = std::make_shared<XSDConfigParser>(m_configPath, m_pConfig);
+    m_pConfigParser = std::make_shared<XSDConfigParser>(m_pConfig);
     return true;
 }
 

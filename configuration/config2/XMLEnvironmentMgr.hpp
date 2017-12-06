@@ -29,9 +29,9 @@ class XMLEnvironmentMgr : 	public EnvironmentMgr
 {
 	public:
 
-		XMLEnvironmentMgr(const std::string &configPath) : EnvironmentMgr(configPath) { }
+		XMLEnvironmentMgr() { }
 		~XMLEnvironmentMgr() { }
-
+        
 
 	protected:
 

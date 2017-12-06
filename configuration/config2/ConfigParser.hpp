@@ -32,21 +32,20 @@ class ConfigParser
 {
     public:
 
-        ConfigParser(const std::string &basePath, std::shared_ptr<ConfigItem> &pConfig) : m_basePath(basePath), m_pConfig(pConfig) { };
+        ConfigParser(std::shared_ptr<ConfigItem> &pConfig) : m_pConfig(pConfig) { };
         virtual ~ConfigParser() { };
         virtual bool parseEnvironmentConfig(const std::vector<std::string> &cfgParms, Status &status);
     
 
     protected:
 
-        virtual bool doParse(const std::vector<std::string> &cfgParms) = 0;
+        virtual bool doParse(const std::vector<std::string> &cfgParms, Status &status) = 0;
         ConfigParser() { };
         std::vector<std::string> split(const std::string  &input, const std::string  &delim);
         
 
     protected:
 
-        std::string m_basePath;
         std::shared_ptr<ConfigItem> m_pConfig;
 };
 

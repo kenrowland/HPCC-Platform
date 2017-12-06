@@ -23,7 +23,7 @@ bool ConfigParser::parseEnvironmentConfig(const std::vector<std::string> &cfgPar
 {
     try
     {
-        doParse(cfgParms);
+        doParse(cfgParms, status);
     }
     catch (const ParseException &pe)
     {

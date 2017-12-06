@@ -28,7 +28,7 @@
 
 namespace pt = boost::property_tree;
 
-bool XSDConfigParser::doParse(const std::vector<std::string> &cfgParms)
+bool XSDConfigParser::doParse(const std::vector<std::string> &cfgParms, Status &status)
 {
     bool rc = true;
     //try
@@ -83,8 +83,12 @@ bool XSDConfigParser::doParse(const std::vector<std::string> &cfgParms)
         pType->setLimits(pIntLimits);
         m_pConfig->addType(pType);
 
-        m_buildsetFilename = cfgParms[1];
-        parseXSD(cfgParms[0]);
+        //
+        // Get our specific XSD parameters from the input 
+        m_basePath = cfgParms[0];
+        m_masterXSDFilename = cfgParms[1];
+        m_buildsetFilename = cfgParms[2];
+        parseXSD(m_masterXSDFilename);
     }
     
     return rc;
@@ -206,7 +210,7 @@ void XSDConfigParser::parseAttributeGroup(const pt::ptree &attributeTree)
 	if (groupName != "")
 	{
 		std::shared_ptr<ConfigItemValueSet> pValueSet = std::make_shared<ConfigItemValueSet>(groupName, m_pConfig);
-		std::shared_ptr<XSDValueSetParser> pXSDValueSetParaser = std::make_shared<XSDValueSetParser>(m_basePath, std::dynamic_pointer_cast<ConfigItem>(pValueSet));
+		std::shared_ptr<XSDValueSetParser> pXSDValueSetParaser = std::make_shared<XSDValueSetParser>(std::dynamic_pointer_cast<ConfigItem>(pValueSet));
 		pXSDValueSetParaser->parseXSD(attributeTree.get_child("", pt::ptree()));
 		m_pConfig->addConfigType(pValueSet, groupName);
 	}
@@ -246,7 +250,7 @@ void XSDConfigParser::parseComplexType(const pt::ptree &typeTree)
                 pt::ptree componentTree = typeTree.get_child("", pt::ptree());
                 if (!componentTree.empty())
                 {
-                    std::shared_ptr<XSDComponentParser> pComponentXSDParaser = std::make_shared<XSDComponentParser>(m_basePath, std::dynamic_pointer_cast<ConfigItem>(pComponent));
+                    std::shared_ptr<XSDComponentParser> pComponentXSDParaser = std::make_shared<XSDComponentParser>(std::dynamic_pointer_cast<ConfigItem>(pComponent));
                     pComponentXSDParaser->parseXSD(typeTree);
                     m_pConfig->addConfigType(pComponent, complexTypeName);
                 }
@@ -271,7 +275,7 @@ void XSDConfigParser::parseComplexType(const pt::ptree &typeTree)
             pt::ptree childTree = typeTree.get_child("", pt::ptree());
             if (!childTree.empty())
             {
-                std::shared_ptr<XSDConfigParser> pXSDParaser = std::make_shared<XSDConfigParser>(m_basePath, pTypeItem);
+                std::shared_ptr<XSDConfigParser> pXSDParaser = std::make_shared<XSDConfigParser>(pTypeItem);
                 pXSDParaser->parseXSD(childTree);
                 m_pConfig->addConfigType(pTypeItem, complexTypeName);
             }
@@ -367,7 +371,7 @@ void XSDConfigParser::parseElement(const pt::ptree &elemTree)
         // Now, if there are children, create a parser and have at it
         if (!childTree.empty())
         {
-            std::shared_ptr<XSDConfigParser> pXSDParaser = std::make_shared<XSDConfigParser>(m_basePath, pConfigElement);
+            std::shared_ptr<XSDConfigParser> pXSDParaser = std::make_shared<XSDConfigParser>(pConfigElement);
             pXSDParaser->parseXSD(childTree);
         }
 

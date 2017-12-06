@@ -32,7 +32,7 @@ class XSDComponentParser : public XSDConfigParser
 {
     public:
 
-        XSDComponentParser(const std::string &basePath, std::shared_ptr<ConfigItem> pConfig) : XSDConfigParser(basePath, pConfig) { }
+        XSDComponentParser(std::shared_ptr<ConfigItem> pConfig) : XSDConfigParser(pConfig) { }
         virtual ~XSDComponentParser() { }
         virtual void parseXSD(const pt::ptree &tree);
 

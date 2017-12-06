@@ -36,7 +36,7 @@
 
 class EnvironmentMgr;
 
-EnvironmentMgr *getEnvironmentMgrInstance(const std::string &envType, const std::string &configPath);
+EnvironmentMgr *getEnvironmentMgrInstance(const std::string &envType);
 
 
 class EnvironmentMgr
@@ -48,7 +48,7 @@ class EnvironmentMgr
             std::string value;
         };
 
-        EnvironmentMgr(const std::string &configPath);
+        EnvironmentMgr();
         virtual ~EnvironmentMgr() { }
 
         // add a load from stream?
@@ -69,13 +69,14 @@ class EnvironmentMgr
         
         void addPath(const std::shared_ptr<EnvironmentNode> pNode);
         virtual bool createParser(const std::vector<std::string> &cfgParms) = 0;
+        //virtual bool doLoadConfig(const std::vector<std::string> &cfgParms) = 0;
         virtual bool load(std::istream &in) = 0;
         virtual void save(std::ostream &out) = 0;
 
 
     protected:
 
-        std::string m_configPath;
+        //std::string m_configPath;
         std::shared_ptr<ConfigItem> m_pConfig;
         std::shared_ptr<ConfigParser> m_pConfigParser;
         std::shared_ptr<EnvironmentNode> m_pRootNode;

@@ -33,15 +33,15 @@ class XSDConfigParser : public ConfigParser
 {
     public:
 
-        XSDConfigParser(const std::string &basePath, std::shared_ptr<ConfigItem> &pConfig) :
-            ConfigParser(basePath, pConfig) { }
+        XSDConfigParser(std::shared_ptr<ConfigItem> &pConfig) :
+            ConfigParser(pConfig) { }
         virtual ~XSDConfigParser() { };
     
 
     protected:
 
         XSDConfigParser() { };
-        virtual bool doParse(const std::vector<std::string> &cfgParms) override;
+        virtual bool doParse(const std::vector<std::string> &cfgParms, Status &status) override;
         virtual void parseXSD(const pt::ptree &tree);
         virtual void parseXSD(const std::string &filename);
         virtual std::string getXSDAttributeValue(const pt::ptree &tree, const std::string &attriName, bool throwIfNotPresent=true, const std::string &defaultVal = "") const;
@@ -61,6 +61,8 @@ class XSDConfigParser : public ConfigParser
     protected:
     
         std::string m_buildsetFilename;   
+        std::string m_basePath;
+        std::string m_masterXSDFilename;
 
 };
 
