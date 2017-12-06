@@ -125,6 +125,7 @@ ESPstruct newElementType
     string    elementType("");
     string    class("");
     string    category("");
+    bool      isRequired(false);
     ESPstruct docType doc;
 };
 

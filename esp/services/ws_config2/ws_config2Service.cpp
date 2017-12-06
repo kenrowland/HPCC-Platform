@@ -2,6 +2,7 @@
 //#include "ConfiguratorAPI.hpp"
 #include "jstring.hpp"
 #include "ConfigItem.hpp"
+#include "ws_config2Session.hpp"
 
 
 Cws_config2Ex::Cws_config2Ex()
@@ -41,8 +42,9 @@ bool Cws_config2Ex::ongetNode(IEspContext &context, IEspGetNodeRequest &req, IEs
 
     if (pNode)
     {
-        std::string nodeDisplayName = pNode->getName();    // default node name (if name= attribute found, that becomes the name)
         const std::shared_ptr<ConfigItem> &pNodeConfigItem = pNode->getConfigItem();
+        std::string nodeDisplayName = pNodeConfigItem->getDisplayName();
+        resp.setNodeName(nodeDisplayName.c_str());
         IArrayOf<IEspelementType> elements;
 
         //
@@ -107,12 +109,11 @@ bool Cws_config2Ex::ongetNode(IEspContext &context, IEspGetNodeRequest &req, IEs
             }
         }
         resp.setAttributes(nodeAttributes); 
-        resp.setNodeName(nodeDisplayName.c_str());
 
         //
         // Now the children. Get all the possible configured children so that we will know if any are not
         // instantiated.
-        std::vector<std::shared_ptr<ConfigItem>> nodeConfigChildren = pNode->getConfigItem()->getChildren();
+        //std::vector<std::shared_ptr<ConfigItem>> nodeConfigChildren = pNode->getConfigItem()->getChildren();
         if (pNode->hasChildren())
         {
             std::vector<std::shared_ptr<EnvironmentNode>> children = pNode->getChildren();
@@ -131,19 +132,6 @@ bool Cws_config2Ex::ongetNode(IEspContext &context, IEspGetNodeRequest &req, IEs
                 pElement->setNodeId(pNode->getId().c_str());
                 pElement->setNumChildren(pNode->getNumChildren());
                 elements.append(*pElement.getLink());
-
-                //
-                // Remove the node we just added from the node's configuration children because at least one is configured. Note
-                // that a previous iteration of this loop may have already removed it in the case where there is more than one
-                // occurance of a node in the environment for a config item
-                for (auto typeIt=nodeConfigChildren.begin(); typeIt!=nodeConfigChildren.end(); ++typeIt)
-                {
-                    if ((*typeIt)->getItemType() == pConfigItem->getItemType())
-                    {
-                        nodeConfigChildren.erase(typeIt);
-                        break;
-                    }
-                }
             }
 
             
@@ -151,27 +139,21 @@ bool Cws_config2Ex::ongetNode(IEspContext &context, IEspGetNodeRequest &req, IEs
         resp.setChildren(elements); 
 
         //
-        // Now add any configuration elements that don't have instantiations in the environment. These get an empty nodeId 
-        // to indicate that no configured environment item exists and that it can be added
-        
-        //IArrayOf<IEspelementType> elements;
-        for (auto it=nodeConfigChildren.begin(); it!=nodeConfigChildren.end(); ++it)
+        // Build a list of items that can be inserted under this node
+        IArrayOf<IEspnewElementType> newElements;
+        std::vector<std::shared_ptr<ConfigItem>> insertableList = pNode->getInsertableItems();
+        for (auto it=insertableList.begin(); it!=insertableList.end(); ++it)
         {
             std::shared_ptr<ConfigItem> pConfigItem = *it;
-            Owned<IEspelementType> pElement = createelementType();
-            pElement->setName(pConfigItem->getDisplayName().c_str());
-            pElement->setElementType(pConfigItem->getItemType().c_str());
-            pElement->setClass(pConfigItem->getClassName().c_str());
-            pElement->setCategory(pConfigItem->getCategory().c_str());
-            pElement->setNumAllowedInstances(pConfigItem->getMaxInstances());
-            pElement->setNumRequiredInstances(pConfigItem->getMinInstances());
-            pElement->updateDoc().setTooltip("");
-         
-            pElement->setNodeId("");
-            pElement->setNumChildren(0);
-            elements.append(*pElement.getLink());
+            Owned<IEspnewElementType> pNewElement = createnewElementType();
+            pNewElement->setName(pConfigItem->getDisplayName().c_str());
+            pNewElement->setElementType(pConfigItem->getItemType().c_str());
+            pNewElement->setClass(pConfigItem->getClassName().c_str());
+            pNewElement->setCategory(pConfigItem->getCategory().c_str());
+            pNewElement->setIsRequired(pConfigItem->isRequired());
+            newElements.append(*pNewElement.getLink());
         }
-        //resp.setChildren(elements); 
+        resp.setNewElements(newElements);
 
 
         if (pNodeConfigItem->isItemValueDefined())

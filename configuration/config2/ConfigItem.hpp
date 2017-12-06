@@ -81,6 +81,7 @@ class ConfigItem : public std::enable_shared_from_this<ConfigItem>
         virtual void resetEnvironment();
         virtual void postProcessConfig();
         bool isInsertable() const { return (m_minInstances == 0) || (m_maxInstances > m_minInstances); }
+        bool isRequired() const { return m_minInstances > 0; }
 
     protected:
 
