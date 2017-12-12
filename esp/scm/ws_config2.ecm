@@ -15,23 +15,75 @@
     limitations under the License.
 ############################################################################## */
 
+ESPresponse PassFailResponse
+{
+    bool error(false);
+    string errorMsg("");
+};
+
+
+ESPstruct statusMsgType
+{
+    string msgLevel;                // message level ("info", "warning", "error", "fatal")
+    string nodeId;                  // node identifier that generated this status message
+    string refNodeId("");           // optional refereence node (message dependent)
+    string attribute("");           // name of node's attribute generating the message ("" for the node itself)
+    string msg;                     // the message
+};
+
+ESPstruct statusType
+{
+    bool error(false);    // true if a message exsits in status (below) with a message level of error or higher
+    ESParray<ESPstruct statusMsgType, statusMsg> status;
+};
+
+
+//ESPresponse baseResponse
+//{
+//    bool error(false);
+//    ESPstruct statusType status;
+//};
+
+
+ESPstruct commonResponse
+{
+    bool error(false);
+    ESPstruct statusType status;
+};
+
+
+//ESPstruct subclassResponse : baseResponse
+//{
+//    string context;
+//};
+
+
 //
 // Session
 
 ESPrequest OpenSessionRequest
 {
     string username;
+    string type("XML");           // type of session 
+    string configPath("");        // location of configuration schema environmentFiles
+    string masterConfigFile("");  // name of master config control file
+    string sourcePath("");        // path to envrionment files 
+    string activePath("");        // path to active environment file ("" for none)
 };
 
-ESPresponse OpenSessionResponse
+
+ESPresponse OpenSessionResponse 
 {
-    string sessionId;
     bool error(false);
+    string errorMsg("");
+    string sessionId;
 };
+
 
 ESPrequest CloseSessionRequest
 {
     string sessionId;
+    bool forceClose(false);    // must be true to close a session that have a modified environmrnt file
 };
 
 
@@ -41,7 +93,7 @@ ESPrequest CloseSessionRequest
 
 ESPrequest GetNodeRequest 
 {
-    string sessionId;
+    string sessionId("0");
     string nodeId;
 };
 
@@ -79,21 +131,7 @@ ESPstruct typeInfo
 };
 
 
-ESPstruct statusMsgType
-{
-    string msgLevel;                // message level ("info", "warning", "error", "fatal")
-    string nodeId;                  // node identifier that generated this status message
-    string refNodeId("");           // optional refereence node (message dependent)
-    string attribute("");           // name of node's attribute generating the message ("" for the node itself)
-    string msg;                     // the message
-};
 
-
-ESPstruct statusType
-{
-    bool error(false);    // true if a message exsits in status (below) with a message level of error or higher
-    ESParray<ESPstruct statusMsgType, statusMsg> status;
-};
 
 
 ESPstruct docType
@@ -103,44 +141,57 @@ ESPstruct docType
 };
 
 
-
-ESPstruct elementType
+ESPstruct elementInfoType
 {
     string    name("");
     string    elementType("");
     string    class("");
     string    category("");
+    bool      isRequired(false);   // only used when in the insertable list
+    ESPstruct docType doc;
+};
+
+
+ESPstruct nodeType
+{
+    ESPstruct elementInfoType elementInfo;
+    //string    name("");
+    //string    elementType("");
+    //string    class("");
+    //string    category("");
     //ESParray<string, id> nodeIdList;
     string    nodeId;
-    ESPstruct docType doc;
+    //ESPstruct docType doc;
     int   numChildren(0);
-    int   numAllowedInstances(0);
-    int   numRequiredInstances(0);
+    //int   numAllowedInstances(0);
+    //int   numRequiredInstances(0);
 };
 
 
-ESPstruct newElementType
-{
-    string    name("");
-    string    elementType("");
-    string    class("");
-    string    category("");
-    bool      isRequired(false);
-    ESPstruct docType doc;
-};
+//ESPstruct elementType
+//{
+//    string    name("");
+//    string    elementType("");
+//    string    class("");
+//    string    category("");
+//    bool      isRequired(false);
+//    ESPstruct docType doc;
+//};
 
 
 ESPstruct attributeType
 {
-    string    name("");
+    string    displayName;
+    string    name;
     ESPstruct docType doc;
     ESPstruct  typeInfo type;
     string currentValue("");
     string defaultValue("");
-	bool   valueSet(false);           // indicates if currentValue is actually a valid value (has been set)
-    bool   defaultValid(false);       // true if defaultValue is a valid default value, false if no default provided
+	//bool   currentValuePresent(false);     // indicates if currentValue is set to a value
+    //bool   defaultValueValid(false);       // true if defaultValue is a valid default value, false if no default provided
     bool   required(true);
-    bool   readonly(false);
+    bool   readOnly(false);
+    bool   hidden(false);
 };
 
 
@@ -158,18 +209,19 @@ ESPresponse [exceptions_inline, encode(0)] GetNodeResponse
     string nodeName;
 	ESPstruct statusType status;
     ESParray<ESPstruct attributeType, attribute> attributes;
-    ESParray<ESPstruct elementType, child> children;
-    ESParray<ESPstruct newElementType, item> newElements;
+    ESParray<ESPstruct nodeType, child> children;
+    ESParray<ESPstruct elementInfoType, item> insertable;        // list of insertable elements under this node
     bool nodeValueDefined(false);                                // true if the node is configured to have a value (not usually true)
 	bool nodeValueSet(false);                                    // if configured, true if the node value has been set
 	ESPstruct attributeType value;                               // this would be <element>value</element> not normal, see valueDefined
 };
 
 
-ESPrequest CreateInstanceRequest  // response is same as GetPathRequest
+ESPrequest InsertNodeRequest  // response is same as GetPathRequest
 {
-    string nodeId;    // node id where new isntance is to be created
-    string name;  // name of new instance to create
+    string sessionId("0");
+    string nodeId;
+    string elementType;  // name of new instance to create
 };
 
 
@@ -223,18 +275,28 @@ ESPresponse GetEnvironmentListResponse
     ESParray<ESPstruct environmentFileType, environmentFile> environmentFiles;
 };
 
-ESPrequest SetEnvironmentConfigRequest
+
+ESPrequest OpenEnvironmentFileRequest
 {
     string sessionId;
-    string configPath;
-    string sourcePath;
-    string activePath;
+    string filename;
 };
 
-ESPresponse PassFailResponse
+
+
+ESPrequest SaveEnvironmentFileRequest
 {
-    bool error(false);
+    string sessionId;
+    string filename("");     // empty string means to overwrite the existing file
 };
+
+
+ESPrequest EnableChangesRequest
+{
+    string sessionId;
+    bool   enable(false);    // can turn on and off
+};
+
 
 
 
@@ -242,11 +304,14 @@ ESPservice [auth_feature("DEFERRED"),version("2.0"), default_client_version("2.0
 {
     ESPMethod openSession(OpenSessionRequest, OpenSessionResponse);
     ESPMethod closeSession(CloseSessionRequest, PassFailResponse);
-    ESPMethod setEnvironmentConfig(SetEnvironmentConfigRequest, PassFailResponse);
     ESPMethod getEnvironmentFileList(GetEnvironmentListRequest, GetEnvironmentListResponse);
+    ESPMethod openEnvironmentFile(OpenEnvironmentFileRequest, PassFailResponse);
+    ESPMethod saveEnvironmentFile(SaveEnvironmentFileRequest, PassFailResponse);
+    ESPMethod enableEnvironmentChanges(EnableChangesRequest, PassFailResponse);
     ESPMethod getNode(GetNodeRequest, GetNodeResponse);
     ESPMethod setValues(SetValuesRequest, SetValuesResponse);
     ESPMethod getParents(GetParentsRequest, GetParentsResponse);
+    ESPMethod insertNode(InsertNodeRequest, GetNodeResponse);
 };
 
 

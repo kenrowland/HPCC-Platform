@@ -40,13 +40,13 @@ EnvironmentMgr::EnvironmentMgr() :
 }
 
 
-bool EnvironmentMgr::loadConfig(const std::vector<std::string> &cfgParms)  // todo: add a status object here for return
+bool EnvironmentMgr::loadConfig(const std::string &configPath, const std::string &masterConfigFile,  const std::vector<std::string> &cfgParms)  // todo: add a status object here for return
 {
     bool rc = false;
     Status status;
-    if (createParser(cfgParms))
+    if (createParser(configPath, masterConfigFile, cfgParms))
     {
-        rc = m_pConfigParser->parseEnvironmentConfig(cfgParms, status);
+        rc = m_pConfigParser->parseEnvironmentConfig(configPath, masterConfigFile, cfgParms, status);
         if (rc)
         {
             m_pConfig->processUniqueAttributeValueSets();  // really a pre-post processing requirement
@@ -65,7 +65,7 @@ bool EnvironmentMgr::loadEnvironment(const std::string &filename)
     in.open(fpath);
     if (in.is_open())
     {
-        load(in);
+        doLoadEnvironment(in);
     }
     return true;
 }

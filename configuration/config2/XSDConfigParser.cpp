@@ -28,7 +28,7 @@
 
 namespace pt = boost::property_tree;
 
-bool XSDConfigParser::doParse(const std::vector<std::string> &cfgParms, Status &status)
+bool XSDConfigParser::doParse(const std::string &configPath, const std::string &masterConfigFile,  const std::vector<std::string> &cfgParms, Status &statu)
 {
     bool rc = true;
     //try
@@ -85,9 +85,9 @@ bool XSDConfigParser::doParse(const std::vector<std::string> &cfgParms, Status &
 
         //
         // Get our specific XSD parameters from the input 
-        m_basePath = cfgParms[0];
-        m_masterXSDFilename = cfgParms[1];
-        m_buildsetFilename = cfgParms[2];
+        m_basePath = configPath;
+        m_masterXSDFilename = masterConfigFile;
+        //m_buildsetFilename = cfgParms[2];
         parseXSD(m_masterXSDFilename);
     }
     

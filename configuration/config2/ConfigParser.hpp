@@ -34,12 +34,12 @@ class ConfigParser
 
         ConfigParser(std::shared_ptr<ConfigItem> &pConfig) : m_pConfig(pConfig) { };
         virtual ~ConfigParser() { };
-        virtual bool parseEnvironmentConfig(const std::vector<std::string> &cfgParms, Status &status);
+        virtual bool parseEnvironmentConfig(const std::string &configPath, const std::string &masterConfigFile,  const std::vector<std::string> &cfgParms, Status &status);
     
 
     protected:
 
-        virtual bool doParse(const std::vector<std::string> &cfgParms, Status &status) = 0;
+        virtual bool doParse(const std::string &configPath, const std::string &masterConfigFile,  const std::vector<std::string> &cfgParms, Status &status) = 0;
         ConfigParser() { };
         std::vector<std::string> split(const std::string  &input, const std::string  &delim);
         

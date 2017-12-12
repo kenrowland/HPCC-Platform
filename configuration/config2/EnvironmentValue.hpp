@@ -35,7 +35,7 @@ class EnvironmentValue
 
         ~EnvironmentValue() { }
         bool setValue(const std::string &value, Status *pStatus, bool forceSet=false);
-        bool isValueSet() const { return m_valueSet; }
+        bool isValuePresent() const { return m_valueSet; }
         bool checkCurrentValue();
         const std::string &getValue() const { return m_value;  }
         const std::string &getDefaultValue() const { return m_pCfgValue->getDefaultValue(); }

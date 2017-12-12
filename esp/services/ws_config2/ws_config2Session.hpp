@@ -21,31 +21,43 @@
 
 
 #include "EnvironmentMgr.hpp"
+#include "build-config.h"
 
 
 struct ConfigMgrSession {
 
-
+    std::string username;
     std::string configPath;
+    std::string sourcePath;
+    std::string activePath;
     std::string configType;
-    std::vector<std::string> cfgParms;
+    std::string masterConfigFile;
+    bool writeEnabled;
     EnvironmentMgr *m_pEnvMgr;
 
-    ConfigMgrSession() :
-        configPath("/opt/HPCCSystems/componentfiles/config2xml/"),
-        configType("XML") { }
-
-    bool initializeSession()
+    bool initializeSession(std::vector<std::string> &cfgParms)
     {
-        m_pEnvMgr = getEnvironmentMgrInstance(configType, configPath);
+        m_pEnvMgr = getEnvironmentMgrInstance(configType);
         if (m_pEnvMgr)
-            m_pEnvMgr->loadConfig(cfgParms);
+            m_pEnvMgr->loadConfig(configPath, masterConfigFile, cfgParms);
         return m_pEnvMgr;
     }
+
 
     bool loadEnvironment(const std::string &envFile)
     {
         return m_pEnvMgr->loadEnvironment(envFile);
+    }
+
+
+    std::string getEnvironmentFileExtension() const 
+    {
+        std::string ext = ".unk";
+        if (configType == "XML")
+        {
+            ext = ".xml";
+        }
+        return ext;
     }
 
 };

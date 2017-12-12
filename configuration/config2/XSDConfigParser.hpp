@@ -41,7 +41,7 @@ class XSDConfigParser : public ConfigParser
     protected:
 
         XSDConfigParser() { };
-        virtual bool doParse(const std::vector<std::string> &cfgParms, Status &status) override;
+        virtual bool doParse(const std::string &configPath, const std::string &masterConfigFile,  const std::vector<std::string> &cfgParms, Status &statu) override;
         virtual void parseXSD(const pt::ptree &tree);
         virtual void parseXSD(const std::string &filename);
         virtual std::string getXSDAttributeValue(const pt::ptree &tree, const std::string &attriName, bool throwIfNotPresent=true, const std::string &defaultVal = "") const;

@@ -1,6 +1,6 @@
 /*##############################################################################
 
-    HPCC SYSTEMS software Copyright (C) 2017 HPCC Systems®.
+    HPCC SYSTEMS software Copyright (C) 2017 HPCC Systemsï¿½.
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -52,7 +52,7 @@ class EnvironmentMgr
         virtual ~EnvironmentMgr() { }
 
         // add a load from stream?
-        bool loadConfig(const std::vector<std::string> &cfgParms);  // parms are dependent on the environment type
+        bool loadConfig(const std::string &configPath, const std::string &masterConfigFile,  const std::vector<std::string> &cfgParms = std::vector<std::string>());
         bool loadEnvironment(const std::string &file);  // return some error code,or a get last error type of call?
 
         std::shared_ptr<EnvironmentNode> getEnvironmentNode(const std::string &nodeId);
@@ -68,9 +68,9 @@ class EnvironmentMgr
         std::string getUniqueKey();
         
         void addPath(const std::shared_ptr<EnvironmentNode> pNode);
-        virtual bool createParser(const std::vector<std::string> &cfgParms) = 0;
+        virtual bool createParser(const std::string &configPath, const std::string &masterConfigFile,  const std::vector<std::string> &cfgParms) = 0;
         //virtual bool doLoadConfig(const std::vector<std::string> &cfgParms) = 0;
-        virtual bool load(std::istream &in) = 0;
+        virtual bool doLoadEnvironment(std::istream &in) = 0;
         virtual void save(std::ostream &out) = 0;
 
 

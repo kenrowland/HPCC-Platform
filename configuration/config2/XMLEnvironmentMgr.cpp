@@ -20,14 +20,14 @@
 #include "XSDConfigParser.hpp"
 
 
-bool XMLEnvironmentMgr::createParser(const std::vector<std::string> &cfgParms)
+bool XMLEnvironmentMgr::createParser(const std::string &configPath, const std::string &masterConfigFile,  const std::vector<std::string> &cfgParms)
 {
     m_pConfigParser = std::make_shared<XSDConfigParser>(m_pConfig);
     return true;
 }
 
 
-bool XMLEnvironmentMgr::load(std::istream &in)
+bool XMLEnvironmentMgr::doLoadEnvironment(std::istream &in)
 {
 	pt::ptree envTree;
 

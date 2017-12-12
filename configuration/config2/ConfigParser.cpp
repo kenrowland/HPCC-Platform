@@ -19,11 +19,11 @@
 #include "ConfigExceptions.hpp"
 
 
-bool ConfigParser::parseEnvironmentConfig(const std::vector<std::string> &cfgParms, Status &status)
+bool ConfigParser::parseEnvironmentConfig(const std::string &configPath, const std::string &masterConfigFile,  const std::vector<std::string> &cfgParms, Status &status)
 {
     try
     {
-        doParse(cfgParms, status);
+        doParse(configPath, masterConfigFile, cfgParms, status);
     }
     catch (const ParseException &pe)
     {

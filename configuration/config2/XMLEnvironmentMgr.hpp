@@ -1,6 +1,6 @@
 /*##############################################################################
 
-    HPCC SYSTEMS software Copyright (C) 2017 HPCC Systems®.
+    HPCC SYSTEMS software Copyright (C) 2017 HPCC Systemsï¿½.
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -35,8 +35,8 @@ class XMLEnvironmentMgr : 	public EnvironmentMgr
 
 	protected:
 
-        bool createParser(const std::vector<std::string> &cfgParms) override;
-        bool load(std::istream &in) override;
+        bool createParser(const std::string &configPath, const std::string &masterConfigFile,  const std::vector<std::string> &cfgParms) override;
+        bool doLoadEnvironment(std::istream &in) override;
         void save(std::ostream &out) override;
 		void parse(const pt::ptree &envTree, const std::shared_ptr<ConfigItem> &pConfig, std::shared_ptr<EnvironmentNode> &pEnvNode);
 		void serialize(pt::ptree &envTree, std::shared_ptr<EnvironmentNode> &pEnvNode) const;
