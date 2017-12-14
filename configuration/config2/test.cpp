@@ -54,6 +54,9 @@ int main()
 
         auto list = pNode->getInsertableItems();
 
+        Status status;
+        pEnvMgr->addNewEnvironmentNode("35", "espsmc", status);
+
 
         /*auto attributes = pNode->getAttributes();
         for (auto it = attributes.begin(); it != attributes.end(); ++it)
@@ -83,7 +86,6 @@ int main()
         //newValues.push_back({ "name", "namehasbeenchanged" });
         //pEnvMgr->setAttributeValues("158", newValues, "", false);
 
-        Status status;
         pEnvMgr->saveEnvironment("testout.xml", status);
 
 		auto results = pEnvMgr->getEnvironmentNode(".");
