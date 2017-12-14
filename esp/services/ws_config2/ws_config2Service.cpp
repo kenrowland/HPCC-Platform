@@ -316,27 +316,21 @@ bool Cws_config2Ex::oninsertNode(IEspContext &context, IEspInsertNodeRequest &re
 
     if (pSession)
     {
-        //EnvironmentMgr *pEnvMgr = pSession->m_pEnvMgr;
-        std::string id = req.getNodeId();
-        std::shared_ptr<EnvironmentNode> pNode = pSession->m_pEnvMgr->getEnvironmentNode(id);
+        std::string parentNodeId = req.getNodeId();
+        std::shared_ptr<EnvironmentNode> pNode = pSession->m_pEnvMgr->getEnvironmentNode(parentNodeId);
         
         if (pNode)
-        {
-            //
-            // Get the list of elements that can be inserted below this node and find the one that is 
-            // being inserted.
-            std::vector<std::shared_ptr<ConfigItem>> insertableList = pNode->getInsertableItems();
-            for (auto it=insertableList.begin(); it!=insertableList.end(); ++it)
+        { 
+            std::shared_ptr<EnvironmentNode> pNewNode = pSession->m_pEnvMgr->addNewEnvironmentNode(parentNodeId, req.getElementType(), status);
+            if (pNewNode)
             {
-                if ((*it)->getItemType() == req.getElementType())
-                {
-
-                }
+                getNodelInfo(pNewNode, resp);
+                resp.setNodeId(pNewNode->getId().c_str());
             }
         }
         else
         {
-            status.addStatusMsg(statusMsg::error, id.c_str(), "", "", "The input node ID is not a valid not in the environment");
+            status.addStatusMsg(statusMsg::error, sessionId.c_str(), "", "", "The input node ID is not a valid not in the environment");
             rc = false;
         }
     }

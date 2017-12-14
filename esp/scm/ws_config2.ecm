@@ -131,9 +131,6 @@ ESPstruct typeInfo
 };
 
 
-
-
-
 ESPstruct docType
 {
     string tooltip("");
@@ -166,17 +163,6 @@ ESPstruct nodeType
     //int   numAllowedInstances(0);
     //int   numRequiredInstances(0);
 };
-
-
-//ESPstruct elementType
-//{
-//    string    name("");
-//    string    elementType("");
-//    string    class("");
-//    string    category("");
-//    bool      isRequired(false);
-//    ESPstruct docType doc;
-//};
 
 
 ESPstruct attributeType
@@ -296,8 +282,6 @@ ESPrequest EnableChangesRequest
     string sessionId;
     bool   enable(false);    // can turn on and off
 };
-
-
 
 
 ESPservice [auth_feature("DEFERRED"),version("2.0"), default_client_version("2.0"), exceptions_inline("xslt/exceptions.xslt")] ws_config2
