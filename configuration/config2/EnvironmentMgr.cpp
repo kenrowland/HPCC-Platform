@@ -125,6 +125,7 @@ std::shared_ptr<EnvironmentNode> EnvironmentMgr::addNewEnvironmentNode(const std
             pNewNode->setId(getUniqueKey());
             pNewNode->addMissingAttributesFromConfig();
             pParentNode->addChild(pNewNode);
+            addPath(pNewNode);
         }
     }
     return pNewNode;
