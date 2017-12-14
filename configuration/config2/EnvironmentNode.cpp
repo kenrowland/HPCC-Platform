@@ -33,7 +33,7 @@ void EnvironmentNode::addAttribute(const std::string &name, std::shared_ptr<Envi
 std::vector<std::shared_ptr<EnvironmentNode>> EnvironmentNode::getChildren(const std::string &name) const
 {
     std::vector<std::shared_ptr<EnvironmentNode>> childNodes;
-    if (name == "") 
+    if (name == "")
     {
         for (auto nodeIt = m_children.begin(); nodeIt != m_children.end(); ++nodeIt)
         {
@@ -97,12 +97,12 @@ std::map<std::string, std::vector<std::shared_ptr<EnvironmentNode>>> Environment
 
 std::shared_ptr<EnvironmentNode> EnvironmentNode::getParent() const
 {
-	std::shared_ptr<EnvironmentNode> pParent;
-	if (!m_pParent.expired())
-	{
-		pParent = m_pParent.lock();
-	}
-	return pParent;
+    std::shared_ptr<EnvironmentNode> pParent;
+    if (!m_pParent.expired())
+    {
+        pParent = m_pParent.lock();
+    }
+    return pParent;
 }
 
 
@@ -115,6 +115,27 @@ std::vector<std::shared_ptr<EnvironmentValue>> EnvironmentNode::getAttributes() 
         attributes.push_back(attrIt->second);
     }
     return attributes;
+}
+
+
+void EnvironmentNode::addMissingAttributesFromConfig()
+{
+    std::map<std::string, std::shared_ptr<ConfigValue>> configuredAttributes = m_pConfigItem->getAttributes();
+
+    //
+    // go through all the configured attrubutes and for each that is not present in our list, add it
+    for (auto it = configuredAttributes.begin(); it != configuredAttributes.end(); ++it)
+    {
+        auto attrIt = m_attributes.find(it->first);
+        if (attrIt == m_attributes.end())
+        {
+            std::shared_ptr<ConfigValue> pCfgValue = it->second;
+            std::shared_ptr<EnvironmentValue> pEnvValue = std::make_shared<EnvironmentValue>(shared_from_this(), pCfgValue, it->first); 
+            pCfgValue->addEnvValue(pEnvValue);
+            addAttribute(it->first, pEnvValue);
+        }
+    }
+
 }
 
 

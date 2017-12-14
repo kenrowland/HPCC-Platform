@@ -46,6 +46,7 @@ class EnvironmentNode : public std::enable_shared_from_this<EnvironmentNode>
         void setAttributeValues(const std::vector<ValueDef> &values, Status &status, bool allowInvalid, bool forceCreate);
 		void setAttributeValue(const std::string &name, const std::string &value, Status &status, bool allowInvalid=false, bool forceCreate=false);   // candidate for a variant?
 		std::string getAttributeValue(const std::string &name) const;                                  // candidate for a variant?
+        void addMissingAttributesFromConfig();
 		bool setValue(const std::string &value, Status &status, bool force = false);
 		void setNodeEnvValue(const std::shared_ptr<EnvironmentValue> &pEnvValue) { m_pNodeValue = pEnvValue;  }
 		const std::shared_ptr<EnvironmentValue> &getNodeEnvValue() const { return m_pNodeValue;  }

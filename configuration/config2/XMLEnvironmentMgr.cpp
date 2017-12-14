@@ -94,9 +94,6 @@ void XMLEnvironmentMgr::parse(const pt::ptree &envTree, const std::shared_ptr<Co
 				std::string curValue = attrIt->second.get_value<std::string>();
 				std::shared_ptr<EnvironmentValue> pEnvValue = std::make_shared<EnvironmentValue>(pEnvNode, pCfgValue, attrIt->first, curValue);   // this is where we would use a variant
                 pCfgValue->addEnvValue(pEnvValue);
-                //auto x = pCfgValue.get();
-                //std::shared_ptr<CfgValue> pCopyCfg;
-                //pCopyCfg = pCfgValue;
 				pEnvNode->addAttribute(attrIt->first, pEnvValue);
 			}
 		}
@@ -111,7 +108,6 @@ void XMLEnvironmentMgr::parse(const pt::ptree &envTree, const std::shared_ptr<Co
 			else
 			{
 				pEnvConfig = pConfigItem->getChild(elemName);
-				// if pEnvConfig->getName == undefined  ....  same, but not based on buildset
 			}
 
 			std::shared_ptr<EnvironmentNode> pElementNode = std::make_shared<EnvironmentNode>(pEnvConfig, elemName, pEnvNode);
