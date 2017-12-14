@@ -56,7 +56,7 @@ class EnvironmentMgr
         bool loadEnvironment(const std::string &file);  // return some error code,or a get last error type of call?
 
         std::shared_ptr<EnvironmentNode> getEnvironmentNode(const std::string &nodeId);
-        //void setAttributeValues(const std::string &path, const std::vector<valueDef> &values, const std::string &nodeValue, bool force=false);
+        std::shared_ptr<EnvironmentNode> addNewEnvironmentNode(const std::string &parentNodeId, const std::string &elementType, Status &status);
         
         // save to stream ?
         void saveEnvironment(const std::string &file, Status &status);

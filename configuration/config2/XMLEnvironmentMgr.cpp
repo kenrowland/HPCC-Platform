@@ -84,9 +84,6 @@ void XMLEnvironmentMgr::parse(const pt::ptree &envTree, const std::shared_ptr<Co
 	{
 		std::string elemName = it->first;
 
-        if (elemName == "EspService")
-            int i = 3;
-
 		//
 		// First see if there are attributes for this element (<xmlattr> === <element attr1="xx" attr2="yy" ...></element>  The attr1 and attr2 are in this)
 		if (elemName == "<xmlattr>")
@@ -100,7 +97,7 @@ void XMLEnvironmentMgr::parse(const pt::ptree &envTree, const std::shared_ptr<Co
                 //auto x = pCfgValue.get();
                 //std::shared_ptr<CfgValue> pCopyCfg;
                 //pCopyCfg = pCfgValue;
-				pEnvNode->insertAttribute(attrIt->first, pEnvValue);
+				pEnvNode->addAttribute(attrIt->first, pEnvValue);
 			}
 		}
 		else
@@ -121,7 +118,7 @@ void XMLEnvironmentMgr::parse(const pt::ptree &envTree, const std::shared_ptr<Co
 			pElementNode->setId(getUniqueKey());
 			addPath(pElementNode);
 			parse(it->second, pEnvConfig, pElementNode);
-			pEnvNode->insertChild(pElementNode);
+			pEnvNode->addChild(pElementNode);
 		}
 	}
 }

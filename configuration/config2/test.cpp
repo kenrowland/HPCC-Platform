@@ -41,12 +41,8 @@ int main()
 
         EnvironmentMgr *pEnvMgr = getEnvironmentMgrInstance("XML");
         std::vector<std::string> cfgParms;
-        cfgParms.push_back(c_path);
-        cfgParms.push_back("newenv.xsd");
         cfgParms.push_back("buildset.xml");  // not used right now
-        pEnvMgr->loadConfig(cfgParms);
-
-		//envMgr.setConfig(pConfig);
+        pEnvMgr->loadConfig(c_path, "newenv.xsd", cfgParms);
         pEnvMgr->loadEnvironment(c_path + "/environment.xml");
 
         // 158

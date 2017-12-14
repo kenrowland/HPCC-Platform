@@ -17,13 +17,13 @@
 
 #include "EnvironmentNode.hpp"
 
-void EnvironmentNode::insertChild(std::shared_ptr<EnvironmentNode> pNode)
+void EnvironmentNode::addChild(std::shared_ptr<EnvironmentNode> pNode)
 {
     m_children.insert(std::make_pair(pNode->getName(), pNode));
 }
 
 
-void EnvironmentNode::insertAttribute(const std::string &name, std::shared_ptr<EnvironmentValue> pValue)
+void EnvironmentNode::addAttribute(const std::string &name, std::shared_ptr<EnvironmentValue> pValue)
 {
     auto retValue = m_attributes.insert(std::make_pair(name, pValue));
     // todo: add check to make sure no duplicate attributes, use retValue to see if value was inserted or not
@@ -145,7 +145,7 @@ void EnvironmentNode::setAttributeValue(const std::string &attrName, const std::
     {
         std::shared_ptr<ConfigValue> pCfgValue = m_pConfigItem->getAttribute(attrName);
         pEnvValue = std::make_shared<EnvironmentValue>(shared_from_this(), pCfgValue, attrName);
-        insertAttribute(attrName, pEnvValue);
+        addAttribute(attrName, pEnvValue);
         if (!pCfgValue->isConfigured())
         {
             status.addStatusMsg(statusMsg::warning, getId(), attrName, "", "Undefined attribute did not exist in configuration, was created");

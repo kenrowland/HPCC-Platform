@@ -60,8 +60,8 @@ class ConfigItem : public std::enable_shared_from_this<ConfigItem>
         virtual void addConfigType(const std::shared_ptr<ConfigItem> &pItem, const std::string &typeName);
         virtual std::shared_ptr<ConfigItem> getConfigType(const std::string &name, bool throwIfNotPresent=true) const;
         virtual void insertConfigType(const std::shared_ptr<ConfigItem> pTypeItem);
-        virtual void insertChild(const std::shared_ptr<ConfigItem> &pItem) { m_children.insert({ pItem->getName(), pItem }); }
-        virtual void insertChild(const std::shared_ptr<ConfigItem> &pItem, const std::string &name) { m_children.insert({ name, pItem }); }
+        virtual void addChild(const std::shared_ptr<ConfigItem> &pItem) { m_children.insert({ pItem->getName(), pItem }); }
+        virtual void addChild(const std::shared_ptr<ConfigItem> &pItem, const std::string &name) { m_children.insert({ name, pItem }); }
         virtual std::vector<std::shared_ptr<ConfigItem>> getChildren();
         std::shared_ptr<ConfigItem> getChild(const std::string &name);
         std::shared_ptr<ConfigItem> getChildByComponent(const std::string &name, std::string &componentName);
@@ -69,8 +69,8 @@ class ConfigItem : public std::enable_shared_from_this<ConfigItem>
         virtual std::shared_ptr<ConfigValue> getItemCfgValue() const { return m_pItemCfgValue; }
         virtual bool isItemValueDefined() { return m_pItemCfgValue != nullptr; }
         void findCfgValues(const std::string &path, std::vector<std::shared_ptr<ConfigValue>> &cfgValues);
-        virtual void insertAttribute(const std::shared_ptr<ConfigValue> &pCfgValue);
-        virtual void insertAttribute(const std::vector<std::shared_ptr<ConfigValue>> &attributes);
+        virtual void addAttribute(const std::shared_ptr<ConfigValue> &pCfgValue);
+        virtual void addAttribute(const std::vector<std::shared_ptr<ConfigValue>> &attributes);
         virtual std::shared_ptr<ConfigValue> getAttribute(const std::string &name) const;
         virtual const std::map<std::string, std::shared_ptr<ConfigValue>> &getAttributes() const { return m_attributes;  }
         virtual bool addUniqueName(const std::string keyName);

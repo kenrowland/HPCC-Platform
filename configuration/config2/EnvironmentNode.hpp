@@ -35,14 +35,14 @@ class EnvironmentNode : public std::enable_shared_from_this<EnvironmentNode>
 			m_pConfigItem(pCfgItem), m_name(elemName), m_pParent(pParent) { }
 		~EnvironmentNode() { }
 		const std::string &getName() const { return m_name;  }
-		void insertChild(std::shared_ptr<EnvironmentNode> pNode);
+		void addChild(std::shared_ptr<EnvironmentNode> pNode);
 		std::vector<std::shared_ptr<EnvironmentNode>> getChildren(const std::string &name="") const;
         std::map<std::string, std::vector<std::shared_ptr<EnvironmentNode>>> getChildrenByName() const;
         std::map<std::string, std::vector<std::shared_ptr<EnvironmentNode>>> getChildrenByConfigType() const;
 		bool hasChildren() const { return m_children.size() != 0; }
 		int getNumChildren() const { return m_children.size(); }
 		std::shared_ptr<EnvironmentNode> getParent() const;
-		void insertAttribute(const std::string &name, std::shared_ptr<EnvironmentValue> pValue);
+		void addAttribute(const std::string &name, std::shared_ptr<EnvironmentValue> pValue);
         void setAttributeValues(const std::vector<ValueDef> &values, Status &status, bool allowInvalid, bool forceCreate);
 		void setAttributeValue(const std::string &name, const std::string &value, Status &status, bool allowInvalid=false, bool forceCreate=false);   // candidate for a variant?
 		std::string getAttributeValue(const std::string &name) const;                                  // candidate for a variant?

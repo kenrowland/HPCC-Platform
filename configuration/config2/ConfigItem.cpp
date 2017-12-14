@@ -203,7 +203,7 @@ void ConfigItem::insertConfigType(const std::shared_ptr<ConfigItem> pTypeItem)
     for (auto childIt = typeChildren.begin(); childIt != typeChildren.end(); ++childIt)
     {
         std::shared_ptr<ConfigItem> pNewItem = std::make_shared<ConfigItem>(*(*childIt));
-        insertChild(pNewItem);
+        addChild(pNewItem);
     }
 
     //
@@ -212,7 +212,7 @@ void ConfigItem::insertConfigType(const std::shared_ptr<ConfigItem> pTypeItem)
     for (auto attrIt = typeAttributes.begin(); attrIt != typeAttributes.end(); ++attrIt)
     {
         std::shared_ptr<ConfigValue> pNewAttr = std::make_shared<ConfigValue>(*(attrIt->second));
-        insertAttribute(pNewAttr);
+        addAttribute(pNewAttr);
     }
 
     //
@@ -239,7 +239,7 @@ void ConfigItem::insertConfigType(const std::shared_ptr<ConfigItem> pTypeItem)
 }
 
 
-void ConfigItem::insertAttribute(const std::shared_ptr<ConfigValue> &pCfgValue)
+void ConfigItem::addAttribute(const std::shared_ptr<ConfigValue> &pCfgValue)
 {
 	auto retVal = m_attributes.insert({ pCfgValue->getName(), pCfgValue });
 	if (!retVal.second)
@@ -249,10 +249,10 @@ void ConfigItem::insertAttribute(const std::shared_ptr<ConfigValue> &pCfgValue)
 }
 
 
-void ConfigItem::insertAttribute(const std::vector<std::shared_ptr<ConfigValue>> &attributes)
+void ConfigItem::addAttribute(const std::vector<std::shared_ptr<ConfigValue>> &attributes)
 {
 	for (auto it = attributes.begin(); it != attributes.end(); ++it)
-		insertAttribute((*it));
+		addAttribute((*it));
 }
 
 

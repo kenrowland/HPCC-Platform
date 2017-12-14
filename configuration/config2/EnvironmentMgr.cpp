@@ -20,7 +20,6 @@
 #include "XMLEnvironmentMgr.hpp"
 
 
-
 EnvironmentMgr *getEnvironmentMgrInstance(const std::string &envType)
 {
     EnvironmentMgr *pEnvMgr = NULL;
@@ -103,21 +102,30 @@ std::shared_ptr<EnvironmentNode> EnvironmentMgr::getEnvironmentNode(const std::s
 }
 
 
-// todo: make a standard return that has a status string and array of messages
-/*void EnvironmentMgr::setAttributeValues(const std::string &nodeId, const std::vector<valueDef> &values, const std::string &nodeValue, bool force)
+std::shared_ptr<EnvironmentNode> EnvironmentMgr::addNewEnvironmentNode(const std::string &parentNodeId, const std::string &elementType, Status &status)
 {
-    Status status;
-    std::shared_ptr<EnvironmentNode> pEnvNode = getEnvironmentNode(nodeId);
-    if (pEnvNode)
+    std::shared_ptr<EnvironmentNode> pNewNode;
+    std::shared_ptr<EnvironmentNode> pParentNode = getEnvironmentNode(parentNodeId);
+    if (pParentNode)
     {
-        for (auto it = values.begin(); it != values.end(); ++it)
-            pEnvNode->setAttributeValue((*it).name, (*it).value, force);
+        std::shared_ptr<ConfigItem> pNewCfgItem;
+        std::vector<std::shared_ptr<ConfigItem>> insertableItems = pParentNode->getInsertableItems();  // configured items under the parent
+        for (auto it = insertableItems.begin(); it != insertableItems.end(); ++it)
+        {
+            if ((*it)->getItemType() == elementType)
+            {
+                pNewCfgItem = *it;
+                break;
+            }
+        }
+
+        if (pNewCfgItem)
+        {
+            pNewNode = std::make_shared<EnvironmentNode>(pNewCfgItem, pNewCfgItem->getName(), pParentNode);
+        }
     }
-    else
-    {
-        status.addStatusMsg(statusMsg::error, nodeId, "", "", "Indicated node ID does not exist");
-    }
-}*/
+    return pNewNode;
+}
 
 
 std::string EnvironmentMgr::getUniqueKey()
