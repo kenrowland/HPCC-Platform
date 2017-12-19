@@ -553,3 +553,14 @@ const std::string &ConfigItem::getItemType() const
 
     return m_name;
 }
+
+
+//const std::string &ConfigItem::getProperty(const std::string &name, const std::string &default) const
+//{
+//    auto it = m_properties.find(name);
+//    if (it != m_properties.end())
+//    {
+//        return it->second;
+//    }
+//    return default;
+//}

@@ -47,6 +47,8 @@ class ConfigItem : public std::enable_shared_from_this<ConfigItem>
         virtual const std::string &getDisplayName() const { return m_displayName.length() ? m_displayName : m_name; }
         virtual void setCategory(const std::string &category) { m_category = category; }
         virtual const std::string &getCategory() const { return m_category; }
+        virtual void setNamePrefix(const std::string &prefix) { m_namePrefix = prefix; }
+        virtual const std::string &getNamePrefix() const { return m_namePrefix ; }
         virtual void setItemType(const std::string &itemType) { m_itemType = itemType;  }
         virtual const std::string &getItemType() const;
         void setMinInstances(unsigned num) { m_minInstances = num; }
@@ -83,11 +85,16 @@ class ConfigItem : public std::enable_shared_from_this<ConfigItem>
         bool isInsertable() const { return (m_minInstances == 0) || (m_maxInstances > m_minInstances); }
         bool isRequired() const { return m_minInstances > 0; }
 
+        //const std::string &getProperty(const std::string &name, const std::string &default = "") const;
+        //void setProperty(const std::string &name, const std::string &value) { m_properties[name] = value; }
+
     protected:
 
         ConfigItem() { };
 
     protected:
+
+        //std::map<std::string, std::string> m_properties;
 
         std::string m_name;
         std::string m_displayName;
@@ -95,6 +102,7 @@ class ConfigItem : public std::enable_shared_from_this<ConfigItem>
         std::string m_category;  // used for further subdividing to the user
         std::string m_componentName;   
         std::string m_itemType;
+        std::string m_namePrefix;
         unsigned m_minInstances;
         unsigned m_maxInstances;
         int m_version;

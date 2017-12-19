@@ -57,6 +57,7 @@ class EnvironmentMgr
 
         std::shared_ptr<EnvironmentNode> getEnvironmentNode(const std::string &nodeId);
         std::shared_ptr<EnvironmentNode> addNewEnvironmentNode(const std::string &parentNodeId, const std::string &elementType, Status &status);
+        std::shared_ptr<EnvironmentNode> addNewEnvironmentNode(const std::shared_ptr<EnvironmentNode> &pParentNode, const std::shared_ptr<ConfigItem> &pNewCfgItem, Status &status);
         
         // save to stream ?
         void saveEnvironment(const std::string &file, Status &status);

@@ -236,6 +236,7 @@ void XSDConfigParser::parseComplexType(const pt::ptree &typeTree)
     std::string catName = typeTree.get("<xmlattr>.hpcc:category", "");
     std::string componentName = typeTree.get("<xmlattr>.hpcc:componentName", "");
     std::string displayName = typeTree.get("<xmlattr>.hpcc:displayName", "");
+    std::string namePrefix = typeTree.get("<xmlattr>.hpcc:namePrefix", "");
 
     if (complexTypeName != "")
     {
@@ -247,6 +248,7 @@ void XSDConfigParser::parseComplexType(const pt::ptree &typeTree)
                 pComponent->setCategory(catName);
                 pComponent->setComponentName(componentName);
                 pComponent->setDisplayName(displayName);
+                pComponent->setNamePrefix(namePrefix);
                 pt::ptree componentTree = typeTree.get_child("", pt::ptree());
                 if (!componentTree.empty())
                 {
@@ -302,6 +304,7 @@ void XSDConfigParser::parseElement(const pt::ptree &elemTree)
     std::string className = elemTree.get("<xmlattr>.hpcc:class", "");
     std::string category = elemTree.get("<xmlattr>.hpcc:category", "");
     std::string displayName = elemTree.get("<xmlattr>.hpcc:displayName", "");
+    std::string namePrefix = elemTree.get("<xmlattr>.hpcc:namePrefix", "");
     std::string typeName = elemTree.get("<xmlattr>.type", "");
     unsigned minOccurs = elemTree.get("<xmlattr>.minOccurs", 1);
     std::string maxOccursStr = elemTree.get("<xmlattr>.maxOccurs", "1");
@@ -312,6 +315,7 @@ void XSDConfigParser::parseElement(const pt::ptree &elemTree)
     pConfigElement->setMinInstances(minOccurs);
     pConfigElement->setMaxInstances(maxOccurs);
     pConfigElement->setCategory(category);
+    pConfigElement->setNamePrefix(namePrefix);
 
     pt::ptree childTree = elemTree.get_child("", pt::ptree());
     
@@ -357,6 +361,7 @@ void XSDConfigParser::parseElement(const pt::ptree &elemTree)
                         pConfigElement->setCategory((category != "") ? category : pConfigType->getCategory());
                         pConfigElement->setDisplayName((displayName != "") ? displayName : pConfigType->getDisplayName());
                         pConfigElement->setComponentName(pConfigType->getComponentName());  
+                        pConfigElement->setNamePrefix((namePrefix != "") ? namePrefix : pConfigType->getNamePrefix());
                     }
                 }
                 else

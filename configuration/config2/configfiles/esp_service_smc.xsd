@@ -3,7 +3,7 @@
     xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" attributeFormDefault="unqualified" 
     xmlns:hpcc="someuri">
     <xs:include schemaLocation="types.xsd"/>
-    <xs:complexType name="espsmc" hpcc:class="component" hpcc:category="espservice" hpcc:componentName="espsmc" hpcc:displayName="ESP SMC">
+    <xs:complexType name="espsmc" hpcc:class="component" hpcc:category="espservice" hpcc:componentName="espsmc" hpcc:displayName="ESP SMC" hpcc:namePrefix="myesmsmc">
     
         <xs:attributeGroup name="Monitoring" hpcc:docid="SMC-T02">
             <xs:attribute name="monitorDaliFileServer" type="xs:boolean" use="true" default="false" hpcc:displayName="Monior Dali File Server" hpcc:tooltip="Warn if dafilesrv process is not running on computers"/>

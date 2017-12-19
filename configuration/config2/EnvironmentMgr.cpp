@@ -102,6 +102,7 @@ std::shared_ptr<EnvironmentNode> EnvironmentMgr::getEnvironmentNode(const std::s
 }
 
 
+
 std::shared_ptr<EnvironmentNode> EnvironmentMgr::addNewEnvironmentNode(const std::string &parentNodeId, const std::string &elementType, Status &status)
 {
     std::shared_ptr<EnvironmentNode> pNewNode;
@@ -114,20 +115,69 @@ std::shared_ptr<EnvironmentNode> EnvironmentMgr::addNewEnvironmentNode(const std
         {
             if ((*it)->getItemType() == elementType)
             {
-                pNewCfgItem = *it;
+                pNewNode = addNewEnvironmentNode(pParentNode, *it, status);
                 break;
             }
         }
+    }
+    else
+    {
+        status.addStatusMsg(statusMsg::error, parentNodeId, "", "", "Unable to find indicated parent node");
+    }
+    return pNewNode;
+}
 
-        if (pNewCfgItem)
+
+std::shared_ptr<EnvironmentNode> EnvironmentMgr::addNewEnvironmentNode(const std::shared_ptr<EnvironmentNode> &pParentNode, const std::shared_ptr<ConfigItem> &pNewCfgItem, Status &status)
+{
+    std::shared_ptr<EnvironmentNode> pNewNode;
+    
+    //
+    // Create the new node and add it to the parent
+    pNewNode = std::make_shared<EnvironmentNode>(pNewCfgItem, pNewCfgItem->getName(), pParentNode);
+    pNewNode->setId(getUniqueKey());
+    pNewNode->addMissingAttributesFromConfig();
+    pParentNode->addChild(pNewNode);
+    addPath(pNewNode);
+
+    //
+    // Should we give it a name?
+    if (pNewCfgItem->getNamePrefix() != "" && pNewNode->hasAttribute("name"))
+    {
+        std::string prefix = pNewCfgItem->getNamePrefix();
+        std::string newName;
+        std::vector<std::string> curNames = pNewNode->getAllFieldValues("name");
+        size_t count = curNames.size();
+        for (size_t n = 1; n <= count + 1; ++n)
         {
-            pNewNode = std::make_shared<EnvironmentNode>(pNewCfgItem, pNewCfgItem->getName(), pParentNode);
-            pNewNode->setId(getUniqueKey());
-            pNewNode->addMissingAttributesFromConfig();
-            pParentNode->addChild(pNewNode);
-            addPath(pNewNode);
+            newName = prefix + std::to_string(n);
+            bool found = false;
+            for (auto it = curNames.begin(); it != curNames.end() && !found; ++it)
+            {
+                if ((*it) == newName)
+                    found = true;
+            }
+
+            if (!found)
+            {
+                pNewNode->setAttributeValue("name", newName, status);
+                break;
+            }
         }
     }
+
+    //
+    // Look through the children and add any that are necessary
+    auto cfgChildren = pNewCfgItem->getChildren();
+    for (auto childIt = cfgChildren.begin(); childIt != cfgChildren.end(); ++childIt)
+    {
+        unsigned numReq = (*childIt)->getMinInstances();
+        for (int i=0; i<numReq; ++i)
+        {
+            addNewEnvironmentNode(pNewNode, *childIt, status);
+        }
+    }
+    
     return pNewNode;
 }
 

@@ -55,7 +55,10 @@ int main()
         auto list = pNode->getInsertableItems();
 
         Status status;
-        pEnvMgr->addNewEnvironmentNode("35", "espsmc", status);
+        auto pNewNode = pEnvMgr->addNewEnvironmentNode("35", "ws_ecl", status);
+        auto newList = pNewNode->getInsertableItems();
+        pEnvMgr->addNewEnvironmentNode("35", "ws_ecl", status);
+        pEnvMgr->addNewEnvironmentNode("35", "ws_ecl", status);
 
 
         /*auto attributes = pNode->getAttributes();
@@ -86,7 +89,7 @@ int main()
         //newValues.push_back({ "name", "namehasbeenchanged" });
         //pEnvMgr->setAttributeValues("158", newValues, "", false);
 
-        pEnvMgr->saveEnvironment("testout.xml", status);
+        //pEnvMgr->saveEnvironment("testout.xml", status);
 
 		auto results = pEnvMgr->getEnvironmentNode(".");
 

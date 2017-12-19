@@ -53,6 +53,7 @@ class EnvironmentNode : public std::enable_shared_from_this<EnvironmentNode>
 		bool isNodeValueSet() const { return m_pNodeValue != nullptr; }
 		std::vector<std::shared_ptr<EnvironmentValue>> getAttributes() const;
 		const std::shared_ptr<EnvironmentValue> getAttribute(const std::string &name) const;
+        bool hasAttribute(const std::string &name) const { return m_attributes.find(name) != m_attributes.end();  }
 		bool hasAttributes() const { return m_attributes.size() != 0; }
 		void setId(const std::string &id) { m_id = id; } 
 		const std::string &getId() const { return m_id;  }

@@ -3,7 +3,7 @@
     xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" attributeFormDefault="unqualified" 
     xmlns:hpcc="someuri">
     <xs:include schemaLocation="types.xsd"/>
-    <xs:complexType name="ws_ecl" hpcc:class="component" hpcc:category="espservice" hpcc:componentName="ws_ecl" hpcc:displayName="WS ECL??">
+    <xs:complexType name="ws_ecl" hpcc:class="component" hpcc:category="espservice" hpcc:componentName="ws_ecl" hpcc:displayName="WS ECL??" hpcc:namePrefix="myeclWatch">
 		<xs:sequence>
             <xs:element name="EspService" maxOccurs="unbounded" hpcc:docid="MyWS2-T03">
                 <xs:complexType>
