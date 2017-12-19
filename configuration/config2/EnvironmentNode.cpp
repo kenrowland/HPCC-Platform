@@ -23,6 +23,21 @@ void EnvironmentNode::addChild(std::shared_ptr<EnvironmentNode> pNode)
 }
 
 
+bool EnvironmentNode::removeChild(const std::shared_ptr<EnvironmentNode> pNode)
+{
+    bool removed = false;
+    for (auto it=m_children.begin(); it!= m_children.end() && !removed; ++it)
+    {
+        if (pNode == it->second)
+        {
+            m_children.erase(it);
+            removed = true;
+        }
+    }
+    return removed;
+}
+
+
 void EnvironmentNode::addAttribute(const std::string &name, std::shared_ptr<EnvironmentValue> pValue)
 {
     auto retValue = m_attributes.insert(std::make_pair(name, pValue));

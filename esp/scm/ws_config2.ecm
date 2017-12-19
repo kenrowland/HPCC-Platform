@@ -38,13 +38,6 @@ ESPstruct statusType
 };
 
 
-//ESPresponse baseResponse
-//{
-//    bool error(false);
-//    ESPstruct statusType status;
-//};
-
-
 ESPstruct commonResponse
 {
     bool error(false);
@@ -52,14 +45,8 @@ ESPstruct commonResponse
 };
 
 
-//ESPstruct subclassResponse : baseResponse
-//{
-//    string context;
-//};
-
-
 //
-// Session
+// Session management (not to be confused with platform session management)
 
 ESPrequest OpenSessionRequest
 {
@@ -91,7 +78,7 @@ ESPrequest CloseSessionRequest
 //
 // Node management
 
-ESPrequest GetNodeRequest 
+ESPrequest NodeRequest 
 {
     string sessionId("0");
     string nodeId;
@@ -152,16 +139,8 @@ ESPstruct elementInfoType
 ESPstruct nodeType
 {
     ESPstruct elementInfoType elementInfo;
-    //string    name("");
-    //string    elementType("");
-    //string    class("");
-    //string    category("");
-    //ESParray<string, id> nodeIdList;
     string    nodeId;
-    //ESPstruct docType doc;
-    int   numChildren(0);
-    //int   numAllowedInstances(0);
-    //int   numRequiredInstances(0);
+    int       numChildren(0);
 };
 
 
@@ -173,8 +152,6 @@ ESPstruct attributeType
     ESPstruct  typeInfo type;
     string currentValue("");
     string defaultValue("");
-	//bool   currentValuePresent(false);     // indicates if currentValue is set to a value
-    //bool   defaultValueValid(false);       // true if defaultValue is a valid default value, false if no default provided
     bool   required(true);
     bool   readOnly(false);
     bool   hidden(false);
@@ -206,7 +183,7 @@ ESPresponse [exceptions_inline, encode(0)] GetNodeResponse
 ESPrequest InsertNodeRequest  // response is same as GetPathRequest
 {
     string sessionId("0");
-    string nodeId;
+    string parentNodeId;
     string elementType;  // name of new instance to create
 };
 
@@ -227,11 +204,6 @@ ESPresponse [exceptions_inline, encode(0)] SetValuesResponse
 	ESPstruct statusType status;
 };
 
-
-ESPrequest GetParentsRequest
-{
-    string nodeId;   
-};
 
 
 ESPresponse [exceptions_inline, encode(0)] GetParentsResponse
@@ -292,10 +264,11 @@ ESPservice [auth_feature("DEFERRED"),version("2.0"), default_client_version("2.0
     ESPMethod openEnvironmentFile(OpenEnvironmentFileRequest, PassFailResponse);
     ESPMethod saveEnvironmentFile(SaveEnvironmentFileRequest, PassFailResponse);
     ESPMethod enableEnvironmentChanges(EnableChangesRequest, PassFailResponse);
-    ESPMethod getNode(GetNodeRequest, GetNodeResponse);
+    ESPMethod getNode(NodeRequest, GetNodeResponse);
     ESPMethod setValues(SetValuesRequest, SetValuesResponse);
-    ESPMethod getParents(GetParentsRequest, GetParentsResponse);
+    ESPMethod getParents(NodeRequest, GetParentsResponse);
     ESPMethod insertNode(InsertNodeRequest, GetNodeResponse);
+    ESPMethod removeNode(NodeRequest, PassFailResponse);
 };
 
 

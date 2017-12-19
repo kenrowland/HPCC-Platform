@@ -133,7 +133,7 @@ bool Cws_config2Ex::onenableEnvironmentChanges(IEspContext &context, IEspEnableC
 }
 
 
-bool Cws_config2Ex::ongetNode(IEspContext &context, IEspGetNodeRequest &req, IEspGetNodeResponse &resp)
+bool Cws_config2Ex::ongetNode(IEspContext &context, IEspNodeRequest &req, IEspGetNodeResponse &resp)
 {
     std::string sessionId = req.getSessionId();
     std::string id = req.getNodeId();
@@ -150,134 +150,7 @@ bool Cws_config2Ex::ongetNode(IEspContext &context, IEspGetNodeRequest &req, IEs
         if (pNode)
         {
             getNodelInfo(pNode, resp);
-            /*const std::shared_ptr<ConfigItem> &pNodeConfigItem = pNode->getConfigItem();
-            std::string nodeDisplayName = pNodeConfigItem->getDisplayName();
-            IArrayOf<IEspnodeType> elements;
-
-            //
-            // Handle the attributes
-            IArrayOf<IEspattributeType> nodeAttributes;
-            if (pNode->hasAttributes())
-            {
-                std::vector<std::shared_ptr<EnvironmentValue>> attributes = pNode->getAttributes();
-                for (auto it=attributes.begin(); it!=attributes.end(); ++it)
-                {
-                    std::shared_ptr<EnvironmentValue> pAttr = *it;
-                    Owned<IEspattributeType> pAttribute = createattributeType();
-
-                    const std::shared_ptr<ConfigValue> &pCfgValue = pAttr->getCfgValue();
-                    std::string attributeName = pAttr->getName();
-                    pAttribute->setName(attributeName.c_str());
-                    pAttribute->setDisplayName(pCfgValue->getDisplayName().c_str());
-                    if (attributeName == "name" && pAttr->isValuePresent())
-                    {
-                        nodeDisplayName = pAttr->getValue();  // better usability value
-                    }
-
-                    pAttribute->updateDoc().setTooltip(pCfgValue->getTooltip().c_str());
-
-                    const std::shared_ptr<ConfigValueType> &pType = pCfgValue->getType();
-                    std::shared_ptr<ConfigTypeLimits> &pLimits = pType->getLimits();
-                    pAttribute->updateType().setName(pType->getName().c_str());
-                    pAttribute->updateType().updateLimits().setMin(pType->getLimits()->getMin());
-                    pAttribute->updateType().updateLimits().setMax(pType->getLimits()->getMin());
-                    pAttribute->setRequired(pCfgValue->isRequired());
-                    pAttribute->setReadOnly(pCfgValue->isReadOnly());
-                    pAttribute->setHidden(pCfgValue->isHidden());
-
-
-                    //StringArray excludeList;
-                    //excludeList.append("username");
-                    //pAttribute->updateType().updateLimits().setDisallowList(excludeList);
-
-                    std::vector<AllowedValue> allowedValues = pCfgValue->getAllowedValues(pAttr.get());
-                    if (!allowedValues.empty())
-                    {
-                        IArrayOf<IEspchoiceType> choices;
-                        for (auto valueIt=allowedValues.begin(); valueIt!=allowedValues.end(); ++valueIt)
-                        {
-                            Owned<IEspchoiceType> pChoice = createchoiceType();
-                            pChoice->setName((*valueIt).m_value.c_str());
-                            pChoice->setDesc((*valueIt).m_description.c_str());
-                            choices.append(*pChoice.getLink());
-                        }
-                        pAttribute->updateType().updateLimits().setChoiceList(choices);
-                    }
-
-                    //pAttribute->setCurrentValuePresent(pAttr->isValuePresent());
-                    pAttribute->setCurrentValue(pAttr->getValue().c_str());
-                    //pAttribute->setDefaultValueValid(pCfgValue->hasDefaultValue());
-                    pAttribute->setDefaultValue(pCfgValue->getDefaultValue().c_str());
-
-                    nodeAttributes.append(*pAttribute.getLink());
-                }
-            }
-            resp.setAttributes(nodeAttributes); 
-            resp.setNodeName(nodeDisplayName.c_str());
-
-            //
-            // Now the children
-            if (pNode->hasChildren())
-            {
-                std::vector<std::shared_ptr<EnvironmentNode>> children = pNode->getChildren();
-                for (auto it=children.begin(); it!=children.end(); ++it)
-                {
-                    std::shared_ptr<EnvironmentNode> pNode = *it;
-                    const std::shared_ptr<ConfigItem> pConfigItem = pNode->getConfigItem();
-                    Owned<IEspnodeType> pElement = createnodeType();
-                    pElement->updateElementInfo().setName(pConfigItem->getDisplayName().c_str());
-                    pElement->updateElementInfo().setElementType(pConfigItem->getItemType().c_str());
-                    pElement->updateElementInfo().setClass(pConfigItem->getClassName().c_str());
-                    pElement->updateElementInfo().setCategory(pConfigItem->getCategory().c_str());
-                    pElement->updateElementInfo().updateDoc().setTooltip("");
-                    //pElement->setNumAllowedInstances(pConfigItem->getMaxInstances());
-                    //pElement->setNumRequiredInstances(pConfigItem->getMinInstances());
-                    pElement->setNodeId(pNode->getId().c_str());
-                    pElement->setNumChildren(pNode->getNumChildren());
-                    elements.append(*pElement.getLink());
-                }
-
-
-            }
-            resp.setChildren(elements); 
-
-            //
-            // Build a list of items that can be inserted under this node
-            IArrayOf<IEspelementInfoType> newElements;
-            std::vector<std::shared_ptr<ConfigItem>> insertableList = pNode->getInsertableItems();
-            for (auto it=insertableList.begin(); it!=insertableList.end(); ++it)
-            {
-                std::shared_ptr<ConfigItem> pConfigItem = *it;
-                Owned<IEspelementInfoType> pNewElement = createelementInfoType();
-                pNewElement->setName(pConfigItem->getDisplayName().c_str());
-                pNewElement->setElementType(pConfigItem->getItemType().c_str());
-                pNewElement->setClass(pConfigItem->getClassName().c_str());
-                pNewElement->setCategory(pConfigItem->getCategory().c_str());
-                pNewElement->setIsRequired(pConfigItem->isRequired());
-                newElements.append(*pNewElement.getLink());
-            }
-            resp.setInsertable(newElements);
-
-
-            if (pNodeConfigItem->isItemValueDefined())
-            {
-                resp.setNodeValueDefined(true);  
-
-                const std::shared_ptr<ConfigValue> &pNodeCfgValue = pNodeConfigItem->getItemCfgValue();
-                const std::shared_ptr<ConfigValueType> &pType = pNodeCfgValue->getType();
-                resp.updateValue().updateType().setName(pType->getName().c_str());
-                resp.updateValue().updateType().updateLimits().setMin(pType->getLimits()->getMin());
-                resp.updateValue().updateType().updateLimits().setMax(pType->getLimits()->getMin());
-
-                if (pNode->isNodeValueSet())
-                {
-                    const std::shared_ptr<EnvironmentValue> &pNodeValue = pNode->getNodeEnvValue();
-                    resp.setNodeValueSet(true);
-                    resp.updateValue().setCurrentValue(pNodeValue->getValue().c_str());
-                }
-            }
-
-            rc = true;  */
+            
         }
         else
         {
@@ -316,7 +189,7 @@ bool Cws_config2Ex::oninsertNode(IEspContext &context, IEspInsertNodeRequest &re
 
     if (pSession)
     {
-        std::string parentNodeId = req.getNodeId();
+        std::string parentNodeId = req.getParentNodeId();
         std::shared_ptr<EnvironmentNode> pNode = pSession->m_pEnvMgr->getEnvironmentNode(parentNodeId);
         
         if (pNode)
@@ -330,7 +203,7 @@ bool Cws_config2Ex::oninsertNode(IEspContext &context, IEspInsertNodeRequest &re
         }
         else
         {
-            status.addStatusMsg(statusMsg::error, sessionId.c_str(), "", "", "The input node ID is not a valid not in the environment");
+            status.addStatusMsg(statusMsg::error, sessionId.c_str(), "", "", "The input parent node ID is not a valid not in the environment");
             rc = false;
         }
     }
@@ -341,6 +214,27 @@ bool Cws_config2Ex::oninsertNode(IEspContext &context, IEspInsertNodeRequest &re
 
 
     return true;
+}
+
+
+bool Cws_config2Ex::onremoveNode(IEspContext &context, IEspNodeRequest &req, IEspPassFailResponse &resp)
+{
+    std::string sessionId = req.getSessionId();
+    const ConfigMgrSession *pSession = getConfigSession(sessionId);
+    Status status;
+
+    bool rc = true;
+
+    if (pSession)
+    {
+        std::string nodeId = req.getNodeId();
+        rc = pSession->m_pEnvMgr->removeEnvironmentNode(nodeId, status);
+    }
+    else
+    {
+        status.addStatusMsg(statusMsg::error, sessionId.c_str(), "", "", "The session ID is not valid");
+    }
+    return rc;
 }
 
 
@@ -387,7 +281,7 @@ bool Cws_config2Ex::onsetValues(IEspContext &context, IEspSetValuesRequest &req,
     return rc;
 }
 
-bool Cws_config2Ex::ongetParents(IEspContext &context, IEspGetParentsRequest &req, IEspGetParentsResponse &resp)
+bool Cws_config2Ex::ongetParents(IEspContext &context, IEspNodeRequest &req, IEspGetParentsResponse &resp)
 {
     std::string id = req.getNodeId();
     std::shared_ptr<EnvironmentNode> pNode = m_pEnvMgr->getEnvironmentNode(id);
@@ -457,9 +351,7 @@ const ConfigMgrSession *Cws_config2Ex::getConfigSession(const std::string &sessi
 
 bool Cws_config2Ex::getNodelInfo(const std::shared_ptr<EnvironmentNode> &pNode, IEspGetNodeResponse &resp) const
 {
-    
     Status status;
-
     bool rc;
         
     const std::shared_ptr<ConfigItem> &pNodeConfigItem = pNode->getConfigItem();
@@ -516,9 +408,7 @@ bool Cws_config2Ex::getNodelInfo(const std::shared_ptr<EnvironmentNode> &pNode, 
                 pAttribute->updateType().updateLimits().setChoiceList(choices);
             }
 
-            //pAttribute->setCurrentValuePresent(pAttr->isValuePresent());
             pAttribute->setCurrentValue(pAttr->getValue().c_str());
-            //pAttribute->setDefaultValueValid(pCfgValue->hasDefaultValue());
             pAttribute->setDefaultValue(pCfgValue->getDefaultValue().c_str());
 
             nodeAttributes.append(*pAttribute.getLink());
@@ -542,8 +432,6 @@ bool Cws_config2Ex::getNodelInfo(const std::shared_ptr<EnvironmentNode> &pNode, 
             pElement->updateElementInfo().setClass(pConfigItem->getClassName().c_str());
             pElement->updateElementInfo().setCategory(pConfigItem->getCategory().c_str());
             pElement->updateElementInfo().updateDoc().setTooltip("");
-            //pElement->setNumAllowedInstances(pConfigItem->getMaxInstances());
-            //pElement->setNumRequiredInstances(pConfigItem->getMinInstances());
             pElement->setNodeId(pNode->getId().c_str());
             pElement->setNumChildren(pNode->getNumChildren());
             elements.append(*pElement.getLink());

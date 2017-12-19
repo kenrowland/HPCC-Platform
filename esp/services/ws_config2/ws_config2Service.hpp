@@ -20,10 +20,11 @@ public:
     Cws_config2Ex();
     virtual ~Cws_config2Ex();
 
-    virtual bool ongetNode(IEspContext &context, IEspGetNodeRequest &req, IEspGetNodeResponse &resp);
+    virtual bool ongetNode(IEspContext &context, IEspNodeRequest &req, IEspGetNodeResponse &resp);
     virtual bool onsetValues(IEspContext &context, IEspSetValuesRequest &req, IEspSetValuesResponse &resp);
-    virtual bool ongetParents(IEspContext &context, IEspGetParentsRequest &req, IEspGetParentsResponse &resp);
+    virtual bool ongetParents(IEspContext &context, IEspNodeRequest &req, IEspGetParentsResponse &resp);
     virtual bool oninsertNode(IEspContext &context, IEspInsertNodeRequest &req, IEspGetNodeResponse &resp);
+    virtual bool onremoveNode(IEspContext &context, IEspNodeRequest &req, IEspPassFailResponse &resp);
 
     virtual bool onopenSession(IEspContext &context, IEspOpenSessionRequest &req, IEspOpenSessionResponse &resp);
     virtual bool oncloseSession(IEspContext &context, IEspCloseSessionRequest &req, IEspPassFailResponse &resp);
