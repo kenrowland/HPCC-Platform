@@ -355,7 +355,7 @@ bool Cws_config2Ex::getNodelInfo(const std::shared_ptr<EnvironmentNode> &pNode, 
     bool rc;
         
     const std::shared_ptr<ConfigItem> &pNodeConfigItem = pNode->getConfigItem();
-    std::string nodeDisplayName = pNodeConfigItem->getDisplayName();
+    std::string nodeDisplayName = pNodeConfigItem->getProperty("displayName");
     IArrayOf<IEspnodeType> elements;
 
     //
@@ -427,10 +427,10 @@ bool Cws_config2Ex::getNodelInfo(const std::shared_ptr<EnvironmentNode> &pNode, 
             std::shared_ptr<EnvironmentNode> pNode = *it;
             const std::shared_ptr<ConfigItem> pConfigItem = pNode->getConfigItem();
             Owned<IEspnodeType> pElement = createnodeType();
-            pElement->updateElementInfo().setName(pConfigItem->getDisplayName().c_str());
+            pElement->updateElementInfo().setName(pConfigItem->getProperty("displayName").c_str());
             pElement->updateElementInfo().setElementType(pConfigItem->getItemType().c_str());
-            pElement->updateElementInfo().setClass(pConfigItem->getClassName().c_str());
-            pElement->updateElementInfo().setCategory(pConfigItem->getCategory().c_str());
+            pElement->updateElementInfo().setClass(pConfigItem->getProperty("className").c_str());
+            pElement->updateElementInfo().setCategory(pConfigItem->getProperty("category").c_str());
             pElement->updateElementInfo().updateDoc().setTooltip("");
             pElement->setNodeId(pNode->getId().c_str());
             pElement->setNumChildren(pNode->getNumChildren());
@@ -447,10 +447,10 @@ bool Cws_config2Ex::getNodelInfo(const std::shared_ptr<EnvironmentNode> &pNode, 
     {
         std::shared_ptr<ConfigItem> pConfigItem = *it;
         Owned<IEspelementInfoType> pNewElement = createelementInfoType();
-        pNewElement->setName(pConfigItem->getDisplayName().c_str());
+        pNewElement->setName(pConfigItem->getProperty("displayName").c_str());
         pNewElement->setElementType(pConfigItem->getItemType().c_str());
-        pNewElement->setClass(pConfigItem->getClassName().c_str());
-        pNewElement->setCategory(pConfigItem->getCategory().c_str());
+        pNewElement->setClass(pConfigItem->getProperty("className").c_str());
+        pNewElement->setCategory(pConfigItem->getProperty("category").c_str());
         pNewElement->setIsRequired(pConfigItem->isRequired());
         newElements.append(*pNewElement.getLink());
     }

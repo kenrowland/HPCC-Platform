@@ -15,35 +15,39 @@
     limitations under the License.
 ############################################################################## */
 
-#include "ConfigItem.hpp"
-#include "ConfigExceptions.hpp"
-#include "ConfigTypeStringLimits.hpp"
-#include "ConfigTypeIntegerLimits.hpp"
+#include "SchemaItem.hpp"
+#include "Exceptions.hpp"
+#include "SchemaTypeStringLimits.hpp"
+#include "SchemaTypeIntegerLimits.hpp"
 #include <algorithm>
 
 
 // static class variables
-std::map<std::string, std::vector<std::shared_ptr<ConfigValue>>> ConfigItem::m_uniqueAttributeValueSets;
+std::map<std::string, std::vector<std::shared_ptr<SchemaValue>>> SchemaItem::m_uniqueAttributeValueSets;
 //std::map<std::string, ConfigItem::KeyRef> ConfigItem::m_keyRefs;
 
 
-ConfigItem::ConfigItem(const std::string &name, const std::string &className, const std::shared_ptr<ConfigItem> &pParent) :
-	m_className(className), 
-	m_name(name), 
+SchemaItem::SchemaItem(const std::string &name, const std::string &className, const std::shared_ptr<SchemaItem> &pParent) :
+	//m_className(className), 
+	//m_name(name), 
 	m_pParent(pParent), 
-	m_displayName(name),
+	//m_displayName(name),
 	m_minInstances(1), 
-	m_maxInstances(1), 
-	m_version(-1) 
+	m_maxInstances(1) 
+	//m_version(-1) 
 {
 	//
 	// If this is a root node (no parent), then do some additional init 
 	if (m_pParent.expired())
 	{
+        m_properties["name"] = name;
+        m_properties["displayName"] = name;
+        m_properties["className"] = className;
+
         //
         // Create a default type so that all values have a type
-		std::shared_ptr<ConfigValueType> pDefaultType = std::make_shared<ConfigValueType>("default");
-		std::shared_ptr<ConfigTypeLimits> pDefaultLimits = std::make_shared<ConfigTypeLimits>();
+		std::shared_ptr<SchemaType> pDefaultType = std::make_shared<SchemaType>("default");
+		std::shared_ptr<SchemaTypeLimits> pDefaultLimits = std::make_shared<SchemaTypeLimits>();
 		pDefaultType->setLimits(pDefaultLimits);
 		addType(pDefaultType);
 	}
@@ -105,15 +109,15 @@ ConfigItem::ConfigItem(const std::string &name, const std::string &className, co
 //}
 
 
-void ConfigItem::addType(const std::shared_ptr<ConfigValueType> &pType)
+void SchemaItem::addType(const std::shared_ptr<SchemaType> &pType)
 {
     m_types[pType->getName()] = pType;
 }
 
 
-std::shared_ptr<ConfigValueType> ConfigItem::getType(const std::string &typeName, bool throwIfNotPresent) const
+std::shared_ptr<SchemaType> SchemaItem::getType(const std::string &typeName, bool throwIfNotPresent) const
 {
-    std::shared_ptr<ConfigValueType> pType;
+    std::shared_ptr<SchemaType> pType;
     auto it = m_types.find(typeName);
     if (it != m_types.end())
     {
@@ -121,7 +125,7 @@ std::shared_ptr<ConfigValueType> ConfigItem::getType(const std::string &typeName
     }
     else
     {
-        std::shared_ptr<ConfigItem> pParent = m_pParent.lock();
+        std::shared_ptr<SchemaItem> pParent = m_pParent.lock();
         if (pParent)
         {
             return pParent->getType(typeName, throwIfNotPresent);
@@ -139,41 +143,42 @@ std::shared_ptr<ConfigValueType> ConfigItem::getType(const std::string &typeName
 }
 
 
-bool ConfigItem::addUniqueName(const std::string keyName)
+bool SchemaItem::addUniqueName(const std::string keyName)
 {
     auto result = m_keys.insert(keyName);
     return result.second;  // true if keyName did not already exist
 }
 
 
-void ConfigItem::addConfigType(const std::shared_ptr<ConfigItem> &pItem, const std::string &typeName)
+void SchemaItem::addSchemaType(const std::shared_ptr<SchemaItem> &pItem, const std::string &typeName)
 {
-    auto it = m_configTypes.find(typeName);
-    if (it == m_configTypes.end())
+    auto it = m_schemaTypes.find(typeName);
+    if (it == m_schemaTypes.end())
     {
-        m_configTypes[typeName] = pItem;
+        m_schemaTypes[typeName] = pItem;
     }
     else
     {
-        throw(ParseException("Duplicate config type found: " + pItem->getName()));
+        //throw(ParseException("Duplicate config type found: " + pItem->getName()));
+        throw(ParseException("Duplicate config type found: " + m_properties["name"]));
     }
 }
 
 
-std::shared_ptr<ConfigItem> ConfigItem::getConfigType(const std::string &name, bool throwIfNotPresent) const
+std::shared_ptr<SchemaItem> SchemaItem::getSchemaType(const std::string &name, bool throwIfNotPresent) const
 {
-    std::shared_ptr<ConfigItem> pItem;
-    auto it = m_configTypes.find(name);
-    if (it != m_configTypes.end())
+    std::shared_ptr<SchemaItem> pItem;
+    auto it = m_schemaTypes.find(name);
+    if (it != m_schemaTypes.end())
     {
         return it->second;
     }
     else
     {
-        std::shared_ptr<ConfigItem> pParent = m_pParent.lock();
+        std::shared_ptr<SchemaItem> pParent = m_pParent.lock();
         if (pParent)
         {
-            return pParent->getConfigType(name, throwIfNotPresent);
+            return pParent->getSchemaType(name, throwIfNotPresent);
         }
     }
 
@@ -190,7 +195,7 @@ std::shared_ptr<ConfigItem> ConfigItem::getConfigType(const std::string &name, b
 
 //
 // Inserts a previously added configType to the config item
-void ConfigItem::insertConfigType(const std::shared_ptr<ConfigItem> pTypeItem)
+void SchemaItem::insertConfigType(const std::shared_ptr<SchemaItem> pTypeItem)
 {
     //
     // To insert a config type (most likely previously defined by a complexType name="" XSD definition)
@@ -199,28 +204,28 @@ void ConfigItem::insertConfigType(const std::shared_ptr<ConfigItem> pTypeItem)
 
     //
     // Children
-    std::vector<std::shared_ptr<ConfigItem>> typeChildren = pTypeItem->getChildren();
+    std::vector<std::shared_ptr<SchemaItem>> typeChildren = pTypeItem->getChildren();
     for (auto childIt = typeChildren.begin(); childIt != typeChildren.end(); ++childIt)
     {
-        std::shared_ptr<ConfigItem> pNewItem = std::make_shared<ConfigItem>(*(*childIt));
+        std::shared_ptr<SchemaItem> pNewItem = std::make_shared<SchemaItem>(*(*childIt));
         addChild(pNewItem);
     }
 
     //
     // Attributes
-    const std::map<std::string, std::shared_ptr<ConfigValue>> &typeAttributes = pTypeItem->getAttributes();
+    const std::map<std::string, std::shared_ptr<SchemaValue>> &typeAttributes = pTypeItem->getAttributes();
     for (auto attrIt = typeAttributes.begin(); attrIt != typeAttributes.end(); ++attrIt)
     {
-        std::shared_ptr<ConfigValue> pNewAttr = std::make_shared<ConfigValue>(*(attrIt->second));
+        std::shared_ptr<SchemaValue> pNewAttr = std::make_shared<SchemaValue>(*(attrIt->second));
         addAttribute(pNewAttr);
     }
 
     //
     // Type main value
-    if (pTypeItem->getItemCfgValue() != nullptr)
+    if (pTypeItem->getItemSchemaValue() != nullptr)
     {
-        std::shared_ptr<ConfigValue> pNewItemCfgValue = std::make_shared<ConfigValue>(*(pTypeItem->getItemCfgValue()));
-        setItemCfgValue(pNewItemCfgValue);
+        std::shared_ptr<SchemaValue> pNewItemCfgValue = std::make_shared<SchemaValue>(*(pTypeItem->getItemSchemaValue()));
+        setItemSchemaValue(pNewItemCfgValue);
     }
 
     //
@@ -239,53 +244,53 @@ void ConfigItem::insertConfigType(const std::shared_ptr<ConfigItem> pTypeItem)
 }
 
 
-void ConfigItem::addAttribute(const std::shared_ptr<ConfigValue> &pCfgValue)
+void SchemaItem::addAttribute(const std::shared_ptr<SchemaValue> &pCfgValue)
 {
 	auto retVal = m_attributes.insert({ pCfgValue->getName(), pCfgValue });
 	if (!retVal.second)
 	{
-		throw(ParseException("Duplicate attribute (" + pCfgValue->getName() + ") found for element " + m_name));
+		throw(ParseException("Duplicate attribute (" + pCfgValue->getName() + ") found for element " + m_properties["name"]));
 	}
 }
 
 
-void ConfigItem::addAttribute(const std::vector<std::shared_ptr<ConfigValue>> &attributes)
+void SchemaItem::addAttribute(const std::vector<std::shared_ptr<SchemaValue>> &attributes)
 {
 	for (auto it = attributes.begin(); it != attributes.end(); ++it)
 		addAttribute((*it));
 }
 
 
-std::shared_ptr<ConfigValue> ConfigItem::getAttribute(const std::string &name) const
+std::shared_ptr<SchemaValue> SchemaItem::getAttribute(const std::string &name) const
 {
-	std::shared_ptr<ConfigValue> pCfgValue;
+	std::shared_ptr<SchemaValue> pCfgValue;
 	auto it = m_attributes.find(name);
 	if (it != m_attributes.end())
 		pCfgValue = it->second;
 	else
 	{
         // not found, build a default cfg value for the undefined attribute
-		pCfgValue = std::make_shared<ConfigValue>(name, false);
+		pCfgValue = std::make_shared<SchemaValue>(name, false);
 		pCfgValue->setType(getType("default"));
 	}
 	return pCfgValue;
 }
 
 
-void ConfigItem::addUniqueAttributeValueSetDefinition(const std::string &setName, const std::string &elementPath, const std::string &attributeName, bool duplicateOk)
+void SchemaItem::addUniqueAttributeValueSetDefinition(const std::string &setName, const std::string &elementPath, const std::string &attributeName, bool duplicateOk)
 {
     m_uniqueAttributeValueSetDefs.insert({ setName, SetInfo(setName, elementPath, attributeName, duplicateOk) });   // these are processed later
 }
 
 
-void ConfigItem::addReferenceToUniqueAttributeValueSet(const std::string &setName, const std::string &elementPath, const std::string &attributeName)
+void SchemaItem::addReferenceToUniqueAttributeValueSet(const std::string &setName, const std::string &elementPath, const std::string &attributeName)
 {
     m_uniqueAttributeValueSetReferences.insert({ setName, SetInfo(setName, elementPath, attributeName) });   // these are processed later
 }
 
 
 
-void ConfigItem::processUniqueAttributeValueSetReferences()
+void SchemaItem::processUniqueAttributeValueSetReferences()
 {
     for (auto setRefIt = m_uniqueAttributeValueSetReferences.begin(); setRefIt != m_uniqueAttributeValueSetReferences.end(); ++setRefIt)
     {  
@@ -294,9 +299,9 @@ void ConfigItem::processUniqueAttributeValueSetReferences()
         {
             for (auto cfgIt = keyIt->second.begin(); cfgIt != keyIt->second.end(); ++cfgIt)
             {
-                std::shared_ptr<ConfigValue> pKeyRefAttribute = *cfgIt;     // this is the reference attribute from which attributeName must be a member
+                std::shared_ptr<SchemaValue> pKeyRefAttribute = *cfgIt;     // this is the reference attribute from which attributeName must be a member
                 std::string cfgValuePath = ((setRefIt->second.m_elementPath != ".") ? setRefIt->second.m_elementPath : "") + "@" + setRefIt->second.m_attributeName;
-                std::vector<std::shared_ptr<ConfigValue>> cfgValues;
+                std::vector<std::shared_ptr<SchemaValue>> cfgValues;
                 findCfgValues(cfgValuePath, cfgValues);
                 if (!cfgValues.empty())
                 {
@@ -319,18 +324,18 @@ void ConfigItem::processUniqueAttributeValueSetReferences()
 }
 
 
-std::vector<std::shared_ptr<ConfigItem>> ConfigItem::getChildren()
+std::vector<std::shared_ptr<SchemaItem>> SchemaItem::getChildren()
 {
-    std::vector<std::shared_ptr<ConfigItem>> children;
+    std::vector<std::shared_ptr<SchemaItem>> children;
     for (auto it = m_children.begin(); it != m_children.end(); ++it)
         children.push_back(it->second);
     return children;
 }
 
 
-std::shared_ptr<ConfigItem> ConfigItem::getChild(const std::string &name)
+std::shared_ptr<SchemaItem> SchemaItem::getChild(const std::string &name)
 {
-	std::shared_ptr<ConfigItem> pItem = std::make_shared<ConfigItem>(name, "default", shared_from_this());
+	std::shared_ptr<SchemaItem> pItem = std::make_shared<SchemaItem>(name, "default", shared_from_this());
 	auto it = m_children.find(name);  // only return the first one
 	if (it != m_children.end())
 	{
@@ -340,13 +345,13 @@ std::shared_ptr<ConfigItem> ConfigItem::getChild(const std::string &name)
 }
 
 
-std::shared_ptr<ConfigItem> ConfigItem::getChildByComponent(const std::string &name, std::string &componentName)
+std::shared_ptr<SchemaItem> SchemaItem::getChildByComponent(const std::string &name, std::string &componentName)
 {
-    std::shared_ptr<ConfigItem> pItem = std::make_shared<ConfigItem>(name, "default", shared_from_this());  
+    std::shared_ptr<SchemaItem> pItem = std::make_shared<SchemaItem>(name, "default", shared_from_this());  
     auto childItRange = m_children.equal_range(name);
     for (auto childIt = childItRange.first; childIt != childItRange.second; ++childIt)
     {
-        if (childIt->second->getComponentName() == componentName)
+        if (childIt->second->getProperty("componentName") == componentName)
         {
             pItem = childIt->second;
             break;
@@ -357,7 +362,7 @@ std::shared_ptr<ConfigItem> ConfigItem::getChildByComponent(const std::string &n
 }
 
 
-void ConfigItem::resetEnvironment()
+void SchemaItem::resetEnvironment()
 {
     for (auto it = m_attributes.begin(); it != m_attributes.end(); ++it)
     {
@@ -367,14 +372,14 @@ void ConfigItem::resetEnvironment()
 
 
 
-void ConfigItem::findCfgValues(const std::string &path, std::vector<std::shared_ptr<ConfigValue>> &cfgValues)
+void SchemaItem::findCfgValues(const std::string &path, std::vector<std::shared_ptr<SchemaValue>> &cfgValues)
 {
     bool rootPath = path[0] == '/';
     //
     // If path is from the root, move on up
     if (rootPath && !m_pParent.expired())
     {   
-        std::shared_ptr<ConfigItem> pParent = m_pParent.lock();
+        std::shared_ptr<SchemaItem> pParent = m_pParent.lock();
         if (pParent)
         {
             return pParent->findCfgValues(path, cfgValues);
@@ -389,7 +394,7 @@ void ConfigItem::findCfgValues(const std::string &path, std::vector<std::shared_
 
         if (rootPath)
         {
-            if (m_name == elem)
+            if (m_properties["name"] == elem)
             {
                 return findCfgValues(path.substr(end + 1), cfgValues);
             }
@@ -423,7 +428,7 @@ void ConfigItem::findCfgValues(const std::string &path, std::vector<std::shared_
 }
 
 
-void ConfigItem::processUniqueAttributeValueSets()
+void SchemaItem::processUniqueAttributeValueSets()
 {
     for (auto setIt = m_uniqueAttributeValueSetDefs.begin(); setIt != m_uniqueAttributeValueSetDefs.end(); ++setIt)
     {
@@ -433,7 +438,7 @@ void ConfigItem::processUniqueAttributeValueSets()
         {
             //std::shared_ptr<ConfigItem> pCfgItem = getChild(elementName);  // todo: validate pCfgItem found
             std::string cfgValuePath = ((setIt->second.m_elementPath != ".") ? setIt->second.m_elementPath : "") + "@" + setIt->second.m_attributeName;
-            std::vector<std::shared_ptr<ConfigValue>> cfgValues;
+            std::vector<std::shared_ptr<SchemaValue>> cfgValues;
             findCfgValues(cfgValuePath, cfgValues);
             if (!cfgValues.empty())
             {
@@ -446,14 +451,14 @@ void ConfigItem::processUniqueAttributeValueSets()
 
                     if (!keyDefExists)
                     {
-                        std::vector<std::shared_ptr<ConfigValue>> values;
+                        std::vector<std::shared_ptr<SchemaValue>> values;
                         values.push_back(*attrIt);
                         it = m_uniqueAttributeValueSets.insert({ setIt->second.m_setName, values }).first;  // so the else condition will work
                         keyDefExists = true;  // Now, it does exist
                     }
                     else
                     {
-                        std::vector<std::shared_ptr<ConfigValue>> &values = it->second;
+                        std::vector<std::shared_ptr<SchemaValue>> &values = it->second;
                         bool found = false;
                         for (auto cfgIt = values.begin(); cfgIt != values.end() && !found; ++cfgIt)
                         {
@@ -471,7 +476,7 @@ void ConfigItem::processUniqueAttributeValueSets()
         }
         else
         {
-            throw(ParseException("Duplicate key (" + setIt->second.m_setName + ") found for element " + m_name));
+            throw(ParseException("Duplicate key (" + setIt->second.m_setName + ") found for element " + m_properties["name"]));
         }
     }
 
@@ -485,7 +490,7 @@ void ConfigItem::processUniqueAttributeValueSets()
 
 
 
-void ConfigItem::postProcessConfig()
+void SchemaItem::postProcessConfig()
 {
     //
     // Make sure that the item type value for all children that are insertable (minRequired = 0 or maxAllowed > minRequired)
@@ -497,7 +502,7 @@ void ConfigItem::postProcessConfig()
             auto rc = itemTypes.insert(it->second->getItemType());
             if (!rc.second)
             {
-                throw(ParseException("Duplicate itemType(" + it->second->getItemType() + ") found for element " + getName()));
+                throw(ParseException("Duplicate itemType(" + it->second->getItemType() + ") found for element " + m_properties["name"]));
             }
         }
     }
@@ -513,13 +518,13 @@ void ConfigItem::postProcessConfig()
         // it is replicated to us.
         if (it->second->isMirroredValue())
         {
-            std::vector<std::shared_ptr<ConfigValue>> cfgValues;
+            std::vector<std::shared_ptr<SchemaValue>> cfgValues;
             findCfgValues(it->second->getMirrorFromPath(), cfgValues);
             if (!cfgValues.empty() && cfgValues.size() == 1)
             {
                 if (cfgValues.size() == 1)
                 {
-                    it->second->addMirroredCfgValue(cfgValues[0]);
+                    it->second->addMirroredSchemaValue(cfgValues[0]);
                 }
                 else
                 {
@@ -542,25 +547,26 @@ void ConfigItem::postProcessConfig()
 }
 
 
-const std::string &ConfigItem::getItemType() const
+const std::string &SchemaItem::getItemType() const
 {
     //
     // Return itemType based on this set of rules
-    if (m_itemType != "")
-        return m_itemType;
-    else if (m_componentName != "")
-        return m_componentName;
+    if (getProperty("itemType") != "")
+        return getProperty("itemType");
+    else if (getProperty("componentName") != "")
+        return getProperty("componentName");
 
-    return m_name;
+    return getProperty("name");
+    //return m_name;
 }
 
 
-//const std::string &ConfigItem::getProperty(const std::string &name, const std::string &default) const
-//{
-//    auto it = m_properties.find(name);
-//    if (it != m_properties.end())
-//    {
-//        return it->second;
-//    }
-//    return default;
-//}
+const std::string &SchemaItem::getProperty(const std::string &name, const std::string &default) const
+{
+    auto it = m_properties.find(name);
+    if (it != m_properties.end())
+    {
+        return it->second;
+    }
+    return default;
+}

@@ -15,11 +15,11 @@
     limitations under the License.
 ############################################################################## */
 
-#include "ConfigParser.hpp"
-#include "ConfigExceptions.hpp"
+#include "SchemaParser.hpp"
+#include "Exceptions.hpp"
 
 
-bool ConfigParser::parseEnvironmentConfig(const std::string &configPath, const std::string &masterConfigFile,  const std::vector<std::string> &cfgParms, Status &status)
+bool SchemaParser::parseSchema(const std::string &configPath, const std::string &masterConfigFile,  const std::vector<std::string> &cfgParms, Status &status)
 {
     try
     {
@@ -34,7 +34,7 @@ bool ConfigParser::parseEnvironmentConfig(const std::string &configPath, const s
 }
 
 
-std::vector<std::string> ConfigParser::split(const std::string  &input, const std::string  &delim)
+std::vector<std::string> SchemaParser::split(const std::string  &input, const std::string  &delim)
 {
     size_t  start = 0, end = 0, delimLen = delim.length();
     std::vector<std::string> list;

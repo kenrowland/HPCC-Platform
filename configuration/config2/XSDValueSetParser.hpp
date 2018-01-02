@@ -24,17 +24,17 @@
 #include <map>
 #include <boost/property_tree/ptree.hpp>
 
-#include "XSDConfigParser.hpp"
-#include "ConfigItemValueSet.hpp"
+#include "XSDSchemaParser.hpp"
+#include "SchemaItemValueSet.hpp"
 
 namespace pt = boost::property_tree;
 
-class XSDValueSetParser : public XSDConfigParser
+class XSDValueSetParser : public XSDSchemaParser
 {
     public:
 
-        XSDValueSetParser(std::shared_ptr<ConfigItem> pValueSet) : 
-            XSDConfigParser(pValueSet) { m_pValueSet = std::dynamic_pointer_cast<ConfigItemValueSet>(pValueSet);  }
+        XSDValueSetParser(std::shared_ptr<SchemaItem> pValueSet) : 
+            XSDSchemaParser(pValueSet) { m_pValueSet = std::dynamic_pointer_cast<SchemaItemValueSet>(pValueSet);  }
         virtual ~XSDValueSetParser() { }
         virtual void parseXSD(const pt::ptree &valueSetTree);
         void parseAttributeGroup(const pt::ptree &attributeTree);
@@ -48,7 +48,7 @@ class XSDValueSetParser : public XSDConfigParser
 
     protected:
 
-        std::shared_ptr<ConfigItemValueSet> m_pValueSet;
+        std::shared_ptr<SchemaItemValueSet> m_pValueSet;
 
 };
 

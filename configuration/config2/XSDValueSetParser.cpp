@@ -16,7 +16,7 @@
 ############################################################################## */
 
 #include "XSDValueSetParser.hpp"
-#include "ConfigExceptions.hpp"
+#include "Exceptions.hpp"
 
 namespace pt = boost::property_tree;
 
@@ -45,16 +45,16 @@ void XSDValueSetParser::parseAttributeGroup(const pt::ptree &attributeTree)
     //
     // Only support an attribute reference. The ref value is a type.
     std::string groupRefName = getXSDAttributeValue(attributeTree, "<xmlattr>.ref");
-    std::shared_ptr<ConfigItemValueSet> pValueSet = std::dynamic_pointer_cast<ConfigItemValueSet>(m_pConfig->getConfigType(groupRefName, true));
+    std::shared_ptr<SchemaItemValueSet> pValueSet = std::dynamic_pointer_cast<SchemaItemValueSet>(m_pSchema->getSchemaType(groupRefName, true));
     if (pValueSet)
     {
-        m_pValueSet->addCfgValue(pValueSet);
+        m_pValueSet->addSchemaValue(pValueSet);
     }
 }
 
 
 void XSDValueSetParser::parseAttribute(const pt::ptree &attr)
 {
-    std::shared_ptr<ConfigValue> pCfgValue = getCfgValue(attr);
-    m_pValueSet->addCfgValue(pCfgValue);
+    std::shared_ptr<SchemaValue> pCfgValue = getSchemaValue(attr);
+    m_pValueSet->addSchemaValue(pCfgValue);
 }

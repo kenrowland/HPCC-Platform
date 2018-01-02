@@ -15,11 +15,11 @@
     limitations under the License.
 ############################################################################## */
 
-#include "ConfigValue.hpp"
+#include "SchemaValue.hpp"
 #include "EnvironmentValue.hpp"
 
 
-bool ConfigValue::isValueValid(const std::string &value, const EnvironmentValue *pEnvValue) const
+bool SchemaValue::isValueValid(const std::string &value, const EnvironmentValue *pEnvValue) const
 {
     bool isValid = true;   // assume valid
 
@@ -53,7 +53,7 @@ bool ConfigValue::isValueValid(const std::string &value, const EnvironmentValue 
 }
 
 
-void ConfigValue::validate(Status &status, const std::string &id, const EnvironmentValue *pEnvValue) const
+void SchemaValue::validate(Status &status, const std::string &id, const EnvironmentValue *pEnvValue) const
 {
     // get currentvalue from pEnvValue
     // for keyed, make sure all values are unique
@@ -64,25 +64,24 @@ void ConfigValue::validate(Status &status, const std::string &id, const Environm
 }
 
 
-void ConfigValue::resetEnvironment()
+void SchemaValue::resetEnvironment()
 { 
     m_envValues.clear();
 }
 
 
 // replicates the new value throughout the environment
-void ConfigValue::mirrorValue(const std::string &oldValue, const std::string &newValue)
+void SchemaValue::mirrorValueToEnvironment(const std::string &oldValue, const std::string &newValue)
 {
-    for (auto mirrorCfg = m_mirrorToCfgValues.begin(); mirrorCfg != m_mirrorToCfgValues.end(); ++mirrorCfg)
+    for (auto mirrorCfgIt = m_mirrorToCfgValues.begin(); mirrorCfgIt != m_mirrorToCfgValues.end(); ++mirrorCfgIt)
     {
-        (*mirrorCfg)->setMirroredEnvValues(oldValue, newValue);
+        (*mirrorCfgIt)->setMirroredEnvValues(oldValue, newValue);
     }
-
 }
 
 
 // Worker method for replicating a mirrored value to the environment values for this config value
-void ConfigValue::setMirroredEnvValues(const std::string &oldValue, const std::string &newValue)
+void SchemaValue::setMirroredEnvValues(const std::string &oldValue, const std::string &newValue)
 {
     for (auto envIt = m_envValues.begin(); envIt != m_envValues.end(); ++envIt)
     {
@@ -95,7 +94,7 @@ void ConfigValue::setMirroredEnvValues(const std::string &oldValue, const std::s
 }
 
 
-std::vector<std::string> ConfigValue::getAllEnvValues() const
+std::vector<std::string> SchemaValue::getAllEnvValues() const
 {
     std::vector<std::string> values;
     for (auto it = m_envValues.begin(); it != m_envValues.end(); ++it)
@@ -106,7 +105,7 @@ std::vector<std::string> ConfigValue::getAllEnvValues() const
 }
 
 
-std::vector<AllowedValue> ConfigValue::getAllowedValues(const EnvironmentValue *pEnvValue) const
+std::vector<AllowedValue> SchemaValue::getAllowedValues(const EnvironmentValue *pEnvValue) const
 {
     std::vector<AllowedValue> allowedValues;
 
@@ -128,13 +127,13 @@ std::vector<AllowedValue> ConfigValue::getAllowedValues(const EnvironmentValue *
 }
 
 
-std::vector<std::string> ConfigValue::getAllKeyRefValues(const EnvironmentValue *pEnvValue) const
+std::vector<std::string> SchemaValue::getAllKeyRefValues(const EnvironmentValue *pEnvValue) const
 {
     std::vector<std::string> keyRefValues;
-    std::vector<std::weak_ptr<ConfigValue>> refCfgValues = getUniqueValueSetRefs();
+    std::vector<std::weak_ptr<SchemaValue>> refCfgValues = getUniqueValueSetRefs();
     for (auto refCfgValueIt = refCfgValues.begin(); refCfgValueIt != refCfgValues.end(); ++refCfgValueIt)
     {
-        std::shared_ptr<ConfigValue> pRefCfgValue = (*refCfgValueIt).lock();
+        std::shared_ptr<SchemaValue> pRefCfgValue = (*refCfgValueIt).lock();
         std::vector<std::string> allValues = pRefCfgValue->getAllEnvValues();
         keyRefValues.insert(keyRefValues.end(), allValues.begin(), allValues.end());
     }

@@ -22,21 +22,21 @@ bool EnvironmentValue::setValue(const std::string &value, Status *pStatus, bool 
 { 
     bool rc = true;
     std::string oldValue = m_value;
-    if (m_pCfgValue)
+    if (m_pSchemaValue)
     {
         m_forcedSet = false;
-        if (m_pCfgValue->isValueValid(value))
+        if (m_pSchemaValue->isValueValid(value))
         {
             m_value = value;
             m_valueSet = true;
-            m_pCfgValue->mirrorValue(oldValue, value);
+            m_pSchemaValue->mirrorValueToEnvironment(oldValue, value);
         }
         else if (forceSet)
         {
             m_value = value;
             m_valueSet = true;
             m_forcedSet = true;
-            m_pCfgValue->mirrorValue(oldValue, value);
+            m_pSchemaValue->mirrorValueToEnvironment(oldValue, value);
             if (pStatus != nullptr)
                 pStatus->addStatusMsg(statusMsg::info, m_pMyEnvNode.lock()->getId(), m_name, "", "Attribute forced to invalid value");
             rc = true;
@@ -55,9 +55,9 @@ bool EnvironmentValue::setValue(const std::string &value, Status *pStatus, bool 
 bool EnvironmentValue::checkCurrentValue()
 {
     bool rc = true;
-    if (m_pCfgValue)
+    if (m_pSchemaValue)
     {
-        if (!m_pCfgValue->isValueValid(m_value))
+        if (!m_pSchemaValue->isValueValid(m_value))
         {
             rc = false;
         }
@@ -73,26 +73,68 @@ bool EnvironmentValue::checkCurrentValue()
 std::vector<std::string> EnvironmentValue::getAllValues() const
 {
     std::shared_ptr<EnvironmentNode> pEnvNode = m_pMyEnvNode.lock();
-    return pEnvNode->getAllFieldValues(m_pCfgValue->getName());
+    return pEnvNode->getAllFieldValues(m_pSchemaValue->getName());
 }
 
 
 bool EnvironmentValue::isValueValid(const std::string &value) const
 {
-    return m_pCfgValue->isValueValid(value, this);
+    return m_pSchemaValue->isValueValid(value, this);
 }
 
 
 void EnvironmentValue::validate(Status &status, const std::string &myId) const
 {
 
-    if (!m_pCfgValue->isConfigured())
+    if (!m_pSchemaValue->isDefined())
         status.addStatusMsg(statusMsg::warning, myId, m_name, "", "No type information exists");
 
     if (m_forcedSet)
         status.addStatusMsg(statusMsg::warning, myId, m_name, "", "Current value was force set to an invalid value");
 
     // Will generate status based on current value and type
-    m_pCfgValue->validate(status, myId, this);
+    m_pSchemaValue->validate(status, myId, this);
 }
 
+
+// Called when a new value has been created, not read from existing environment, but created and added 
+void EnvironmentValue::initialize()
+{
+    //
+    // Is there an auto generated value we should process:
+    const std::string &type = m_pSchemaValue->getAutoGenerateType();
+    if (type != "")
+    {
+        if (type == "prefix")
+        {
+            std::string newName;
+            const std::string &prefix = m_pSchemaValue->getAutoGenerateValue();
+            std::vector<std::string> curValues = m_pMyEnvNode.lock()->getAllFieldValues(m_name);
+            size_t count = curValues.size();
+            for (size_t n = 1; n <= count + 1; ++n)
+            {
+                newName = prefix + std::to_string(n);
+                bool found = false;
+                for (auto it = curValues.begin(); it != curValues.end() && !found; ++it)
+                {
+                    if ((*it) == newName)
+                        found = true;
+                }
+
+                if (!found)
+                {
+                    setValue(newName, nullptr);
+                    break;
+                }
+            }
+        }
+        else if (type == "configProperty")
+        {
+            std::string value;
+            value = m_pMyEnvNode.lock()->getSchemaItem()->getProperty("componentName");
+            setValue(value, nullptr);
+        }
+        // todo throw here
+    }
+
+}

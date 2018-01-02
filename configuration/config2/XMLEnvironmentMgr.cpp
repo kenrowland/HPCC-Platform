@@ -16,13 +16,13 @@
 ############################################################################## */
 
 #include "XMLEnvironmentMgr.hpp"
-#include "ConfigItemValueSet.hpp"
-#include "XSDConfigParser.hpp"
+#include "SchemaItemValueSet.hpp"
+#include "XSDSchemaParser.hpp"
 
 
 bool XMLEnvironmentMgr::createParser(const std::string &configPath, const std::string &masterConfigFile,  const std::vector<std::string> &cfgParms)
 {
-    m_pConfigParser = std::make_shared<XSDConfigParser>(m_pConfig);
+    m_pSchemaParser = std::make_shared<XSDSchemaParser>(m_pSchema);
     return true;
 }
 
@@ -37,12 +37,13 @@ bool XMLEnvironmentMgr::doLoadEnvironment(std::istream &in)
 	//
 	// Start at root, these better match!
 	std::string rootName = rootIt->first;
-	if (rootName == m_pConfig->getName())
+	//if (rootName == m_pConfig->getName())
+    if (rootName == m_pSchema->getProperty("name"))
 	{
-		m_pRootNode = std::make_shared<EnvironmentNode>(m_pConfig, rootName);
+		m_pRootNode = std::make_shared<EnvironmentNode>(m_pSchema, rootName);
 		m_pRootNode->setId(".");
 		addPath(m_pRootNode);
-		parse(rootIt->second, m_pConfig, m_pRootNode);
+		parse(rootIt->second, m_pSchema, m_pRootNode);
 	}
 
 	return true;
@@ -58,7 +59,7 @@ void XMLEnvironmentMgr::save(std::ostream &out)
 }
 
 
-void XMLEnvironmentMgr::parse(const pt::ptree &envTree, const std::shared_ptr<ConfigItem> &pConfigItem, std::shared_ptr<EnvironmentNode> &pEnvNode)
+void XMLEnvironmentMgr::parse(const pt::ptree &envTree, const std::shared_ptr<SchemaItem> &pConfigItem, std::shared_ptr<EnvironmentNode> &pEnvNode)
 {
 	
 	std::string value;
@@ -67,7 +68,7 @@ void XMLEnvironmentMgr::parse(const pt::ptree &envTree, const std::shared_ptr<Co
 		value = envTree.get<std::string>("");
 		if (value != "")
 		{
-			std::shared_ptr<ConfigValue> pCfgValue = pConfigItem->getItemCfgValue();
+			std::shared_ptr<SchemaValue> pCfgValue = pConfigItem->getItemSchemaValue();
 			std::shared_ptr<EnvironmentValue> pEnvValue = std::make_shared<EnvironmentValue>(pEnvNode, pCfgValue, "");  // node's value has no name
 			pEnvValue->setValue(value, nullptr);
 			pEnvNode->setNodeEnvValue(pEnvValue);
@@ -90,7 +91,7 @@ void XMLEnvironmentMgr::parse(const pt::ptree &envTree, const std::shared_ptr<Co
 		{
 			for (auto attrIt = it->second.begin(); attrIt != it->second.end(); ++attrIt)
 			{
-				std::shared_ptr<ConfigValue> pCfgValue = pConfigItem->getAttribute(attrIt->first);
+				std::shared_ptr<SchemaValue> pCfgValue = pConfigItem->getAttribute(attrIt->first);
 				std::string curValue = attrIt->second.get_value<std::string>();
 				std::shared_ptr<EnvironmentValue> pEnvValue = std::make_shared<EnvironmentValue>(pEnvNode, pCfgValue, attrIt->first, curValue);   // this is where we would use a variant
                 pCfgValue->addEnvValue(pEnvValue);
@@ -100,7 +101,7 @@ void XMLEnvironmentMgr::parse(const pt::ptree &envTree, const std::shared_ptr<Co
 		else
 		{
 			std::string typeName = it->second.get("<xmlattr>.buildSet", "");
-			std::shared_ptr<ConfigItem> pEnvConfig;
+			std::shared_ptr<SchemaItem> pEnvConfig;
 			if (typeName != "")
 			{
 				pEnvConfig = pConfigItem->getChildByComponent(elemName, typeName);

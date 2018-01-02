@@ -15,32 +15,37 @@
     limitations under the License.
 ############################################################################## */
 
+#ifndef _CONFIG2_VALUESET_HPP_
+#define _CONFIG2_VALUESET_HPP_
 
-#ifndef _CONFIG2_XSDCOMPONENTPARSER_HPP_
-#define _CONFIG2_XSDCOMPONENTPARSER_HPP_
-
-#include <string>
 #include <memory>
-#include <map>
-#include <boost/property_tree/ptree.hpp>
+#include <vector>
+#include "SchemaValue.hpp"
+#include "SchemaItem.hpp"
 
-#include "XSDSchemaParser.hpp"
 
-namespace pt = boost::property_tree;
-
-class XSDComponentParser : public XSDSchemaParser
+class SchemaItemValueSet : public SchemaItem
 {
     public:
 
-        XSDComponentParser(std::shared_ptr<SchemaItem> pConfig) : XSDSchemaParser(pConfig) { }
-        virtual ~XSDComponentParser() { }
-        virtual void parseXSD(const pt::ptree &tree);
+		SchemaItemValueSet(const std::string &name, std::shared_ptr<SchemaItem> pParent) : SchemaItem(name, "valueset", pParent) { }
+        virtual ~SchemaItemValueSet() { };
+
+        void addSchemaValue(const std::shared_ptr<SchemaValue> pValue);
+        void addSchemaValue(const std::shared_ptr<SchemaItemValueSet> &valueSet);
+        const std::vector<std::shared_ptr<SchemaValue>> &getSchemaValues() const;
+
+
+    private:
+
+        std::shared_ptr<SchemaValue> findValue(const std::string &valueName, bool throwIfNotFound = true) const;
 
 
     protected:
 
-        XSDComponentParser() { };
+        std::vector<std::shared_ptr<SchemaValue>> m_cfgValues;
+
 };
 
 
-#endif // _CONFIG2_XSDCOMPONENTPARSER_HPP_
+#endif // _CONFIG2_VALUESET_HPP_

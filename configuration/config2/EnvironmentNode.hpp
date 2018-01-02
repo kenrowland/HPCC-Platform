@@ -20,9 +20,9 @@
 
 #include <memory>
 #include <map>
-#include "ConfigItem.hpp"
+#include "SchemaItem.hpp"
 #include "EnvironmentValue.hpp"
-#include "ConfigValue.hpp"
+#include "SchemaValue.hpp"
 #include "Status.hpp"
 #include "ValueDef.hpp"
 
@@ -31,8 +31,8 @@ class EnvironmentNode : public std::enable_shared_from_this<EnvironmentNode>
 {
 	public:
 
-		EnvironmentNode(const std::shared_ptr<ConfigItem> &pCfgItem, const std::string &elemName, const std::shared_ptr<EnvironmentNode> &pParent = nullptr) : 
-			m_pConfigItem(pCfgItem), m_name(elemName), m_pParent(pParent) { }
+		EnvironmentNode(const std::shared_ptr<SchemaItem> &pCfgItem, const std::string &elemName, const std::shared_ptr<EnvironmentNode> &pParent = nullptr) : 
+			m_pSchemaItem(pCfgItem), m_name(elemName), m_pParent(pParent) { }
 		~EnvironmentNode() { }
 		const std::string &getName() const { return m_name;  }
 		void addChild(std::shared_ptr<EnvironmentNode> pNode);
@@ -60,14 +60,15 @@ class EnvironmentNode : public std::enable_shared_from_this<EnvironmentNode>
 		const std::string &getId() const { return m_id;  }
         void validate(Status &status, bool includeChildren=false) const;
 		std::vector<std::string> getAllFieldValues(const std::string &fieldName) const;
-		const std::shared_ptr<ConfigItem> &getConfigItem() const { return m_pConfigItem; }
-        std::vector<std::shared_ptr<ConfigItem>> getInsertableItems() const;
+		const std::shared_ptr<SchemaItem> &getSchemaItem() const { return m_pSchemaItem; }
+        std::vector<std::shared_ptr<SchemaItem>> getInsertableItems() const;
+        void initialize();
 
 
 	protected:
 
 		std::string m_name;   
-		std::shared_ptr<ConfigItem> m_pConfigItem;  
+		std::shared_ptr<SchemaItem> m_pSchemaItem;  
 		std::weak_ptr<EnvironmentNode> m_pParent;
 		std::multimap<std::string, std::shared_ptr<EnvironmentNode>> m_children;
 		std::shared_ptr<EnvironmentValue> m_pNodeValue;   // the node's value (not normal)

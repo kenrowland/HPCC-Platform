@@ -1,12 +1,12 @@
 /*##############################################################################
 
-    HPCC SYSTEMS software Copyright (C) 2017 HPCC Systems®.
+    HPCC SYSTEMS software Copyright (C) 2017 HPCC SystemsÂ®.
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
     You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+       http://www.apache.org/licenses/LICENSE-2.0
 
     Unless required by applicable law or agreed to in writing, software
     distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,23 +15,21 @@
     limitations under the License.
 ############################################################################## */
 
-#include "ConfigTypeIntegerLimits.hpp"
+#ifndef _CONFIG2_CFGINTEGERLIMITS_HPP_
+#define _CONFIG2_CFGINTEGERLIMITS_HPP_
 
-bool ConfigTypeIntegerLimits::isValueValid(const std::string &value)
+#include "SchemaTypeLimits.hpp"
+
+class SchemaTypeIntegerLimits : public SchemaTypeLimits
 {
-    bool isValid = true;
-    int testValue;
-    try
-    {
-        testValue = std::stoi(value);
-    }
-    catch (...)
-    {
-        isValid = false;
-    }
+    public:
 
-    if (isValid)
-        isValid = testValue >= getMin() && testValue <= getMax();
+        SchemaTypeIntegerLimits() { };
+        virtual ~SchemaTypeIntegerLimits() { };
+        int getMin() const { return m_minInclusive; }
+        int getMax() const { return m_maxInclusive; }
+        std::string getString() const override { return "integer limit string"; }
+        virtual bool isValueValid(const std::string &testValue);
+};
 
-    return isValid;
-}
+#endif // _CONFIG2_CFGINTEGERLIMITS_HPP_

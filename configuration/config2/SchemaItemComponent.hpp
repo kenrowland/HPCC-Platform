@@ -15,32 +15,21 @@
     limitations under the License.
 ############################################################################## */
 
-#ifndef _CONFIG2_CFGSTRINGLIMITS_HPP_
-#define _CONFIG2_CFGSTRINGLIMITS_HPP_
+#ifndef _CONFIG2_CONFIGITEMCOMPONENT_HPP_
+#define _CONFIG2_CONFIGITEMCOMPONENT_HPP_
 
-#include "ConfigTypeLimits.hpp"
+#include <memory>
+#include <vector>
+#include "SchemaValue.hpp"
+#include "SchemaItem.hpp"
 
 
-class ConfigTypeStringLimits : public ConfigTypeLimits
+class SchemaItemComponent : public SchemaItem
 {
     public:
 
-        ConfigTypeStringLimits() : m_removeWhiteSpace(true) { m_minInclusive = 0; }
-        virtual ~ConfigTypeStringLimits() { };
-        void setRemoveWhiteSpace(bool remove) { m_removeWhiteSpace = true; }
-        int getMin() const override { return m_minLength; }
-        int getMax() const override { return m_maxLength; }
-        std::string getString() const override;
-        virtual bool isValueValid(const std::string &testValue) const;
-
-
-    protected:
-
-        bool m_removeWhiteSpace;
-
+        SchemaItemComponent(const std::string &name, std::shared_ptr<SchemaItem> pParent) : SchemaItem(name, "component", pParent) { }
+        virtual ~SchemaItemComponent() { }
 };
 
-
-
-
-#endif // _CONFIG2_CFGSTRINGLIMITS_HPP_
+#endif // _CONFIG2_CONFIGITEMCOMPONENT_HPP_

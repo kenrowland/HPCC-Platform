@@ -22,19 +22,19 @@
 #include <memory>
 #include <map>
 #include <vector>
-#include "ConfigTypeLimits.hpp"
+#include "SchemaTypeLimits.hpp"
 
 
 
-class ConfigValueType 
+class SchemaType 
 {
     public:
 
-        ConfigValueType(const std::string &name) : m_name(name), m_autoValueType(""), m_pLimits(std::make_shared<ConfigTypeLimits>()) { }
-        virtual ~ConfigValueType() { }
+        SchemaType(const std::string &name) : m_name(name), m_autoValueType(""), m_pLimits(std::make_shared<SchemaTypeLimits>()) { }
+        virtual ~SchemaType() { }
 
-        std::shared_ptr<ConfigTypeLimits> &getLimits() { return m_pLimits; }
-        void setLimits(const std::shared_ptr<ConfigTypeLimits> &pLimits) { m_pLimits = pLimits; }
+        std::shared_ptr<SchemaTypeLimits> &getLimits() { return m_pLimits; }
+        void setLimits(const std::shared_ptr<SchemaTypeLimits> &pLimits) { m_pLimits = pLimits; }
         bool isComplete() const { return m_pLimits!=nullptr; }
         const std::string &getName() const { return m_name; }
         bool isValueValid(const std::string &testValue) const { return m_pLimits->isValueValid(testValue); }
@@ -48,7 +48,7 @@ class ConfigValueType
     private:
 
         std::string m_name;
-        std::shared_ptr<ConfigTypeLimits> m_pLimits;
+        std::shared_ptr<SchemaTypeLimits> m_pLimits;
         std::string m_autoValueType;
 
 };

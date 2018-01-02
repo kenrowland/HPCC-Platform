@@ -15,9 +15,9 @@
     limitations under the License.
 ############################################################################## */
 
-#include "ConfigTypeLimits.hpp"
+#include "SchemaTypeLimits.hpp"
 
-std::vector<AllowedValue> ConfigTypeLimits::getAllowedValues() const 
+std::vector<AllowedValue> SchemaTypeLimits::getAllowedValues() const 
 { 
     return m_allowedValues; 
 }

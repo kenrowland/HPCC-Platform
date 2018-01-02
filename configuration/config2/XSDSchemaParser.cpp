@@ -16,72 +16,72 @@
 ############################################################################## */
 
 #include <exception>
-#include "XSDConfigParser.hpp"
-#include "ConfigExceptions.hpp"
-#include "ConfigValue.hpp"
+#include "XSDSchemaParser.hpp"
+#include "Exceptions.hpp"
+#include "SchemaValue.hpp"
 
 #include "XSDComponentParser.hpp"
 #include "XSDValueSetParser.hpp"
-#include "ConfigItemComponent.hpp"
-#include "ConfigTypeStringLimits.hpp"
-#include "ConfigTypeIntegerLimits.hpp"
+#include "SchemaItemComponent.hpp"
+#include "SchemaTypeStringLimits.hpp"
+#include "SchemaTypeIntegerLimits.hpp"
 
 namespace pt = boost::property_tree;
 
-bool XSDConfigParser::doParse(const std::string &configPath, const std::string &masterConfigFile,  const std::vector<std::string> &cfgParms, Status &statu)
+bool XSDSchemaParser::doParse(const std::string &configPath, const std::string &masterConfigFile,  const std::vector<std::string> &cfgParms, Status &statu)
 {
     bool rc = true;
     //try
     {
 		//
 		// Add some default types to the config. Note changing values for limits 
-		std::shared_ptr<ConfigTypeLimits> pStringLimits;
-		std::shared_ptr<ConfigTypeLimits> pIntLimits;
+		std::shared_ptr<SchemaTypeLimits> pStringLimits;
+		std::shared_ptr<SchemaTypeLimits> pIntLimits;
 
-		std::shared_ptr<ConfigValueType> pType = std::make_shared<ConfigValueType>("xs:string");
-        pStringLimits = std::make_shared<ConfigTypeStringLimits>();
+		std::shared_ptr<SchemaType> pType = std::make_shared<SchemaType>("xs:string");
+        pStringLimits = std::make_shared<SchemaTypeStringLimits>();
 		pType->setLimits(pStringLimits);
-		m_pConfig->addType(pType);
+		m_pSchema->addType(pType);
 
-		pType = std::make_shared<ConfigValueType>("xs:token");
-        pStringLimits = std::make_shared<ConfigTypeStringLimits>();
+		pType = std::make_shared<SchemaType>("xs:token");
+        pStringLimits = std::make_shared<SchemaTypeStringLimits>();
 		pType->setLimits(pStringLimits);
-		m_pConfig->addType(pType);
+		m_pSchema->addType(pType);
 
-		pType = std::make_shared<ConfigValueType>("xs:boolean");
-        std::shared_ptr<ConfigTypeLimits> pBoolLimits = std::make_shared<ConfigTypeStringLimits>();
+		pType = std::make_shared<SchemaType>("xs:boolean");
+        std::shared_ptr<SchemaTypeLimits> pBoolLimits = std::make_shared<SchemaTypeStringLimits>();
         pBoolLimits->addAllowedValue("true");
         pBoolLimits->addAllowedValue("false");
 		pType->setLimits(pBoolLimits);
-		m_pConfig->addType(pType);
+		m_pSchema->addType(pType);
 
-		pType = std::make_shared<ConfigValueType>("xs:integer");
-        pIntLimits = std::make_shared<ConfigTypeIntegerLimits>();
+		pType = std::make_shared<SchemaType>("xs:integer");
+        pIntLimits = std::make_shared<SchemaTypeIntegerLimits>();
 		pType->setLimits(pIntLimits);
-		m_pConfig->addType(pType);
+		m_pSchema->addType(pType);
 
-		pType = std::make_shared<ConfigValueType>("xs:int");
-        pIntLimits = std::make_shared<ConfigTypeIntegerLimits>();
+		pType = std::make_shared<SchemaType>("xs:int");
+        pIntLimits = std::make_shared<SchemaTypeIntegerLimits>();
 		pType->setLimits(pIntLimits);
-		m_pConfig->addType(pType);
+		m_pSchema->addType(pType);
 
-		pType = std::make_shared<ConfigValueType>("xs:nonNegativeInteger");
-        pIntLimits = std::make_shared<ConfigTypeIntegerLimits>();
+		pType = std::make_shared<SchemaType>("xs:nonNegativeInteger");
+        pIntLimits = std::make_shared<SchemaTypeIntegerLimits>();
 		pIntLimits->setMinInclusive(0);
 		pType->setLimits(pIntLimits);
-		m_pConfig->addType(pType);
+		m_pSchema->addType(pType);
 
-		pType = std::make_shared<ConfigValueType>("xs:positiveInteger");
-        pIntLimits = std::make_shared<ConfigTypeIntegerLimits>();
+		pType = std::make_shared<SchemaType>("xs:positiveInteger");
+        pIntLimits = std::make_shared<SchemaTypeIntegerLimits>();
 		pIntLimits->setMinInclusive(1);
 		pType->setLimits(pIntLimits);
-		m_pConfig->addType(pType);
+		m_pSchema->addType(pType);
 
-        pType = std::make_shared<ConfigValueType>("xs:unsignedInt");
-        pIntLimits = std::make_shared<ConfigTypeIntegerLimits>();
+        pType = std::make_shared<SchemaType>("xs:unsignedInt");
+        pIntLimits = std::make_shared<SchemaTypeIntegerLimits>();
         pIntLimits->setMinInclusive(0);
         pType->setLimits(pIntLimits);
-        m_pConfig->addType(pType);
+        m_pSchema->addType(pType);
 
         //
         // Get our specific XSD parameters from the input 
@@ -95,7 +95,7 @@ bool XSDConfigParser::doParse(const std::string &configPath, const std::string &
 }
 
 
-void XSDConfigParser::parseXSD(const std::string &filename)
+void XSDSchemaParser::parseXSD(const std::string &filename)
 {
     pt::ptree xsdTree;
     std::string fpath = m_basePath + filename;
@@ -123,7 +123,7 @@ void XSDConfigParser::parseXSD(const std::string &filename)
 }
 
 
-void XSDConfigParser::parseXSD(const pt::ptree &keys)
+void XSDSchemaParser::parseXSD(const pt::ptree &keys)
 {
     for (auto it = keys.begin(); it != keys.end(); ++it)
     {
@@ -133,7 +133,7 @@ void XSDConfigParser::parseXSD(const pt::ptree &keys)
         if (elemType == "xs:include")
         {
             std::string schemaFile = getXSDAttributeValue(it->second, "<xmlattr>.schemaLocation");
-            if (m_pConfig->addUniqueName(schemaFile))
+            if (m_pSchema->addUniqueName(schemaFile))
             {
                 parseXSD(schemaFile);
             }
@@ -174,7 +174,7 @@ void XSDConfigParser::parseXSD(const pt::ptree &keys)
 }
 
 
-std::string XSDConfigParser::getXSDAttributeValue(const pt::ptree &tree, const std::string &attrName, bool throwIfNotPresent, const std::string &defaultVal) const
+std::string XSDSchemaParser::getXSDAttributeValue(const pt::ptree &tree, const std::string &attrName, bool throwIfNotPresent, const std::string &defaultVal) const
 {
     std::string value = defaultVal;
     try
@@ -190,53 +190,52 @@ std::string XSDConfigParser::getXSDAttributeValue(const pt::ptree &tree, const s
 }
 
 
-void XSDConfigParser::parseSimpleType(const pt::ptree &typeTree)
+void XSDSchemaParser::parseSimpleType(const pt::ptree &typeTree)
 {
-    std::shared_ptr<ConfigValueType> pCfgType = getCfgType(typeTree, true);
-    m_pConfig->addType(pCfgType);
+    std::shared_ptr<SchemaType> pCfgType = getSchemaType(typeTree, true);
+    m_pSchema->addType(pCfgType);
 }
 
 
-void XSDConfigParser::parseAttribute(const pt::ptree &attr)
+void XSDSchemaParser::parseAttribute(const pt::ptree &attr)
 {
-    std::shared_ptr<ConfigValue> pCfgValue = getCfgValue(attr);
-	m_pConfig->addAttribute(pCfgValue);
+    std::shared_ptr<SchemaValue> pCfgValue = getSchemaValue(attr);
+	m_pSchema->addAttribute(pCfgValue);
 }
 
 
-void XSDConfigParser::parseAttributeGroup(const pt::ptree &attributeTree)
+void XSDSchemaParser::parseAttributeGroup(const pt::ptree &attributeTree)
 {
     std::string groupName = getXSDAttributeValue(attributeTree, "<xmlattr>.name", false, "");  // only a named attributeGroup is supported
 	if (groupName != "")
 	{
-		std::shared_ptr<ConfigItemValueSet> pValueSet = std::make_shared<ConfigItemValueSet>(groupName, m_pConfig);
-		std::shared_ptr<XSDValueSetParser> pXSDValueSetParaser = std::make_shared<XSDValueSetParser>(std::dynamic_pointer_cast<ConfigItem>(pValueSet));
+		std::shared_ptr<SchemaItemValueSet> pValueSet = std::make_shared<SchemaItemValueSet>(groupName, m_pSchema);
+		std::shared_ptr<XSDValueSetParser> pXSDValueSetParaser = std::make_shared<XSDValueSetParser>(std::dynamic_pointer_cast<SchemaItem>(pValueSet));
 		pXSDValueSetParaser->parseXSD(attributeTree.get_child("", pt::ptree()));
-		m_pConfig->addConfigType(pValueSet, groupName);
+		m_pSchema->addSchemaType(pValueSet, groupName);
 	}
 	else
 	{
 		std::string refName = getXSDAttributeValue(attributeTree, "<xmlattr>.ref", false, "");  // only a named attributeGroup is supported
 		if (refName != "")
 		{
-			std::shared_ptr<ConfigItemValueSet> pValueSet = std::dynamic_pointer_cast<ConfigItemValueSet>(m_pConfig->getConfigType(refName, true));
+			std::shared_ptr<SchemaItemValueSet> pValueSet = std::dynamic_pointer_cast<SchemaItemValueSet>(m_pSchema->getSchemaType(refName, true));
 			if (pValueSet)
 			{
-				m_pConfig->addAttribute(pValueSet->getCfgValues());
+				m_pSchema->addAttribute(pValueSet->getSchemaValues());
 			}
 		}
 	}
 }
 
 
-void XSDConfigParser::parseComplexType(const pt::ptree &typeTree)
+void XSDSchemaParser::parseComplexType(const pt::ptree &typeTree)
 {
     std::string complexTypeName = getXSDAttributeValue(typeTree, "<xmlattr>.name", false, "");
     std::string className = typeTree.get("<xmlattr>.hpcc:class", "");
     std::string catName = typeTree.get("<xmlattr>.hpcc:category", "");
     std::string componentName = typeTree.get("<xmlattr>.hpcc:componentName", "");
     std::string displayName = typeTree.get("<xmlattr>.hpcc:displayName", "");
-    std::string namePrefix = typeTree.get("<xmlattr>.hpcc:namePrefix", "");
 
     if (complexTypeName != "")
     {
@@ -244,17 +243,17 @@ void XSDConfigParser::parseComplexType(const pt::ptree &typeTree)
         {
             if (className == "component")
             {
-                std::shared_ptr<ConfigItemComponent> pComponent = std::make_shared<ConfigItemComponent>(complexTypeName, m_pConfig);
-                pComponent->setCategory(catName);
-                pComponent->setComponentName(componentName);
-                pComponent->setDisplayName(displayName);
-                pComponent->setNamePrefix(namePrefix);
+                std::shared_ptr<SchemaItemComponent> pComponent = std::make_shared<SchemaItemComponent>(complexTypeName, m_pSchema);
+                pComponent->setProperty("category", catName);
+                pComponent->setProperty("componentName", componentName);
+                //pComponent->setDisplayName(displayName);
+                pComponent->setProperty("displayName", displayName);
                 pt::ptree componentTree = typeTree.get_child("", pt::ptree());
                 if (!componentTree.empty())
                 {
-                    std::shared_ptr<XSDComponentParser> pComponentXSDParaser = std::make_shared<XSDComponentParser>(std::dynamic_pointer_cast<ConfigItem>(pComponent));
+                    std::shared_ptr<XSDComponentParser> pComponentXSDParaser = std::make_shared<XSDComponentParser>(std::dynamic_pointer_cast<SchemaItem>(pComponent));
                     pComponentXSDParaser->parseXSD(typeTree);
-                    m_pConfig->addConfigType(pComponent, complexTypeName);
+                    m_pSchema->addSchemaType(pComponent, complexTypeName);
                 }
                 else
                 {
@@ -272,14 +271,14 @@ void XSDConfigParser::parseComplexType(const pt::ptree &typeTree)
         // and add it to the 
         else
         {
-            std::shared_ptr<ConfigItem> pTypeItem = std::make_shared<ConfigItem>(complexTypeName, "", m_pConfig);
+            std::shared_ptr<SchemaItem> pTypeItem = std::make_shared<SchemaItem>(complexTypeName, "", m_pSchema);
             //pTypeItem->setDisplayName(displayName);
             pt::ptree childTree = typeTree.get_child("", pt::ptree());
             if (!childTree.empty())
             {
-                std::shared_ptr<XSDConfigParser> pXSDParaser = std::make_shared<XSDConfigParser>(pTypeItem);
+                std::shared_ptr<XSDSchemaParser> pXSDParaser = std::make_shared<XSDSchemaParser>(pTypeItem);
                 pXSDParaser->parseXSD(childTree);
-                m_pConfig->addConfigType(pTypeItem, complexTypeName);
+                m_pSchema->addSchemaType(pTypeItem, complexTypeName);
             }
             else
             {
@@ -298,31 +297,31 @@ void XSDConfigParser::parseComplexType(const pt::ptree &typeTree)
 }
 
 
-void XSDConfigParser::parseElement(const pt::ptree &elemTree)
+void XSDSchemaParser::parseElement(const pt::ptree &elemTree)
 {
     std::string elementName = elemTree.get("<xmlattr>.name", "");
     std::string className = elemTree.get("<xmlattr>.hpcc:class", "");
     std::string category = elemTree.get("<xmlattr>.hpcc:category", "");
     std::string displayName = elemTree.get("<xmlattr>.hpcc:displayName", "");
-    std::string namePrefix = elemTree.get("<xmlattr>.hpcc:namePrefix", "");
     std::string typeName = elemTree.get("<xmlattr>.type", "");
     unsigned minOccurs = elemTree.get("<xmlattr>.minOccurs", 1);
     std::string maxOccursStr = elemTree.get("<xmlattr>.maxOccurs", "1");
     unsigned maxOccurs = (maxOccursStr != "unbounded") ? stoi(maxOccursStr) : UINTMAX_MAX;
 
-    std::shared_ptr<ConfigItem> pConfigElement = std::make_shared<ConfigItem>(elementName, className, m_pConfig);
-    pConfigElement->setDisplayName(displayName);
+    std::shared_ptr<SchemaItem> pConfigElement = std::make_shared<SchemaItem>(elementName, className, m_pSchema);
+    //pConfigElement->setDisplayName(displayName);
+    pConfigElement->setProperty("displayName", displayName);
     pConfigElement->setMinInstances(minOccurs);
     pConfigElement->setMaxInstances(maxOccurs);
-    pConfigElement->setCategory(category);
-    pConfigElement->setNamePrefix(namePrefix);
+    pConfigElement->setProperty("category", category);
 
     pt::ptree childTree = elemTree.get_child("", pt::ptree());
     
     // special case to set the root since the top level schema can't specify it
     if (category == "root")  // special case to set the root since the top level schema can't specify it
     {
-        m_pConfig->setName(elementName);
+        //m_pConfig->setName(elementName);
+        m_pSchema->setProperty("name", elementName);
         parseXSD(childTree);
     }
     else
@@ -331,16 +330,16 @@ void XSDConfigParser::parseElement(const pt::ptree &elemTree)
         // If a type is specified, then either it's a simple value type (which could be previously defined) for this element, or a named complex type. 
         if (typeName != "")
         {
-            const std::shared_ptr<ConfigValueType> pSimpleType = m_pConfig->getType(typeName, false);
+            const std::shared_ptr<SchemaType> pSimpleType = m_pSchema->getType(typeName, false);
             if (pSimpleType != nullptr)
             {
-                std::shared_ptr<ConfigValue> pCfgValue = std::make_shared<ConfigValue>("");  // no name value since it's the element's value 
+                std::shared_ptr<SchemaValue> pCfgValue = std::make_shared<SchemaValue>("");  // no name value since it's the element's value 
                 pCfgValue->setType(pSimpleType);                      // will throw if type is not defined
-                pConfigElement->setItemCfgValue(pCfgValue);
+                pConfigElement->setItemSchemaValue(pCfgValue);
             }
             else
             {
-                std::shared_ptr<ConfigItem> pConfigType = m_pConfig->getConfigType(typeName, false);
+                std::shared_ptr<SchemaItem> pConfigType = m_pSchema->getSchemaType(typeName, false);
                 if (pConfigType != nullptr)
                 {
                     //
@@ -354,14 +353,15 @@ void XSDConfigParser::parseElement(const pt::ptree &elemTree)
  
                     //
                     // If a component, then set element data (allow overriding with locally parsed values)
-                    if (pConfigType->getClassName() == "component")
+                    if (pConfigType->getProperty("className") == "component")
                     {
-                        pConfigElement->setName((elementName != "") ? elementName : pConfigType->getName());
-                        pConfigElement->setClassName((className != "") ? className : pConfigType->getClassName());
-                        pConfigElement->setCategory((category != "") ? category : pConfigType->getCategory());
-                        pConfigElement->setDisplayName((displayName != "") ? displayName : pConfigType->getDisplayName());
-                        pConfigElement->setComponentName(pConfigType->getComponentName());  
-                        pConfigElement->setNamePrefix((namePrefix != "") ? namePrefix : pConfigType->getNamePrefix());
+                        //pConfigElement->setName((elementName != "") ? elementName : pConfigType->getName());
+                        pConfigElement->setProperty("name", (elementName != "") ? elementName : pConfigType->getProperty("name"));
+                        pConfigElement->setProperty("className", (className != "") ? className : pConfigType->getProperty("className"));
+                        pConfigElement->setProperty("category", (category != "") ? category : pConfigType->getProperty("category"));
+                        //pConfigElement->setDisplayName((displayName != "") ? displayName : pConfigType->getDisplayName());
+                        pConfigElement->setProperty("displayName", (displayName != "") ? displayName : pConfigType->getProperty("displayName"));
+                        pConfigElement->setProperty("componentName", pConfigType->getProperty("componentName"));  
                     }
                 }
                 else
@@ -376,30 +376,30 @@ void XSDConfigParser::parseElement(const pt::ptree &elemTree)
         // Now, if there are children, create a parser and have at it
         if (!childTree.empty())
         {
-            std::shared_ptr<XSDConfigParser> pXSDParaser = std::make_shared<XSDConfigParser>(pConfigElement);
+            std::shared_ptr<XSDSchemaParser> pXSDParaser = std::make_shared<XSDSchemaParser>(pConfigElement);
             pXSDParaser->parseXSD(childTree);
         }
 
         //
         // Add the element
-        m_pConfig->addChild(pConfigElement);
+        m_pSchema->addChild(pConfigElement);
       
     }
 }
 
 
-std::shared_ptr<ConfigValueType> XSDConfigParser::getCfgType(const pt::ptree &typeTree, bool nameRequired)
+std::shared_ptr<SchemaType> XSDSchemaParser::getSchemaType(const pt::ptree &typeTree, bool nameRequired)
 {
     std::string typeName = getXSDAttributeValue(typeTree, "<xmlattr>.name", nameRequired, "");
 
-    std::shared_ptr<ConfigValueType> pCfgType = std::make_shared<ConfigValueType>(typeName);
-    std::shared_ptr<ConfigTypeLimits> pLimits; // = std::make_shared<CfgLimits>();
+    std::shared_ptr<SchemaType> pCfgType = std::make_shared<SchemaType>(typeName);
+    std::shared_ptr<SchemaTypeLimits> pLimits; // = std::make_shared<CfgLimits>();
     auto restriction = typeTree.find("xs:restriction");
     if (restriction != typeTree.not_found())
     {
         std::string baseType = getXSDAttributeValue(restriction->second, "<xmlattr>.base");
-		std::shared_ptr<ConfigValueType> pType = std::make_shared<ConfigValueType>(*(m_pConfig->getType(baseType)));
-		pLimits = std::make_shared<ConfigTypeLimits>(*(pType->getLimits()));
+		std::shared_ptr<SchemaType> pType = std::make_shared<SchemaType>(*(m_pSchema->getType(baseType)));
+		pLimits = std::make_shared<SchemaTypeLimits>(*(pType->getLimits()));
         if (!pLimits)
         {
             std::string msg = "Unsupported base type(" + baseType + ")";
@@ -456,10 +456,10 @@ std::shared_ptr<ConfigValueType> XSDConfigParser::getCfgType(const pt::ptree &ty
 }
 
 
-std::shared_ptr<ConfigValue> XSDConfigParser::getCfgValue(const pt::ptree &attr)
+std::shared_ptr<SchemaValue> XSDSchemaParser::getSchemaValue(const pt::ptree &attr)
 {
     std::string attrName = getXSDAttributeValue(attr, "<xmlattr>.name");
-    std::shared_ptr<ConfigValue> pCfgValue = std::make_shared<ConfigValue>(attrName);
+    std::shared_ptr<SchemaValue> pCfgValue = std::make_shared<SchemaValue>(attrName);
     pCfgValue->setDisplayName(attr.get("<xmlattr>.hpcc:displayName", attrName));
     pCfgValue->setRequired(attr.get("<xmlattr>.use", "optional") == "required");
     pCfgValue->setTooltip(attr.get("<xmlattr>.hpcc:tooltip", ""));
@@ -467,11 +467,13 @@ std::shared_ptr<ConfigValue> XSDConfigParser::getCfgValue(const pt::ptree &attr)
     pCfgValue->setHidden(attr.get("<xmlattr>.hpcc:hidden", "false") == "true");
     pCfgValue->setDeprecated(attr.get("<xmlattr>.hpcc:deprecated", "false") == "true");
     pCfgValue->setMirrorFromPath(attr.get("<xmlattr>.hpcc:mirrorFrom", ""));
+    pCfgValue->setAutoGenerateType(attr.get("<xmlattr>.hpcc:autoGenerateType", ""));
+    pCfgValue->setAutoGenerateValue(attr.get("<xmlattr>.hpcc:autoGenerateValue", ""));
 
     std::string defaultValue = attr.get("<xmlattr>.default", "notsetnotsetAAAnotsetnotset");
     if (defaultValue != "notsetnotsetAAAnotsetnotset")
     {
-        pCfgValue->setDefault(defaultValue);
+        pCfgValue->setDefaultValue(defaultValue);
     }
 
     std::string modList = attr.get("<xmlattr>.hpcc:modifiers", "");
@@ -483,11 +485,11 @@ std::shared_ptr<ConfigValue> XSDConfigParser::getCfgValue(const pt::ptree &attr)
     std::string typeName = attr.get("<xmlattr>.type", "");
     if (typeName != "")
     {
-        pCfgValue->setType(m_pConfig->getType(typeName));
+        pCfgValue->setType(m_pSchema->getType(typeName));
     }
     else
     {
-        std::shared_ptr<ConfigValueType> pCfgType = getCfgType(attr.get_child("xs:simpleType", pt::ptree()), false);
+        std::shared_ptr<SchemaType> pCfgType = getSchemaType(attr.get_child("xs:simpleType", pt::ptree()), false);
         if (!pCfgType->isComplete())
         {
             throw(ParseException("Attribute " + attrName + " does not have a valid type"));
@@ -498,7 +500,7 @@ std::shared_ptr<ConfigValue> XSDConfigParser::getCfgValue(const pt::ptree &attr)
 }
 
 
-void XSDConfigParser::parseKey(const pt::ptree &keyTree)
+void XSDSchemaParser::parseKey(const pt::ptree &keyTree)
 {
     std::string keyName = getXSDAttributeValue(keyTree, "<xmlattr>.name");
     bool duplicateOk = keyTree.get("<xmlattr>.hpcc:allowDuplicate", "false") == "true";
@@ -515,11 +517,11 @@ void XSDConfigParser::parseKey(const pt::ptree &keyTree)
         attributeName = attrName;
     }
 
-    m_pConfig->addUniqueAttributeValueSetDefinition(keyName, elementName, attributeName, duplicateOk);
+    m_pSchema->addUniqueAttributeValueSetDefinition(keyName, elementName, attributeName, duplicateOk);
 }
 
 
-void XSDConfigParser::parseKeyRef(const pt::ptree &keyTree)
+void XSDSchemaParser::parseKeyRef(const pt::ptree &keyTree)
 {
     std::string keyName = getXSDAttributeValue(keyTree, "<xmlattr>.refer");
     std::string elementName = getXSDAttributeValue(keyTree, "xs:selector.<xmlattr>.xpath", false, "");
@@ -535,5 +537,5 @@ void XSDConfigParser::parseKeyRef(const pt::ptree &keyTree)
         attributeName = attrName;
     }
 
-    m_pConfig->addReferenceToUniqueAttributeValueSet(keyName, elementName, attributeName);
+    m_pSchema->addReferenceToUniqueAttributeValueSet(keyName, elementName, attributeName);
 }

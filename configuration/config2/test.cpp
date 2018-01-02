@@ -6,7 +6,7 @@
 #include <exception>
 #include <iostream>
 
-#include "ConfigExceptions.hpp"
+#include "Exceptions.hpp"
 
 //#include "libxml/parser.h"
 //#include "libxml/tree.h"
@@ -19,8 +19,8 @@ const std::string c_path = "configfiles/"; ///opt/HPCCSystems/componentfiles/con
 // void parseComponentXSD(pt::ptree &xsdTree);
 // void parseIncludes(pt::ptree &xsdTree);
 
-#include "ConfigItem.hpp"
-#include "XSDConfigParser.hpp"
+#include "SchemaItem.hpp"
+#include "XSDSchemaParser.hpp"
 #include "XMLEnvironmentMgr.hpp"
 
 
@@ -42,7 +42,7 @@ int main()
         EnvironmentMgr *pEnvMgr = getEnvironmentMgrInstance("XML");
         std::vector<std::string> cfgParms;
         cfgParms.push_back("buildset.xml");  // not used right now
-        pEnvMgr->loadConfig(c_path, "newenv.xsd", cfgParms);
+        pEnvMgr->loadSchema(c_path, "newenv.xsd", cfgParms);
         pEnvMgr->loadEnvironment(c_path + "/environment.xml");
 
         // 158

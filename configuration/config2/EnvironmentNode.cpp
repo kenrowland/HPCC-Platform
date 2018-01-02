@@ -94,12 +94,12 @@ std::map<std::string, std::vector<std::shared_ptr<EnvironmentNode>>> Environment
     std::map<std::string, std::vector<std::shared_ptr<EnvironmentNode>>> results;
     for (auto childIt = m_children.begin(); childIt != m_children.end(); ++childIt)
     {
-        auto it = results.find(childIt->second->getConfigItem()->getItemType());
+        auto it = results.find(childIt->second->getSchemaItem()->getItemType());
         if (it == results.end())
         {
             std::vector<std::shared_ptr<EnvironmentNode>> nodes;
             nodes.push_back(childIt->second);
-            results[childIt->second->getConfigItem()->getItemType()] = nodes;
+            results[childIt->second->getSchemaItem()->getItemType()] = nodes;
         }
         else
         {
@@ -135,7 +135,7 @@ std::vector<std::shared_ptr<EnvironmentValue>> EnvironmentNode::getAttributes() 
 
 void EnvironmentNode::addMissingAttributesFromConfig()
 {
-    std::map<std::string, std::shared_ptr<ConfigValue>> configuredAttributes = m_pConfigItem->getAttributes();
+    std::map<std::string, std::shared_ptr<SchemaValue>> configuredAttributes = m_pSchemaItem->getAttributes();
 
     //
     // go through all the configured attrubutes and for each that is not present in our list, add it
@@ -144,7 +144,7 @@ void EnvironmentNode::addMissingAttributesFromConfig()
         auto attrIt = m_attributes.find(it->first);
         if (attrIt == m_attributes.end())
         {
-            std::shared_ptr<ConfigValue> pCfgValue = it->second;
+            std::shared_ptr<SchemaValue> pCfgValue = it->second;
             std::shared_ptr<EnvironmentValue> pEnvValue = std::make_shared<EnvironmentValue>(shared_from_this(), pCfgValue, it->first); 
             pCfgValue->addEnvValue(pEnvValue);
             addAttribute(it->first, pEnvValue);
@@ -179,10 +179,10 @@ void EnvironmentNode::setAttributeValue(const std::string &attrName, const std::
     // If not and the forceCreate flag is set, create it. 
     else
     {
-        std::shared_ptr<ConfigValue> pCfgValue = m_pConfigItem->getAttribute(attrName);
+        std::shared_ptr<SchemaValue> pCfgValue = m_pSchemaItem->getAttribute(attrName);
         pEnvValue = std::make_shared<EnvironmentValue>(shared_from_this(), pCfgValue, attrName);
         addAttribute(attrName, pEnvValue);
-        if (!pCfgValue->isConfigured())
+        if (!pCfgValue->isDefined())
         {
             status.addStatusMsg(statusMsg::warning, getId(), attrName, "", "Undefined attribute did not exist in configuration, was created");
         }
@@ -224,7 +224,7 @@ bool EnvironmentNode::setValue(const std::string &value, Status &status, bool fo
     }
     else
     {
-        std::shared_ptr<ConfigValue> pCfgValue = m_pConfigItem->getItemCfgValue();
+        std::shared_ptr<SchemaValue> pCfgValue = m_pSchemaItem->getItemSchemaValue();
 
         m_pNodeValue = std::make_shared<EnvironmentValue>(shared_from_this(), pCfgValue, "");  // node's value has no name
         rc = m_pNodeValue->setValue(value, &status, force);
@@ -296,9 +296,9 @@ const std::shared_ptr<EnvironmentValue> EnvironmentNode::getAttribute(const std:
 }
 
 
-std::vector<std::shared_ptr<ConfigItem>> EnvironmentNode::getInsertableItems() const
+std::vector<std::shared_ptr<SchemaItem>> EnvironmentNode::getInsertableItems() const
 {
-    std::vector<std::shared_ptr<ConfigItem>> insertableItems;
+    std::vector<std::shared_ptr<SchemaItem>> insertableItems;
     std::map<std::string, unsigned> childCounts;
 
     //
@@ -306,7 +306,7 @@ std::vector<std::shared_ptr<ConfigItem>> EnvironmentNode::getInsertableItems() c
     // child node's configuration type
     for (auto childIt = m_children.begin(); childIt != m_children.end(); ++childIt)
     {
-        std::string itemType = childIt->second->getConfigItem()->getItemType();
+        std::string itemType = childIt->second->getSchemaItem()->getItemType();
         auto findIt = childCounts.find(itemType);
         if (findIt != childCounts.end())
         {
@@ -321,7 +321,7 @@ std::vector<std::shared_ptr<ConfigItem>> EnvironmentNode::getInsertableItems() c
     //
     // Now get the full list of configurable items, then resolve it against the child counts from 
     // above to build a vector of insertable items
-    std::vector<std::shared_ptr<ConfigItem>> configChildren = m_pConfigItem->getChildren();
+    std::vector<std::shared_ptr<SchemaItem>> configChildren = m_pSchemaItem->getChildren();
     for (auto cfgIt = configChildren.begin(); cfgIt != configChildren.end(); ++cfgIt)
     {
         auto findIt = childCounts.find((*cfgIt)->getItemType());
@@ -338,4 +338,30 @@ std::vector<std::shared_ptr<ConfigItem>> EnvironmentNode::getInsertableItems() c
         }
     }
     return insertableItems;
+}
+
+
+//
+// Called to initialize a newly added node to the environment (not just read from the environment)
+void EnvironmentNode::initialize()
+{
+    //
+    // Add any attributes that are requried
+    addMissingAttributesFromConfig();
+
+    //
+    // If we are a comonent and there is a buildSet attribute, set the value to the configItem's type
+    if (m_pSchemaItem->getProperty("componentName") != "" && hasAttribute("buildSet"))
+    {
+        Status status;
+        setAttributeValue("buildSet", m_pSchemaItem->getProperty("category"), status);
+    }
+
+
+    //
+    // Initilize each attribute
+    for (auto attrIt = m_attributes.begin(); attrIt != m_attributes.end(); ++attrIt)
+    {
+        attrIt->second->initialize();
+    }
 }

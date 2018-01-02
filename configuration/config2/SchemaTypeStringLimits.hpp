@@ -15,37 +15,32 @@
     limitations under the License.
 ############################################################################## */
 
-#ifndef _CONFIG2_VALUESET_HPP_
-#define _CONFIG2_VALUESET_HPP_
+#ifndef _CONFIG2_CFGSTRINGLIMITS_HPP_
+#define _CONFIG2_CFGSTRINGLIMITS_HPP_
 
-#include <memory>
-#include <vector>
-#include "ConfigValue.hpp"
-#include "ConfigItem.hpp"
+#include "SchemaTypeLimits.hpp"
 
 
-class ConfigItemValueSet : public ConfigItem
+class SchemaTypeStringLimits : public SchemaTypeLimits
 {
     public:
 
-		ConfigItemValueSet(const std::string &name, std::shared_ptr<ConfigItem> pParent) : ConfigItem(name, "valueset", pParent) { }
-        virtual ~ConfigItemValueSet() { };
-
-        void addCfgValue(const std::shared_ptr<ConfigValue> pValue);
-        void addCfgValue(const std::shared_ptr<ConfigItemValueSet> &valueSet);
-        const std::vector<std::shared_ptr<ConfigValue>> &getCfgValues() const;
-
-
-    private:
-
-        std::shared_ptr<ConfigValue> findValue(const std::string &valueName, bool throwIfNotFound = true) const;
+        SchemaTypeStringLimits() : m_removeWhiteSpace(true) { m_minInclusive = 0; }
+        virtual ~SchemaTypeStringLimits() { };
+        void setRemoveWhiteSpace(bool remove) { m_removeWhiteSpace = true; }
+        int getMin() const override { return m_minLength; }
+        int getMax() const override { return m_maxLength; }
+        std::string getString() const override;
+        virtual bool isValueValid(const std::string &testValue) const;
 
 
     protected:
 
-        std::vector<std::shared_ptr<ConfigValue>> m_cfgValues;
+        bool m_removeWhiteSpace;
 
 };
 
 
-#endif // _CONFIG2_VALUESET_HPP_
+
+
+#endif // _CONFIG2_CFGSTRINGLIMITS_HPP_

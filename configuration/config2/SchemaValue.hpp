@@ -22,27 +22,27 @@
 #define _CONFIG2_VALUE_HPP_
 
 #include <memory>
-#include "ConfigValueType.hpp"
+#include "SchemaType.hpp"
 #include "Status.hpp"
 
-class ConfigValue 
+class SchemaValue 
 {
     public:
 
-        ConfigValue(const std::string &name, bool isConfigured =true) :
+        SchemaValue(const std::string &name, bool isConfigured =true) :
             m_name(name), m_displayName(name), m_required(false), m_readOnly(false), 
             m_hidden(false), m_defaultSet(false), m_deprecated(false), m_isUnique(false),
-            m_isConfigured(isConfigured) { }
-        virtual ~ConfigValue() { }
-        void setType(const std::shared_ptr<ConfigValueType> pType) { m_pType = pType; }
-        const std::shared_ptr<ConfigValueType> &getType() const { return m_pType; }
+            m_isDefined(isConfigured) { }
+        virtual ~SchemaValue() { }
+        void setType(const std::shared_ptr<SchemaType> pType) { m_pType = pType; }
+        const std::shared_ptr<SchemaType> &getType() const { return m_pType; }
         const std::string &getName() const { return m_name; }
         bool isValueValid(const std::string &newValue, const EnvironmentValue *pEnvValue = nullptr) const;
         void setDisplayName(const std::string &displayName) { m_displayName = displayName; }
         const std::string &getDisplayName() const { return m_displayName; }
         void setRequired(bool reqd) { m_required = reqd; }
         bool isRequired() const { return m_required; }
-        void setDefault(const std::string &dflt) { m_default = dflt; m_defaultSet = (dflt != ""); }
+        void setDefaultValue(const std::string &dflt) { m_default = dflt; m_defaultSet = (dflt != ""); }
         const std::string &getDefaultValue() const { return m_default; }
         bool hasDefaultValue() const { return m_defaultSet; }
         void setReadOnly(bool readOnly) { m_readOnly = readOnly; }
@@ -59,21 +59,25 @@ class ConfigValue
         bool hasModifiers() const { return m_modifiers.size() != 0; }
         void setUniqueValue(bool isUnique) { m_isUnique = isUnique; }
         bool isUniqueValue() const { return m_isUnique;  }
-        void setUniqueValueSetRef(const std::shared_ptr<ConfigValue> &pValue) { m_pUniqueValueSetRefs.push_back(pValue);  }
+        void setUniqueValueSetRef(const std::shared_ptr<SchemaValue> &pValue) { m_pUniqueValueSetRefs.push_back(pValue);  }
         bool isFromUniqueValueSet() const { return !m_pUniqueValueSetRefs.empty(); }
-        std::vector<std::weak_ptr<ConfigValue>> getUniqueValueSetRefs() const { return m_pUniqueValueSetRefs;  }
-        bool isConfigured() const { return m_isConfigured;  }
+        std::vector<std::weak_ptr<SchemaValue>> getUniqueValueSetRefs() const { return m_pUniqueValueSetRefs;  }
+        bool isDefined() const { return m_isDefined;  }
         void resetEnvironment();
         void setMirrorFromPath(const std::string &path) { m_mirrorFromPath = path;  }
         const std::string &getMirrorFromPath() const { return m_mirrorFromPath;  }
         bool isMirroredValue() const { return m_mirrorFromPath.length() != 0; }
-        void addMirroredCfgValue(const std::shared_ptr<ConfigValue> &pVal) { m_mirrorToCfgValues.push_back(pVal); }
+        void addMirroredSchemaValue(const std::shared_ptr<SchemaValue> &pVal) { m_mirrorToCfgValues.push_back(pVal); }
+        void mirrorValueToEnvironment(const std::string &oldValue, const std::string &newValue);
         void addEnvValue(const std::shared_ptr<EnvironmentValue> &pEnvValue) { m_envValues.push_back(pEnvValue); }
         std::vector<std::string> getAllEnvValues() const;
-        void mirrorValue(const std::string &oldValue, const std::string &newValue);
         void setMirroredEnvValues(const std::string &oldValue, const std::string &newValue);
         void validate(Status &status, const std::string &id, const EnvironmentValue *pEnvValue = nullptr) const;
         std::vector<AllowedValue> getAllowedValues(const EnvironmentValue *pEnvValue = nullptr) const;
+        void setAutoGenerateType(const std::string &type) { m_autoGenerateType = type; }
+        const std::string &getAutoGenerateType() const { return m_autoGenerateType; }
+        void setAutoGenerateValue(const std::string &value) { m_autoGenerateValue = value; }
+        const std::string &getAutoGenerateValue() const { return m_autoGenerateValue; }
 
     protected:
 
@@ -81,23 +85,25 @@ class ConfigValue
 
     protected:
 
-        std::shared_ptr<ConfigValueType> m_pType;
+        std::shared_ptr<SchemaType> m_pType;
         std::vector<std::weak_ptr<EnvironmentValue>> m_envValues;
-        std::vector<std::shared_ptr<ConfigValue>> m_mirrorToCfgValues;
+        std::vector<std::shared_ptr<SchemaValue>> m_mirrorToCfgValues;
         std::string m_name;
         std::string m_displayName;
         std::string m_mirrorFromPath;
+        std::string m_autoGenerateValue;
+        std::string m_autoGenerateType;
         bool m_required;
         bool m_readOnly;
         bool m_hidden;
         bool m_defaultSet;
         bool m_deprecated;
         bool m_isUnique;
-        bool m_isConfigured;  // false indicates a value for which there is no defined configuration
+        bool m_isDefined;  // false indicates a value for which there is no defined configuration
         std::string m_default;
         std::string m_tooltip;
         std::vector<std::string> m_modifiers;
-        std::vector<std::weak_ptr<ConfigValue>> m_pUniqueValueSetRefs;    // this value serves as the key from which values are valid
+        std::vector<std::weak_ptr<SchemaValue>> m_pUniqueValueSetRefs;    // this value serves as the key from which values are valid
 };
 
 #endif // _CONFIG2_VALUE_HPP_

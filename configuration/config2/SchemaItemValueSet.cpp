@@ -17,50 +17,50 @@
 
 #include <algorithm>
 
-#include "ConfigItemValueSet.hpp"
-#include "ConfigExceptions.hpp"
+#include "SchemaItemValueSet.hpp"
+#include "Exceptions.hpp"
 
 
-void ConfigItemValueSet::addCfgValue(const std::shared_ptr<ConfigValue> pNewValue)
+void SchemaItemValueSet::addSchemaValue(const std::shared_ptr<SchemaValue> pNewValue)
 {
-    std::shared_ptr<ConfigValue> pValue = findValue(pNewValue->getName(), false);
+    std::shared_ptr<SchemaValue> pValue = findValue(pNewValue->getName(), false);
     if (!pValue)
     {
 		m_cfgValues.push_back(pNewValue);
     }
     else 
     {
-        std::string msg = "ValueSet: " + getName() + " - A value already exists for " + pNewValue->getName();
+        std::string msg = "ValueSet: " + getProperty("name") + " - A value already exists for " + pNewValue->getName();
         throw(ParseException(msg));
     }
 }
 
 
-void ConfigItemValueSet::addCfgValue(const std::shared_ptr<ConfigItemValueSet> &valueSet)
+void SchemaItemValueSet::addSchemaValue(const std::shared_ptr<SchemaItemValueSet> &valueSet)
 {
-    const std::vector<std::shared_ptr<ConfigValue>> &values = valueSet->getCfgValues();
+    const std::vector<std::shared_ptr<SchemaValue>> &values = valueSet->getSchemaValues();
     for (auto it=values.begin(); it!=values.end(); ++it)
-        addCfgValue(*it);
+        addSchemaValue(*it);
 }
 
 
-const std::vector<std::shared_ptr<ConfigValue>> &ConfigItemValueSet::getCfgValues() const
+const std::vector<std::shared_ptr<SchemaValue>> &SchemaItemValueSet::getSchemaValues() const
 {
     return m_cfgValues;
 }
 
 
-std::shared_ptr<ConfigValue> ConfigItemValueSet::findValue(const std::string &valueName, bool throwIfNotFound) const
+std::shared_ptr<SchemaValue> SchemaItemValueSet::findValue(const std::string &valueName, bool throwIfNotFound) const
 {
-    std::shared_ptr<ConfigValue> pValue;
-    auto it = std::find_if(m_cfgValues.begin(), m_cfgValues.end(), [valueName](const std::shared_ptr<ConfigValue> &pTestValue) -> bool {return pTestValue->getName() == valueName;} );
+    std::shared_ptr<SchemaValue> pValue;
+    auto it = std::find_if(m_cfgValues.begin(), m_cfgValues.end(), [valueName](const std::shared_ptr<SchemaValue> &pTestValue) -> bool {return pTestValue->getName() == valueName;} );
     if (it != m_cfgValues.end())
     {
         pValue = *it;
     }
     else if (throwIfNotFound)
     {
-        std::string msg = "ValueSet: " + getName() +  " - Unable to find valueName(" + valueName + ")";
+        std::string msg = "ValueSet: " + getProperty("name") +  " - Unable to find valueName(" + valueName + ")";
         throw(ValueException(msg));
     }
     return pValue;

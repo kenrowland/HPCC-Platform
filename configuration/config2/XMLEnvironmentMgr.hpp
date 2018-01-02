@@ -38,7 +38,7 @@ class XMLEnvironmentMgr : 	public EnvironmentMgr
         bool createParser(const std::string &configPath, const std::string &masterConfigFile,  const std::vector<std::string> &cfgParms) override;
         bool doLoadEnvironment(std::istream &in) override;
         void save(std::ostream &out) override;
-		void parse(const pt::ptree &envTree, const std::shared_ptr<ConfigItem> &pConfig, std::shared_ptr<EnvironmentNode> &pEnvNode);
+		void parse(const pt::ptree &envTree, const std::shared_ptr<SchemaItem> &pConfig, std::shared_ptr<EnvironmentNode> &pEnvNode);
 		void serialize(pt::ptree &envTree, std::shared_ptr<EnvironmentNode> &pEnvNode) const;
 
 };

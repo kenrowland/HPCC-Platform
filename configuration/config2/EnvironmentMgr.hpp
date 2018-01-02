@@ -29,8 +29,8 @@
 #include <string>
 #include <fstream>
 #include <vector>
-#include "ConfigItem.hpp"
-#include "ConfigParser.hpp"
+#include "SchemaItem.hpp"
+#include "SchemaParser.hpp"
 #include "EnvironmentNode.hpp"
 #include "Status.hpp"
 
@@ -52,12 +52,12 @@ class EnvironmentMgr
         virtual ~EnvironmentMgr() { }
 
         // add a load from stream?
-        bool loadConfig(const std::string &configPath, const std::string &masterConfigFile,  const std::vector<std::string> &cfgParms = std::vector<std::string>());
+        bool loadSchema(const std::string &configPath, const std::string &masterConfigFile,  const std::vector<std::string> &cfgParms = std::vector<std::string>());
         bool loadEnvironment(const std::string &file);  // return some error code,or a get last error type of call?
 
         std::shared_ptr<EnvironmentNode> getEnvironmentNode(const std::string &nodeId);
         std::shared_ptr<EnvironmentNode> addNewEnvironmentNode(const std::string &parentNodeId, const std::string &elementType, Status &status);
-        std::shared_ptr<EnvironmentNode> addNewEnvironmentNode(const std::shared_ptr<EnvironmentNode> &pParentNode, const std::shared_ptr<ConfigItem> &pNewCfgItem, Status &status);
+        std::shared_ptr<EnvironmentNode> addNewEnvironmentNode(const std::shared_ptr<EnvironmentNode> &pParentNode, const std::shared_ptr<SchemaItem> &pNewCfgItem, Status &status);
         bool removeEnvironmentNode(const std::string &nodeId, Status &status);
         
         // save to stream ?
@@ -79,8 +79,8 @@ class EnvironmentMgr
     protected:
 
         //std::string m_configPath;
-        std::shared_ptr<ConfigItem> m_pConfig;
-        std::shared_ptr<ConfigParser> m_pConfigParser;
+        std::shared_ptr<SchemaItem> m_pSchema;
+        std::shared_ptr<SchemaParser> m_pSchemaParser;
         std::shared_ptr<EnvironmentNode> m_pRootNode;
         std::map<std::string, std::shared_ptr<EnvironmentNode>> m_nodeIds;
 

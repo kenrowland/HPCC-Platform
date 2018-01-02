@@ -32,17 +32,17 @@ struct AllowedValue
     std::string m_description;
 };
 
-class ConfigTypeLimits 
+class SchemaTypeLimits 
 {
     public:
 
-        ConfigTypeLimits() :
+        SchemaTypeLimits() :
             m_minInclusive(INT_MIN),
             m_maxInclusive(INT_MAX),
             m_minExclusive(INT_MIN),
             m_maxExclusive(INT_MAX),
             m_length(0) { }
-        virtual ~ConfigTypeLimits() { }
+        virtual ~SchemaTypeLimits() { }
         void setMinInclusive(int v)  { m_minInclusive = v; } 
         void setMinExclusive(int v)  { m_minExclusive = v; } 
         void setMaxInclusive(int v)  { m_maxInclusive = v; } 

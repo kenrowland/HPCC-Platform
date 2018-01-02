@@ -25,22 +25,22 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/xml_parser.hpp>
 
-#include "ConfigParser.hpp"
+#include "SchemaParser.hpp"
 
 namespace pt = boost::property_tree;
 
-class XSDConfigParser : public ConfigParser
+class XSDSchemaParser : public SchemaParser
 {
     public:
 
-        XSDConfigParser(std::shared_ptr<ConfigItem> &pConfig) :
-            ConfigParser(pConfig) { }
-        virtual ~XSDConfigParser() { };
+        XSDSchemaParser(std::shared_ptr<SchemaItem> &pConfig) :
+            SchemaParser(pConfig) { }
+        virtual ~XSDSchemaParser() { };
     
 
     protected:
 
-        XSDConfigParser() { };
+        XSDSchemaParser() { };
         virtual bool doParse(const std::string &configPath, const std::string &masterConfigFile,  const std::vector<std::string> &cfgParms, Status &statu) override;
         virtual void parseXSD(const pt::ptree &tree);
         virtual void parseXSD(const std::string &filename);
@@ -52,8 +52,8 @@ class XSDConfigParser : public ConfigParser
         virtual void parseComplexType(const pt::ptree &typeTree);
         virtual void parseElement(const pt::ptree &elemTree);
 
-        virtual std::shared_ptr<ConfigValueType> getCfgType(const pt::ptree &typeTree, bool nameRequired=true);
-        virtual std::shared_ptr<ConfigValue> getCfgValue(const pt::ptree &attr);
+        virtual std::shared_ptr<SchemaType> getSchemaType(const pt::ptree &typeTree, bool nameRequired=true);
+        virtual std::shared_ptr<SchemaValue> getSchemaValue(const pt::ptree &attr);
         
         virtual void parseKey(const pt::ptree &keyTree);
         virtual void parseKeyRef(const pt::ptree &keyTree);

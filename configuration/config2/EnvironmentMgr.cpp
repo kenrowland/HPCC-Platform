@@ -16,7 +16,7 @@
 ############################################################################## */
 
 #include "EnvironmentMgr.hpp"
-#include "ConfigExceptions.hpp"
+#include "Exceptions.hpp"
 #include "XMLEnvironmentMgr.hpp"
 
 
@@ -35,21 +35,21 @@ EnvironmentMgr *getEnvironmentMgrInstance(const std::string &envType)
 EnvironmentMgr::EnvironmentMgr() :
     m_key(0)
 {
-    m_pConfig = std::make_shared<ConfigItem>("root");  // make the root
+    m_pSchema = std::make_shared<SchemaItem>("root");  // make the root
 }
 
 
-bool EnvironmentMgr::loadConfig(const std::string &configPath, const std::string &masterConfigFile,  const std::vector<std::string> &cfgParms)  // todo: add a status object here for return
+bool EnvironmentMgr::loadSchema(const std::string &configPath, const std::string &masterConfigFile,  const std::vector<std::string> &cfgParms)  // todo: add a status object here for return
 {
     bool rc = false;
     Status status;
     if (createParser(configPath, masterConfigFile, cfgParms))
     {
-        rc = m_pConfigParser->parseEnvironmentConfig(configPath, masterConfigFile, cfgParms, status);
+        rc = m_pSchemaParser->parseSchema(configPath, masterConfigFile, cfgParms, status);
         if (rc)
         {
-            m_pConfig->processUniqueAttributeValueSets();  // really a pre-post processing requirement
-            m_pConfig->postProcessConfig();
+            m_pSchema->processUniqueAttributeValueSets();  // really a pre-post processing requirement
+            m_pSchema->postProcessConfig();
         }
     }
     return rc;
@@ -109,8 +109,8 @@ std::shared_ptr<EnvironmentNode> EnvironmentMgr::addNewEnvironmentNode(const std
     std::shared_ptr<EnvironmentNode> pParentNode = getEnvironmentNode(parentNodeId);
     if (pParentNode)
     {
-        std::shared_ptr<ConfigItem> pNewCfgItem;
-        std::vector<std::shared_ptr<ConfigItem>> insertableItems = pParentNode->getInsertableItems();  // configured items under the parent
+        std::shared_ptr<SchemaItem> pNewCfgItem;
+        std::vector<std::shared_ptr<SchemaItem>> insertableItems = pParentNode->getInsertableItems();  // configured items under the parent
         for (auto it = insertableItems.begin(); it != insertableItems.end(); ++it)
         {
             if ((*it)->getItemType() == elementType)
@@ -128,50 +128,26 @@ std::shared_ptr<EnvironmentNode> EnvironmentMgr::addNewEnvironmentNode(const std
 }
 
 
-std::shared_ptr<EnvironmentNode> EnvironmentMgr::addNewEnvironmentNode(const std::shared_ptr<EnvironmentNode> &pParentNode, const std::shared_ptr<ConfigItem> &pNewCfgItem, Status &status)
+std::shared_ptr<EnvironmentNode> EnvironmentMgr::addNewEnvironmentNode(const std::shared_ptr<EnvironmentNode> &pParentNode, const std::shared_ptr<SchemaItem> &pNewCfgItem, Status &status)
 {
     std::shared_ptr<EnvironmentNode> pNewNode;
     
     //
     // Create the new node and add it to the parent
-    pNewNode = std::make_shared<EnvironmentNode>(pNewCfgItem, pNewCfgItem->getName(), pParentNode);
+    //pNewNode = std::make_shared<EnvironmentNode>(pNewCfgItem, pNewCfgItem->getName(), pParentNode);
+    pNewNode = std::make_shared<EnvironmentNode>(pNewCfgItem, pNewCfgItem->getProperty("name"), pParentNode);
     pNewNode->setId(getUniqueKey());
-    pNewNode->addMissingAttributesFromConfig();
     pParentNode->addChild(pNewNode);
     addPath(pNewNode);
-
-    //
-    // Should we give it a name?
-    if (pNewCfgItem->getNamePrefix() != "" && pNewNode->hasAttribute("name"))
-    {
-        std::string prefix = pNewCfgItem->getNamePrefix();
-        std::string newName;
-        std::vector<std::string> curNames = pNewNode->getAllFieldValues("name");
-        size_t count = curNames.size();
-        for (size_t n = 1; n <= count + 1; ++n)
-        {
-            newName = prefix + std::to_string(n);
-            bool found = false;
-            for (auto it = curNames.begin(); it != curNames.end() && !found; ++it)
-            {
-                if ((*it) == newName)
-                    found = true;
-            }
-
-            if (!found)
-            {
-                pNewNode->setAttributeValue("name", newName, status);
-                break;
-            }
-        }
-    }
+    pNewNode->initialize();  
+    
 
     //
     // Look through the children and add any that are necessary
     auto cfgChildren = pNewCfgItem->getChildren();
     for (auto childIt = cfgChildren.begin(); childIt != cfgChildren.end(); ++childIt)
     {
-        unsigned numReq = (*childIt)->getMinInstances();
+        int numReq = (*childIt)->getMinInstances();
         for (int i=0; i<numReq; ++i)
         {
             addNewEnvironmentNode(pNewNode, *childIt, status);

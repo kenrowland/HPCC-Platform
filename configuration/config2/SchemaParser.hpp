@@ -24,29 +24,29 @@
 #include <vector>
 
 
-#include "ConfigItem.hpp"
+#include "SchemaItem.hpp"
 #include "Status.hpp"
 
 
-class ConfigParser 
+class SchemaParser 
 {
     public:
 
-        ConfigParser(std::shared_ptr<ConfigItem> &pConfig) : m_pConfig(pConfig) { };
-        virtual ~ConfigParser() { };
-        virtual bool parseEnvironmentConfig(const std::string &configPath, const std::string &masterConfigFile,  const std::vector<std::string> &cfgParms, Status &status);
+        SchemaParser(std::shared_ptr<SchemaItem> &pSchema) : m_pSchema(pSchema) { };
+        virtual ~SchemaParser() { };
+        virtual bool parseSchema(const std::string &configPath, const std::string &masterConfigFile,  const std::vector<std::string> &cfgParms, Status &status);
     
 
     protected:
 
         virtual bool doParse(const std::string &configPath, const std::string &masterConfigFile,  const std::vector<std::string> &cfgParms, Status &status) = 0;
-        ConfigParser() { };
+        SchemaParser() { };
         std::vector<std::string> split(const std::string  &input, const std::string  &delim);
         
 
     protected:
 
-        std::shared_ptr<ConfigItem> m_pConfig;
+        std::shared_ptr<SchemaItem> m_pSchema;
 };
 
 
