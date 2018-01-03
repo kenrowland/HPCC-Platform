@@ -53,13 +53,12 @@ void XSDComponentParser::parseXSD(const pt::ptree &compTree)
         if (!elemTree.empty())
         {
             std::string elementName = getXSDAttributeValue(elemTree, "<xmlattr>.name");
-            //m_pConfig->setName(elementName);
-            m_pSchema->setProperty("name", elementName);
+            m_pSchemaItem->setProperty("name", elementName);
             int minOccurs = elemTree.get("<xmlattr>.minOccurs", 1);
             std::string maxOccursStr = elemTree.get("<xmlattr>.maxOccurs", "1");
             int maxOccurs = (maxOccursStr != "unbounded") ? stoi(maxOccursStr) : -1;
-            m_pSchema->setMinInstances(minOccurs);
-            m_pSchema->setMaxInstances(maxOccurs);
+            m_pSchemaItem->setMinInstances(minOccurs);
+            m_pSchemaItem->setMaxInstances(maxOccurs);
 
             //
             // See if the element has a type. If so, then the element can have a value (other than attributes). Note does happen, but is rare
@@ -67,7 +66,7 @@ void XSDComponentParser::parseXSD(const pt::ptree &compTree)
             if (elementDataType != "")
             {
                 std::shared_ptr<SchemaValue> pItemCfgValue = std::make_shared<SchemaValue>("elementData");
-                pItemCfgValue->setType(m_pSchema->getType(elementDataType));
+                pItemCfgValue->setType(m_pSchemaItem->getSchemaValueType(elementDataType));
                 pItemCfgValue->setDefaultValue(elemTree.get("<xmlattr>.default", ""));
             }
 
@@ -113,44 +112,3 @@ void XSDComponentParser::parseXSD(const pt::ptree &compTree)
         }
     }
 }
-
-
-//void XSDComponentParser::parseKey(const pt::ptree &keyTree)
-//{
-//    std::string keyName = getXSDAttributeValue(keyTree, "<xmlattr>.name");
-//    std::string elementName = getXSDAttributeValue(keyTree, "xs:selector.<xmlattr>.xpath", false, "");
-//    std::string attrName = getXSDAttributeValue(keyTree, "xs:field.<xmlattr>.xpath", false, "");
-//    std::string attributeName;
-//
-//    if (attrName.find_first_of('@') != std::string::npos)
-//    {
-//        attributeName = attrName.substr(attrName.find_first_of('@') + 1);
-//    }
-//    else
-//    {
-//        attributeName = attrName;
-//    }
-//
-//    m_pConfig->addKey(keyName, elementName, attributeName);
-//}
-//
-//
-//void XSDComponentParser::parseKeyRef(const pt::ptree &keyTree)
-//{
-//    std::string keyName = getXSDAttributeValue(keyTree, "<xmlattr>.refer");
-//    std::string elementName = getXSDAttributeValue(keyTree, "xs:selector.<xmlattr>.xpath", false, "");
-//    std::string attrName = getXSDAttributeValue(keyTree, "xs:field.<xmlattr>.xpath", false, "");
-//    std::string attributeName;
-//
-//    if (attrName.find_first_of('@') != std::string::npos)
-//    {
-//        attributeName = attrName.substr(attrName.find_first_of('@') + 1);
-//    }
-//    else
-//    {
-//        attributeName = attrName;
-//    }
-//
-//    m_pConfig->addKeyRef(keyName, elementName, attributeName);
-//}
-

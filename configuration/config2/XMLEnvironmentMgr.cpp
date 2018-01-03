@@ -16,7 +16,6 @@
 ############################################################################## */
 
 #include "XMLEnvironmentMgr.hpp"
-#include "SchemaItemValueSet.hpp"
 #include "XSDSchemaParser.hpp"
 
 

@@ -27,9 +27,6 @@
 #include "SchemaValue.hpp"
 
 
-class SchemaItemValueSet;
-
-
 class SchemaItem : public std::enable_shared_from_this<SchemaItem>
 {
     public:
@@ -42,24 +39,24 @@ class SchemaItem : public std::enable_shared_from_this<SchemaItem>
         unsigned getMinInstances() const { return m_minInstances; }
         void setMaxInstances(unsigned num) { m_maxInstances = num; }
         unsigned getMaxInstances() const { return m_maxInstances; }
-        void addType(const std::shared_ptr<SchemaType> &pType);
-        std::shared_ptr<SchemaType> getType(const std::string &typeName, bool throwIfNotPresent = true) const;
+        void addSchemaValueType(const std::shared_ptr<SchemaType> &pType);
+        std::shared_ptr<SchemaType> getSchemaValueType(const std::string &typeName, bool throwIfNotPresent = true) const;
         void addSchemaType(const std::shared_ptr<SchemaItem> &pItem, const std::string &typeName);
         std::shared_ptr<SchemaItem> getSchemaType(const std::string &name, bool throwIfNotPresent=true) const;
-        void insertConfigType(const std::shared_ptr<SchemaItem> pTypeItem);
+        void insertSchemaType(const std::shared_ptr<SchemaItem> pTypeItem);
         void addChild(const std::shared_ptr<SchemaItem> &pItem) { m_children.insert({ pItem->getProperty("name"), pItem }); }
-        //virtual void addChild(const std::shared_ptr<ConfigItem> &pItem) { m_children.insert({ pItem->getName(), pItem }); }
         void addChild(const std::shared_ptr<SchemaItem> &pItem, const std::string &name) { m_children.insert({ name, pItem }); }
-        virtual std::vector<std::shared_ptr<SchemaItem>> getChildren();
+        std::vector<std::shared_ptr<SchemaItem>> getChildren();
         std::shared_ptr<SchemaItem> getChild(const std::string &name);
         std::shared_ptr<SchemaItem> getChildByComponent(const std::string &name, std::string &componentName);
         void setItemSchemaValue(const std::shared_ptr<SchemaValue> &pValue) { m_pItemValue = pValue; }
         std::shared_ptr<SchemaValue> getItemSchemaValue() const { return m_pItemValue; }
         bool isItemValueDefined() { return m_pItemValue != nullptr; }
-        void findCfgValues(const std::string &path, std::vector<std::shared_ptr<SchemaValue>> &cfgValues);
-        void addAttribute(const std::shared_ptr<SchemaValue> &pCfgValue);
-        void addAttribute(const std::vector<std::shared_ptr<SchemaValue>> &attributes);
-        std::shared_ptr<SchemaValue> getAttribute(const std::string &name) const;
+        void findSchemaValues(const std::string &path, std::vector<std::shared_ptr<SchemaValue>> &schemaValues);
+        virtual void addAttribute(const std::shared_ptr<SchemaValue> &pCfgValue);
+        virtual void addAttribute(const std::vector<std::shared_ptr<SchemaValue>> &attributes);
+        virtual void addAttribute(const std::map<std::string, std::shared_ptr<SchemaValue>> &attributes);
+        std::shared_ptr<SchemaValue> getAttribute(const std::string &name, bool createIfDoesNotExist=true) const;
         const std::map<std::string, std::shared_ptr<SchemaValue>> &getAttributes() const { return m_attributes;  }
         bool addUniqueName(const std::string keyName);
         void addUniqueAttributeValueSetDefinition(const std::string &setName, const std::string &elementPath, const std::string &attributeName, bool duplicateOk = false);

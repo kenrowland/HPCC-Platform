@@ -28,28 +28,26 @@ std::map<std::string, std::vector<std::shared_ptr<SchemaValue>>> SchemaItem::m_u
 
 
 SchemaItem::SchemaItem(const std::string &name, const std::string &className, const std::shared_ptr<SchemaItem> &pParent) :
-	//m_className(className), 
-	//m_name(name), 
 	m_pParent(pParent), 
-	//m_displayName(name),
 	m_minInstances(1), 
 	m_maxInstances(1) 
-	//m_version(-1) 
 {
+    //
+    // Set properties
+    m_properties["name"] = name;
+    m_properties["displayName"] = name;
+    m_properties["className"] = className;
+
 	//
 	// If this is a root node (no parent), then do some additional init 
 	if (m_pParent.expired())
 	{
-        m_properties["name"] = name;
-        m_properties["displayName"] = name;
-        m_properties["className"] = className;
-
         //
         // Create a default type so that all values have a type
 		std::shared_ptr<SchemaType> pDefaultType = std::make_shared<SchemaType>("default");
 		std::shared_ptr<SchemaTypeLimits> pDefaultLimits = std::make_shared<SchemaTypeLimits>();
 		pDefaultType->setLimits(pDefaultLimits);
-		addType(pDefaultType);
+		addSchemaValueType(pDefaultType);
 	}
 }
 
@@ -109,13 +107,13 @@ SchemaItem::SchemaItem(const std::string &name, const std::string &className, co
 //}
 
 
-void SchemaItem::addType(const std::shared_ptr<SchemaType> &pType)
+void SchemaItem::addSchemaValueType(const std::shared_ptr<SchemaType> &pType)
 {
     m_types[pType->getName()] = pType;
 }
 
 
-std::shared_ptr<SchemaType> SchemaItem::getType(const std::string &typeName, bool throwIfNotPresent) const
+std::shared_ptr<SchemaType> SchemaItem::getSchemaValueType(const std::string &typeName, bool throwIfNotPresent) const
 {
     std::shared_ptr<SchemaType> pType;
     auto it = m_types.find(typeName);
@@ -128,7 +126,7 @@ std::shared_ptr<SchemaType> SchemaItem::getType(const std::string &typeName, boo
         std::shared_ptr<SchemaItem> pParent = m_pParent.lock();
         if (pParent)
         {
-            return pParent->getType(typeName, throwIfNotPresent);
+            return pParent->getSchemaValueType(typeName, throwIfNotPresent);
         }
     }
 
@@ -194,11 +192,12 @@ std::shared_ptr<SchemaItem> SchemaItem::getSchemaType(const std::string &name, b
 
 
 //
-// Inserts a previously added configType to the config item
-void SchemaItem::insertConfigType(const std::shared_ptr<SchemaItem> pTypeItem)
+// This method is used to insert a named type into the current schema item. This is done by making copies
+// of the relevant members and inserting them into this instance
+void SchemaItem::insertSchemaType(const std::shared_ptr<SchemaItem> pTypeItem)
 {
     //
-    // To insert a config type (most likely previously defined by a complexType name="" XSD definition)
+    // To insert a schema type (for example a previously defined complexType name="" XSD definition)
     // loop through each set of configurable pieces of the input type, make a copy of each, and add it to 
     // this element.
 
@@ -261,17 +260,26 @@ void SchemaItem::addAttribute(const std::vector<std::shared_ptr<SchemaValue>> &a
 }
 
 
-std::shared_ptr<SchemaValue> SchemaItem::getAttribute(const std::string &name) const
+void SchemaItem::addAttribute(const std::map<std::string, std::shared_ptr<SchemaValue>> &attributes)
+{
+    for (auto it = attributes.begin(); it != attributes.end(); ++it)
+        addAttribute(it->second);
+}
+
+
+std::shared_ptr<SchemaValue> SchemaItem::getAttribute(const std::string &name, bool createIfDoesNotExist) const
 {
 	std::shared_ptr<SchemaValue> pCfgValue;
 	auto it = m_attributes.find(name);
-	if (it != m_attributes.end())
-		pCfgValue = it->second;
-	else
+    if (it != m_attributes.end())
+    {
+        pCfgValue = it->second;
+    }
+	else if (createIfDoesNotExist)
 	{
         // not found, build a default cfg value for the undefined attribute
 		pCfgValue = std::make_shared<SchemaValue>(name, false);
-		pCfgValue->setType(getType("default"));
+		pCfgValue->setType(getSchemaValueType("default"));
 	}
 	return pCfgValue;
 }
@@ -289,7 +297,6 @@ void SchemaItem::addReferenceToUniqueAttributeValueSet(const std::string &setNam
 }
 
 
-
 void SchemaItem::processUniqueAttributeValueSetReferences()
 {
     for (auto setRefIt = m_uniqueAttributeValueSetReferences.begin(); setRefIt != m_uniqueAttributeValueSetReferences.end(); ++setRefIt)
@@ -302,7 +309,7 @@ void SchemaItem::processUniqueAttributeValueSetReferences()
                 std::shared_ptr<SchemaValue> pKeyRefAttribute = *cfgIt;     // this is the reference attribute from which attributeName must be a member
                 std::string cfgValuePath = ((setRefIt->second.m_elementPath != ".") ? setRefIt->second.m_elementPath : "") + "@" + setRefIt->second.m_attributeName;
                 std::vector<std::shared_ptr<SchemaValue>> cfgValues;
-                findCfgValues(cfgValuePath, cfgValues);
+                findSchemaValues(cfgValuePath, cfgValues);
                 if (!cfgValues.empty())
                 {
                     for (auto attrIt = cfgValues.begin(); attrIt != cfgValues.end(); ++attrIt)
@@ -372,21 +379,24 @@ void SchemaItem::resetEnvironment()
 
 
 
-void SchemaItem::findCfgValues(const std::string &path, std::vector<std::shared_ptr<SchemaValue>> &cfgValues)
+void SchemaItem::findSchemaValues(const std::string &path, std::vector<std::shared_ptr<SchemaValue>> &schemaValues)
 {
     bool rootPath = path[0] == '/';
+
     //
-    // If path is from the root, move on up
+    // If path is from the root, and we aren't the root, pass the request to our parent
     if (rootPath && !m_pParent.expired())
     {   
         std::shared_ptr<SchemaItem> pParent = m_pParent.lock();
         if (pParent)
         {
-            return pParent->findCfgValues(path, cfgValues);
+            return pParent->findSchemaValues(path, schemaValues);
         }
     }
 
-    size_t start = rootPath ? 1 : 0;
+    //
+    // Break the path down and process it
+    size_t start = rootPath ? 1 : 0;    // skip leading slash if we are at the root
     size_t end = path.find_first_of("/@", start);
     if (end != std::string::npos)
     {
@@ -396,11 +406,11 @@ void SchemaItem::findCfgValues(const std::string &path, std::vector<std::shared_
         {
             if (m_properties["name"] == elem)
             {
-                return findCfgValues(path.substr(end + 1), cfgValues);
+                return findSchemaValues(path.substr(end + 1), schemaValues);
             }
             else
             {
-                // todo: throw? the root is not correct
+                throw(ParseException("Unable to find root element '" + elem + "' when searching path '" + path + "'"));
             }
         }
 
@@ -410,7 +420,7 @@ void SchemaItem::findCfgValues(const std::string &path, std::vector<std::shared_
             auto rangeIt = m_attributes.equal_range(attrName);
             for (auto it = rangeIt.first; it != rangeIt.second; ++it)
             {
-                cfgValues.push_back(it->second);
+                schemaValues.push_back(it->second);
             }
         }
 
@@ -419,7 +429,7 @@ void SchemaItem::findCfgValues(const std::string &path, std::vector<std::shared_
             auto rangeIt = m_children.equal_range(elem);
             for (auto it = rangeIt.first; it != rangeIt.second; ++it)
             {
-                return it->second->findCfgValues(path.substr(end + ((path[end] == '/') ? 1 : 0)), cfgValues);
+                return it->second->findSchemaValues(path.substr(end + ((path[end] == '/') ? 1 : 0)), schemaValues);
             }
         }
     }
@@ -439,7 +449,7 @@ void SchemaItem::processUniqueAttributeValueSets()
             //std::shared_ptr<ConfigItem> pCfgItem = getChild(elementName);  // todo: validate pCfgItem found
             std::string cfgValuePath = ((setIt->second.m_elementPath != ".") ? setIt->second.m_elementPath : "") + "@" + setIt->second.m_attributeName;
             std::vector<std::shared_ptr<SchemaValue>> cfgValues;
-            findCfgValues(cfgValuePath, cfgValues);
+            findSchemaValues(cfgValuePath, cfgValues);
             if (!cfgValues.empty())
             {
                 //
@@ -519,7 +529,7 @@ void SchemaItem::postProcessConfig()
         if (it->second->isMirroredValue())
         {
             std::vector<std::shared_ptr<SchemaValue>> cfgValues;
-            findCfgValues(it->second->getMirrorFromPath(), cfgValues);
+            findSchemaValues(it->second->getMirrorFromPath(), cfgValues);
             if (!cfgValues.empty() && cfgValues.size() == 1)
             {
                 if (cfgValues.size() == 1)

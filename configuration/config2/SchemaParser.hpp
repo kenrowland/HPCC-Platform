@@ -32,7 +32,7 @@ class SchemaParser
 {
     public:
 
-        SchemaParser(std::shared_ptr<SchemaItem> &pSchema) : m_pSchema(pSchema) { };
+        SchemaParser(std::shared_ptr<SchemaItem> &pSchema) : m_pSchemaItem(pSchema) { };
         virtual ~SchemaParser() { };
         virtual bool parseSchema(const std::string &configPath, const std::string &masterConfigFile,  const std::vector<std::string> &cfgParms, Status &status);
     
@@ -46,7 +46,7 @@ class SchemaParser
 
     protected:
 
-        std::shared_ptr<SchemaItem> m_pSchema;
+        std::shared_ptr<SchemaItem> m_pSchemaItem;
 };
 
 
