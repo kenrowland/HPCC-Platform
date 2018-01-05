@@ -26,6 +26,8 @@
 #include <boost/property_tree/xml_parser.hpp>
 
 #include "SchemaParser.hpp"
+#include "SchemaTypeIntegerLimits.hpp"
+#include "SchemaTypeStringLimits.hpp"
 
 namespace pt = boost::property_tree;
 
@@ -41,7 +43,7 @@ class XSDSchemaParser : public SchemaParser
     protected:
 
         XSDSchemaParser() { };
-        virtual bool doParse(const std::string &configPath, const std::string &masterConfigFile,  const std::vector<std::string> &cfgParms, Status &statu) override;
+        virtual bool doParse(const std::string &configPath, const std::string &masterConfigFile,  const std::vector<std::string> &cfgParms) override;
         virtual void parseXSD(const pt::ptree &tree);
         virtual void parseXSD(const std::string &filename);
         virtual std::string getXSDAttributeValue(const pt::ptree &tree, const std::string &attriName, bool throwIfNotPresent=true, const std::string &defaultVal = "") const;
@@ -57,6 +59,8 @@ class XSDSchemaParser : public SchemaParser
         
         virtual void parseKey(const pt::ptree &keyTree);
         virtual void parseKeyRef(const pt::ptree &keyTree);
+        virtual void parseIntegerTypeLimits(const pt::ptree &restrictTree, std::shared_ptr<SchemaTypeIntegerLimits> &pIntegerLimits);
+        virtual void parseStringTypeLimits(const pt::ptree &restrictTree, std::shared_ptr<SchemaTypeStringLimits> &pStringLimits);
 
     protected:
     

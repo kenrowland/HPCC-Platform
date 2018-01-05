@@ -17,59 +17,26 @@
 
 #include "SchemaTypeStringLimits.hpp"
 #include "EnvironmentValue.hpp"
+#include <regex>
 
-std::string SchemaTypeStringLimits::getString() const
+std::string SchemaTypeStringLimits::getLimitString() const
 {
 
-    std::string limitStr = "";
-
-    if (m_length != 0)
-    {
-        //limitStr += "string " + m_length + " charcters in length.";
-    }
-    else 
-    {
-        //limitStr += "string between " + getMin() + " and ";
-        if (getMax() == INT_MAX)
-        {
-            limitStr += " unlimited ";
-        }
-        else
-        {
-            limitStr += getMax();
-        }
-        limitStr += "characters in length.";
-
-    }
-
-    return limitStr;
+    return "String limit info";
 }
 
 
-bool SchemaTypeStringLimits::isValueValid(const std::string &testValue) const
+bool SchemaTypeStringLimits::doValueTest(const std::string &testValue) const
 {
-    bool isValid = true;
-
+    bool isValid;
     int len = testValue.length();
+    isValid = len >= m_minLength && len <= m_maxLength;
 
-    isValid = len >= getMin() && len <= getMax();
-
-    if (isValid)
+    // test patterns
+    for (auto it = m_patterns.begin(); it != m_patterns.end() && isValid; ++it)
     {
-        if (!m_allowedValues.empty())
-        {
-            bool found = false;
-            for (auto valueIt = m_allowedValues.begin(); valueIt != m_allowedValues.end() && !found; ++valueIt)
-            {
-                found = (*valueIt).m_value == testValue;
-            }
-            isValid = found;
-            // lastErrorString - not in enumerated list?
-        }
+        std::regex expr (*it);
+        isValid = std::regex_match(testValue, expr);
     }
-
-    // should do a pattern test here
-
     return isValid;
-
 }

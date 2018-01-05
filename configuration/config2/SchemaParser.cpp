@@ -19,18 +19,19 @@
 #include "Exceptions.hpp"
 
 
-bool SchemaParser::parseSchema(const std::string &configPath, const std::string &masterConfigFile,  const std::vector<std::string> &cfgParms, Status &status)
+bool SchemaParser::parse(const std::string &configPath, const std::string &masterConfigFile,  const std::vector<std::string> &cfgParms)
 {
+    bool rc = true;
     try
     {
-        doParse(configPath, masterConfigFile, cfgParms, status);
+        doParse(configPath, masterConfigFile, cfgParms);
     }
     catch (const ParseException &pe)
     {
-        std::string msg = "The following error was detected while parsing the configuration: " + static_cast<std::string>(pe.what());
-        status.addStatusMsg(statusMsg::fatal, "", "", "", msg);
+        m_message = "The following error was detected while parsing the configuration: " + static_cast<std::string>(pe.what());
+        rc = false;
     }
-    return status.isOk();
+    return rc;
 }
 
 

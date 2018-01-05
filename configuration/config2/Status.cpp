@@ -27,6 +27,19 @@ void Status::addStatusMsg(enum statusMsg::msgLevel level, const std::string &nod
 }
 
 
+void Status::addUniqueStatusMsg(enum statusMsg::msgLevel level, const std::string &nodeId, const std::string &name, const std::string &referNodeId, const std::string &msg)
+{
+    bool duplicateFound = false;
+    auto msgRange = m_messages.equal_range(level);
+    for (auto msgIt = msgRange.first; msgIt != msgRange.second && !duplicateFound; ++msgIt)
+    {
+        duplicateFound = (msgIt->second.nodeId == nodeId) && (msgIt->second.attribute == name) && (msgIt->second.msg == msg);
+    }
+
+    if (!duplicateFound)
+        addStatusMsg(level, nodeId, name, referNodeId, msg);
+}
+
 std::vector<statusMsg> Status::getMessages() const
 {
     std::vector<statusMsg> msgs;

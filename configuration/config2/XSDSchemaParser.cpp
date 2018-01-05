@@ -27,68 +27,66 @@
 
 namespace pt = boost::property_tree;
 
-bool XSDSchemaParser::doParse(const std::string &configPath, const std::string &masterConfigFile,  const std::vector<std::string> &cfgParms, Status &statu)
+bool XSDSchemaParser::doParse(const std::string &configPath, const std::string &masterConfigFile,  const std::vector<std::string> &cfgParms)
 {
     bool rc = true;
-    //try
-    {
-		//
-		// Add some default types to the config. Note changing values for limits 
-		std::shared_ptr<SchemaTypeLimits> pStringLimits;
-		std::shared_ptr<SchemaTypeLimits> pIntLimits;
+   
+    //
+    // Add some default types to the config. Note changing values for limits 
+    std::shared_ptr<SchemaTypeStringLimits> pStringLimits;
+    std::shared_ptr<SchemaTypeIntegerLimits> pIntLimits;
 
-		std::shared_ptr<SchemaType> pType = std::make_shared<SchemaType>("xs:string");
-        pStringLimits = std::make_shared<SchemaTypeStringLimits>();
-		pType->setLimits(pStringLimits);
-		m_pSchemaItem->addSchemaValueType(pType);
+    std::shared_ptr<SchemaType> pType = std::make_shared<SchemaType>("xs:string");
+    pStringLimits = std::make_shared<SchemaTypeStringLimits>();
+    pType->setLimits(pStringLimits);
+    m_pSchemaItem->addSchemaValueType(pType);
 
-		pType = std::make_shared<SchemaType>("xs:token");
-        pStringLimits = std::make_shared<SchemaTypeStringLimits>();
-		pType->setLimits(pStringLimits);
-		m_pSchemaItem->addSchemaValueType(pType);
+    pType = std::make_shared<SchemaType>("xs:token");
+    pStringLimits = std::make_shared<SchemaTypeStringLimits>();
+    pType->setLimits(pStringLimits);
+    m_pSchemaItem->addSchemaValueType(pType);
 
-		pType = std::make_shared<SchemaType>("xs:boolean");
-        std::shared_ptr<SchemaTypeLimits> pBoolLimits = std::make_shared<SchemaTypeStringLimits>();
-        pBoolLimits->addAllowedValue("true");
-        pBoolLimits->addAllowedValue("false");
-		pType->setLimits(pBoolLimits);
-		m_pSchemaItem->addSchemaValueType(pType);
+    pType = std::make_shared<SchemaType>("xs:boolean");
+    std::shared_ptr<SchemaTypeLimits> pBoolLimits = std::make_shared<SchemaTypeStringLimits>();
+    pBoolLimits->addAllowedValue("true");
+    pBoolLimits->addAllowedValue("false");
+    pType->setLimits(pBoolLimits);
+    m_pSchemaItem->addSchemaValueType(pType);
 
-		pType = std::make_shared<SchemaType>("xs:integer");
-        pIntLimits = std::make_shared<SchemaTypeIntegerLimits>();
-		pType->setLimits(pIntLimits);
-		m_pSchemaItem->addSchemaValueType(pType);
+    pType = std::make_shared<SchemaType>("xs:integer");
+    pIntLimits = std::make_shared<SchemaTypeIntegerLimits>();
+    pType->setLimits(pIntLimits);
+    m_pSchemaItem->addSchemaValueType(pType);
 
-		pType = std::make_shared<SchemaType>("xs:int");
-        pIntLimits = std::make_shared<SchemaTypeIntegerLimits>();
-		pType->setLimits(pIntLimits);
-		m_pSchemaItem->addSchemaValueType(pType);
+    pType = std::make_shared<SchemaType>("xs:int");
+    pIntLimits = std::make_shared<SchemaTypeIntegerLimits>();
+    pType->setLimits(pIntLimits);
+    m_pSchemaItem->addSchemaValueType(pType);
 
-		pType = std::make_shared<SchemaType>("xs:nonNegativeInteger");
-        pIntLimits = std::make_shared<SchemaTypeIntegerLimits>();
-		pIntLimits->setMinInclusive(0);
-		pType->setLimits(pIntLimits);
-		m_pSchemaItem->addSchemaValueType(pType);
+    pType = std::make_shared<SchemaType>("xs:nonNegativeInteger");
+    pIntLimits = std::make_shared<SchemaTypeIntegerLimits>();
+    pIntLimits->setMinInclusive(0);
+    pType->setLimits(pIntLimits);
+    m_pSchemaItem->addSchemaValueType(pType);
 
-		pType = std::make_shared<SchemaType>("xs:positiveInteger");
-        pIntLimits = std::make_shared<SchemaTypeIntegerLimits>();
-		pIntLimits->setMinInclusive(1);
-		pType->setLimits(pIntLimits);
-		m_pSchemaItem->addSchemaValueType(pType);
+    pType = std::make_shared<SchemaType>("xs:positiveInteger");
+    pIntLimits = std::make_shared<SchemaTypeIntegerLimits>();
+    pIntLimits->setMinInclusive(1);
+    pType->setLimits(pIntLimits);
+    m_pSchemaItem->addSchemaValueType(pType);
 
-        pType = std::make_shared<SchemaType>("xs:unsignedInt");
-        pIntLimits = std::make_shared<SchemaTypeIntegerLimits>();
-        pIntLimits->setMinInclusive(0);
-        pType->setLimits(pIntLimits);
-        m_pSchemaItem->addSchemaValueType(pType);
+    pType = std::make_shared<SchemaType>("xs:unsignedInt");
+    pIntLimits = std::make_shared<SchemaTypeIntegerLimits>();
+    pIntLimits->setMinInclusive(0);
+    pType->setLimits(pIntLimits);
+    m_pSchemaItem->addSchemaValueType(pType);
 
-        //
-        // Get our specific XSD parameters from the input 
-        m_basePath = configPath;
-        m_masterXSDFilename = masterConfigFile;
-        //m_buildsetFilename = cfgParms[2];
-        parseXSD(m_masterXSDFilename);
-    }
+    //
+    // Get our specific XSD parameters from the input 
+    m_basePath = configPath;
+    m_masterXSDFilename = masterConfigFile;
+    //m_buildsetFilename = cfgParms[2];
+    parseXSD(m_masterXSDFilename);
     
     return rc;
 }
@@ -100,12 +98,14 @@ void XSDSchemaParser::parseXSD(const std::string &filename)
     std::string fpath = m_basePath + filename;
     try
     {
-        pt::read_xml(fpath, xsdTree);
+        pt::read_xml(fpath, xsdTree, pt::xml_parser::trim_whitespace | pt::xml_parser::no_comments);
     }
     catch (const std::exception &e)
     {
         std::string xmlError = e.what();
-        throw(ParseException("Input configuration file is not valid: " + xmlError));
+        ParseException pe("Unable to read/parse file. Check that file is formatted correctly. Error = " + xmlError);
+        pe.addFilename(filename);
+        throw(pe);
     }
 
     try
@@ -199,7 +199,7 @@ void XSDSchemaParser::parseSimpleType(const pt::ptree &typeTree)
 void XSDSchemaParser::parseAttribute(const pt::ptree &attr)
 {
     std::shared_ptr<SchemaValue> pCfgValue = getSchemaValue(attr);
-	m_pSchemaItem->addAttribute(pCfgValue);
+    m_pSchemaItem->addAttribute(pCfgValue);
 }
 
 
@@ -210,28 +210,28 @@ void XSDSchemaParser::parseAttributeGroup(const pt::ptree &attributeTree)
     //
     // If there is a name (for the attribute group) then a group of attributes is being defined. Create the group, parese it, and add it as a 
     // schema type that can be reused (usually with a ref= reference in another attribute group schema item)
-	if (groupName != "")
-	{
+    if (groupName != "")
+    {
         std::shared_ptr<SchemaItem> pValueSet = std::make_shared<SchemaItem>(groupName, "valueset", m_pSchemaItem);
         std::shared_ptr<XSDValueSetParser> pXSDValueSetParaser = std::make_shared<XSDValueSetParser>(pValueSet);
-		pXSDValueSetParaser->parseXSD(attributeTree.get_child("", pt::ptree()));
-		m_pSchemaItem->addSchemaType(pValueSet, groupName);
-	}
+        pXSDValueSetParaser->parseXSD(attributeTree.get_child("", pt::ptree()));
+        m_pSchemaItem->addSchemaType(pValueSet, groupName);
+    }
 
     //
     // Is it a reference to a named attribute group previously saved? If so, grab the defined attributes and add them.
-	else
-	{
-		std::string refName = getXSDAttributeValue(attributeTree, "<xmlattr>.ref", false, "");  // only a named attributeGroup is supported
-		if (refName != "")
-		{
+    else
+    {
+        std::string refName = getXSDAttributeValue(attributeTree, "<xmlattr>.ref", false, "");  // only a named attributeGroup is supported
+        if (refName != "")
+        {
             std::shared_ptr<SchemaItem> pValueSet = m_pSchemaItem->getSchemaType(refName, true);
-			if (pValueSet)
-			{
+            if (pValueSet)
+            {
                 m_pSchemaItem->addAttribute(pValueSet->getAttributes());
-			}
-		}
-	}
+            }
+        }
+    }
 }
 
 
@@ -392,66 +392,97 @@ std::shared_ptr<SchemaType> XSDSchemaParser::getSchemaType(const pt::ptree &type
     std::string typeName = getXSDAttributeValue(typeTree, "<xmlattr>.name", nameRequired, "");
 
     std::shared_ptr<SchemaType> pCfgType = std::make_shared<SchemaType>(typeName);
-    std::shared_ptr<SchemaTypeLimits> pLimits; // = std::make_shared<CfgLimits>();
+    std::shared_ptr<SchemaTypeLimits> pLimits;
     auto restriction = typeTree.find("xs:restriction");
     if (restriction != typeTree.not_found())
     {
         std::string baseType = getXSDAttributeValue(restriction->second, "<xmlattr>.base");
-		std::shared_ptr<SchemaType> pType = std::make_shared<SchemaType>(*(m_pSchemaItem->getSchemaValueType(baseType)));
-		pLimits = std::make_shared<SchemaTypeLimits>(*(pType->getLimits()));
-        if (!pLimits)
-        {
-            std::string msg = "Unsupported base type(" + baseType + ")";
-            throw(ParseException(msg));
-        }
+        std::shared_ptr<SchemaType> pType = std::make_shared<SchemaType>(*(m_pSchemaItem->getSchemaValueType(baseType)));
 
-		pCfgType->setAutoValueType(getXSDAttributeValue(restriction->second, "<xmlattr>.hpcc:autoType", false, ""));
+        pLimits = pType->getLimits();
 
         if (!restriction->second.empty())
         {
             pt::ptree restrictTree = restriction->second.get_child("", pt::ptree());
-            for (auto it = restrictTree.begin(); it != restrictTree.end(); ++it)
+            if (std::dynamic_pointer_cast<SchemaTypeIntegerLimits>(pLimits) != nullptr)
             {
-                try
-                {
-                    std::string restrictionType = it->first;
-                    if (restrictionType == "xs:minLength")
-                        pLimits->setMinLength(it->second.get<int>("<xmlattr>.value"));
-                    else if (restrictionType == "xs:maxLength")
-                        pLimits->setMaxLength(it->second.get<int>("<xmlattr>.value"));
-                    else if (restrictionType == "xs:length")
-                        pLimits->setLength(it->second.get<int>("<xmlattr>.value"));
-                    else if (restrictionType == "xs:minInclusive")
-                        pLimits->setMinInclusive(it->second.get<int>("<xmlattr>.value"));
-                    else if (restrictionType == "xs:maxInclusive")
-                        pLimits->setMaxInclusive(it->second.get<int>("<xmlattr>.value"));
-                    else if (restrictionType == "xs:minExclusive")
-                        pLimits->setMinExclusive(it->second.get<int>("<xmlattr>.value"));
-                    else if (restrictionType == "xs:maxExclusive")
-                        pLimits->setMaxExclusive(it->second.get<int>("<xmlattr>.value"));
-                    else if (restrictionType == "xs:pattern")
-                        pLimits->addPattern(it->second.get("<xmlattr>.value", "0"));
-                    else if (restrictionType == "xs:enumeration")
-                    {
-                        pLimits->addAllowedValue(it->second.get("<xmlattr>.value", "badbadbad"), it->second.get("<xmlattr>.hpcc:description", ""));
-                    }
-                    else if (restrictionType.find("xs:") != std::string::npos)
-                    {
-                        std::string msg = "Unsupported restriction(" + it->first + ") found while parsing type(" + typeName + ")";
-                        throw(ParseException(msg));
-                    }
-                }
-                catch (std::exception &e)
-                {
-                    std::string msg = "Invalid value found for restriction(" + it->first + ")";
-                    throw(ParseException(msg));
-                }
+                std::shared_ptr<SchemaTypeIntegerLimits> pBaseIntLimits = std::dynamic_pointer_cast<SchemaTypeIntegerLimits>(pLimits);
+                std::shared_ptr<SchemaTypeIntegerLimits> pIntLimits = std::make_shared<SchemaTypeIntegerLimits>(*pBaseIntLimits);
+                parseIntegerTypeLimits(restrictTree, std::dynamic_pointer_cast<SchemaTypeIntegerLimits>(pIntLimits));
+                pLimits = pIntLimits;
+            }
+            else if (std::dynamic_pointer_cast<SchemaTypeStringLimits>(pLimits) != nullptr)
+            {
+                std::shared_ptr<SchemaTypeStringLimits> pBaseStringimits = std::dynamic_pointer_cast<SchemaTypeStringLimits>(pLimits);
+                std::shared_ptr<SchemaTypeStringLimits> pStringimits = std::make_shared<SchemaTypeStringLimits>(*pBaseStringimits);
+                parseStringTypeLimits(restrictTree, std::dynamic_pointer_cast<SchemaTypeStringLimits>(pStringimits));
+                pLimits = pStringimits;
+            }
+            else 
+            {
+                std::string msg = "Unsupported base type(" + baseType + ")";
+                throw(ParseException(msg));
             }
         }
     }
 
     pCfgType->setLimits(pLimits);
     return pCfgType;
+}
+
+
+
+void XSDSchemaParser::parseIntegerTypeLimits(const pt::ptree &restrictTree, std::shared_ptr<SchemaTypeIntegerLimits> &pIntegerLimits)
+{
+    for (auto it = restrictTree.begin(); it != restrictTree.end(); ++it)
+    {
+        std::string restrictionType = it->first;
+
+        if (restrictionType == "xs:minInclusive")
+            pIntegerLimits->setMinInclusive(it->second.get<int>("<xmlattr>.value"));
+        else if (restrictionType == "xs:maxInclusive")
+            pIntegerLimits->setMaxInclusive(it->second.get<int>("<xmlattr>.value"));
+        else if (restrictionType == "xs:minExclusive")
+            pIntegerLimits->setMinExclusive(it->second.get<int>("<xmlattr>.value"));
+        else if (restrictionType == "xs:maxExclusive")
+            pIntegerLimits->setMaxExclusive(it->second.get<int>("<xmlattr>.value"));
+        else if (restrictionType == "xs:enumeration")
+        {
+            pIntegerLimits->addAllowedValue(it->second.get("<xmlattr>.value", "badbadbad"), it->second.get("<xmlattr>.hpcc:description", ""));
+        }
+        else if (restrictionType != "<xmlattr>")
+        {
+            std::string msg = "Invalid restriction(" + it->first + ") found while parsing type";
+            throw(ParseException(msg));
+        }
+    }       
+}
+
+
+void XSDSchemaParser::parseStringTypeLimits(const pt::ptree &restrictTree, std::shared_ptr<SchemaTypeStringLimits> &pStringLimits)
+{
+    for (auto it = restrictTree.begin(); it != restrictTree.end(); ++it)
+    {
+        std::string restrictionType = it->first;
+
+        if (restrictionType == "xs:minLength")
+            pStringLimits->setMinLength(it->second.get<int>("<xmlattr>.value"));
+        else if (restrictionType == "xs:maxLength")
+            pStringLimits->setMaxLength(it->second.get<int>("<xmlattr>.value"));
+        else if (restrictionType == "xs:length")
+            pStringLimits->setLength(it->second.get<int>("<xmlattr>.value"));
+        else if (restrictionType == "xs:pattern")
+            pStringLimits->addPattern(it->second.get("<xmlattr>.value", "0"));
+        else if (restrictionType == "xs:enumeration")
+        {
+            pStringLimits->addAllowedValue(it->second.get("<xmlattr>.value", "badbadbad"), it->second.get("<xmlattr>.hpcc:description", ""));
+        }
+        else if (restrictionType != "<xmlattr>")
+        {
+            std::string msg = "Invalid restriction(" + it->first + ") found while parsing type";
+            throw(ParseException(msg));
+        }
+    }
 }
 
 
@@ -468,12 +499,7 @@ std::shared_ptr<SchemaValue> XSDSchemaParser::getSchemaValue(const pt::ptree &at
     pCfgValue->setMirrorFromPath(attr.get("<xmlattr>.hpcc:mirrorFrom", ""));
     pCfgValue->setAutoGenerateType(attr.get("<xmlattr>.hpcc:autoGenerateType", ""));
     pCfgValue->setAutoGenerateValue(attr.get("<xmlattr>.hpcc:autoGenerateValue", ""));
-
-    std::string defaultValue = attr.get("<xmlattr>.default", "notsetnotsetAAAnotsetnotset");
-    if (defaultValue != "notsetnotsetAAAnotsetnotset")
-    {
-        pCfgValue->setDefaultValue(defaultValue);
-    }
+    pCfgValue->setDefaultValue(attr.get("<xmlattr>.default", ""));
 
     std::string modList = attr.get("<xmlattr>.hpcc:modifiers", "");
     if (modList.length())
@@ -488,12 +514,12 @@ std::shared_ptr<SchemaValue> XSDSchemaParser::getSchemaValue(const pt::ptree &at
     }
     else
     {
-        std::shared_ptr<SchemaType> pCfgType = getSchemaType(attr.get_child("xs:simpleType", pt::ptree()), false);
-        if (!pCfgType->isComplete())
+        std::shared_ptr<SchemaType> pType = getSchemaType(attr.get_child("xs:simpleType", pt::ptree()), false);
+        if (!pType->isValid())
         {
             throw(ParseException("Attribute " + attrName + " does not have a valid type"));
         }
-        pCfgValue->setType(pCfgType);
+        pCfgValue->setType(pType);
     }
     return pCfgValue;
 }

@@ -25,7 +25,6 @@
 #include <boost/property_tree/ptree.hpp>
 
 #include "XSDSchemaParser.hpp"
-//#include "SchemaItemValueSet.hpp"
 
 namespace pt = boost::property_tree;
 
@@ -35,22 +34,14 @@ class XSDValueSetParser : public XSDSchemaParser
 
         XSDValueSetParser(std::shared_ptr<SchemaItem> pValueSet) :
             XSDSchemaParser(pValueSet)  { }
-            //XSDSchemaParser(pValueSet) { m_pValueSet = std::dynamic_pointer_cast<SchemaItemValueSet>(pValueSet); }
         virtual ~XSDValueSetParser() { }
         virtual void parseXSD(const pt::ptree &valueSetTree);
         void parseAttributeGroup(const pt::ptree &attributeTree);
-        void parseAttribute(const pt::ptree &attr);
     
 
     protected:
 
         XSDValueSetParser() { }
-
-
-    protected:
-
-        //std::shared_ptr<SchemaItemValueSet> m_pValueSet;
-
 };
 
 

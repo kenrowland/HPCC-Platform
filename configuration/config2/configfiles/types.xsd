@@ -83,6 +83,6 @@
     </xs:complexType>
     <xs:attributeGroup name="buildInfo">
 		<xs:attribute name="build" type="xs:string" use="required" hpcc:hidden="true" hpcc:tooltip="The build name to be deployed"/>
-        <xs:attribute name="buildSet" type="xs:string" use="required" hpcc:hidden="true"/>
+        <xs:attribute name="buildSet" type="xs:string" use="required" hpcc:hidden="true" hpcc:autoGenerateType="configProperty" hpcc:autoGenerateValue="componentName"/>
 	</xs:attributeGroup>
 </xs:schema>

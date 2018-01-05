@@ -19,24 +19,33 @@
 #define _CONFIG2_CFGSTRINGLIMITS_HPP_
 
 #include "SchemaTypeLimits.hpp"
+#include <limits.h>
 
 
 class SchemaTypeStringLimits : public SchemaTypeLimits
 {
     public:
 
-        SchemaTypeStringLimits() : m_removeWhiteSpace(true) { m_minInclusive = 0; }
+        SchemaTypeStringLimits() : m_minLength(0), m_maxLength(INT_MAX) { }
         virtual ~SchemaTypeStringLimits() { };
-        void setRemoveWhiteSpace(bool remove) { m_removeWhiteSpace = true; }
-        int getMin() const override { return m_minLength; }
-        int getMax() const override { return m_maxLength; }
-        std::string getString() const override;
-        virtual bool isValueValid(const std::string &testValue) const;
+        void setLength(unsigned v) { m_length = v; }
+        void setMinLength(int v) { m_minLength = v; }
+        void setMaxLength(int v) { m_maxLength = v; }
+        void addPattern(const std::string &pattern) { m_patterns.push_back(pattern); }
+        std::string getLimitString() const;
 
 
     protected:
 
-        bool m_removeWhiteSpace;
+        virtual bool doValueTest(const std::string &testValue) const;
+
+
+    protected:
+
+        unsigned m_length;
+        int m_minLength;
+        int m_maxLength;
+        std::vector<std::string> m_patterns;
 
 };
 

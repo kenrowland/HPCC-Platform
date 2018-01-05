@@ -29,14 +29,13 @@ class EnvironmentValue
     public:
 
         EnvironmentValue(const std::shared_ptr<EnvironmentNode> &pMyNode, const std::shared_ptr<SchemaValue> &pCfgValue, const std::string &name="") :
-            m_pMyEnvNode(pMyNode), m_pSchemaValue(pCfgValue), m_name(name), m_forcedSet(false), m_valueSet(false) { }
+            m_pMyEnvNode(pMyNode), m_pSchemaValue(pCfgValue), m_name(name), m_forcedSet(false) { }
         EnvironmentValue(const std::shared_ptr<EnvironmentNode> &pMyNode, const std::shared_ptr<SchemaValue> &pCfgValue, const std::string &name, const std::string initValue) :
-            EnvironmentValue(pMyNode, pCfgValue, name) { m_value = initValue; m_valueSet = true; }
+            EnvironmentValue(pMyNode, pCfgValue, name) { m_value = initValue; }
 
         ~EnvironmentValue() { }
         bool setValue(const std::string &value, Status *pStatus, bool forceSet=false);
-        bool isValuePresent() const { return m_valueSet; }
-        bool checkCurrentValue();
+        bool isValueSet() const { return m_value != ""; }
         const std::string &getValue() const { return m_value;  }
         const std::string &getDefaultValue() const { return m_pSchemaValue->getDefaultValue(); }
         bool hasDefaultValue() const { return m_pSchemaValue->hasDefaultValue(); }
@@ -46,12 +45,12 @@ class EnvironmentValue
         bool isValueValid(const std::string &value) const;
         void validate(Status &status, const std::string &myId) const;
         std::vector<std::string> getAllValues() const;
+        std::string getNodeId() const;
         void initialize();
     
     private:
 
-        bool m_forcedSet;     // true when last set value was a forced set
-        bool m_valueSet;
+        bool m_forcedSet;     // true when last set value was a forced set 
         std::string m_name;
         std::string m_value;
         std::shared_ptr<SchemaValue> m_pSchemaValue;

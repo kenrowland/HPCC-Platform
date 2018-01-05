@@ -24,8 +24,6 @@
 
 // static class variables
 std::map<std::string, std::vector<std::shared_ptr<SchemaValue>>> SchemaItem::m_uniqueAttributeValueSets;
-//std::map<std::string, ConfigItem::KeyRef> ConfigItem::m_keyRefs;
-
 
 SchemaItem::SchemaItem(const std::string &name, const std::string &className, const std::shared_ptr<SchemaItem> &pParent) :
 	m_pParent(pParent), 
@@ -51,7 +49,7 @@ SchemaItem::SchemaItem(const std::string &name, const std::string &className, co
 	}
 }
 
-
+// Copy constructor. Not needed at this time, but saving just in case
 //ConfigItem::ConfigItem(const ConfigItem &ci) :
 //    m_name(ci.m_name),
 //    m_displayName(ci.m_displayName),
@@ -157,7 +155,6 @@ void SchemaItem::addSchemaType(const std::shared_ptr<SchemaItem> &pItem, const s
     }
     else
     {
-        //throw(ParseException("Duplicate config type found: " + pItem->getName()));
         throw(ParseException("Duplicate config type found: " + m_properties["name"]));
     }
 }
@@ -446,7 +443,6 @@ void SchemaItem::processUniqueAttributeValueSets()
         bool keyDefExists = it != m_uniqueAttributeValueSets.end();
         if (!keyDefExists || setIt->second.m_duplicateOk)
         {
-            //std::shared_ptr<ConfigItem> pCfgItem = getChild(elementName);  // todo: validate pCfgItem found
             std::string cfgValuePath = ((setIt->second.m_elementPath != ".") ? setIt->second.m_elementPath : "") + "@" + setIt->second.m_attributeName;
             std::vector<std::shared_ptr<SchemaValue>> cfgValues;
             findSchemaValues(cfgValuePath, cfgValues);
@@ -567,7 +563,6 @@ const std::string &SchemaItem::getItemType() const
         return getProperty("componentName");
 
     return getProperty("name");
-    //return m_name;
 }
 
 

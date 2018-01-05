@@ -48,7 +48,7 @@ class EnvironmentNode : public std::enable_shared_from_this<EnvironmentNode>
 		void setAttributeValue(const std::string &name, const std::string &value, Status &status, bool allowInvalid=false, bool forceCreate=false);   // candidate for a variant?
 		std::string getAttributeValue(const std::string &name) const;                                  // candidate for a variant?
         void addMissingAttributesFromConfig();
-		bool setValue(const std::string &value, Status &status, bool force = false);
+		bool setNodeValue(const std::string &value, Status &status, bool force = false);
 		void setNodeEnvValue(const std::shared_ptr<EnvironmentValue> &pEnvValue) { m_pNodeValue = pEnvValue;  }
 		const std::shared_ptr<EnvironmentValue> &getNodeEnvValue() const { return m_pNodeValue;  }
 		bool isNodeValueSet() const { return m_pNodeValue != nullptr; }
@@ -59,7 +59,7 @@ class EnvironmentNode : public std::enable_shared_from_this<EnvironmentNode>
 		void setId(const std::string &id) { m_id = id; } 
 		const std::string &getId() const { return m_id;  }
         void validate(Status &status, bool includeChildren=false) const;
-		std::vector<std::string> getAllFieldValues(const std::string &fieldName) const;
+		std::vector<std::string> getAllAttributeValues(const std::string &attrName) const;
 		const std::shared_ptr<SchemaItem> &getSchemaItem() const { return m_pSchemaItem; }
         std::vector<std::shared_ptr<SchemaItem>> getInsertableItems() const;
         void initialize();

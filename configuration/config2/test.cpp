@@ -26,7 +26,7 @@ const std::string c_path = "configfiles/"; ///opt/HPCCSystems/componentfiles/con
 
 int main()
 {
-
+    
     try 
     {
         //std::shared_ptr<ConfigItem> pConfig = std::make_shared<ConfigItem>("root");

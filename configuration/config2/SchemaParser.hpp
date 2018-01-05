@@ -34,12 +34,13 @@ class SchemaParser
 
         SchemaParser(std::shared_ptr<SchemaItem> &pSchema) : m_pSchemaItem(pSchema) { };
         virtual ~SchemaParser() { };
-        virtual bool parseSchema(const std::string &configPath, const std::string &masterConfigFile,  const std::vector<std::string> &cfgParms, Status &status);
-    
+        virtual bool parse(const std::string &configPath, const std::string &masterConfigFile,  const std::vector<std::string> &cfgParms);
+        const std::string getLastMessage() const { return m_message;  }
+
 
     protected:
 
-        virtual bool doParse(const std::string &configPath, const std::string &masterConfigFile,  const std::vector<std::string> &cfgParms, Status &status) = 0;
+        virtual bool doParse(const std::string &configPath, const std::string &masterConfigFile,  const std::vector<std::string> &cfgParms) = 0;
         SchemaParser() { };
         std::vector<std::string> split(const std::string  &input, const std::string  &delim);
         
@@ -47,6 +48,7 @@ class SchemaParser
     protected:
 
         std::shared_ptr<SchemaItem> m_pSchemaItem;
+        std::string m_message;                       // a place where a message can be stored and retrieved, such as for a parse error
 };
 
 

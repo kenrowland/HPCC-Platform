@@ -52,16 +52,17 @@ class EnvironmentMgr
         virtual ~EnvironmentMgr() { }
 
         // add a load from stream?
-        bool loadSchema(const std::string &configPath, const std::string &masterConfigFile,  const std::vector<std::string> &cfgParms = std::vector<std::string>());
-        bool loadEnvironment(const std::string &file);  // return some error code,or a get last error type of call?
+        bool loadSchema(const std::string &configPath, const std::string &masterConfigFile, const std::vector<std::string> &cfgParms = std::vector<std::string>());
+        std::string getLastSchemaMessage() const;
+        std::string getLastEnvironmentMessage() const { return m_message;  }
+        bool loadEnvironment(const std::string &file);  
 
         std::shared_ptr<EnvironmentNode> getEnvironmentNode(const std::string &nodeId);
         std::shared_ptr<EnvironmentNode> addNewEnvironmentNode(const std::string &parentNodeId, const std::string &elementType, Status &status);
         std::shared_ptr<EnvironmentNode> addNewEnvironmentNode(const std::shared_ptr<EnvironmentNode> &pParentNode, const std::shared_ptr<SchemaItem> &pNewCfgItem, Status &status);
         bool removeEnvironmentNode(const std::string &nodeId, Status &status);
         
-        // save to stream ?
-        void saveEnvironment(const std::string &file, Status &status);
+        void saveEnvironment(const std::string &file);
         void validate(Status &status) const;
 
 
@@ -71,18 +72,17 @@ class EnvironmentMgr
         
         void addPath(const std::shared_ptr<EnvironmentNode> pNode);
         virtual bool createParser(const std::string &configPath, const std::string &masterConfigFile,  const std::vector<std::string> &cfgParms) = 0;
-        //virtual bool doLoadConfig(const std::vector<std::string> &cfgParms) = 0;
         virtual bool doLoadEnvironment(std::istream &in) = 0;
         virtual void save(std::ostream &out) = 0;
 
 
     protected:
 
-        //std::string m_configPath;
         std::shared_ptr<SchemaItem> m_pSchema;
         std::shared_ptr<SchemaParser> m_pSchemaParser;
         std::shared_ptr<EnvironmentNode> m_pRootNode;
         std::map<std::string, std::shared_ptr<EnvironmentNode>> m_nodeIds;
+        std::string m_message;
 
 
     private:

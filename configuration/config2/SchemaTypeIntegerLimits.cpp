@@ -17,7 +17,7 @@
 
 #include "SchemaTypeIntegerLimits.hpp"
 
-bool SchemaTypeIntegerLimits::isValueValid(const std::string &value)
+bool SchemaTypeIntegerLimits::doValueTest(const std::string &value) const
 {
     bool isValid = true;
     int testValue;
@@ -27,11 +27,21 @@ bool SchemaTypeIntegerLimits::isValueValid(const std::string &value)
     }
     catch (...)
     {
-        isValid = false;
+        isValid = false;  // not even an integer string
     }
 
     if (isValid)
-        isValid = testValue >= getMin() && testValue <= getMax();
-
+    {
+        //
+        // min/max tests
+        isValid = (m_minExclusiveTest) ? (testValue > m_min) : (testValue >= m_min);
+        isValid = isValid && ((m_maxExclusiveTest) ? (testValue < m_max) : (testValue <= m_max));
+    }
     return isValid;
+}
+
+
+std::string SchemaTypeIntegerLimits::getLimitString() const
+{
+    return "integer limit string";
 }

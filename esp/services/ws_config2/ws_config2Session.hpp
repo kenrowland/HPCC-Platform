@@ -33,13 +33,15 @@ struct ConfigMgrSession {
     std::string configType;
     std::string masterConfigFile;
     bool writeEnabled;
+    bool modified;
     EnvironmentMgr *m_pEnvMgr;
 
-    bool initializeSession(std::vector<std::string> &cfgParms)
+    bool initializeSession(std::vector<std::string> &cfgParms, Status &status)
     {
+        writeEnabled = modified = false;
         m_pEnvMgr = getEnvironmentMgrInstance(configType);
         if (m_pEnvMgr)
-            m_pEnvMgr->loadConfig(configPath, masterConfigFile, cfgParms);
+            m_pEnvMgr->loadSchema(configPath, masterConfigFile, status, cfgParms);
         return m_pEnvMgr;
     }
 
@@ -47,6 +49,12 @@ struct ConfigMgrSession {
     bool loadEnvironment(const std::string &envFile)
     {
         return m_pEnvMgr->loadEnvironment(envFile);
+    }
+
+
+    bool saveEnvironment(const std::string &envFile)
+    {
+        return m_pEnvMgr->saveEnvironment(envFile);
     }
 
 
@@ -59,6 +67,7 @@ struct ConfigMgrSession {
         }
         return ext;
     }
+
 
 };
 

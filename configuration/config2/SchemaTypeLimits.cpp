@@ -17,8 +17,33 @@
 
 #include "SchemaTypeLimits.hpp"
 
-std::vector<AllowedValue> SchemaTypeLimits::getAllowedValues() const 
+std::vector<AllowedValue> SchemaTypeLimits::getEnumeratedValues() const 
 { 
-    return m_allowedValues; 
+    return m_enumeratedValues; 
 }
 
+
+bool SchemaTypeLimits::isValueValid(const std::string &testValue) const
+{
+    bool rc = isValidEnumeratedValue(testValue);
+    if (rc)
+    {
+        rc = doValueTest(testValue);
+    }
+    return rc;
+}
+
+
+bool SchemaTypeLimits::isValidEnumeratedValue(const std::string &testValue) const
+{
+    bool rc = true;
+    if (isEnumerated())  // extra check just in case called by accident
+    {
+        rc = false;
+        for (auto it = m_enumeratedValues.begin(); it != m_enumeratedValues.end() && !rc; ++it)
+        {
+            rc = (testValue == (*it).m_value);
+        }
+    }
+    return rc;
+}

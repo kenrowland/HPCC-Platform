@@ -17,7 +17,7 @@
             <xs:element name="EspService" maxOccurs="unbounded" hpcc:docid="SMC-T01">
                 <xs:complexType>
                     <xs:attributeGroup ref="buildInfo"/>
-                    <xs:attribute name="name" type="xs:string" use="required" hpcc:displayName="Name" hpcc:autogeneratename="EclWatch" hpcc:tooltip="Name for this ESP service" />
+                    <xs:attribute name="name" type="xs:string" use="required" hpcc:displayName="Name" hpcc:autoGenerateType="prefix" hpcc:autoGenerateValue="EclWatch" hpcc:tooltip="Name for this ESP service" />
                     <xs:attribute name="description" type="xs:string" use="optional" hpcc:displayName="Description" hpcc:tooltip="Description for this process" />
                     <xs:attribute name="syntaxCheckQueue" type="xs:string" use="optional" hpcc:displayName="Syntax Check Queue" hpcc:tooltip="Queue Name of ECL server which is used for ECL Syntax Check" />
                     <xs:attribute name="pluginsPath" type="xs:string" use="optional" default="${PLUGINS_PATH}" hpcc:displayName="Plugins Path" hpcc:tooltip="Path where plugin files are deployed" />

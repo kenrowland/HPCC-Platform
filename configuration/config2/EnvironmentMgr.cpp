@@ -25,7 +25,6 @@ EnvironmentMgr *getEnvironmentMgrInstance(const std::string &envType)
     EnvironmentMgr *pEnvMgr = NULL;
     if (envType == "XML")
     {
-        //std::shared_ptr<ConfigParser> pCfgParser = std::make_shared<XSDConfigParser>(configPath, m_pConfig);
         pEnvMgr = new XMLEnvironmentMgr();
     }
     return pEnvMgr;
@@ -39,16 +38,15 @@ EnvironmentMgr::EnvironmentMgr() :
 }
 
 
-bool EnvironmentMgr::loadSchema(const std::string &configPath, const std::string &masterConfigFile,  const std::vector<std::string> &cfgParms)  // todo: add a status object here for return
+bool EnvironmentMgr::loadSchema(const std::string &configPath, const std::string &masterConfigFile, const std::vector<std::string> &cfgParms)  // todo: add a status object here for return
 {
     bool rc = false;
-    Status status;
     if (createParser(configPath, masterConfigFile, cfgParms))
     {
-        rc = m_pSchemaParser->parseSchema(configPath, masterConfigFile, cfgParms, status);
+        rc = m_pSchemaParser->parse(configPath, masterConfigFile, cfgParms);
         if (rc)
         {
-            m_pSchema->processUniqueAttributeValueSets();  // really a pre-post processing requirement
+            m_pSchema->processUniqueAttributeValueSets();  // This must be done first
             m_pSchema->postProcessConfig();
         }
     }
@@ -56,21 +54,34 @@ bool EnvironmentMgr::loadSchema(const std::string &configPath, const std::string
 }
 
 
+std::string EnvironmentMgr::getLastSchemaMessage() const
+{
+    if (m_pSchemaParser)
+        return m_pSchemaParser->getLastMessage();
+    return "";
+}
+
+
 bool EnvironmentMgr::loadEnvironment(const std::string &filename)
 {
+    bool rc = false;
     std::ifstream in;
     std::string fpath = filename;
     
     in.open(fpath);
     if (in.is_open())
     {
-        doLoadEnvironment(in);
+        rc = doLoadEnvironment(in);
     }
-    return true;
+    else
+    {
+        m_message = "Unable to open environment file '" + filename + "'";
+    }
+    return rc;
 }
 
 
-void EnvironmentMgr::saveEnvironment(const std::string &filename, Status &status)
+void EnvironmentMgr::saveEnvironment(const std::string &filename)
 {
     std::ofstream out;
 
@@ -134,13 +145,12 @@ std::shared_ptr<EnvironmentNode> EnvironmentMgr::addNewEnvironmentNode(const std
     
     //
     // Create the new node and add it to the parent
-    //pNewNode = std::make_shared<EnvironmentNode>(pNewCfgItem, pNewCfgItem->getName(), pParentNode);
     pNewNode = std::make_shared<EnvironmentNode>(pNewCfgItem, pNewCfgItem->getProperty("name"), pParentNode);
     pNewNode->setId(getUniqueKey());
     pParentNode->addChild(pNewNode);
     addPath(pNewNode);
     pNewNode->initialize();  
-    
+   
 
     //
     // Look through the children and add any that are necessary

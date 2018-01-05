@@ -46,6 +46,7 @@ bool Cws_config2Ex::onopenSession(IEspContext &context, IEspOpenSessionRequest &
 {
     bool loaded = false;
     ConfigMgrSession newSession;
+    Status status;
 
     std::string inputMasterFile = req.getMasterConfigFile();
     std::string inputConfigPath = req.getConfigPath();
@@ -60,7 +61,7 @@ bool Cws_config2Ex::onopenSession(IEspContext &context, IEspOpenSessionRequest &
 
     std::vector<std::string> cfgParms;
     cfgParms.push_back("buildset.xml");
-    if (newSession.initializeSession(cfgParms))
+    if (newSession.initializeSession(cfgParms, status))
     {
         if (newSession.loadEnvironment("/opt/HPCCSystems/componentfiles/config2xml/environment.xml"))
         {
@@ -70,7 +71,18 @@ bool Cws_config2Ex::onopenSession(IEspContext &context, IEspOpenSessionRequest &
             m_sessions[sessionId] = newSession;
             m_sessionKey++;
         }
+        else
+        {
+            resp.setError(true);
+            resp.setMsg(newSession.m_pEnvMgr->getLastEnvironmentMessage());
+        }
     }
+    else
+    {
+        resp.setError(true);
+        resp.setMsg(newSession.m_pEnvMgr->getLastSchemaMessage());
+    }
+
     m_pEnvMgr = newSession.m_pEnvMgr;   // for cenvenience as the code is migrated to support sessions
 
     return true; 
@@ -199,6 +211,7 @@ bool Cws_config2Ex::oninsertNode(IEspContext &context, IEspInsertNodeRequest &re
             {
                 getNodelInfo(pNewNode, resp);
                 resp.setNodeId(pNewNode->getId().c_str());
+                pSession->modified = true;
             }
         }
         else
@@ -217,7 +230,7 @@ bool Cws_config2Ex::oninsertNode(IEspContext &context, IEspInsertNodeRequest &re
 }
 
 
-bool Cws_config2Ex::onremoveNode(IEspContext &context, IEspNodeRequest &req, IEspPassFailResponse &resp)
+bool Cws_config2Ex::onremoveNode(IEspContext &context, IEspNodeRequest &req, IEspCommonStatusResponse &resp)
 {
     std::string sessionId = req.getSessionId();
     const ConfigMgrSession *pSession = getConfigSession(sessionId);
@@ -229,11 +242,20 @@ bool Cws_config2Ex::onremoveNode(IEspContext &context, IEspNodeRequest &req, IEs
     {
         std::string nodeId = req.getNodeId();
         rc = pSession->m_pEnvMgr->removeEnvironmentNode(nodeId, status);
+        pSession->modified = true;
     }
     else
     {
         status.addStatusMsg(statusMsg::error, sessionId.c_str(), "", "", "The session ID is not valid");
     }
+
+    //
+    // Add the messages in the status object to the response
+    IArrayOf<IEspstatusMsgType> msgs;
+    buildStatusMessageObject(msgs, status);
+    resp.updateStatus().setStatus(msgs);
+    resp.updateStatus().setError(status.isError());
+
     return rc;
 }
 
@@ -241,6 +263,8 @@ bool Cws_config2Ex::onremoveNode(IEspContext &context, IEspNodeRequest &req, IEs
 bool Cws_config2Ex::onsetValues(IEspContext &context, IEspSetValuesRequest &req, IEspSetValuesResponse &resp)
 {
     bool rc;
+    std::string sessionId = req.getSessionId();
+    const ConfigMgrSession *pSession = getConfigSession(sessionId);
     std::string id = req.getNodeId();
     std::shared_ptr<EnvironmentNode> pNode = m_pEnvMgr->getEnvironmentNode(id);
     Status status;
@@ -259,6 +283,7 @@ bool Cws_config2Ex::onsetValues(IEspContext &context, IEspSetValuesRequest &req,
             values.push_back(value);
         }
         pNode->setAttributeValues(values, status, allowInvalid, forceCreate);
+        pSession->modi
         rc = true;
     }
     else

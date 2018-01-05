@@ -41,7 +41,6 @@ bool EnvironmentNode::removeChild(const std::shared_ptr<EnvironmentNode> pNode)
 void EnvironmentNode::addAttribute(const std::string &name, std::shared_ptr<EnvironmentValue> pValue)
 {
     auto retValue = m_attributes.insert(std::make_pair(name, pValue));
-    // todo: add check to make sure no duplicate attributes, use retValue to see if value was inserted or not
 }
 
 
@@ -146,7 +145,7 @@ void EnvironmentNode::addMissingAttributesFromConfig()
         {
             std::shared_ptr<SchemaValue> pCfgValue = it->second;
             std::shared_ptr<EnvironmentValue> pEnvValue = std::make_shared<EnvironmentValue>(shared_from_this(), pCfgValue, it->first); 
-            pCfgValue->addEnvValue(pEnvValue);
+            pCfgValue->addEnvironmentValue(pEnvValue);
             addAttribute(it->first, pEnvValue);
         }
     }
@@ -163,7 +162,6 @@ void EnvironmentNode::setAttributeValues(const std::vector<ValueDef> &values, St
 }
 
 
-// should probably return a status object, and put path/valueName in there
 void EnvironmentNode::setAttributeValue(const std::string &attrName, const std::string &value, Status &status, bool allowInvalid, bool forceCreate)
 {
     std::shared_ptr<EnvironmentValue> pEnvValue;
@@ -177,7 +175,7 @@ void EnvironmentNode::setAttributeValue(const std::string &attrName, const std::
     //
     // Not found on this node. See if the configuration defines the attribute. If so, set the value and move on.
     // If not and the forceCreate flag is set, create it. 
-    else
+    else if (forceCreate)
     {
         std::shared_ptr<SchemaValue> pCfgValue = m_pSchemaItem->getAttribute(attrName);
         pEnvValue = std::make_shared<EnvironmentValue>(shared_from_this(), pCfgValue, attrName);
@@ -188,10 +186,6 @@ void EnvironmentNode::setAttributeValue(const std::string &attrName, const std::
         }
     }
 
-
-    //
-    // If we have a value, set it to the new value. If that passes, see if there is any post processing to do. Note that
-    // a forced create value can never have an invalid value.
     if (pEnvValue)
     {
         pEnvValue->setValue(value, &status, allowInvalid); 
@@ -214,21 +208,19 @@ std::string EnvironmentNode::getAttributeValue(const std::string &name) const
 }
 
 
-bool EnvironmentNode::setValue(const std::string &value, Status &status, bool force)
+bool EnvironmentNode::setNodeValue(const std::string &value, Status &status, bool force)
 {
     bool rc = false;
 
-    if (m_pNodeValue)
-    {
-        rc = m_pNodeValue->setValue(value, &status, force);
-    }
-    else
+    //
+    // If no environment value is present, create one first
+    if (!m_pNodeValue)
     {
         std::shared_ptr<SchemaValue> pCfgValue = m_pSchemaItem->getItemSchemaValue();
-
         m_pNodeValue = std::make_shared<EnvironmentValue>(shared_from_this(), pCfgValue, "");  // node's value has no name
-        rc = m_pNodeValue->setValue(value, &status, force);
     }
+    
+    rc = m_pNodeValue->setValue(value, &status, force);
     return rc;
 }
 
@@ -239,20 +231,46 @@ void EnvironmentNode::validate(Status &status, bool includeChildren) const
     // Check node value
     if (m_pNodeValue)
     {
-        if (!m_pNodeValue->checkCurrentValue())
-        {
-            m_pNodeValue->validate(status, "");
-            //status.addStatusMsg(statusMsg::warning, getId(), "", "", "The node value is not valid");
-        }
+        m_pNodeValue->validate(status, "");
     }
 
     //
     // Check any attributes
     for (auto attrIt = m_attributes.begin(); attrIt != m_attributes.end(); ++attrIt)
     {
-        if (!attrIt->second->checkCurrentValue())
+        attrIt->second->validate(status, m_id);
+        
+        //
+        // If this value must be unique, make sure it is
+        if (attrIt->second->getSchemaValue()->isUniqueValue())
         {
-            attrIt->second->validate(status, m_id);
+            bool found = false;
+            std::vector<std::string> allValues = attrIt->second->getAllValues();
+            std::set<std::string> unquieValues;
+            for (auto it = allValues.begin(); it != allValues.end() && !found; ++it)
+            {
+                auto ret = unquieValues.insert(*it);
+                found = ret.second;
+            }
+
+            if (found)
+            {
+                status.addUniqueStatusMsg(statusMsg::error, m_id, attrIt->second->getName(), "", "Attribute value must be unique");  
+            }
+        }
+
+        //
+        // Does this value need to be from another set of values?
+        if (attrIt->second->getSchemaValue()->isFromUniqueValueSet())
+        {
+            bool found = false;
+            std::vector<std::string> allValues = attrIt->second->getSchemaValue()->getAllKeyRefValues();
+            for (auto it = allValues.begin(); it != allValues.end() && !found; ++it)
+                found = *it == attrIt->second->getValue();
+            if (!found)
+            {
+                status.addStatusMsg(statusMsg::error, m_id, attrIt->second->getName(), "", "Attribute value must be from a unique set");
+            }
         }
     }
 
@@ -268,7 +286,7 @@ void EnvironmentNode::validate(Status &status, bool includeChildren) const
 }
 
 
-std::vector<std::string> EnvironmentNode::getAllFieldValues(const std::string &fieldName) const
+std::vector<std::string> EnvironmentNode::getAllAttributeValues(const std::string &attrName) const
 {
     std::vector<std::string> values;
     std::shared_ptr<EnvironmentNode> pParentNode = m_pParent.lock();
@@ -277,7 +295,7 @@ std::vector<std::string> EnvironmentNode::getAllFieldValues(const std::string &f
         std::vector<std::shared_ptr<EnvironmentNode>> nodes = pParentNode->getChildren(m_name);
         for (auto it = nodes.begin(); it != nodes.end(); ++it)
         {
-            values.push_back((*it)->getAttributeValue(fieldName));
+            values.push_back((*it)->getAttributeValue(attrName));
         }
     }
     return values;

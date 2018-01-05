@@ -50,6 +50,7 @@ class Status
 		Status() : m_highestMsgLevel(statusMsg::info) { }
 		~Status() {}
 		void addStatusMsg(enum statusMsg::msgLevel status, const std::string &nodeId, const std::string &name, const std::string &referNodeId, const std::string &msg);
+        void addUniqueStatusMsg(enum statusMsg::msgLevel status, const std::string &nodeId, const std::string &name, const std::string &referNodeId, const std::string &msg);
         enum statusMsg::msgLevel getHighestMsgLevel() const { return m_highestMsgLevel; }
         bool isOk() const { return m_highestMsgLevel <= statusMsg::warning; }
         bool isError() const { return m_highestMsgLevel >= statusMsg::error; }

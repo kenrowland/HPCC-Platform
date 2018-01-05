@@ -21,7 +21,7 @@
 #include <memory>
 #include <vector>
 #include <string>
-#include <limits.h>
+
 
 class EnvironmentValue;
 
@@ -36,41 +36,24 @@ class SchemaTypeLimits
 {
     public:
 
-        SchemaTypeLimits() :
-            m_minInclusive(INT_MIN),
-            m_maxInclusive(INT_MAX),
-            m_minExclusive(INT_MIN),
-            m_maxExclusive(INT_MAX),
-            m_length(0) { }
+        SchemaTypeLimits() { }
         virtual ~SchemaTypeLimits() { }
-        void setMinInclusive(int v)  { m_minInclusive = v; } 
-        void setMinExclusive(int v)  { m_minExclusive = v; } 
-        void setMaxInclusive(int v)  { m_maxInclusive = v; } 
-        void setMaxExclusive(int v)  { m_maxExclusive = v; } 
-        void setLength(int v)        { m_length       = v; }
-        void setMinLength(int v)     { m_minLength    = v; } 
-        void setMaxLength(int v)     { m_maxLength    = v; }
-        void addPattern(const std::string &pattern) { m_patterns.push_back(pattern); }
-        void addAllowedValue(const std::string &value, const std::string &desc="") { m_allowedValues.push_back(AllowedValue(value, desc)); }
-        std::vector<AllowedValue> getAllowedValues() const;
-        bool isEnumerated() const { return !m_allowedValues.empty();  }
-        virtual bool isValueValid(const std::string &testValue) { return true; }
-        virtual int getMin() const { return m_minInclusive; }
-        virtual int getMax() const { return m_maxInclusive; }
-        virtual std::string getString() const { return ""; }
+        void addAllowedValue(const std::string &value, const std::string &desc="") { m_enumeratedValues.push_back(AllowedValue(value, desc)); }
+        std::vector<AllowedValue> getEnumeratedValues() const;
+        bool isEnumerated() const { return !m_enumeratedValues.empty(); }
+        bool isValueValid(const std::string &testValue) const;
+        virtual std::string getLimitString() const { return "No value limits"; }
 
 
     protected:
 
-        int m_minInclusive;
-        int m_maxInclusive;
-        int m_minExclusive;
-        int m_maxExclusive;
-        unsigned m_length;
-        int m_minLength;
-        int m_maxLength;
-        std::vector<std::string> m_patterns;
-        std::vector<AllowedValue> m_allowedValues;
+        virtual bool isValidEnumeratedValue(const std::string &testValue) const;
+        virtual bool doValueTest(const std::string &testValue) const { return true;  }
+
+
+    protected:
+
+        std::vector<AllowedValue> m_enumeratedValues;
 };
 
 

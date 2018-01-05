@@ -28,8 +28,12 @@ class ParseException : public std::exception
 
         ParseException(const std::string &reason) : m_reason(reason) { };
         ParseException(const char *reason) : m_reason(reason) { };
+        ParseException() { };
 
         void addFilename(const std::string &filename) { m_filenames.push_back(filename); }
+
+        virtual void setMessage(const char *msg) { m_reason = msg; }
+        virtual void setMessage(const std::string &msg) { m_reason = msg; }
 
         virtual const char *what() const throw()
         {
@@ -56,46 +60,6 @@ class ParseException : public std::exception
 
         std::string m_reason;
         std::vector<std::string> m_filenames;
-
-};
-
-
-class ValueException : public std::exception
-{
-    public:
-
-        ValueException(const std::string &reason) : m_reason(reason) { };
-        ValueException(const char *reason) : m_reason(reason) { };
-
-        virtual const char *what() const throw()
-        {
-            return m_reason.c_str();
-        }
-
-    
-    private:
-
-        std::string m_reason;
-
-};
-
-
-class ConfigException : public std::exception
-{
-public:
-
-	ConfigException(const std::string &reason) : m_reason(reason) { };
-	ConfigException(const char *reason) : m_reason(reason) { };
-
-	virtual const char *what() const throw()
-	{
-		return m_reason.c_str();
-	}
-
-
-private:
-
-	std::string m_reason;
 
 };
 

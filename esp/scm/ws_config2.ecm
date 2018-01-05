@@ -15,12 +15,6 @@
     limitations under the License.
 ############################################################################## */
 
-ESPresponse PassFailResponse
-{
-    bool error(false);
-    string errorMsg("");
-};
-
 
 ESPstruct statusMsgType
 {
@@ -38,9 +32,15 @@ ESPstruct statusType
 };
 
 
-ESPstruct commonResponse
+ESPresponse PassFailResponse
 {
     bool error(false);
+    string msg("");
+};
+
+
+ESPresponse CommonStatusResponse
+{
     ESPstruct statusType status;
 };
 
@@ -62,8 +62,8 @@ ESPrequest OpenSessionRequest
 ESPresponse OpenSessionResponse 
 {
     bool error(false);
-    string errorMsg("");
     string sessionId;
+    string msg("");         // any messages from the open session request
 };
 
 
@@ -268,7 +268,7 @@ ESPservice [auth_feature("DEFERRED"),version("2.0"), default_client_version("2.0
     ESPMethod setValues(SetValuesRequest, SetValuesResponse);
     ESPMethod getParents(NodeRequest, GetParentsResponse);
     ESPMethod insertNode(InsertNodeRequest, GetNodeResponse);
-    ESPMethod removeNode(NodeRequest, PassFailResponse);
+    ESPMethod removeNode(NodeRequest, CommonStatusResponse);
 };
 
 

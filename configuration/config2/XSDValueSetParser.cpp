@@ -41,19 +41,10 @@ void XSDValueSetParser::parseXSD(const pt::ptree &valueSetTree)
 
 void XSDValueSetParser::parseAttributeGroup(const pt::ptree &attributeTree)
 {
-    //
-    // Only support an attribute reference. The ref value is a type.
     std::string groupRefName = getXSDAttributeValue(attributeTree, "<xmlattr>.ref");
     std::shared_ptr<SchemaItem> pValueSet = m_pSchemaItem->getSchemaType(groupRefName, true);
     if (pValueSet)
     {
         m_pSchemaItem->addAttribute(pValueSet->getAttributes());
     }
-}
-
-
-void XSDValueSetParser::parseAttribute(const pt::ptree &attr)
-{
-    std::shared_ptr<SchemaValue> pCfgValue = getSchemaValue(attr);
-    m_pSchemaItem->addAttribute(pCfgValue);
 }

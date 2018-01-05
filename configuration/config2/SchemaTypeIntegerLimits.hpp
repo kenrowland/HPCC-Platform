@@ -24,12 +24,26 @@ class SchemaTypeIntegerLimits : public SchemaTypeLimits
 {
     public:
 
-        SchemaTypeIntegerLimits() { };
+        SchemaTypeIntegerLimits() : m_min(INT_MIN), m_max(INT_MAX), m_minExclusiveTest(false), m_maxExclusiveTest(false) { }
         virtual ~SchemaTypeIntegerLimits() { };
-        int getMin() const { return m_minInclusive; }
-        int getMax() const { return m_maxInclusive; }
-        std::string getString() const override { return "integer limit string"; }
-        virtual bool isValueValid(const std::string &testValue);
+        void setMinInclusive(int v) { m_min = v; }
+        void setMinExclusive(int v) { m_min = v;  m_minExclusiveTest = true; }
+        void setMaxInclusive(int v) { m_max = v; }
+        void setMaxExclusive(int v) { m_max = v;  m_maxExclusiveTest = true; }
+        std::string getLimitString() const;
+
+
+    protected:
+
+        virtual bool doValueTest(const std::string &testValue) const;
+
+
+    protected:
+    
+        bool m_maxExclusiveTest;
+        bool m_minExclusiveTest;
+        int m_min;
+        int m_max;
 };
 
 #endif // _CONFIG2_CFGINTEGERLIMITS_HPP_
