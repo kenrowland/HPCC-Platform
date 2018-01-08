@@ -566,12 +566,12 @@ const std::string &SchemaItem::getItemType() const
 }
 
 
-const std::string &SchemaItem::getProperty(const std::string &name, const std::string &default) const
+const std::string &SchemaItem::getProperty(const std::string &name, const std::string &dflt) const
 {
     auto it = m_properties.find(name);
     if (it != m_properties.end())
     {
         return it->second;
     }
-    return default;
+    return dflt;
 }

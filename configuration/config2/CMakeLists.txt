@@ -20,19 +20,18 @@ project ( config2 )
 SET(  SRCS 
       EnvironmentMgr.cpp
       XMLEnvironmentMgr.cpp
-	  ConfigParser.cpp
-	  ConfigItemValueSet.cpp
-	  ConfigItem.cpp
-	  ConfigValue.cpp
-	  ConfigTypeLimits.cpp
-	  ConfigTypeIntegerLimits.cpp
-	  ConfigTypeStringLimits.cpp
-	  EnvironmentNode.cpp
-	  EnvironmentValue.cpp
-	  XSDComponentParser.cpp
-	  XSDConfigParser.cpp
-	  XSDValueSetParser.cpp
-	  Status.cpp
+      SchemaParser.cpp
+      SchemaItem.cpp
+      SchemaValue.cpp
+      SchemaTypeLimits.cpp
+      SchemaTypeIntegerLimits.cpp
+      SchemaTypeStringLimits.cpp
+      EnvironmentNode.cpp
+      EnvironmentValue.cpp
+      XSDComponentParser.cpp
+      XSDSchemaParser.cpp
+      XSDValueSetParser.cpp
+      Status.cpp
 )
 
 INCLUDE_DIRECTORIES(

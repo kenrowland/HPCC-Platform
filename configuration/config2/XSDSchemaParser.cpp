@@ -408,14 +408,14 @@ std::shared_ptr<SchemaType> XSDSchemaParser::getSchemaType(const pt::ptree &type
             {
                 std::shared_ptr<SchemaTypeIntegerLimits> pBaseIntLimits = std::dynamic_pointer_cast<SchemaTypeIntegerLimits>(pLimits);
                 std::shared_ptr<SchemaTypeIntegerLimits> pIntLimits = std::make_shared<SchemaTypeIntegerLimits>(*pBaseIntLimits);
-                parseIntegerTypeLimits(restrictTree, std::dynamic_pointer_cast<SchemaTypeIntegerLimits>(pIntLimits));
+                parseIntegerTypeLimits(restrictTree, pIntLimits);
                 pLimits = pIntLimits;
             }
             else if (std::dynamic_pointer_cast<SchemaTypeStringLimits>(pLimits) != nullptr)
             {
                 std::shared_ptr<SchemaTypeStringLimits> pBaseStringimits = std::dynamic_pointer_cast<SchemaTypeStringLimits>(pLimits);
                 std::shared_ptr<SchemaTypeStringLimits> pStringimits = std::make_shared<SchemaTypeStringLimits>(*pBaseStringimits);
-                parseStringTypeLimits(restrictTree, std::dynamic_pointer_cast<SchemaTypeStringLimits>(pStringimits));
+                parseStringTypeLimits(restrictTree, pStringimits);
                 pLimits = pStringimits;
             }
             else 

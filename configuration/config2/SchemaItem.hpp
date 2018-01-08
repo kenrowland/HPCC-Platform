@@ -68,7 +68,7 @@ class SchemaItem : public std::enable_shared_from_this<SchemaItem>
         bool isInsertable() const { return (m_minInstances == 0) || (m_maxInstances > m_minInstances); }
         bool isRequired() const { return m_minInstances > 0; }
 
-        const std::string &getProperty(const std::string &name, const std::string &default = "") const;
+        const std::string &getProperty(const std::string &name, const std::string &dfault = std::string("")) const;
         void setProperty(const std::string &name, const std::string &value) { m_properties[name] = value; }
 
 

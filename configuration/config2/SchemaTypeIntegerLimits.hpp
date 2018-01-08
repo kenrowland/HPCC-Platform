@@ -19,6 +19,7 @@
 #define _CONFIG2_CFGINTEGERLIMITS_HPP_
 
 #include "SchemaTypeLimits.hpp"
+#include <limits.h>
 
 class SchemaTypeIntegerLimits : public SchemaTypeLimits
 {

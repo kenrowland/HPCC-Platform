@@ -42,7 +42,7 @@ class SchemaType
         bool isValueValid(const std::string &testValue) const { return m_pLimits->isValueValid(testValue); }
         bool isEnumerated() const { return m_pLimits->isEnumerated(); }
         const std::vector<AllowedValue> getEnumeratedValues() const { return m_pLimits->getEnumeratedValues(); }
-        const std::string &getLimitString() const { return m_pLimits->getLimitString();  }
+        const std::string getLimitString() const { return m_pLimits->getLimitString();  }
 
 
     private:
