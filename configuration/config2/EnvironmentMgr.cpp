@@ -67,7 +67,7 @@ bool EnvironmentMgr::loadEnvironment(const std::string &filename)
     bool rc = false;
     std::ifstream in;
     std::string fpath = filename;
-    
+
     in.open(fpath);
     if (in.is_open())
     {
@@ -81,15 +81,17 @@ bool EnvironmentMgr::loadEnvironment(const std::string &filename)
 }
 
 
-void EnvironmentMgr::saveEnvironment(const std::string &filename)
+bool EnvironmentMgr::saveEnvironment(const std::string &filename)
 {
+    bool rc = false;
     std::ofstream out;
 
     out.open(filename);
     if (out.is_open())
     {
-        save(out);
+        rc = save(out);
     }
+    return rc;
 }
 
 
@@ -142,15 +144,15 @@ std::shared_ptr<EnvironmentNode> EnvironmentMgr::addNewEnvironmentNode(const std
 std::shared_ptr<EnvironmentNode> EnvironmentMgr::addNewEnvironmentNode(const std::shared_ptr<EnvironmentNode> &pParentNode, const std::shared_ptr<SchemaItem> &pNewCfgItem, Status &status)
 {
     std::shared_ptr<EnvironmentNode> pNewNode;
-    
+
     //
     // Create the new node and add it to the parent
     pNewNode = std::make_shared<EnvironmentNode>(pNewCfgItem, pNewCfgItem->getProperty("name"), pParentNode);
     pNewNode->setId(getUniqueKey());
     pParentNode->addChild(pNewNode);
     addPath(pNewNode);
-    pNewNode->initialize();  
-   
+    pNewNode->initialize();
+
 
     //
     // Look through the children and add any that are necessary
@@ -163,7 +165,7 @@ std::shared_ptr<EnvironmentNode> EnvironmentMgr::addNewEnvironmentNode(const std
             addNewEnvironmentNode(pNewNode, *childIt, status);
         }
     }
-    
+
     return pNewNode;
 }
 
@@ -172,7 +174,7 @@ bool EnvironmentMgr::removeEnvironmentNode(const std::string &nodeId, Status &st
 {
     bool rc = false;
     std::shared_ptr<EnvironmentNode> pNode = getEnvironmentNode(nodeId);
-    
+
     if (pNode)
     {
         std::shared_ptr<EnvironmentNode> pParentNode = pNode->getParent();

@@ -47,10 +47,10 @@ class EnvironmentValue
         std::vector<std::string> getAllValues() const;
         std::string getNodeId() const;
         void initialize();
-    
+
     private:
 
-        bool m_forcedSet;     // true when last set value was a forced set 
+        bool m_forcedSet;     // true when last set value was a forced set
         std::string m_name;
         std::string m_value;
         std::shared_ptr<SchemaValue> m_pSchemaValue;

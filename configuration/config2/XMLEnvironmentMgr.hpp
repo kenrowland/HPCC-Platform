@@ -1,6 +1,6 @@
 /*##############################################################################
 
-    HPCC SYSTEMS software Copyright (C) 2017 HPCC Systems�.
+    HPCC SYSTEMS software Copyright (C) 2017 HPCC Systems®.
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -25,21 +25,21 @@
 
 namespace pt = boost::property_tree;
 
-class XMLEnvironmentMgr : 	public EnvironmentMgr
+class XMLEnvironmentMgr :   public EnvironmentMgr
 {
-	public:
+    public:
 
-		XMLEnvironmentMgr() { }
-		~XMLEnvironmentMgr() { }
-        
+        XMLEnvironmentMgr() { }
+        ~XMLEnvironmentMgr() { }
 
-	protected:
+
+    protected:
 
         bool createParser(const std::string &configPath, const std::string &masterConfigFile,  const std::vector<std::string> &cfgParms) override;
         bool doLoadEnvironment(std::istream &in) override;
-        void save(std::ostream &out) override;
-		void parse(const pt::ptree &envTree, const std::shared_ptr<SchemaItem> &pConfig, std::shared_ptr<EnvironmentNode> &pEnvNode);
-		void serialize(pt::ptree &envTree, std::shared_ptr<EnvironmentNode> &pEnvNode) const;
+        bool save(std::ostream &out) override;
+        void parse(const pt::ptree &envTree, const std::shared_ptr<SchemaItem> &pConfig, std::shared_ptr<EnvironmentNode> &pEnvNode);
+        void serialize(pt::ptree &envTree, std::shared_ptr<EnvironmentNode> &pEnvNode) const;
 
 };
 

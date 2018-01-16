@@ -26,8 +26,8 @@ const std::string c_path = "configfiles/"; ///opt/HPCCSystems/componentfiles/con
 
 int main()
 {
-    
-    try 
+
+    try
     {
         //std::shared_ptr<ConfigItem> pConfig = std::make_shared<ConfigItem>("root");
 
@@ -48,7 +48,7 @@ int main()
         // 158
         //auto pNode = envMgr.getNodeFromPath("158");
         // auto pNode = pEnvMgr->getEnvironmentNode("74");     // 29 is Hardware/Computer
-        auto pNode = pEnvMgr->getEnvironmentNode("35");     
+        auto pNode = pEnvMgr->getEnvironmentNode("35");
 
         //auto x = pNode->getAllFieldValues("name");
 
@@ -75,23 +75,23 @@ int main()
 
 
         // keyref needs to look local first, then search the config tree, but field is ALWAYS local
-        // Used during validation. 
+        // Used during validation.
 
-		//
-		// Validate the environment
-
-        
+        //
+        // Validate the environment
 
 
-		//
-		// Value set test
+
+
+        //
+        // Value set test
         //std::vector<EnvironmentMgr::valueDef> newValues;
         //newValues.push_back({ "name", "namehasbeenchanged" });
         //pEnvMgr->setAttributeValues("158", newValues, "", false);
 
         //pEnvMgr->saveEnvironment("testout.xml", status);
 
-		auto results = pEnvMgr->getEnvironmentNode(".");
+        auto results = pEnvMgr->getEnvironmentNode(".");
 
     }
     catch (ParseException &e)
@@ -153,7 +153,7 @@ int main()
 
         std::cout << "Success\n";
 
-        // std::cout << std::endl << "Using Boost "     
+        // std::cout << std::endl << "Using Boost "
         //   << BOOST_VERSION / 100000     << "."  // major version
         //   << BOOST_VERSION / 100 % 1000 << "."  // minor version
         //   << BOOST_VERSION % 100                // patch level
@@ -181,7 +181,7 @@ int main()
 //     //
 //     // Since we only support includes for a component schema at the top level, look for includes first and process them.
 //     // Note that these includes may NOT define elements or anything like that. Only types, attribute groups, keyrefs
-//     const pt::ptree &keys = schemaIt->second.get_child("", pt::ptree());  
+//     const pt::ptree &keys = schemaIt->second.get_child("", pt::ptree());
 //     for (auto it=keys.begin(); it!=keys.end(); ++it)
 //     {
 //         if (it->first == "xs:include")

@@ -1,6 +1,6 @@
 #include "ws_config2Service.hpp"
 #include "jfile.hpp"
-#include "ConfigItem.hpp"
+#include "SchemaItem.hpp"
 
 static const std::string CFG2_MASTER_CONFIG_FILE = "newenv.xsd";
 static const std::string CFG2_CONFIG_DIR = COMPONENTFILES_DIR  "/config2xml/";
@@ -10,30 +10,6 @@ static const std::string CFG2_SOURCE_DIR = CFG2_CONFIG_DIR;
 Cws_config2Ex::Cws_config2Ex()
 {
     m_sessionKey = 0;  // for now and default to 0 in esdl defs 74523;  // some number
-    //CONFIGURATOR_API::initialize();
-    
-    //std::shared_ptr<ConfigItem> pConfig = std::make_shared<ConfigItem>("root");
-    //ConfigParser *pCfgParser = new XSDConfigParser("", pConfig);
-    //m_envMgr.setConfig(pConfig);
-
-    //ConfigMgrSession session("XML");
-    //std::vector<std::string> cfgParms;
-    //cfgParms.push_back("/opt/HPCCSystems/componentfiles/config2xml/");
-    //cfgParms.push_back("newenv.xsd");
-    //cfgParms.push_back("buildset.xml");
-    //session.initializeSession(cfgParms);
-    //session.loadEnvironment("/opt/HPCCSystems/componentfiles/config2xml/environment.xml");
-
-    //m_pEnvMgr = session.m_pEnvMgr;
-
-    /*m_pEnvMgr = getEnvironmentMgrInstance("XML");
-    std::vector<std::string> cfgParms;
-    cfgParms.push_back("newenv.xsd");
-    cfgParms.push_back("/opt/HPCCSystems/componentfiles/config2xml/");
-    cfgParms.push_back("buildset.xml");
-    m_pEnvMgr->loadConfig(cfgParms);
-    m_pEnvMgr->loadEnvironment("/opt/HPCCSystems/componentfiles/config2xml/environment.xml");*/
-
 }
 
 
@@ -45,57 +21,50 @@ Cws_config2Ex::~Cws_config2Ex()
 bool Cws_config2Ex::onopenSession(IEspContext &context, IEspOpenSessionRequest &req, IEspOpenSessionResponse &resp) 
 {
     bool loaded = false;
-    ConfigMgrSession newSession;
-    Status status;
+    ConfigMgrSession *pNewSession = new ConfigMgrSession();
 
-    std::string inputMasterFile = req.getMasterConfigFile();
-    std::string inputConfigPath = req.getConfigPath();
+    std::string inputMasterFile = req.getMasterSchemaFile();
+    std::string inputSchemaPath = req.getSchemaPath();
     std::string inputSourcePath = req.getSourcePath();
-    newSession.masterConfigFile = (inputMasterFile != "") ? req.getMasterConfigFile() : CFG2_MASTER_CONFIG_FILE;
-    newSession.configType = req.getType();
-    newSession.username = req.getUsername();
-    newSession.configPath = (inputConfigPath != "") ? req.getConfigPath() : CFG2_CONFIG_DIR;
-    newSession.sourcePath = (inputSourcePath != "") ? req.getSourcePath() : CFG2_SOURCE_DIR;
-    newSession.activePath = req.getActivePath();
+    pNewSession->masterConfigFile = (inputMasterFile != "") ? inputMasterFile : CFG2_MASTER_CONFIG_FILE;
+    pNewSession->configType = req.getType();
+    pNewSession->username = req.getUsername();
+    pNewSession->schemaPath = (inputSchemaPath != "") ? inputSchemaPath : CFG2_CONFIG_DIR;
+    pNewSession->sourcePath = (inputSourcePath != "") ? inputSourcePath : CFG2_SOURCE_DIR;
+    pNewSession->activePath = req.getActivePath();
 
-
+    //
+    // Open the session by loading the schema, which is done during session init
     std::vector<std::string> cfgParms;
-    cfgParms.push_back("buildset.xml");
-    if (newSession.initializeSession(cfgParms, status))
+    cfgParms.push_back("buildset.xml");  // Note that this is hardcoded for now, when other types suppored, must be passed in
+    if (pNewSession->initializeSession(cfgParms))
     {
-        if (newSession.loadEnvironment("/opt/HPCCSystems/componentfiles/config2xml/environment.xml"))
-        {
-            std::string sessionId = std::to_string(m_sessionKey);
-            resp.setSessionId(sessionId.c_str());
-            resp.setError(false);
-            m_sessions[sessionId] = newSession;
-            m_sessionKey++;
-        }
-        else
-        {
-            resp.setError(true);
-            resp.setMsg(newSession.m_pEnvMgr->getLastEnvironmentMessage());
-        }
+        std::string sessionId = std::to_string(m_sessionKey);
+        resp.setSessionId(sessionId.c_str());
+        resp.setError(false);
+        m_sessions[sessionId] = pNewSession;
+        m_sessionKey++;
     }
     else
     {
+        delete pNewSession;
         resp.setError(true);
-        resp.setMsg(newSession.m_pEnvMgr->getLastSchemaMessage());
+        resp.setMsg(pNewSession->getLastMsg().c_str());
     }
-
-    m_pEnvMgr = newSession.m_pEnvMgr;   // for cenvenience as the code is migrated to support sessions
-
     return true; 
 }
 
 
-bool Cws_config2Ex::oncloseSession(IEspContext &context, IEspCloseSessionRequest &req, IEspPassFailResponse &resp) { return true; }
+bool Cws_config2Ex::oncloseSession(IEspContext &context, IEspCloseSessionRequest &req, IEspPassFailResponse &resp)
+{
+    return true;
+}
 
 
-bool Cws_config2Ex::ongetEnvironmentFileList(IEspContext &context, IEspGetEnvironmentListRequest &req, IEspGetEnvironmentListResponse &resp) 
+bool Cws_config2Ex::ongetEnvironmentFileList(IEspContext &context, IEspCommonSessionRequest &req, IEspGetEnvironmentListResponse &resp)
 {
     std::string sessionId = req.getSessionId();
-    const ConfigMgrSession *pSession = getConfigSession(sessionId);
+    ConfigMgrSession *pSession = getConfigSession(sessionId);
     Status status;
 
     bool rc = true;
@@ -123,24 +92,136 @@ bool Cws_config2Ex::ongetEnvironmentFileList(IEspContext &context, IEspGetEnviro
             resp.setEnvironmentFiles(environmentFiles); 
         }
     }
+    else
+    {
+        resp.setError(true);
+        resp.setMsg("The session ID is not valid");
+    }
     return rc;
 }
 
 
 bool Cws_config2Ex::onopenEnvironmentFile(IEspContext &context, IEspOpenEnvironmentFileRequest &req, IEspPassFailResponse &resp)
 {
+    bool doOpen = false;
+    ConfigMgrSession *pSession = getConfigSession(req.getSessionId());
+    if (pSession)
+    {
+        doOpen = true;   // assume we are moving ahead with the open
+        if (pSession->modified)
+        {
+            if (req.getForceOpenIfModified() )
+            {
+                if (pSession->doesKeyFit(req.getSessionLockKey()))
+                {
+                    resp.setError(true);
+                    resp.setMsg("Session lock key mismatch when opening new environment with changes in current loaded environment");
+                    doOpen = false;
+                }
+            }
+            else
+            {
+                resp.setError(true);
+                resp.setMsg("Current environment has been modified without saving the changes");
+                doOpen = false;
+            }
+        }
+
+        if (doOpen)
+        {
+            std::string newEnvFile = req.getFilename();
+            if (!pSession->loadEnvironment(newEnvFile))
+            {
+                resp.setError(true);
+                resp.setMsg(pSession->getLastMsg().c_str());
+            }
+        }
+    }
+    else
+    {
+        resp.setError(true);
+        resp.setMsg("The session ID is not valid");
+    }
     return true;
 }
 
 
 bool Cws_config2Ex::onsaveEnvironmentFile(IEspContext &context, IEspSaveEnvironmentFileRequest &req, IEspPassFailResponse &resp)
 {
+    std::string sessionId = req.getSessionId();
+    ConfigMgrSession *pSession = getConfigSession(sessionId);
+    if (pSession)
+    {
+        std::string saveFilename = req.getFilename();
+
+        //
+        // Conditions where a save is done:
+        //   - A file name is provided (save as). The current environment, even if changed, is saved to the
+        //     new file. The session converts to the newly saved environment and is marked unlocked and un modified
+        //   - No filename is provided
+        //     - If modified, then the lockKey must be provided
+        //     - If not modified, this is a noop
+        if (saveFilename != "" || (pSession->modified && pSession->doesKeyFit(req.getSessionLockKey())))
+        {
+            if (!pSession->saveEnvironment(saveFilename))
+            {
+                resp.setError(true);
+                resp.setMsg("There was a problem saving the environment");
+            }
+        }
+    }
+    else
+    {
+        resp.setError(true);
+        resp.setMsg("The session ID is not valid");
+    }
     return true;
 }
 
 
-bool Cws_config2Ex::onenableEnvironmentChanges(IEspContext &context, IEspEnableChangesRequest &req, IEspPassFailResponse &resp)
+bool Cws_config2Ex::onlockSession(IEspContext &context, IEspCommonSessionRequest &req, IEspLockSessionResponse &resp)
 {
+    std::string sessionId = req.getSessionId();
+    ConfigMgrSession *pSession = getConfigSession(sessionId);
+    if (pSession)
+    {
+        if (pSession->lock())
+        {
+            resp.setSessionLockKey(pSession->lockKey.c_str());
+        }
+        else
+        {
+            resp.setError(true);
+            resp.setMsg("There was a problem locking the session (already locked?)");
+        }
+    }
+    else
+    {
+        resp.setError(true);
+        resp.setMsg("The session ID is not valid");
+    }
+    return true;
+}
+
+
+bool Cws_config2Ex::onunlockSession(IEspContext &context, IEspUnlockSessionRequest &req, IEspPassFailResponse &resp)
+{
+    std::string sessionId = req.getSessionId();
+    ConfigMgrSession *pSession = getConfigSession(sessionId);
+    if (pSession)
+    {
+        std::string unlockKey = req.getSessionLockKey();
+        if (!pSession->unlock(unlockKey))
+        {
+            resp.setError(true);
+            resp.setMsg("There was a problem unlocking the session (key mismatch?)");
+        }
+    }
+    else
+    {
+        resp.setError(true);
+        resp.setMsg("The session ID is not valid");
+    }
     return true;
 }
 
@@ -149,7 +230,7 @@ bool Cws_config2Ex::ongetNode(IEspContext &context, IEspNodeRequest &req, IEspGe
 {
     std::string sessionId = req.getSessionId();
     std::string id = req.getNodeId();
-    const ConfigMgrSession *pSession = getConfigSession(sessionId);
+    ConfigMgrSession *pSession = getConfigSession(sessionId);
     Status status;
 
     bool rc;
@@ -192,9 +273,8 @@ bool Cws_config2Ex::ongetNode(IEspContext &context, IEspNodeRequest &req, IEspGe
 
 bool Cws_config2Ex::oninsertNode(IEspContext &context, IEspInsertNodeRequest &req, IEspGetNodeResponse &resp)
 {
-
     std::string sessionId = req.getSessionId();
-    const ConfigMgrSession *pSession = getConfigSession(sessionId);
+    ConfigMgrSession *pSession = getConfigSessionForUpdate(sessionId, req.getSessionLockKey());
     Status status;
 
     bool rc = true;
@@ -203,7 +283,7 @@ bool Cws_config2Ex::oninsertNode(IEspContext &context, IEspInsertNodeRequest &re
     {
         std::string parentNodeId = req.getParentNodeId();
         std::shared_ptr<EnvironmentNode> pNode = pSession->m_pEnvMgr->getEnvironmentNode(parentNodeId);
-        
+
         if (pNode)
         { 
             std::shared_ptr<EnvironmentNode> pNewNode = pSession->m_pEnvMgr->addNewEnvironmentNode(parentNodeId, req.getElementType(), status);
@@ -222,10 +302,15 @@ bool Cws_config2Ex::oninsertNode(IEspContext &context, IEspInsertNodeRequest &re
     }
     else
     {
-        status.addStatusMsg(statusMsg::error, sessionId.c_str(), "", "", "The session ID is not valid");
+        status.addStatusMsg(statusMsg::error, sessionId.c_str(), "", "", "The session ID is not valid, session is not locked, or the key is not correct");
     }
 
-
+    //
+    // Add the messages in the status object to the response
+    IArrayOf<IEspstatusMsgType> msgs;
+    buildStatusMessageObject(msgs, status);
+    resp.updateStatus().setStatus(msgs);
+    resp.updateStatus().setError(status.isError());
     return true;
 }
 
@@ -233,7 +318,7 @@ bool Cws_config2Ex::oninsertNode(IEspContext &context, IEspInsertNodeRequest &re
 bool Cws_config2Ex::onremoveNode(IEspContext &context, IEspNodeRequest &req, IEspCommonStatusResponse &resp)
 {
     std::string sessionId = req.getSessionId();
-    const ConfigMgrSession *pSession = getConfigSession(sessionId);
+    ConfigMgrSession *pSession = getConfigSessionForUpdate(sessionId, req.getSessionLockKey());
     Status status;
 
     bool rc = true;
@@ -246,7 +331,7 @@ bool Cws_config2Ex::onremoveNode(IEspContext &context, IEspNodeRequest &req, IEs
     }
     else
     {
-        status.addStatusMsg(statusMsg::error, sessionId.c_str(), "", "", "The session ID is not valid");
+        status.addStatusMsg(statusMsg::error, sessionId.c_str(), "", "", "The session ID is not valid, session is not locked, or the key is not correct");
     }
 
     //
@@ -263,33 +348,41 @@ bool Cws_config2Ex::onremoveNode(IEspContext &context, IEspNodeRequest &req, IEs
 bool Cws_config2Ex::onsetValues(IEspContext &context, IEspSetValuesRequest &req, IEspSetValuesResponse &resp)
 {
     bool rc;
-    std::string sessionId = req.getSessionId();
-    const ConfigMgrSession *pSession = getConfigSession(sessionId);
-    std::string id = req.getNodeId();
-    std::shared_ptr<EnvironmentNode> pNode = m_pEnvMgr->getEnvironmentNode(id);
     Status status;
-    if (pNode)
+    std::string sessionId = req.getSessionId();
+    ConfigMgrSession *pSession = getConfigSessionForUpdate(sessionId, req.getSessionLockKey());
+    if (pSession)
     {
-        bool forceCreate = req.getForceCreate();
-        bool allowInvalid = req.getAllowInvalid();
-        IArrayOf<IConstattributeValueType> &attrbuteValues = req.getAttributeValues();
-        std::vector<ValueDef> values;
-        ForEachItemIn(i, attrbuteValues)
+        std::string id = req.getNodeId();
+        std::shared_ptr<EnvironmentNode> pNode = pSession->m_pEnvMgr->getEnvironmentNode(id);
+        Status status;
+        if (pNode)
         {
-            IConstattributeValueType& attrVal = attrbuteValues.item(i);
-            ValueDef value;
-            value.name = attrVal.getName();
-            value.value = attrVal.getValue();
-            values.push_back(value);
+            bool forceCreate = req.getForceCreate();
+            bool allowInvalid = req.getAllowInvalid();
+            IArrayOf<IConstattributeValueType> &attrbuteValues = req.getAttributeValues();
+            std::vector<ValueDef> values;
+            ForEachItemIn(i, attrbuteValues)
+            {
+                IConstattributeValueType& attrVal = attrbuteValues.item(i);
+                ValueDef value;
+                value.name = attrVal.getName();
+                value.value = attrVal.getValue();
+                values.push_back(value);
+            }
+            pNode->setAttributeValues(values, status, allowInvalid, forceCreate);
+            pSession->modified = true;
+            rc = true;
         }
-        pNode->setAttributeValues(values, status, allowInvalid, forceCreate);
-        pSession->modi
-        rc = true;
+        else
+        {
+            status.addStatusMsg(statusMsg::error, id.c_str(), "", "", "The input node ID is not a valid not in the environment");
+            rc = false;
+        }
     }
     else
     {
-        status.addStatusMsg(statusMsg::error, id.c_str(), "", "", "The input node ID is not a valid not in the environment");
-        rc = false;
+        status.addStatusMsg(statusMsg::error, sessionId.c_str(), "", "", "The session ID is not valid, session is not locked, or the key is not correct");
     }
 
     //
@@ -298,39 +391,41 @@ bool Cws_config2Ex::onsetValues(IEspContext &context, IEspSetValuesRequest &req,
     buildStatusMessageObject(msgs, status);
     resp.updateStatus().setStatus(msgs); 
     resp.updateStatus().setError(status.isError());
-
-    //
-    // finalize the responsse
-    resp.setNodeId(id.c_str());
    
     return rc;
 }
-
+//
 bool Cws_config2Ex::ongetParents(IEspContext &context, IEspNodeRequest &req, IEspGetParentsResponse &resp)
 {
-    std::string id = req.getNodeId();
-    std::shared_ptr<EnvironmentNode> pNode = m_pEnvMgr->getEnvironmentNode(id);
+    std::string nodeId = req.getNodeId();
+    std::string sessionId = req.getSessionId();
     Status status;
-    bool rc;
 
-    if (pNode)
+    ConfigMgrSession *pSession = getConfigSession(sessionId);
+    if (pSession)
     {
-        StringArray ids;
-        while (pNode)
+        std::shared_ptr<EnvironmentNode> pNode = pSession->m_pEnvMgr->getEnvironmentNode(nodeId);
+        if (pNode)
         {
-            pNode = pNode->getParent();
-            if (pNode)
+            StringArray ids;
+            while (pNode)
             {
-                ids.append(pNode->getId().c_str());
+                pNode = pNode->getParent();
+                if (pNode)
+                {
+                    ids.append(pNode->getId().c_str());
+                }
             }
+            resp.setParentIdList(ids);
         }
-        resp.setParentIdList(ids);
-        rc = true;
+        else
+        {
+            status.addStatusMsg(statusMsg::error, nodeId.c_str(), "", "", "The input node ID is not a valid not in the environment");
+        }
     }
     else
     {
-        status.addStatusMsg(statusMsg::error, id.c_str(), "", "", "The input node ID is not a valid not in the environment");
-        rc = false;
+        status.addStatusMsg(statusMsg::error, sessionId.c_str(), "", "", "The session ID is not valid, session is not locked, or the key is not correct");
     }
 
     //
@@ -340,11 +435,7 @@ bool Cws_config2Ex::ongetParents(IEspContext &context, IEspNodeRequest &req, IEs
     resp.updateStatus().setStatus(msgs); 
     resp.updateStatus().setError(status.isError());
 
-    //
-    // finalize the responsse
-    resp.setNodeId(id.c_str()); 
-    
-    return rc;
+    return true;
 }
 
 
@@ -364,23 +455,35 @@ void Cws_config2Ex::buildStatusMessageObject(IArrayOf<IEspstatusMsgType> &msgs, 
 }
 
 
-const ConfigMgrSession *Cws_config2Ex::getConfigSession(const std::string &sessionId) const
+ConfigMgrSession *Cws_config2Ex::getConfigSession(const std::string &sessionId)
 {
-    const ConfigMgrSession *pSession = nullptr;
+    ConfigMgrSession *pSession = nullptr;
     auto it = m_sessions.find(sessionId);
     if (it != m_sessions.end())
-        pSession = &(it->second);
+    {
+        pSession = (it->second);
+    }
     return pSession;
 }
 
 
-bool Cws_config2Ex::getNodelInfo(const std::shared_ptr<EnvironmentNode> &pNode, IEspGetNodeResponse &resp) const
+ConfigMgrSession *Cws_config2Ex::getConfigSessionForUpdate(const std::string &sessionId, const std::string &lockKey)
+{
+    ConfigMgrSession *pSession = getConfigSession(sessionId);
+    if (!pSession || pSession->doesKeyFit(lockKey))
+    {
+        pSession = nullptr;
+    }
+    return pSession;
+}
+
+
+void Cws_config2Ex::getNodelInfo(const std::shared_ptr<EnvironmentNode> &pNode, IEspGetNodeResponse &resp) const
 {
     Status status;
-    bool rc;
         
-    const std::shared_ptr<ConfigItem> &pNodeConfigItem = pNode->getConfigItem();
-    std::string nodeDisplayName = pNodeConfigItem->getProperty("displayName");
+    const std::shared_ptr<SchemaItem> &pNodeSchemaItem = pNode->getSchemaItem();
+    std::string nodeDisplayName = pNodeSchemaItem->getProperty("displayName");
     IArrayOf<IEspnodeType> elements;
 
     //
@@ -394,32 +497,40 @@ bool Cws_config2Ex::getNodelInfo(const std::shared_ptr<EnvironmentNode> &pNode, 
             std::shared_ptr<EnvironmentValue> pAttr = *it;
             Owned<IEspattributeType> pAttribute = createattributeType();
 
-            const std::shared_ptr<ConfigValue> &pCfgValue = pAttr->getCfgValue();
+            const std::shared_ptr<SchemaValue> &pSchemaValue = pAttr->getSchemaValue();
             std::string attributeName = pAttr->getName();
             pAttribute->setName(attributeName.c_str());
-            pAttribute->setDisplayName(pCfgValue->getDisplayName().c_str());
-            if (attributeName == "name" && pAttr->isValuePresent())
+            pAttribute->setDisplayName(pSchemaValue->getDisplayName().c_str());
+            if (attributeName == "name" && pAttr->isValueSet())
             {
                 nodeDisplayName = pAttr->getValue();  // better usability value
             }
 
-            pAttribute->updateDoc().setTooltip(pCfgValue->getTooltip().c_str());
+            pAttribute->updateDoc().setTooltip(pSchemaValue->getTooltip().c_str());
 
-            const std::shared_ptr<ConfigValueType> &pType = pCfgValue->getType();
-            std::shared_ptr<ConfigTypeLimits> &pLimits = pType->getLimits();
+            const std::shared_ptr<SchemaType> &pType = pSchemaValue->getType();
+            std::shared_ptr<SchemaTypeLimits> &pLimits = pType->getLimits();
             pAttribute->updateType().setName(pType->getName().c_str());
-            pAttribute->updateType().updateLimits().setMin(pType->getLimits()->getMin());
-            pAttribute->updateType().updateLimits().setMax(pType->getLimits()->getMax());
-            pAttribute->setRequired(pCfgValue->isRequired());
-            pAttribute->setReadOnly(pCfgValue->isReadOnly());
-            pAttribute->setHidden(pCfgValue->isHidden());
+            if (pType->getLimits()->isMaxSet())
+            {
+                pAttribute->updateType().updateLimits().setMaxValid(true);
+                pAttribute->updateType().updateLimits().setMax(pType->getLimits()->getMax());
+            }
+            if (pType->getLimits()->isMinSet())
+            {
+                pAttribute->updateType().updateLimits().setMinValid(true);
+                pAttribute->updateType().updateLimits().setMin(pType->getLimits()->getMin());
+            }
+            pAttribute->setRequired(pSchemaValue->isRequired());
+            pAttribute->setReadOnly(pSchemaValue->isReadOnly());
+            pAttribute->setHidden(pSchemaValue->isHidden());
 
 
             //StringArray excludeList;
             //excludeList.append("username");
             //pAttribute->updateType().updateLimits().setDisallowList(excludeList);
 
-            std::vector<AllowedValue> allowedValues = pCfgValue->getAllowedValues(pAttr.get());
+            std::vector<AllowedValue> allowedValues = pSchemaValue->getAllowedValues(pAttr.get());
             if (!allowedValues.empty())
             {
                 IArrayOf<IEspchoiceType> choices;
@@ -434,7 +545,7 @@ bool Cws_config2Ex::getNodelInfo(const std::shared_ptr<EnvironmentNode> &pNode, 
             }
 
             pAttribute->setCurrentValue(pAttr->getValue().c_str());
-            pAttribute->setDefaultValue(pCfgValue->getDefaultValue().c_str());
+            pAttribute->setDefaultValue(pSchemaValue->getDefaultValue().c_str());
 
             nodeAttributes.append(*pAttribute.getLink());
         }
@@ -450,12 +561,12 @@ bool Cws_config2Ex::getNodelInfo(const std::shared_ptr<EnvironmentNode> &pNode, 
         for (auto it=children.begin(); it!=children.end(); ++it)
         {
             std::shared_ptr<EnvironmentNode> pNode = *it;
-            const std::shared_ptr<ConfigItem> pConfigItem = pNode->getConfigItem();
+            const std::shared_ptr<SchemaItem> pSchemaItem = pNode->getSchemaItem();
             Owned<IEspnodeType> pElement = createnodeType();
-            pElement->updateElementInfo().setName(pConfigItem->getProperty("displayName").c_str());
-            pElement->updateElementInfo().setElementType(pConfigItem->getItemType().c_str());
-            pElement->updateElementInfo().setClass(pConfigItem->getProperty("className").c_str());
-            pElement->updateElementInfo().setCategory(pConfigItem->getProperty("category").c_str());
+            pElement->updateElementInfo().setName(pSchemaItem->getProperty("displayName").c_str());
+            pElement->updateElementInfo().setElementType(pSchemaItem->getItemType().c_str());
+            pElement->updateElementInfo().setClass(pSchemaItem->getProperty("className").c_str());
+            pElement->updateElementInfo().setCategory(pSchemaItem->getProperty("category").c_str());
             pElement->updateElementInfo().updateDoc().setTooltip("");
             pElement->setNodeId(pNode->getId().c_str());
             pElement->setNumChildren(pNode->getNumChildren());
@@ -467,30 +578,38 @@ bool Cws_config2Ex::getNodelInfo(const std::shared_ptr<EnvironmentNode> &pNode, 
     //
     // Build a list of items that can be inserted under this node
     IArrayOf<IEspelementInfoType> newElements;
-    std::vector<std::shared_ptr<ConfigItem>> insertableList = pNode->getInsertableItems();
+    std::vector<std::shared_ptr<SchemaItem>> insertableList = pNode->getInsertableItems();
     for (auto it=insertableList.begin(); it!=insertableList.end(); ++it)
     {
-        std::shared_ptr<ConfigItem> pConfigItem = *it;
+        std::shared_ptr<SchemaItem> pSchemaItem = *it;
         Owned<IEspelementInfoType> pNewElement = createelementInfoType();
-        pNewElement->setName(pConfigItem->getProperty("displayName").c_str());
-        pNewElement->setElementType(pConfigItem->getItemType().c_str());
-        pNewElement->setClass(pConfigItem->getProperty("className").c_str());
-        pNewElement->setCategory(pConfigItem->getProperty("category").c_str());
-        pNewElement->setIsRequired(pConfigItem->isRequired());
+        pNewElement->setName(pSchemaItem->getProperty("displayName").c_str());
+        pNewElement->setElementType(pSchemaItem->getItemType().c_str());
+        pNewElement->setClass(pSchemaItem->getProperty("className").c_str());
+        pNewElement->setCategory(pSchemaItem->getProperty("category").c_str());
+        pNewElement->setIsRequired(pSchemaItem->isRequired());
         newElements.append(*pNewElement.getLink());
     }
     resp.setInsertable(newElements);
 
-
-    if (pNodeConfigItem->isItemValueDefined())
+    if (pNodeSchemaItem->isItemValueDefined())
     {
         resp.setNodeValueDefined(true);  
 
-        const std::shared_ptr<ConfigValue> &pNodeCfgValue = pNodeConfigItem->getItemCfgValue();
-        const std::shared_ptr<ConfigValueType> &pType = pNodeCfgValue->getType();
+        const std::shared_ptr<SchemaValue> &pNodeSchemaValue = pNodeSchemaItem->getItemSchemaValue();
+        const std::shared_ptr<SchemaType> &pType = pNodeSchemaValue->getType();
         resp.updateValue().updateType().setName(pType->getName().c_str());
-        resp.updateValue().updateType().updateLimits().setMin(pType->getLimits()->getMin());
-        resp.updateValue().updateType().updateLimits().setMax(pType->getLimits()->getMax());
+
+        if (pType->getLimits()->isMaxSet())
+        {
+            resp.updateValue().updateType().updateLimits().setMaxValid(true);
+            resp.updateValue().updateType().updateLimits().setMax(pType->getLimits()->getMax());
+        }
+        if (pType->getLimits()->isMinSet())
+        {
+            resp.updateValue().updateType().updateLimits().setMinValid(true);
+            resp.updateValue().updateType().updateLimits().setMin(pType->getLimits()->getMin());
+        }
 
         if (pNode->isNodeValueSet())
         {
@@ -499,8 +618,6 @@ bool Cws_config2Ex::getNodelInfo(const std::shared_ptr<EnvironmentNode> &pNode, 
             resp.updateValue().setCurrentValue(pNodeValue->getValue().c_str());
         }
     }
-
-    rc = true;
     
     //
     // Add the messages in the status object to the response
@@ -509,5 +626,4 @@ bool Cws_config2Ex::getNodelInfo(const std::shared_ptr<EnvironmentNode> &pNode, 
     resp.updateStatus().setStatus(msgs); 
     resp.updateStatus().setError(status.isError());
 
-    return rc;  
 }

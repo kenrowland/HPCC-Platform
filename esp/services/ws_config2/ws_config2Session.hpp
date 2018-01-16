@@ -22,39 +22,100 @@
 
 #include "EnvironmentMgr.hpp"
 #include "build-config.h"
+#include <iterator>
+#include <algorithm>
 
+
+#define SESSION_KEY_LENGTH 10
 
 struct ConfigMgrSession {
 
-    std::string username;
-    std::string configPath;
-    std::string sourcePath;
-    std::string activePath;
-    std::string configType;
-    std::string masterConfigFile;
-    bool writeEnabled;
-    bool modified;
-    EnvironmentMgr *m_pEnvMgr;
+    // NOTE: all paths have NO trailing slash
+    std::string username;            // owner of the session
+    std::string schemaPath;          // path to schema files
+    std::string sourcePath;          // path to environment files
+    std::string activePath;          // path to active environment file
+    std::string configType;          // configuration type (XML, JSON, etc.)
+    std::string masterConfigFile;    // master configuration file for the session
+    std::string lockKey;             // key for write operations when session is locled
+    std::string lastMsg;             // last error message
+    std::string curEnvironmentFile;  // name of currentl loaded envronment file
+    bool locked;                     // true if locked
+    bool modified;                   // true if session has modified loaded environment
+    EnvironmentMgr *m_pEnvMgr;       // ptr to active environment manager for session
 
-    bool initializeSession(std::vector<std::string> &cfgParms, Status &status)
+
+    ConfigMgrSession() : locked(false), modified(false), m_pEnvMgr(nullptr) { }
+    ~ConfigMgrSession()
     {
-        writeEnabled = modified = false;
+        if (m_pEnvMgr != nullptr)
+        {
+            delete m_pEnvMgr;
+            m_pEnvMgr = nullptr;
+        }
+    }
+
+
+    bool initializeSession(std::vector<std::string> &cfgParms)
+    {
+        bool rc = true;
         m_pEnvMgr = getEnvironmentMgrInstance(configType);
         if (m_pEnvMgr)
-            m_pEnvMgr->loadSchema(configPath, masterConfigFile, status, cfgParms);
-        return m_pEnvMgr;
+        {
+           if (!m_pEnvMgr->loadSchema(schemaPath, masterConfigFile, cfgParms))
+           {
+               rc = false;
+               lastMsg = "Unable to load configuration schema, error = " + m_pEnvMgr->getLastSchemaMessage();
+
+           }
+        }
+        else
+        {
+            rc = false;
+            lastMsg = "Unrecognized configuration type (" + configType + ")";
+        }
+        return rc;
     }
 
 
     bool loadEnvironment(const std::string &envFile)
     {
-        return m_pEnvMgr->loadEnvironment(envFile);
+        std::string fullPath = sourcePath + "/" + envFile;
+        bool rc = true;
+        if (!m_pEnvMgr->loadEnvironment(fullPath))
+        {
+            rc = false;
+            lastMsg = "Unable to load configuration schema, error = " + m_pEnvMgr->getLastEnvironmentMessage();
+        }
+        else
+        {
+            curEnvironmentFile = envFile;
+            locked = modified = false;
+            lockKey = "";
+        }
+        return rc;
     }
 
 
     bool saveEnvironment(const std::string &envFile)
     {
-        return m_pEnvMgr->saveEnvironment(envFile);
+        bool rc = false;
+        std::string saveFile = (envFile != "") ? envFile : curEnvironmentFile;
+        if (m_pEnvMgr->saveEnvironment(saveFile))
+        {
+            modified = false;
+            locked = locked & (curEnvironmentFile == envFile);  // keep it locked?
+            if (!locked)
+                lockKey = "";   // clear lockKey if no longer locked
+            curEnvironmentFile = saveFile;
+            rc = true;
+        }
+        else
+        {
+            rc = false;
+            lastMsg = "Unable to save enivronment file, error = " + m_pEnvMgr->getLastEnvironmentMessage();
+        }
+        return rc;
     }
 
 
@@ -68,6 +129,58 @@ struct ConfigMgrSession {
         return ext;
     }
 
+
+    bool lock()
+    {
+        bool rc = true;
+        if (!locked)
+        {
+            lockKey = generateRandomString(SESSION_KEY_LENGTH);
+            locked = true;
+        }
+        else
+        {
+            rc = false;
+        }
+        return rc;
+    }
+
+
+    bool unlock(const std::string &key)
+    {
+        bool rc = true;
+        if (locked)
+        {
+            locked = (lockKey == key);
+            rc = !locked;
+        }
+        return rc;
+    }
+
+
+    bool doesKeyFit(const std::string &key)
+    {
+        // must be locked and the key must match
+        return locked && (lockKey == key);
+    }
+
+
+    const std::string &getLastMsg()
+    {
+        return lastMsg;
+    }
+
+
+    std::string generateRandomString(size_t length)
+    {
+        const char* charmap = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+        const size_t charmapLength = strlen(charmap);
+        auto generator = [&](){ return charmap[rand()%charmapLength]; };
+        std::string result;
+        result.reserve(length);
+        std::generate_n(std::back_inserter(result), length, generator);
+        return result;
+    }
 
 };
 

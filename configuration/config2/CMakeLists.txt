@@ -1,6 +1,6 @@
 ##############################################################################
 #
-#    HPCC SYSTEMS software Copyright (C) 2012 HPCC Systems�.
+#    HPCC SYSTEMS software Copyright (C) 2012 HPCC Systems®.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License");
 #    you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@
 
 project ( config2 )
 
-SET(  SRCS 
+SET(  SRCS
       EnvironmentMgr.cpp
       XMLEnvironmentMgr.cpp
       SchemaParser.cpp
@@ -49,4 +49,3 @@ HPCC_ADD_LIBRARY( config2 SHARED ${SRCS} )
 TARGET_LINK_LIBRARIES( config2 jlib )
 
 INSTALL( TARGETS config2 LIBRARY DESTINATION ${LIB_DIR} )
-

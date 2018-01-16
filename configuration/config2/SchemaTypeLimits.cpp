@@ -1,6 +1,6 @@
 /*##############################################################################
 
-    HPCC SYSTEMS software Copyright (C) 2017 HPCC Systems®.
+    HPCC SYSTEMS software Copyright (C) 2017 HPCC SystemsÂ®.
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -17,9 +17,9 @@
 
 #include "SchemaTypeLimits.hpp"
 
-std::vector<AllowedValue> SchemaTypeLimits::getEnumeratedValues() const 
-{ 
-    return m_enumeratedValues; 
+std::vector<AllowedValue> SchemaTypeLimits::getEnumeratedValues() const
+{
+    return m_enumeratedValues;
 }
 
 

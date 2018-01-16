@@ -30,9 +30,9 @@ namespace pt = boost::property_tree;
 bool XSDSchemaParser::doParse(const std::string &configPath, const std::string &masterConfigFile,  const std::vector<std::string> &cfgParms)
 {
     bool rc = true;
-   
+
     //
-    // Add some default types to the config. Note changing values for limits 
+    // Add some default types to the config. Note changing values for limits
     std::shared_ptr<SchemaTypeStringLimits> pStringLimits;
     std::shared_ptr<SchemaTypeIntegerLimits> pIntLimits;
 
@@ -82,12 +82,12 @@ bool XSDSchemaParser::doParse(const std::string &configPath, const std::string &
     m_pSchemaItem->addSchemaValueType(pType);
 
     //
-    // Get our specific XSD parameters from the input 
+    // Get our specific XSD parameters from the input
     m_basePath = configPath;
     m_masterXSDFilename = masterConfigFile;
     //m_buildsetFilename = cfgParms[2];
     parseXSD(m_masterXSDFilename);
-    
+
     return rc;
 }
 
@@ -208,7 +208,7 @@ void XSDSchemaParser::parseAttributeGroup(const pt::ptree &attributeTree)
     std::string groupName = getXSDAttributeValue(attributeTree, "<xmlattr>.name", false, "");  // only a named attributeGroup is supported
 
     //
-    // If there is a name (for the attribute group) then a group of attributes is being defined. Create the group, parese it, and add it as a 
+    // If there is a name (for the attribute group) then a group of attributes is being defined. Create the group, parese it, and add it as a
     // schema type that can be reused (usually with a ref= reference in another attribute group schema item)
     if (groupName != "")
     {
@@ -273,7 +273,7 @@ void XSDSchemaParser::parseComplexType(const pt::ptree &typeTree)
 
         //
         // This is a complex type definition of just regular XSD statements, no special format. Create a parser and parse it
-        // and add it to the 
+        // and add it to the
         else
         {
             std::shared_ptr<SchemaItem> pTypeItem = std::make_shared<SchemaItem>(complexTypeName, "", m_pSchemaItem);
@@ -318,7 +318,7 @@ void XSDSchemaParser::parseElement(const pt::ptree &elemTree)
     pConfigElement->setProperty("category", category);
 
     pt::ptree childTree = elemTree.get_child("", pt::ptree());
-    
+
     // special case to set the root since the top level schema can't specify it
     if (category == "root")  // special case to set the root since the top level schema can't specify it
     {
@@ -328,13 +328,13 @@ void XSDSchemaParser::parseElement(const pt::ptree &elemTree)
     else
     {
         //
-        // If a type is specified, then either it's a simple value type (which could be previously defined) for this element, or a named complex type. 
+        // If a type is specified, then either it's a simple value type (which could be previously defined) for this element, or a named complex type.
         if (typeName != "")
         {
             const std::shared_ptr<SchemaType> pSimpleType = m_pSchemaItem->getSchemaValueType(typeName, false);
             if (pSimpleType != nullptr)
             {
-                std::shared_ptr<SchemaValue> pCfgValue = std::make_shared<SchemaValue>("");  // no name value since it's the element's value 
+                std::shared_ptr<SchemaValue> pCfgValue = std::make_shared<SchemaValue>("");  // no name value since it's the element's value
                 pCfgValue->setType(pSimpleType);                      // will throw if type is not defined
                 pConfigElement->setItemSchemaValue(pCfgValue);
             }
@@ -351,7 +351,7 @@ void XSDSchemaParser::parseElement(const pt::ptree &elemTree)
                     // Set element min/max instances to that defined by the component type def (ignore values parsed above)
                     pConfigElement->setMinInstances(pConfigType->getMinInstances());
                     pConfigElement->setMaxInstances(pConfigType->getMaxInstances());
- 
+
                     //
                     // If a component, then set element data (allow overriding with locally parsed values)
                     if (pConfigType->getProperty("className") == "component")
@@ -360,7 +360,7 @@ void XSDSchemaParser::parseElement(const pt::ptree &elemTree)
                         pConfigElement->setProperty("className", (className != "") ? className : pConfigType->getProperty("className"));
                         pConfigElement->setProperty("category", (category != "") ? category : pConfigType->getProperty("category"));
                         pConfigElement->setProperty("displayName", (displayName != "") ? displayName : pConfigType->getProperty("displayName"));
-                        pConfigElement->setProperty("componentName", pConfigType->getProperty("componentName"));  
+                        pConfigElement->setProperty("componentName", pConfigType->getProperty("componentName"));
                     }
                 }
                 else
@@ -382,7 +382,7 @@ void XSDSchemaParser::parseElement(const pt::ptree &elemTree)
         //
         // Add the element
         m_pSchemaItem->addChild(pConfigElement);
-      
+
     }
 }
 
@@ -418,7 +418,7 @@ std::shared_ptr<SchemaType> XSDSchemaParser::getSchemaType(const pt::ptree &type
                 parseStringTypeLimits(restrictTree, pStringimits);
                 pLimits = pStringimits;
             }
-            else 
+            else
             {
                 std::string msg = "Unsupported base type(" + baseType + ")";
                 throw(ParseException(msg));
@@ -455,7 +455,7 @@ void XSDSchemaParser::parseIntegerTypeLimits(const pt::ptree &restrictTree, std:
             std::string msg = "Invalid restriction(" + it->first + ") found while parsing type";
             throw(ParseException(msg));
         }
-    }       
+    }
 }
 
 

@@ -21,8 +21,8 @@
 void Status::addStatusMsg(enum statusMsg::msgLevel level, const std::string &nodeId, const std::string &name, const std::string &referNodeId, const std::string &msg)
 {
     statusMsg statusMsg(level, nodeId, name, referNodeId, msg);
-	m_messages.insert({level, statusMsg });
-	if (level > m_highestMsgLevel)
+    m_messages.insert({level, statusMsg });
+    if (level > m_highestMsgLevel)
         m_highestMsgLevel = level;
 }
 
@@ -53,15 +53,15 @@ std::vector<statusMsg> Status::getMessages() const
 
 std::string Status::getStatusTypeString(enum statusMsg::msgLevel status) const
 {
-	std::string result = "Not found";
-	switch (status)
-	{
-		case statusMsg::info:    result = "Info";     break;
-		case statusMsg::warning: result = "Warning";  break;
-		case statusMsg::error:   result = "Error";    break;
-		case statusMsg::fatal:   result = "Fatal";    break;
-	}
-	return result;
+    std::string result = "Not found";
+    switch (status)
+    {
+        case statusMsg::info:    result = "Info";     break;
+        case statusMsg::warning: result = "Warning";  break;
+        case statusMsg::error:   result = "Error";    break;
+        case statusMsg::fatal:   result = "Fatal";    break;
+    }
+    return result;
 }
 
 void Status::add(const std::vector<statusMsg> msgs)

@@ -26,7 +26,7 @@
 
 
 
-class SchemaType 
+class SchemaType
 {
     public:
 

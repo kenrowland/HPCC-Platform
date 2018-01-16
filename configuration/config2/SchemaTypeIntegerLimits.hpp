@@ -25,13 +25,17 @@ class SchemaTypeIntegerLimits : public SchemaTypeLimits
 {
     public:
 
-        SchemaTypeIntegerLimits() : m_min(INT_MIN), m_max(INT_MAX), m_minExclusiveTest(false), m_maxExclusiveTest(false) { }
+        SchemaTypeIntegerLimits() : m_min(INT_MIN), m_max(INT_MAX), m_minSet(false), m_maxSet(false), m_minExclusiveTest(false), m_maxExclusiveTest(false) { }
         virtual ~SchemaTypeIntegerLimits() { };
-        void setMinInclusive(int v) { m_min = v; }
-        void setMinExclusive(int v) { m_min = v;  m_minExclusiveTest = true; }
-        void setMaxInclusive(int v) { m_max = v; }
-        void setMaxExclusive(int v) { m_max = v;  m_maxExclusiveTest = true; }
+        void setMinInclusive(int v) { m_minSet = true; m_min = v; }
+        void setMinExclusive(int v) { m_minSet = true; m_min = v;  m_minExclusiveTest = true; }
+        void setMaxInclusive(int v) { m_maxSet = true; m_max = v; }
+        void setMaxExclusive(int v) { m_maxSet = true; m_max = v;  m_maxExclusiveTest = true; }
         std::string getLimitString() const;
+        virtual bool isMaxSet() const { return m_maxSet; }
+        virtual bool isMinSet() const { return m_minSet; }
+        virtual int getMax() const { return (m_maxExclusiveTest ? (m_max-1) : m_max); }
+        virtual int getMin() const { return (m_minExclusiveTest ? (m_min+1) : m_min); }
 
 
     protected:
@@ -40,9 +44,11 @@ class SchemaTypeIntegerLimits : public SchemaTypeLimits
 
 
     protected:
-    
+
         bool m_maxExclusiveTest;
         bool m_minExclusiveTest;
+        bool m_minSet;
+        bool m_maxSet;
         int m_min;
         int m_max;
 };

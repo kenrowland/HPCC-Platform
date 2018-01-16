@@ -37,7 +37,7 @@ class XSDValueSetParser : public XSDSchemaParser
         virtual ~XSDValueSetParser() { }
         virtual void parseXSD(const pt::ptree &valueSetTree);
         void parseAttributeGroup(const pt::ptree &attributeTree);
-    
+
 
     protected:
 

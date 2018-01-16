@@ -81,7 +81,7 @@ class SchemaItem : public std::enable_shared_from_this<SchemaItem>
         std::map<std::string, std::string> m_properties;
         unsigned m_minInstances;
         unsigned m_maxInstances;
-        std::multimap<std::string, std::shared_ptr<SchemaItem>> m_children; 
+        std::multimap<std::string, std::shared_ptr<SchemaItem>> m_children;
         std::shared_ptr<SchemaValue> m_pItemValue;   // value for this item (think of it as the VALUE for an element <xx attr= att1>VALUE</xx>)
         std::map<std::string, std::shared_ptr<SchemaValue>> m_attributes;   // attributes for this item (think in xml terms <m_name attr1="val" attr2="val" .../> where attrN is in this vector
         std::set<std::string> m_keys;   // generic set of key values for use by any component to prevent duplicate operations
@@ -95,8 +95,8 @@ class SchemaItem : public std::enable_shared_from_this<SchemaItem>
                 m_setName(setName), m_elementPath(elementPath), m_attributeName(attributeName), m_duplicateOk(false) { }
             SetInfo(const std::string &setName, const std::string &elementPath, const std::string &attributeName, bool duplicateOk) :
                 m_setName(setName), m_elementPath(elementPath), m_attributeName(attributeName), m_duplicateOk(duplicateOk) { }
-            std::string m_setName; 
-            std::string m_elementPath; 
+            std::string m_setName;
+            std::string m_elementPath;
             std::string m_attributeName;
             bool m_duplicateOk;
         };

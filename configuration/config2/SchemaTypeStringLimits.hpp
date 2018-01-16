@@ -26,13 +26,17 @@ class SchemaTypeStringLimits : public SchemaTypeLimits
 {
     public:
 
-        SchemaTypeStringLimits() : m_minLength(0), m_maxLength(INT_MAX) { }
+        SchemaTypeStringLimits() : m_minLength(0), m_maxLength(INT_MAX), m_minSet(false), m_maxSet(false) { }
         virtual ~SchemaTypeStringLimits() { };
-        void setLength(unsigned v) { m_length = v; }
-        void setMinLength(int v) { m_minLength = v; }
-        void setMaxLength(int v) { m_maxLength = v; }
+        void setLength(unsigned v) { m_minLength = v;  m_maxLength = v; m_minSet = m_maxSet = true; }
+        void setMinLength(int v) { m_minSet = true; m_minLength = v; }
+        void setMaxLength(int v) { m_maxSet = true; m_maxLength = v; }
         void addPattern(const std::string &pattern) { m_patterns.push_back(pattern); }
         std::string getLimitString() const;
+        virtual bool isMaxSet() const { return m_maxSet; }
+        virtual bool isMinSet() const { return m_minSet; }
+        virtual int getMax() const { return m_maxLength; }
+        virtual int getMin() const { return m_minLength; }
 
 
     protected:
@@ -42,11 +46,11 @@ class SchemaTypeStringLimits : public SchemaTypeLimits
 
     protected:
 
-        unsigned m_length;
         int m_minLength;
         int m_maxLength;
+        bool m_minSet;
+        bool m_maxSet;
         std::vector<std::string> m_patterns;
-
 };
 
 

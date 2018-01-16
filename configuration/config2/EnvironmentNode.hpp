@@ -29,51 +29,51 @@
 
 class EnvironmentNode : public std::enable_shared_from_this<EnvironmentNode>
 {
-	public:
+    public:
 
-		EnvironmentNode(const std::shared_ptr<SchemaItem> &pCfgItem, const std::string &elemName, const std::shared_ptr<EnvironmentNode> &pParent = nullptr) : 
-			m_pSchemaItem(pCfgItem), m_name(elemName), m_pParent(pParent) { }
-		~EnvironmentNode() { }
-		const std::string &getName() const { return m_name;  }
-		void addChild(std::shared_ptr<EnvironmentNode> pNode);
+        EnvironmentNode(const std::shared_ptr<SchemaItem> &pCfgItem, const std::string &elemName, const std::shared_ptr<EnvironmentNode> &pParent = nullptr) :
+            m_pSchemaItem(pCfgItem), m_name(elemName), m_pParent(pParent) { }
+        ~EnvironmentNode() { }
+        const std::string &getName() const { return m_name;  }
+        void addChild(std::shared_ptr<EnvironmentNode> pNode);
         bool removeChild(std::shared_ptr<EnvironmentNode> pNode);
-		std::vector<std::shared_ptr<EnvironmentNode>> getChildren(const std::string &name="") const;
+        std::vector<std::shared_ptr<EnvironmentNode>> getChildren(const std::string &name="") const;
         std::map<std::string, std::vector<std::shared_ptr<EnvironmentNode>>> getChildrenByName() const;
         std::map<std::string, std::vector<std::shared_ptr<EnvironmentNode>>> getChildrenByConfigType() const;
-		bool hasChildren() const { return m_children.size() != 0; }
-		int getNumChildren() const { return m_children.size(); }
-		std::shared_ptr<EnvironmentNode> getParent() const;
-		void addAttribute(const std::string &name, std::shared_ptr<EnvironmentValue> pValue);
+        bool hasChildren() const { return m_children.size() != 0; }
+        int getNumChildren() const { return m_children.size(); }
+        std::shared_ptr<EnvironmentNode> getParent() const;
+        void addAttribute(const std::string &name, std::shared_ptr<EnvironmentValue> pValue);
         void setAttributeValues(const std::vector<ValueDef> &values, Status &status, bool allowInvalid, bool forceCreate);
-		void setAttributeValue(const std::string &name, const std::string &value, Status &status, bool allowInvalid=false, bool forceCreate=false);   // candidate for a variant?
-		std::string getAttributeValue(const std::string &name) const;                                  // candidate for a variant?
+        void setAttributeValue(const std::string &name, const std::string &value, Status &status, bool allowInvalid=false, bool forceCreate=false);   // candidate for a variant?
+        std::string getAttributeValue(const std::string &name) const;                                  // candidate for a variant?
         void addMissingAttributesFromConfig();
-		bool setNodeValue(const std::string &value, Status &status, bool force = false);
-		void setNodeEnvValue(const std::shared_ptr<EnvironmentValue> &pEnvValue) { m_pNodeValue = pEnvValue;  }
-		const std::shared_ptr<EnvironmentValue> &getNodeEnvValue() const { return m_pNodeValue;  }
-		bool isNodeValueSet() const { return m_pNodeValue != nullptr; }
-		std::vector<std::shared_ptr<EnvironmentValue>> getAttributes() const;
-		const std::shared_ptr<EnvironmentValue> getAttribute(const std::string &name) const;
+        bool setNodeValue(const std::string &value, Status &status, bool force = false);
+        void setNodeEnvValue(const std::shared_ptr<EnvironmentValue> &pEnvValue) { m_pNodeValue = pEnvValue;  }
+        const std::shared_ptr<EnvironmentValue> &getNodeEnvValue() const { return m_pNodeValue;  }
+        bool isNodeValueSet() const { return m_pNodeValue != nullptr; }
+        std::vector<std::shared_ptr<EnvironmentValue>> getAttributes() const;
+        const std::shared_ptr<EnvironmentValue> getAttribute(const std::string &name) const;
         bool hasAttribute(const std::string &name) const { return m_attributes.find(name) != m_attributes.end();  }
-		bool hasAttributes() const { return m_attributes.size() != 0; }
-		void setId(const std::string &id) { m_id = id; } 
-		const std::string &getId() const { return m_id;  }
+        bool hasAttributes() const { return m_attributes.size() != 0; }
+        void setId(const std::string &id) { m_id = id; }
+        const std::string &getId() const { return m_id;  }
         void validate(Status &status, bool includeChildren=false) const;
-		std::vector<std::string> getAllAttributeValues(const std::string &attrName) const;
-		const std::shared_ptr<SchemaItem> &getSchemaItem() const { return m_pSchemaItem; }
+        std::vector<std::string> getAllAttributeValues(const std::string &attrName) const;
+        const std::shared_ptr<SchemaItem> &getSchemaItem() const { return m_pSchemaItem; }
         std::vector<std::shared_ptr<SchemaItem>> getInsertableItems() const;
         void initialize();
 
 
-	protected:
+    protected:
 
-		std::string m_name;   
-		std::shared_ptr<SchemaItem> m_pSchemaItem;  
-		std::weak_ptr<EnvironmentNode> m_pParent;
-		std::multimap<std::string, std::shared_ptr<EnvironmentNode>> m_children;
-		std::shared_ptr<EnvironmentValue> m_pNodeValue;   // the node's value (not normal)
-		std::map<std::string, std::shared_ptr<EnvironmentValue>> m_attributes;
-		std::string m_id;
+        std::string m_name;
+        std::shared_ptr<SchemaItem> m_pSchemaItem;
+        std::weak_ptr<EnvironmentNode> m_pParent;
+        std::multimap<std::string, std::shared_ptr<EnvironmentNode>> m_children;
+        std::shared_ptr<EnvironmentValue> m_pNodeValue;   // the node's value (not normal)
+        std::map<std::string, std::shared_ptr<EnvironmentValue>> m_attributes;
+        std::string m_id;
 };
 
 

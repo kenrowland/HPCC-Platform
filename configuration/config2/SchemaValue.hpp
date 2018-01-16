@@ -23,7 +23,7 @@
 #include "Status.hpp"
 
 
-class SchemaValue 
+class SchemaValue
 {
     public:
 
@@ -91,11 +91,11 @@ class SchemaValue
             unsigned m_required  : 1;
             unsigned m_readOnly  : 1;
             unsigned m_hidden    : 1;
-            unsigned m_deprecated: 1;   
+            unsigned m_deprecated: 1;
             unsigned m_isUnique  : 1;
             unsigned m_isDefined : 1;
         } bitMask;
-        
+
         std::string m_default;
         std::string m_tooltip;
         std::vector<std::string> m_modifiers;

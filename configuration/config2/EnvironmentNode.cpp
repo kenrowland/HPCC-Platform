@@ -144,7 +144,7 @@ void EnvironmentNode::addMissingAttributesFromConfig()
         if (attrIt == m_attributes.end())
         {
             std::shared_ptr<SchemaValue> pCfgValue = it->second;
-            std::shared_ptr<EnvironmentValue> pEnvValue = std::make_shared<EnvironmentValue>(shared_from_this(), pCfgValue, it->first); 
+            std::shared_ptr<EnvironmentValue> pEnvValue = std::make_shared<EnvironmentValue>(shared_from_this(), pCfgValue, it->first);
             pCfgValue->addEnvironmentValue(pEnvValue);
             addAttribute(it->first, pEnvValue);
         }
@@ -174,7 +174,7 @@ void EnvironmentNode::setAttributeValue(const std::string &attrName, const std::
 
     //
     // Not found on this node. See if the configuration defines the attribute. If so, set the value and move on.
-    // If not and the forceCreate flag is set, create it. 
+    // If not and the forceCreate flag is set, create it.
     else if (forceCreate)
     {
         std::shared_ptr<SchemaValue> pCfgValue = m_pSchemaItem->getAttribute(attrName);
@@ -188,13 +188,13 @@ void EnvironmentNode::setAttributeValue(const std::string &attrName, const std::
 
     if (pEnvValue)
     {
-        pEnvValue->setValue(value, &status, allowInvalid); 
+        pEnvValue->setValue(value, &status, allowInvalid);
     }
     else
     {
         status.addStatusMsg(statusMsg::error, getId(), attrName, "", "The attribute does not exist and was not created");
     }
-    
+
 }
 
 
@@ -219,7 +219,7 @@ bool EnvironmentNode::setNodeValue(const std::string &value, Status &status, boo
         std::shared_ptr<SchemaValue> pCfgValue = m_pSchemaItem->getItemSchemaValue();
         m_pNodeValue = std::make_shared<EnvironmentValue>(shared_from_this(), pCfgValue, "");  // node's value has no name
     }
-    
+
     rc = m_pNodeValue->setValue(value, &status, force);
     return rc;
 }
@@ -239,7 +239,7 @@ void EnvironmentNode::validate(Status &status, bool includeChildren) const
     for (auto attrIt = m_attributes.begin(); attrIt != m_attributes.end(); ++attrIt)
     {
         attrIt->second->validate(status, m_id);
-        
+
         //
         // If this value must be unique, make sure it is
         if (attrIt->second->getSchemaValue()->isUniqueValue())
@@ -255,7 +255,7 @@ void EnvironmentNode::validate(Status &status, bool includeChildren) const
 
             if (found)
             {
-                status.addUniqueStatusMsg(statusMsg::error, m_id, attrIt->second->getName(), "", "Attribute value must be unique");  
+                status.addUniqueStatusMsg(statusMsg::error, m_id, attrIt->second->getName(), "", "Attribute value must be unique");
             }
         }
 
@@ -320,7 +320,7 @@ std::vector<std::shared_ptr<SchemaItem>> EnvironmentNode::getInsertableItems() c
     std::map<std::string, unsigned> childCounts;
 
     //
-    // Iterate over the children and for each, create a childCount entry based on the 
+    // Iterate over the children and for each, create a childCount entry based on the
     // child node's configuration type
     for (auto childIt = m_children.begin(); childIt != m_children.end(); ++childIt)
     {
@@ -337,7 +337,7 @@ std::vector<std::shared_ptr<SchemaItem>> EnvironmentNode::getInsertableItems() c
     }
 
     //
-    // Now get the full list of configurable items, then resolve it against the child counts from 
+    // Now get the full list of configurable items, then resolve it against the child counts from
     // above to build a vector of insertable items
     std::vector<std::shared_ptr<SchemaItem>> configChildren = m_pSchemaItem->getChildren();
     for (auto cfgIt = configChildren.begin(); cfgIt != configChildren.end(); ++cfgIt)

@@ -52,8 +52,8 @@ ESPrequest OpenSessionRequest
 {
     string username;
     string type("XML");           // type of session 
-    string configPath("");        // location of configuration schema environmentFiles
-    string masterConfigFile("");  // name of master config control file
+    string schemaPath("");        // location of configuration schema environmentFiles
+    string masterSchemaFile("");  // name of master schema control file
     string sourcePath("");        // path to envrionment files 
     string activePath("");        // path to active environment file ("" for none)
 };
@@ -81,6 +81,7 @@ ESPrequest CloseSessionRequest
 ESPrequest NodeRequest 
 {
     string sessionId("0");
+    string sessionLockKey("");   // some functions require a lock key, unused otherwise
     string nodeId;
 };
 
@@ -101,6 +102,8 @@ ESPstruct choiceType
 
 ESPstruct limitsType
 {
+    bool   minValid(false);
+    bool   maxValid(false);
     int    min(0);
     int    max(0);
     ESParray<ESPstruct choiceType, choice> choiceList;
@@ -183,6 +186,7 @@ ESPresponse [exceptions_inline, encode(0)] GetNodeResponse
 ESPrequest InsertNodeRequest  // response is same as GetPathRequest
 {
     string sessionId("0");
+    string sessionLockKey("");
     string parentNodeId;
     string elementType;  // name of new instance to create
 };
@@ -190,6 +194,8 @@ ESPrequest InsertNodeRequest  // response is same as GetPathRequest
 
 ESPrequest SetValuesRequest
 {
+    string sessionId("0");
+    string sessionLockKey("");
     string nodeId;    // 
     ESParray<ESPstruct attributeValueType, attribute> attributeValues;
 	bool allowInvalid(false);  // true to allow setting an invalid value
@@ -223,13 +229,17 @@ ESPstruct environmentFileType
 	bool      isActive(false);  // True if this is the current active environment
 };
 
-ESPrequest GetEnvironmentListRequest
+
+ESPrequest CommonSessionRequest
 {
     string sessionId;
 };
 
+
 ESPresponse GetEnvironmentListResponse
 {
+    bool error(false);
+    string msg("");
     ESParray<ESPstruct environmentFileType, environmentFile> environmentFiles;
 };
 
@@ -238,21 +248,31 @@ ESPrequest OpenEnvironmentFileRequest
 {
     string sessionId;
     string filename;
+    string sessionLockKey("");            // required to force open if modified
+    bool   forceOpenIfModified(false);    // forces any current changes to be discarded
 };
-
 
 
 ESPrequest SaveEnvironmentFileRequest
 {
     string sessionId;
-    string filename("");     // empty string means to overwrite the existing file
+    string sessionLockKey("");      // required if saving existing environment and it has been modified
+    string filename("");            // empty string means to overwrite the existing file
 };
 
 
-ESPrequest EnableChangesRequest
+ESPresponse LockSessionResponse
+{
+    bool error(false);
+    string msg("");
+    string sessionLockKey("");   // filled in when a session is sucessfully locked
+};
+
+
+ESPrequest UnlockSessionRequest
 {
     string sessionId;
-    bool   enable(false);    // can turn on and off
+    string sessionLockKey("");   // only valid for an unlock (enable = false)
 };
 
 
@@ -260,10 +280,11 @@ ESPservice [auth_feature("DEFERRED"),version("2.0"), default_client_version("2.0
 {
     ESPMethod openSession(OpenSessionRequest, OpenSessionResponse);
     ESPMethod closeSession(CloseSessionRequest, PassFailResponse);
-    ESPMethod getEnvironmentFileList(GetEnvironmentListRequest, GetEnvironmentListResponse);
+    ESPMethod getEnvironmentFileList(CommonSessionRequest, GetEnvironmentListResponse);
     ESPMethod openEnvironmentFile(OpenEnvironmentFileRequest, PassFailResponse);
     ESPMethod saveEnvironmentFile(SaveEnvironmentFileRequest, PassFailResponse);
-    ESPMethod enableEnvironmentChanges(EnableChangesRequest, PassFailResponse);
+    ESPMethod lockSession(CommonSessionRequest, LockSessionResponse);
+    ESPMethod unlockSession(UnlockSessionRequest, PassFailResponse);
     ESPMethod getNode(NodeRequest, GetNodeResponse);
     ESPMethod setValues(SetValuesRequest, SetValuesResponse);
     ESPMethod getParents(NodeRequest, GetParentsResponse);

@@ -45,24 +45,24 @@ struct statusMsg {
 
 class Status
 {
-	public:
-		
-		Status() : m_highestMsgLevel(statusMsg::info) { }
-		~Status() {}
-		void addStatusMsg(enum statusMsg::msgLevel status, const std::string &nodeId, const std::string &name, const std::string &referNodeId, const std::string &msg);
+    public:
+
+        Status() : m_highestMsgLevel(statusMsg::info) { }
+        ~Status() {}
+        void addStatusMsg(enum statusMsg::msgLevel status, const std::string &nodeId, const std::string &name, const std::string &referNodeId, const std::string &msg);
         void addUniqueStatusMsg(enum statusMsg::msgLevel status, const std::string &nodeId, const std::string &name, const std::string &referNodeId, const std::string &msg);
         enum statusMsg::msgLevel getHighestMsgLevel() const { return m_highestMsgLevel; }
         bool isOk() const { return m_highestMsgLevel <= statusMsg::warning; }
         bool isError() const { return m_highestMsgLevel >= statusMsg::error; }
-		std::string getStatusTypeString(enum statusMsg::msgLevel status) const;
+        std::string getStatusTypeString(enum statusMsg::msgLevel status) const;
         std::vector<statusMsg> getMessages() const;
         void add(const std::vector<statusMsg> msgs);
 
 
-	private:
+    private:
 
-		enum statusMsg::msgLevel m_highestMsgLevel;
-		std::multimap<enum statusMsg::msgLevel, statusMsg> m_messages;
+        enum statusMsg::msgLevel m_highestMsgLevel;
+        std::multimap<enum statusMsg::msgLevel, statusMsg> m_messages;
 };
 
 #endif

@@ -25,14 +25,14 @@
 
 class EnvironmentValue;
 
-struct AllowedValue 
+struct AllowedValue
 {
     AllowedValue(const std::string &value, const std::string &desc="") : m_value(value), m_description(desc) { }
     std::string m_value;
     std::string m_description;
 };
 
-class SchemaTypeLimits 
+class SchemaTypeLimits
 {
     public:
 
@@ -43,6 +43,10 @@ class SchemaTypeLimits
         bool isEnumerated() const { return !m_enumeratedValues.empty(); }
         bool isValueValid(const std::string &testValue) const;
         virtual std::string getLimitString() const { return "No value limits"; }
+        virtual bool isMaxSet() const { return false; }
+        virtual bool isMinSet() const { return false; }
+        virtual int getMax() const { return 0; }
+        virtual int getMin() const { return 0; }
 
 
     protected:

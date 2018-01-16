@@ -20,10 +20,10 @@
 
 SchemaValue::SchemaValue(const std::string &name, bool isDefined) :
     m_name(name), m_displayName(name)
-{ 
-    bitMask.m_required = 0; 
-    bitMask.m_readOnly = 0;        
-    bitMask.m_hidden = 0; 
+{
+    bitMask.m_required = 0;
+    bitMask.m_readOnly = 0;
+    bitMask.m_hidden = 0;
     bitMask.m_deprecated = 0;
     bitMask.m_isUnique = 0;
     bitMask.m_isDefined = isDefined;
@@ -61,7 +61,7 @@ bool SchemaValue::isValueValid(const std::string &value, const EnvironmentValue 
         std::vector<std::string> allValues = getAllKeyRefValues();
         for (auto it = allValues.begin(); it != allValues.end() && !found; ++it)
             found = *it == value;
-        isValid = found;  
+        isValid = found;
     }
     return isValid;
 }
@@ -98,7 +98,7 @@ void SchemaValue::validate(Status &status, const std::string &id, const Environm
 
 
 void SchemaValue::resetEnvironment()
-{ 
+{
     m_envValues.clear();
 }
 
@@ -121,7 +121,7 @@ void SchemaValue::setMirroredEnvironmentValues(const std::string &oldValue, cons
         std::shared_ptr<EnvironmentValue> pEnvValue = (*envIt).lock();
         if (pEnvValue && pEnvValue->getValue() == oldValue)
         {
-            pEnvValue->setValue(newValue, nullptr, true);  
+            pEnvValue->setValue(newValue, nullptr, true);
         }
     }
 }

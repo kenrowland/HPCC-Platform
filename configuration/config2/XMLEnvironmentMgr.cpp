@@ -28,9 +28,9 @@ bool XMLEnvironmentMgr::createParser(const std::string &configPath, const std::s
 
 bool XMLEnvironmentMgr::doLoadEnvironment(std::istream &in)
 {
-   
+
     bool rc = true;
-	pt::ptree envTree;
+    pt::ptree envTree;
     try
     {
         pt::read_xml(in, envTree, pt::xml_parser::trim_whitespace | pt::xml_parser::no_comments);
@@ -57,98 +57,106 @@ bool XMLEnvironmentMgr::doLoadEnvironment(std::istream &in)
 }
 
 
-void XMLEnvironmentMgr::save(std::ostream &out)
+bool XMLEnvironmentMgr::save(std::ostream &out)
 {
-	pt::ptree envTree, topTree;
-	serialize(envTree, m_pRootNode);
-	topTree.add_child("Environment", envTree);
-	pt::write_xml(out, topTree);
+    bool rc = true;
+    try
+    {
+        pt::ptree envTree, topTree;
+        serialize(envTree, m_pRootNode);
+        topTree.add_child("Environment", envTree);
+        pt::write_xml(out, topTree);
+    }
+    catch (const std::exception &e)
+    {
+        std::string xmlError = e.what();
+        m_message = "Unable to save Environment file. Error = " + xmlError;
+        rc = false;
+    }
+    return rc;
 }
 
 
 void XMLEnvironmentMgr::parse(const pt::ptree &envTree, const std::shared_ptr<SchemaItem> &pConfigItem, std::shared_ptr<EnvironmentNode> &pEnvNode)
 {
-	
+
     //
     // First see if the node has a value
-	std::string value;
-	try
-	{
-		value = envTree.get<std::string>("");
-		if (value != "")
-		{
-			std::shared_ptr<SchemaValue> pCfgValue = pConfigItem->getItemSchemaValue();
-			std::shared_ptr<EnvironmentValue> pEnvValue = std::make_shared<EnvironmentValue>(pEnvNode, pCfgValue, "");  // node's value has no name
-			pEnvValue->setValue(value, nullptr);
-			pEnvNode->setNodeEnvValue(pEnvValue);
-		}
-	}
-	catch (...)
-	{
-		// do nothing
-	}
+    std::string value;
+    try
+    {
+        value = envTree.get<std::string>("");
+        if (value != "")
+        {
+            std::shared_ptr<SchemaValue> pCfgValue = pConfigItem->getItemSchemaValue();
+            std::shared_ptr<EnvironmentValue> pEnvValue = std::make_shared<EnvironmentValue>(pEnvNode, pCfgValue, "");  // node's value has no name
+            pEnvValue->setValue(value, nullptr);
+            pEnvNode->setNodeEnvValue(pEnvValue);
+        }
+    }
+    catch (...)
+    {
+        // do nothing
+    }
 
-	//
-	// Find elements in environment tree cooresponding to this config item, then parse each
-	for (auto it = envTree.begin(); it != envTree.end(); ++it)
-	{
-		std::string elemName = it->first;
+    //
+    // Find elements in environment tree cooresponding to this config item, then parse each
+    for (auto it = envTree.begin(); it != envTree.end(); ++it)
+    {
+        std::string elemName = it->first;
 
-		//
-		// First see if there are attributes for this element (<xmlattr> === <element attr1="xx" attr2="yy" ...></element>  The attr1 and attr2 are in this)
-		if (elemName == "<xmlattr>")
-		{
-			for (auto attrIt = it->second.begin(); attrIt != it->second.end(); ++attrIt)
-			{
-				std::shared_ptr<SchemaValue> pSchemaValue = pConfigItem->getAttribute(attrIt->first);  // note, undefined attributes in schema will return a generic schema value
-				std::string curValue = attrIt->second.get_value<std::string>();
-				std::shared_ptr<EnvironmentValue> pEnvValue = std::make_shared<EnvironmentValue>(pEnvNode, pSchemaValue, attrIt->first, curValue);   // this is where we would use a variant
+        //
+        // First see if there are attributes for this element (<xmlattr> === <element attr1="xx" attr2="yy" ...></element>  The attr1 and attr2 are in this)
+        if (elemName == "<xmlattr>")
+        {
+            for (auto attrIt = it->second.begin(); attrIt != it->second.end(); ++attrIt)
+            {
+                std::shared_ptr<SchemaValue> pSchemaValue = pConfigItem->getAttribute(attrIt->first);  // note, undefined attributes in schema will return a generic schema value
+                std::string curValue = attrIt->second.get_value<std::string>();
+                std::shared_ptr<EnvironmentValue> pEnvValue = std::make_shared<EnvironmentValue>(pEnvNode, pSchemaValue, attrIt->first, curValue);   // this is where we would use a variant
                 pSchemaValue->addEnvironmentValue(pEnvValue);
-				pEnvNode->addAttribute(attrIt->first, pEnvValue);
-			}
-		}
-		else
-		{
-			std::string typeName = it->second.get("<xmlattr>.buildSet", "");
-			std::shared_ptr<SchemaItem> pSchemaItem;
-			if (typeName != "")
-			{
-				pSchemaItem = pConfigItem->getChildByComponent(elemName, typeName);
-			}
-			else
-			{
-				pSchemaItem = pConfigItem->getChild(elemName);
-			}
-
-			std::shared_ptr<EnvironmentNode> pElementNode = std::make_shared<EnvironmentNode>(pSchemaItem, elemName, pEnvNode);
-			pElementNode->setId(getUniqueKey());
-			addPath(pElementNode);
-			parse(it->second, pSchemaItem, pElementNode);
-			pEnvNode->addChild(pElementNode);
-		}
-	}
+                pEnvNode->addAttribute(attrIt->first, pEnvValue);
+            }
+        }
+        else
+        {
+            std::string typeName = it->second.get("<xmlattr>.buildSet", "");
+            std::shared_ptr<SchemaItem> pSchemaItem;
+            if (typeName != "")
+            {
+                pSchemaItem = pConfigItem->getChildByComponent(elemName, typeName);
+            }
+            else
+            {
+                pSchemaItem = pConfigItem->getChild(elemName);
+            }
+            std::shared_ptr<EnvironmentNode> pElementNode = std::make_shared<EnvironmentNode>(pSchemaItem, elemName, pEnvNode);
+            pElementNode->setId(getUniqueKey());
+            addPath(pElementNode);
+            parse(it->second, pSchemaItem, pElementNode);
+            pEnvNode->addChild(pElementNode);
+        }
+    }
 }
 
 
 void XMLEnvironmentMgr::serialize(pt::ptree &envTree, std::shared_ptr<EnvironmentNode> &pEnvNode) const
 {
-	std::vector<std::shared_ptr<EnvironmentValue>> attributes = pEnvNode->getAttributes();
-	for (auto attrIt = attributes.begin(); attrIt != attributes.end(); ++attrIt)
-	{
-		envTree.put("<xmlattr>." + (*attrIt)->getName(), (*attrIt)->getValue());
-	}
-
-	std::shared_ptr<EnvironmentValue> pNodeValue = pEnvNode->getNodeEnvValue();
-	if (pNodeValue)
-	{
-		envTree.put_value(pNodeValue->getValue()); 
-	}
-
-	std::vector<std::shared_ptr<EnvironmentNode>> children = pEnvNode->getChildren();
-	for (auto childIt = children.begin(); childIt != children.end(); ++childIt)
-	{
-		pt::ptree nodeTree;
-		serialize(nodeTree, *childIt);
-		envTree.add_child((*childIt)->getName(), nodeTree);
-	}
+    std::vector<std::shared_ptr<EnvironmentValue>> attributes = pEnvNode->getAttributes();
+    for (auto attrIt = attributes.begin(); attrIt != attributes.end(); ++attrIt)
+    {
+        envTree.put("<xmlattr>." + (*attrIt)->getName(), (*attrIt)->getValue());
+    }
+    std::shared_ptr<EnvironmentValue> pNodeValue = pEnvNode->getNodeEnvValue();
+    if (pNodeValue)
+    {
+        envTree.put_value(pNodeValue->getValue());
+    }
+    std::vector<std::shared_ptr<EnvironmentNode>> children = pEnvNode->getChildren();
+    for (auto childIt = children.begin(); childIt != children.end(); ++childIt)
+    {
+        pt::ptree nodeTree;
+        serialize(nodeTree, *childIt);
+        envTree.add_child((*childIt)->getName(), nodeTree);
+    }
 }

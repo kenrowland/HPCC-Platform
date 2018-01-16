@@ -26,9 +26,9 @@
 std::map<std::string, std::vector<std::shared_ptr<SchemaValue>>> SchemaItem::m_uniqueAttributeValueSets;
 
 SchemaItem::SchemaItem(const std::string &name, const std::string &className, const std::shared_ptr<SchemaItem> &pParent) :
-	m_pParent(pParent), 
-	m_minInstances(1), 
-	m_maxInstances(1) 
+    m_pParent(pParent),
+    m_minInstances(1),
+    m_maxInstances(1)
 {
     //
     // Set properties
@@ -36,17 +36,17 @@ SchemaItem::SchemaItem(const std::string &name, const std::string &className, co
     m_properties["displayName"] = name;
     m_properties["className"] = className;
 
-	//
-	// If this is a root node (no parent), then do some additional init 
-	if (m_pParent.expired())
-	{
+    //
+    // If this is a root node (no parent), then do some additional init
+    if (m_pParent.expired())
+    {
         //
         // Create a default type so that all values have a type
-		std::shared_ptr<SchemaType> pDefaultType = std::make_shared<SchemaType>("default");
-		std::shared_ptr<SchemaTypeLimits> pDefaultLimits = std::make_shared<SchemaTypeLimits>();
-		pDefaultType->setLimits(pDefaultLimits);
-		addSchemaValueType(pDefaultType);
-	}
+        std::shared_ptr<SchemaType> pDefaultType = std::make_shared<SchemaType>("default");
+        std::shared_ptr<SchemaTypeLimits> pDefaultLimits = std::make_shared<SchemaTypeLimits>();
+        pDefaultType->setLimits(pDefaultLimits);
+        addSchemaValueType(pDefaultType);
+    }
 }
 
 // Copy constructor. Not needed at this time, but saving just in case
@@ -195,7 +195,7 @@ void SchemaItem::insertSchemaType(const std::shared_ptr<SchemaItem> pTypeItem)
 {
     //
     // To insert a schema type (for example a previously defined complexType name="" XSD definition)
-    // loop through each set of configurable pieces of the input type, make a copy of each, and add it to 
+    // loop through each set of configurable pieces of the input type, make a copy of each, and add it to
     // this element.
 
     //
@@ -242,18 +242,18 @@ void SchemaItem::insertSchemaType(const std::shared_ptr<SchemaItem> pTypeItem)
 
 void SchemaItem::addAttribute(const std::shared_ptr<SchemaValue> &pCfgValue)
 {
-	auto retVal = m_attributes.insert({ pCfgValue->getName(), pCfgValue });
-	if (!retVal.second)
-	{
-		throw(ParseException("Duplicate attribute (" + pCfgValue->getName() + ") found for element " + m_properties["name"]));
-	}
+    auto retVal = m_attributes.insert({ pCfgValue->getName(), pCfgValue });
+    if (!retVal.second)
+    {
+        throw(ParseException("Duplicate attribute (" + pCfgValue->getName() + ") found for element " + m_properties["name"]));
+    }
 }
 
 
 void SchemaItem::addAttribute(const std::vector<std::shared_ptr<SchemaValue>> &attributes)
 {
-	for (auto it = attributes.begin(); it != attributes.end(); ++it)
-		addAttribute((*it));
+    for (auto it = attributes.begin(); it != attributes.end(); ++it)
+        addAttribute((*it));
 }
 
 
@@ -266,19 +266,19 @@ void SchemaItem::addAttribute(const std::map<std::string, std::shared_ptr<Schema
 
 std::shared_ptr<SchemaValue> SchemaItem::getAttribute(const std::string &name, bool createIfDoesNotExist) const
 {
-	std::shared_ptr<SchemaValue> pCfgValue;
-	auto it = m_attributes.find(name);
+    std::shared_ptr<SchemaValue> pCfgValue;
+    auto it = m_attributes.find(name);
     if (it != m_attributes.end())
     {
         pCfgValue = it->second;
     }
-	else if (createIfDoesNotExist)
-	{
+    else if (createIfDoesNotExist)
+    {
         // not found, build a default cfg value for the undefined attribute
-		pCfgValue = std::make_shared<SchemaValue>(name, false);
-		pCfgValue->setType(getSchemaValueType("default"));
-	}
-	return pCfgValue;
+        pCfgValue = std::make_shared<SchemaValue>(name, false);
+        pCfgValue->setType(getSchemaValueType("default"));
+    }
+    return pCfgValue;
 }
 
 
@@ -297,7 +297,7 @@ void SchemaItem::addReferenceToUniqueAttributeValueSet(const std::string &setNam
 void SchemaItem::processUniqueAttributeValueSetReferences()
 {
     for (auto setRefIt = m_uniqueAttributeValueSetReferences.begin(); setRefIt != m_uniqueAttributeValueSetReferences.end(); ++setRefIt)
-    {  
+    {
         auto keyIt = m_uniqueAttributeValueSets.find(setRefIt->second.m_setName);
         if (keyIt != m_uniqueAttributeValueSets.end())
         {
@@ -339,19 +339,19 @@ std::vector<std::shared_ptr<SchemaItem>> SchemaItem::getChildren()
 
 std::shared_ptr<SchemaItem> SchemaItem::getChild(const std::string &name)
 {
-	std::shared_ptr<SchemaItem> pItem = std::make_shared<SchemaItem>(name, "default", shared_from_this());
-	auto it = m_children.find(name);  // only return the first one
-	if (it != m_children.end())
-	{
-		pItem = it->second;
-	}
-	return pItem;
+    std::shared_ptr<SchemaItem> pItem = std::make_shared<SchemaItem>(name, "default", shared_from_this());
+    auto it = m_children.find(name);  // only return the first one
+    if (it != m_children.end())
+    {
+        pItem = it->second;
+    }
+    return pItem;
 }
 
 
 std::shared_ptr<SchemaItem> SchemaItem::getChildByComponent(const std::string &name, std::string &componentName)
 {
-    std::shared_ptr<SchemaItem> pItem = std::make_shared<SchemaItem>(name, "default", shared_from_this());  
+    std::shared_ptr<SchemaItem> pItem = std::make_shared<SchemaItem>(name, "default", shared_from_this());
     auto childItRange = m_children.equal_range(name);
     for (auto childIt = childItRange.first; childIt != childItRange.second; ++childIt)
     {
@@ -383,7 +383,7 @@ void SchemaItem::findSchemaValues(const std::string &path, std::vector<std::shar
     //
     // If path is from the root, and we aren't the root, pass the request to our parent
     if (rootPath && !m_pParent.expired())
-    {   
+    {
         std::shared_ptr<SchemaItem> pParent = m_pParent.lock();
         if (pParent)
         {

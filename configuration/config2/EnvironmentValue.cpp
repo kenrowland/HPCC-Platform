@@ -19,7 +19,7 @@
 #include "EnvironmentNode.hpp"
 
 bool EnvironmentValue::setValue(const std::string &value, Status *pStatus, bool forceSet)
-{ 
+{
     bool rc = true;
     std::string oldValue = m_value;
     if (m_pSchemaValue)
@@ -89,7 +89,7 @@ void EnvironmentValue::validate(Status &status, const std::string &myId) const
 }
 
 
-// Called when a new value has been created, not read from existing environment, but created and added 
+// Called when a new value has been created, not read from existing environment, but created and added
 void EnvironmentValue::initialize()
 {
     //

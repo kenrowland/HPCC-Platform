@@ -108,7 +108,7 @@ void XSDComponentParser::parseXSD(const pt::ptree &compTree)
                     parseKeyRef(it->second);
                 }
             }
-        
+
         }
     }
 }
