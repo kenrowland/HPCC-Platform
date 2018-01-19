@@ -1,7 +1,8 @@
 ################################################################################
 #    HPCC SYSTEMS software Copyright (C) 2012 HPCC Systems®.
 #
-#    Licensed under the Apache License, Version 2.0 (the "License");
+#    All rights reserved. This program is free software: you can redistribute it
+#    and/or modify
 #    you may not use this file except in compliance with the License.
 #    You may obtain a copy of the License at
 #
@@ -13,9 +14,11 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 ################################################################################
-
-ADD_SUBDIRECTORY(ftslave)
-ADD_SUBDIRECTORY(configxml)
-ADD_SUBDIRECTORY(config2xml)
-ADD_SUBDIRECTORY(thor)
-ADD_SUBDIRECTORY(launcher)
+configure_file("config2mgr.conf.in" "config2mgr.conf")
+configure_file("esp.xml.in" "esp.xml")
+install(
+    FILES ${CMAKE_CURRENT_BINARY_DIR}/esp.xml
+          ${CMAKE_CURRENT_BINARY_DIR}/config2mgr.conf
+    DESTINATION etc/${DIR_NAME}/config2mgr
+    COMPONENT Runtime
+    )
