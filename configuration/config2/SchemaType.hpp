@@ -23,10 +23,11 @@
 #include <map>
 #include <vector>
 #include "SchemaTypeLimits.hpp"
+#include "platform.h"
 
 
 
-class SchemaType
+class DECL_EXPORT SchemaType
 {
     public:
 

@@ -21,10 +21,11 @@
 #include <string>
 #include "SchemaValue.hpp"
 #include "Status.hpp"
+#include "platform.h"
 
 class EnvironmentNode;
 
-class EnvironmentValue
+class DECL_EXPORT EnvironmentValue
 {
     public:
 
@@ -35,7 +36,7 @@ class EnvironmentValue
 
         ~EnvironmentValue() { }
         bool setValue(const std::string &value, Status *pStatus, bool forceSet=false);
-        bool isValueSet() const { return m_value != ""; }
+        bool isValueSet() const { return !m_value.empty(); }
         const std::string &getValue() const { return m_value;  }
         const std::string &getDefaultValue() const { return m_pSchemaValue->getDefaultValue(); }
         bool hasDefaultValue() const { return m_pSchemaValue->hasDefaultValue(); }

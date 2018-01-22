@@ -86,7 +86,7 @@ void XMLEnvironmentMgr::parse(const pt::ptree &envTree, const std::shared_ptr<Sc
     try
     {
         value = envTree.get<std::string>("");
-        if (value != "")
+        if (!value.empty())
         {
             std::shared_ptr<SchemaValue> pCfgValue = pConfigItem->getItemSchemaValue();
             std::shared_ptr<EnvironmentValue> pEnvValue = std::make_shared<EnvironmentValue>(pEnvNode, pCfgValue, "");  // node's value has no name
@@ -122,7 +122,7 @@ void XMLEnvironmentMgr::parse(const pt::ptree &envTree, const std::shared_ptr<Sc
         {
             std::string typeName = it->second.get("<xmlattr>.buildSet", "");
             std::shared_ptr<SchemaItem> pSchemaItem;
-            if (typeName != "")
+            if (!typeName.empty())
             {
                 pSchemaItem = pConfigItem->getChildByComponent(elemName, typeName);
             }

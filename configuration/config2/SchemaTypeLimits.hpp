@@ -21,18 +21,19 @@
 #include <memory>
 #include <vector>
 #include <string>
+#include "platform.h"
 
 
 class EnvironmentValue;
 
-struct AllowedValue
+struct DECL_EXPORT AllowedValue
 {
     AllowedValue(const std::string &value, const std::string &desc="") : m_value(value), m_description(desc) { }
     std::string m_value;
     std::string m_description;
 };
 
-class SchemaTypeLimits
+class DECL_EXPORT SchemaTypeLimits
 {
     public:
 

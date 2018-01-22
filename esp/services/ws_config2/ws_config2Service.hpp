@@ -24,7 +24,7 @@ public:
     virtual bool onsetValues(IEspContext &context, IEspSetValuesRequest &req, IEspSetValuesResponse &resp);
     virtual bool ongetParents(IEspContext &context, IEspNodeRequest &req, IEspGetParentsResponse &resp);
     virtual bool oninsertNode(IEspContext &context, IEspInsertNodeRequest &req, IEspGetNodeResponse &resp);
-    virtual bool onremoveNode(IEspContext &context, IEspNodeRequest &req, IEspCommonStatusResponse &resp);
+    virtual bool onremoveNode(IEspContext &context, IEspRemoveNodeRequest &req, IEspCommonStatusResponse &resp);
 
     virtual bool onopenSession(IEspContext &context, IEspOpenSessionRequest &req, IEspOpenSessionResponse &resp);
     virtual bool oncloseSession(IEspContext &context, IEspCloseSessionRequest &req, IEspPassFailResponse &resp);

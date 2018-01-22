@@ -53,7 +53,4 @@ class SchemaTypeStringLimits : public SchemaTypeLimits
         std::vector<std::string> m_patterns;
 };
 
-
-
-
 #endif // _CONFIG2_CFGSTRINGLIMITS_HPP_

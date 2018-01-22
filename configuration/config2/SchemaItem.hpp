@@ -25,14 +25,14 @@
 #include <map>
 #include "SchemaType.hpp"
 #include "SchemaValue.hpp"
+#include "platform.h"
 
 
-class SchemaItem : public std::enable_shared_from_this<SchemaItem>
+class DECL_EXPORT SchemaItem : public std::enable_shared_from_this<SchemaItem>
 {
     public:
 
         SchemaItem(const std::string &name, const std::string &className = "category", const std::shared_ptr<SchemaItem> &pParent = nullptr);
-        //ConfigItem(const ConfigItem &ci);
         virtual ~SchemaItem() { }
         virtual const std::string &getItemType() const;
         void setMinInstances(unsigned num) { m_minInstances = num; }

@@ -21,10 +21,11 @@
 #include <map>
 #include <vector>
 #include <string>
+#include "platform.h"
 
 
 
-struct statusMsg {
+struct DECL_EXPORT statusMsg {
 
     enum msgLevel
     {
@@ -43,14 +44,15 @@ struct statusMsg {
     std::string msg;             // message for user
 };
 
-class Status
+class DECL_EXPORT Status
 {
     public:
 
         Status() : m_highestMsgLevel(statusMsg::info) { }
         ~Status() {}
-        void addStatusMsg(enum statusMsg::msgLevel status, const std::string &nodeId, const std::string &name, const std::string &referNodeId, const std::string &msg);
-        void addUniqueStatusMsg(enum statusMsg::msgLevel status, const std::string &nodeId, const std::string &name, const std::string &referNodeId, const std::string &msg);
+        void addMsg(enum statusMsg::msgLevel status, const std::string &msg) { addMsg(status, "", "", "", msg); }
+        void addMsg(enum statusMsg::msgLevel status, const std::string &nodeId, const std::string &name, const std::string &referNodeId, const std::string &msg);
+        void addUniqueMsg(enum statusMsg::msgLevel status, const std::string &nodeId, const std::string &name, const std::string &referNodeId, const std::string &msg);
         enum statusMsg::msgLevel getHighestMsgLevel() const { return m_highestMsgLevel; }
         bool isOk() const { return m_highestMsgLevel <= statusMsg::warning; }
         bool isError() const { return m_highestMsgLevel >= statusMsg::error; }

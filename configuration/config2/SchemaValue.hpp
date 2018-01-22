@@ -21,9 +21,10 @@
 #include <memory>
 #include "SchemaType.hpp"
 #include "Status.hpp"
+#include "platform.h"
 
 
-class SchemaValue
+class DECL_EXPORT SchemaValue
 {
     public:
 
@@ -39,7 +40,7 @@ class SchemaValue
         bool isRequired() const { return bitMask.m_required; }
         void setDefaultValue(const std::string &dflt) { m_default = dflt; }
         const std::string &getDefaultValue() const { return m_default; }
-        bool hasDefaultValue() const { return m_default != ""; }
+        bool hasDefaultValue() const { return !m_default.empty(); }
         void setReadOnly(bool readOnly) { bitMask.m_readOnly = readOnly; }
         bool isReadOnly() const { return bitMask.m_readOnly; }
         void setHidden(bool hidden) { bitMask.m_hidden = hidden; }

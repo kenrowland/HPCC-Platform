@@ -63,7 +63,7 @@ void XSDComponentParser::parseXSD(const pt::ptree &compTree)
             //
             // See if the element has a type. If so, then the element can have a value (other than attributes). Note does happen, but is rare
             std::string elementDataType = elemTree.get("<xmlattr>.type", "");
-            if (elementDataType != "")
+            if (!elementDataType.empty())
             {
                 std::shared_ptr<SchemaValue> pItemCfgValue = std::make_shared<SchemaValue>("elementData");
                 pItemCfgValue->setType(m_pSchemaItem->getSchemaValueType(elementDataType));

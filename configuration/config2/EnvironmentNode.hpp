@@ -25,9 +25,10 @@
 #include "SchemaValue.hpp"
 #include "Status.hpp"
 #include "ValueDef.hpp"
+#include "platform.h"
 
 
-class EnvironmentNode : public std::enable_shared_from_this<EnvironmentNode>
+class DECL_EXPORT EnvironmentNode : public std::enable_shared_from_this<EnvironmentNode>
 {
     public:
 

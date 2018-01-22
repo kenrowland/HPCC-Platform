@@ -19,6 +19,7 @@
 #define _CONFIG2_VALUEDEF_HPP_
 
 #include <string>
+#include "platform.h"
 
 struct ValueDef {
     std::string name;

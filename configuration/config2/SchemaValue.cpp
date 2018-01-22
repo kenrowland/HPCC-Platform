@@ -49,7 +49,7 @@ bool SchemaValue::isValueValid(const std::string &value, const EnvironmentValue 
 
         if (!found)
         {
-            isValid = false;
+            return false;
         }
     }
 
@@ -83,7 +83,7 @@ void SchemaValue::validate(Status &status, const std::string &id, const Environm
                 msg = "Value is invalid (" + curValue + ").";
             msg += "Valid value (" + m_pType->getLimitString() + ")";
 
-            status.addStatusMsg(pEnvValue->wasForced() ? statusMsg::warning : statusMsg::error, pEnvValue->getNodeId(), pEnvValue->getName(), "", msg);
+            status.addMsg(pEnvValue->wasForced() ? statusMsg::warning : statusMsg::error, pEnvValue->getNodeId(), pEnvValue->getName(), "", msg);
         }
         isValid = false;
     }

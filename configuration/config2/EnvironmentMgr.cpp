@@ -22,7 +22,7 @@
 
 EnvironmentMgr *getEnvironmentMgrInstance(const std::string &envType)
 {
-    EnvironmentMgr *pEnvMgr = NULL;
+    EnvironmentMgr *pEnvMgr = nullptr;
     if (envType == "XML")
     {
         pEnvMgr = new XMLEnvironmentMgr();
@@ -38,7 +38,7 @@ EnvironmentMgr::EnvironmentMgr() :
 }
 
 
-bool EnvironmentMgr::loadSchema(const std::string &configPath, const std::string &masterConfigFile, const std::vector<std::string> &cfgParms)  // todo: add a status object here for return
+bool EnvironmentMgr::loadSchema(const std::string &configPath, const std::string &masterConfigFile, const std::vector<std::string> &cfgParms)
 {
     bool rc = false;
     if (createParser(configPath, masterConfigFile, cfgParms))
@@ -62,20 +62,19 @@ std::string EnvironmentMgr::getLastSchemaMessage() const
 }
 
 
-bool EnvironmentMgr::loadEnvironment(const std::string &filename)
+bool EnvironmentMgr::loadEnvironment(const std::string &qualifiedFilename)
 {
     bool rc = false;
     std::ifstream in;
-    std::string fpath = filename;
 
-    in.open(fpath);
+    in.open(qualifiedFilename);
     if (in.is_open())
     {
         rc = doLoadEnvironment(in);
     }
     else
     {
-        m_message = "Unable to open environment file '" + filename + "'";
+        m_message = "Unable to open environment file '" + qualifiedFilename + "'";
     }
     return rc;
 }
@@ -135,7 +134,7 @@ std::shared_ptr<EnvironmentNode> EnvironmentMgr::addNewEnvironmentNode(const std
     }
     else
     {
-        status.addStatusMsg(statusMsg::error, parentNodeId, "", "", "Unable to find indicated parent node");
+        status.addMsg(statusMsg::error, parentNodeId, "", "", "Unable to find indicated parent node");
     }
     return pNewNode;
 }
@@ -184,12 +183,12 @@ bool EnvironmentMgr::removeEnvironmentNode(const std::string &nodeId, Status &st
         }
         else
         {
-            status.addStatusMsg(statusMsg::error, nodeId, "", "", "Unable to remove the node");
+            status.addMsg(statusMsg::error, nodeId, "", "", "Unable to remove the node");
         }
     }
     else
     {
-        status.addStatusMsg(statusMsg::error, nodeId, "", "", "Unable to find indicated node");
+        status.addMsg(statusMsg::error, nodeId, "", "", "Unable to find indicated node");
     }
 
     return rc;

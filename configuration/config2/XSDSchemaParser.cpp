@@ -210,7 +210,7 @@ void XSDSchemaParser::parseAttributeGroup(const pt::ptree &attributeTree)
     //
     // If there is a name (for the attribute group) then a group of attributes is being defined. Create the group, parese it, and add it as a
     // schema type that can be reused (usually with a ref= reference in another attribute group schema item)
-    if (groupName != "")
+    if (!groupName.empty())
     {
         std::shared_ptr<SchemaItem> pValueSet = std::make_shared<SchemaItem>(groupName, "valueset", m_pSchemaItem);
         std::shared_ptr<XSDValueSetParser> pXSDValueSetParaser = std::make_shared<XSDValueSetParser>(pValueSet);
@@ -223,7 +223,7 @@ void XSDSchemaParser::parseAttributeGroup(const pt::ptree &attributeTree)
     else
     {
         std::string refName = getXSDAttributeValue(attributeTree, "<xmlattr>.ref", false, "");  // only a named attributeGroup is supported
-        if (refName != "")
+        if (!refName.empty())
         {
             std::shared_ptr<SchemaItem> pValueSet = m_pSchemaItem->getSchemaType(refName, true);
             if (pValueSet)
@@ -243,9 +243,9 @@ void XSDSchemaParser::parseComplexType(const pt::ptree &typeTree)
     std::string componentName = typeTree.get("<xmlattr>.hpcc:componentName", "");
     std::string displayName = typeTree.get("<xmlattr>.hpcc:displayName", "");
 
-    if (complexTypeName != "")
+    if (!complexTypeName.empty())
     {
-        if (className != "")
+        if (!className.empty())
         {
             if (className == "component")
             {
@@ -329,7 +329,7 @@ void XSDSchemaParser::parseElement(const pt::ptree &elemTree)
     {
         //
         // If a type is specified, then either it's a simple value type (which could be previously defined) for this element, or a named complex type.
-        if (typeName != "")
+        if (!typeName.empty())
         {
             const std::shared_ptr<SchemaType> pSimpleType = m_pSchemaItem->getSchemaValueType(typeName, false);
             if (pSimpleType != nullptr)
@@ -356,10 +356,10 @@ void XSDSchemaParser::parseElement(const pt::ptree &elemTree)
                     // If a component, then set element data (allow overriding with locally parsed values)
                     if (pConfigType->getProperty("className") == "component")
                     {
-                        pConfigElement->setProperty("name", (elementName != "") ? elementName : pConfigType->getProperty("name"));
-                        pConfigElement->setProperty("className", (className != "") ? className : pConfigType->getProperty("className"));
-                        pConfigElement->setProperty("category", (category != "") ? category : pConfigType->getProperty("category"));
-                        pConfigElement->setProperty("displayName", (displayName != "") ? displayName : pConfigType->getProperty("displayName"));
+                        pConfigElement->setProperty("name", (!elementName.empty()) ? elementName : pConfigType->getProperty("name"));
+                        pConfigElement->setProperty("className", (!className.empty()) ? className : pConfigType->getProperty("className"));
+                        pConfigElement->setProperty("category", (!category.empty()) ? category : pConfigType->getProperty("category"));
+                        pConfigElement->setProperty("displayName", (!displayName.empty()) ? displayName : pConfigType->getProperty("displayName"));
                         pConfigElement->setProperty("componentName", pConfigType->getProperty("componentName"));
                     }
                 }
@@ -508,7 +508,7 @@ std::shared_ptr<SchemaValue> XSDSchemaParser::getSchemaValue(const pt::ptree &at
     }
 
     std::string typeName = attr.get("<xmlattr>.type", "");
-    if (typeName != "")
+    if (!typeName.empty())
     {
         pCfgValue->setType(m_pSchemaItem->getSchemaValueType(typeName));
     }

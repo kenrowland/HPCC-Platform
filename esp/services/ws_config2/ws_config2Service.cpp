@@ -108,24 +108,25 @@ bool Cws_config2Ex::onopenEnvironmentFile(IEspContext &context, IEspOpenEnvironm
     if (pSession)
     {
         doOpen = true;   // assume we are moving ahead with the open
-        if (pSession->modified)
-        {
-            if (req.getForceOpenIfModified() )
-            {
-                if (pSession->doesKeyFit(req.getSessionLockKey()))
-                {
-                    resp.setError(true);
-                    resp.setMsg("Session lock key mismatch when opening new environment with changes in current loaded environment");
-                    doOpen = false;
-                }
-            }
-            else
-            {
-                resp.setError(true);
-                resp.setMsg("Current environment has been modified without saving the changes");
-                doOpen = false;
-            }
-        }
+        // This code is for forcing access to an environment that is already locked (WIP)
+        //if (pSession->modified)
+        //{
+        //    if (req.getForceOpenIfModified() )
+        //    {
+        //        if (pSession->doesKeyFit(req.getSessionLockKey()))
+        //        {
+        //            resp.setError(true);
+        //            resp.setMsg("Session lock key mismatch when opening new environment with changes in current loaded environment");
+        //            doOpen = false;
+        //        }
+        //    }
+        //    else
+        //    {
+        //        resp.setError(true);
+        //        resp.setMsg("Current environment has been modified without saving the changes");
+        //        doOpen = false;
+        //    }
+        //}
 
         if (doOpen)
         {
@@ -247,13 +248,13 @@ bool Cws_config2Ex::ongetNode(IEspContext &context, IEspNodeRequest &req, IEspGe
         }
         else
         {
-            status.addStatusMsg(statusMsg::error, id.c_str(), "", "", "The input node ID is not a valid not in the environment");
+            status.addMsg(statusMsg::error, id.c_str(), "", "", "The input node ID is not a valid not in the environment");
             rc = false;
         }
     }
     else
     {
-        status.addStatusMsg(statusMsg::error, id.c_str(), "", "", "The session ID is not valid");
+        status.addMsg(statusMsg::error, id.c_str(), "", "", "The session ID is not valid");
     }
 
     //
@@ -296,13 +297,13 @@ bool Cws_config2Ex::oninsertNode(IEspContext &context, IEspInsertNodeRequest &re
         }
         else
         {
-            status.addStatusMsg(statusMsg::error, sessionId.c_str(), "", "", "The input parent node ID is not a valid not in the environment");
+            status.addMsg(statusMsg::error, sessionId.c_str(), "", "", "The input parent node ID is not a valid not in the environment");
             rc = false;
         }
     }
     else
     {
-        status.addStatusMsg(statusMsg::error, sessionId.c_str(), "", "", "The session ID is not valid, session is not locked, or the key is not correct");
+        status.addMsg(statusMsg::error, sessionId.c_str(), "", "", "The session ID is not valid, session is not locked, or the key is not correct");
     }
 
     //
@@ -315,7 +316,7 @@ bool Cws_config2Ex::oninsertNode(IEspContext &context, IEspInsertNodeRequest &re
 }
 
 
-bool Cws_config2Ex::onremoveNode(IEspContext &context, IEspNodeRequest &req, IEspCommonStatusResponse &resp)
+bool Cws_config2Ex::onremoveNode(IEspContext &context, IEspRemoveNodeRequest &req, IEspCommonStatusResponse &resp)
 {
     std::string sessionId = req.getSessionId();
     ConfigMgrSession *pSession = getConfigSessionForUpdate(sessionId, req.getSessionLockKey());
@@ -331,7 +332,7 @@ bool Cws_config2Ex::onremoveNode(IEspContext &context, IEspNodeRequest &req, IEs
     }
     else
     {
-        status.addStatusMsg(statusMsg::error, sessionId.c_str(), "", "", "The session ID is not valid, session is not locked, or the key is not correct");
+        status.addMsg(statusMsg::error, sessionId.c_str(), "", "", "The session ID is not valid, session is not locked, or the key is not correct");
     }
 
     //
@@ -347,7 +348,6 @@ bool Cws_config2Ex::onremoveNode(IEspContext &context, IEspNodeRequest &req, IEs
 
 bool Cws_config2Ex::onsetValues(IEspContext &context, IEspSetValuesRequest &req, IEspSetValuesResponse &resp)
 {
-    bool rc;
     Status status;
     std::string sessionId = req.getSessionId();
     ConfigMgrSession *pSession = getConfigSessionForUpdate(sessionId, req.getSessionLockKey());
@@ -372,17 +372,15 @@ bool Cws_config2Ex::onsetValues(IEspContext &context, IEspSetValuesRequest &req,
             }
             pNode->setAttributeValues(values, status, allowInvalid, forceCreate);
             pSession->modified = true;
-            rc = true;
         }
         else
         {
-            status.addStatusMsg(statusMsg::error, id.c_str(), "", "", "The input node ID is not a valid not in the environment");
-            rc = false;
+            status.addMsg(statusMsg::error, id.c_str(), "", "", "The input node ID is not a valid not in the environment");
         }
     }
     else
     {
-        status.addStatusMsg(statusMsg::error, sessionId.c_str(), "", "", "The session ID is not valid, session is not locked, or the key is not correct");
+        status.addMsg(statusMsg::error, sessionId.c_str(), "", "", "The session ID is not valid, session is not locked, or the key is not correct");
     }
 
     //
@@ -392,7 +390,7 @@ bool Cws_config2Ex::onsetValues(IEspContext &context, IEspSetValuesRequest &req,
     resp.updateStatus().setStatus(msgs);
     resp.updateStatus().setError(status.isError());
 
-    return rc;
+    return true;
 }
 //
 bool Cws_config2Ex::ongetParents(IEspContext &context, IEspNodeRequest &req, IEspGetParentsResponse &resp)
@@ -420,12 +418,12 @@ bool Cws_config2Ex::ongetParents(IEspContext &context, IEspNodeRequest &req, IEs
         }
         else
         {
-            status.addStatusMsg(statusMsg::error, nodeId.c_str(), "", "", "The input node ID is not a valid not in the environment");
+            status.addMsg(statusMsg::error, nodeId.c_str(), "", "", "The input node ID is not a valid not in the environment");
         }
     }
     else
     {
-        status.addStatusMsg(statusMsg::error, sessionId.c_str(), "", "", "The session ID is not valid, session is not locked, or the key is not correct");
+        status.addMsg(statusMsg::error, sessionId.c_str(), "", "", "The session ID is not valid, session is not locked, or the key is not correct");
     }
 
     //

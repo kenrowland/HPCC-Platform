@@ -18,7 +18,7 @@
 #include "Status.hpp"
 
 
-void Status::addStatusMsg(enum statusMsg::msgLevel level, const std::string &nodeId, const std::string &name, const std::string &referNodeId, const std::string &msg)
+void Status::addMsg(enum statusMsg::msgLevel level, const std::string &nodeId, const std::string &name, const std::string &referNodeId, const std::string &msg)
 {
     statusMsg statusMsg(level, nodeId, name, referNodeId, msg);
     m_messages.insert({level, statusMsg });
@@ -27,7 +27,7 @@ void Status::addStatusMsg(enum statusMsg::msgLevel level, const std::string &nod
 }
 
 
-void Status::addUniqueStatusMsg(enum statusMsg::msgLevel level, const std::string &nodeId, const std::string &name, const std::string &referNodeId, const std::string &msg)
+void Status::addUniqueMsg(enum statusMsg::msgLevel level, const std::string &nodeId, const std::string &name, const std::string &referNodeId, const std::string &msg)
 {
     bool duplicateFound = false;
     auto msgRange = m_messages.equal_range(level);
@@ -37,7 +37,7 @@ void Status::addUniqueStatusMsg(enum statusMsg::msgLevel level, const std::strin
     }
 
     if (!duplicateFound)
-        addStatusMsg(level, nodeId, name, referNodeId, msg);
+        addMsg(level, nodeId, name, referNodeId, msg);
 }
 
 std::vector<statusMsg> Status::getMessages() const

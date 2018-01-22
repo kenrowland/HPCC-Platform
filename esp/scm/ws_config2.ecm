@@ -81,6 +81,13 @@ ESPrequest CloseSessionRequest
 ESPrequest NodeRequest
 {
     string sessionId("0");
+    string nodeId;
+};
+
+
+ESPrequest RemoveNodeRequest
+{
+    string sessionId("0");
     string sessionLockKey("");   // some functions require a lock key, unused otherwise
     string nodeId;
 };
@@ -248,8 +255,8 @@ ESPrequest OpenEnvironmentFileRequest
 {
     string sessionId;
     string filename;
-    string sessionLockKey("");            // required to force open if modified
-    bool   forceOpenIfModified(false);    // forces any current changes to be discarded
+    //string sessionLockKey("");            // required to force open if modified
+    //bool   forceOpenIfModified(false);    // forces any current changes to be discarded
 };
 
 
@@ -289,7 +296,7 @@ ESPservice [auth_feature("DEFERRED"),version("2.0"), default_client_version("2.0
     ESPMethod setValues(SetValuesRequest, SetValuesResponse);
     ESPMethod getParents(NodeRequest, GetParentsResponse);
     ESPMethod insertNode(InsertNodeRequest, GetNodeResponse);
-    ESPMethod removeNode(NodeRequest, CommonStatusResponse);
+    ESPMethod removeNode(RemoveNodeRequest, CommonStatusResponse);
 };
 
 

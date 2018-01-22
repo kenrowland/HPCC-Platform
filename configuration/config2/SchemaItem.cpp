@@ -49,61 +49,6 @@ SchemaItem::SchemaItem(const std::string &name, const std::string &className, co
     }
 }
 
-// Copy constructor. Not needed at this time, but saving just in case
-//ConfigItem::ConfigItem(const ConfigItem &ci) :
-//    m_name(ci.m_name),
-//    m_displayName(ci.m_displayName),
-//    m_className(ci.m_className),
-//    m_category(ci.m_category),
-//    m_componentName(ci.m_componentName),
-//    m_itemType(ci.m_itemType),
-//    m_minInstances(ci.m_minInstances),
-//    m_maxInstances(ci.m_maxInstances),
-//    m_version(ci.m_version)
-//{
-//    //
-//    // Copy relevant parts
-//
-//    //
-//    // Children
-//    for (auto childIt = ci.m_children.begin(); childIt != ci.m_children.end(); ++childIt)
-//    {
-//        std::shared_ptr<ConfigItem> pNewItem = std::make_shared<ConfigItem>(*childIt->second);
-//        addChild(pNewItem);
-//    }
-//
-//    //
-//    // Attributes
-//    for (auto attrIt = ci.m_attributes.begin(); attrIt != ci.m_attributes.end(); ++attrIt)
-//    {
-//        std::shared_ptr<CfgValue> pNewAttr = std::make_shared<CfgValue>(*(attrIt->second));
-//        addAttribute(pNewAttr);
-//    }
-//
-//    //
-//    // Type main value
-//    if (ci.m_pItemCfgValue != nullptr)
-//    {
-//        std::shared_ptr<CfgValue> pNewItemCfgValue = std::make_shared<CfgValue>(*(ci.m_pItemCfgValue));
-//        setItemCfgValue(pNewItemCfgValue);
-//    }
-//
-//    //
-//    // Unique attribute sets
-//    for (auto setIt = ci.m_uniqueAttributeValueSetDefs.begin(); setIt != ci.m_uniqueAttributeValueSetDefs.end(); ++setIt)
-//    {
-//        m_uniqueAttributeValueSetDefs.insert({ setIt->first, setIt->second });
-//    }
-//
-//    //
-//    // Unique attribute reference sets
-//    for (auto it = ci.m_uniqueAttributeValueSetReferences.begin(); it != ci.m_uniqueAttributeValueSetReferences.end(); ++it)
-//    {
-//        m_uniqueAttributeValueSetReferences.insert({ it->first, it->second });
-//    }
-//
-//}
-
 
 void SchemaItem::addSchemaValueType(const std::shared_ptr<SchemaType> &pType)
 {
@@ -557,9 +502,9 @@ const std::string &SchemaItem::getItemType() const
 {
     //
     // Return itemType based on this set of rules
-    if (getProperty("itemType") != "")
+    if (!getProperty("itemType").empty())
         return getProperty("itemType");
-    else if (getProperty("componentName") != "")
+    else if (!getProperty("componentName").empty())
         return getProperty("componentName");
 
     return getProperty("name");

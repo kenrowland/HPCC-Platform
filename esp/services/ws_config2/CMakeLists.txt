@@ -58,9 +58,8 @@ install(
     LIBRARY DESTINATION ${LIB_DIR}
     COMPONENT Runtime
     )
-add_dependencies(ws_config2 espscm)
-target_link_libraries(
-    ws_config2
+add_dependencies(ws_config2 espscm config2)
+target_link_libraries(ws_config2
     jlib
     xmllib
     esphttp
@@ -69,4 +68,3 @@ target_link_libraries(
     securesocket
     config2
     )
-# add config2 to above list later

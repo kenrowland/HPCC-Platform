@@ -26,9 +26,10 @@
 
 #include "SchemaItem.hpp"
 #include "Status.hpp"
+#include "platform.h"
 
 
-class SchemaParser
+class DECL_EXPORT SchemaParser
 {
     public:
 

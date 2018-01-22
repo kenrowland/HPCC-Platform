@@ -47,7 +47,7 @@ void EnvironmentNode::addAttribute(const std::string &name, std::shared_ptr<Envi
 std::vector<std::shared_ptr<EnvironmentNode>> EnvironmentNode::getChildren(const std::string &name) const
 {
     std::vector<std::shared_ptr<EnvironmentNode>> childNodes;
-    if (name == "")
+    if (name.empty())
     {
         for (auto nodeIt = m_children.begin(); nodeIt != m_children.end(); ++nodeIt)
         {
@@ -182,7 +182,7 @@ void EnvironmentNode::setAttributeValue(const std::string &attrName, const std::
         addAttribute(attrName, pEnvValue);
         if (!pCfgValue->isDefined())
         {
-            status.addStatusMsg(statusMsg::warning, getId(), attrName, "", "Undefined attribute did not exist in configuration, was created");
+            status.addMsg(statusMsg::warning, getId(), attrName, "", "Undefined attribute did not exist in configuration, was created");
         }
     }
 
@@ -192,7 +192,7 @@ void EnvironmentNode::setAttributeValue(const std::string &attrName, const std::
     }
     else
     {
-        status.addStatusMsg(statusMsg::error, getId(), attrName, "", "The attribute does not exist and was not created");
+        status.addMsg(statusMsg::error, getId(), attrName, "", "The attribute does not exist and was not created");
     }
 
 }
@@ -255,7 +255,7 @@ void EnvironmentNode::validate(Status &status, bool includeChildren) const
 
             if (found)
             {
-                status.addUniqueStatusMsg(statusMsg::error, m_id, attrIt->second->getName(), "", "Attribute value must be unique");
+                status.addUniqueMsg(statusMsg::error, m_id, attrIt->second->getName(), "", "Attribute value must be unique");
             }
         }
 
@@ -269,7 +269,7 @@ void EnvironmentNode::validate(Status &status, bool includeChildren) const
                 found = *it == attrIt->second->getValue();
             if (!found)
             {
-                status.addStatusMsg(statusMsg::error, m_id, attrIt->second->getName(), "", "Attribute value must be from a unique set");
+                status.addMsg(statusMsg::error, m_id, attrIt->second->getName(), "", "Attribute value must be from a unique set");
             }
         }
     }
@@ -328,7 +328,7 @@ std::vector<std::shared_ptr<SchemaItem>> EnvironmentNode::getInsertableItems() c
         auto findIt = childCounts.find(itemType);
         if (findIt != childCounts.end())
         {
-            ++findIt->second;
+            ++findIt->second;  // increment the number of instances of this item type.
         }
         else
         {
@@ -369,7 +369,7 @@ void EnvironmentNode::initialize()
 
     //
     // If we are a comonent and there is a buildSet attribute, set the value to the configItem's type
-    if (m_pSchemaItem->getProperty("componentName") != "" && hasAttribute("buildSet"))
+    if (!(m_pSchemaItem->getProperty("componentName").empty())  && hasAttribute("buildSet"))
     {
         Status status;
         setAttributeValue("buildSet", m_pSchemaItem->getProperty("category"), status);

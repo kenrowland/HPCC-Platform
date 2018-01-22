@@ -36,7 +36,7 @@ bool EnvironmentValue::setValue(const std::string &value, Status *pStatus, bool 
             if (pStatus != nullptr)
             {
                 std::string msg = "Attribute forced to invalid value (" + m_pSchemaValue->getType()->getLimitString() + ")";
-                pStatus->addStatusMsg(statusMsg::info, m_pMyEnvNode.lock()->getId(), m_name, "", msg);
+                pStatus->addMsg(statusMsg::info, m_pMyEnvNode.lock()->getId(), m_name, "", msg);
             }
         }
         else
@@ -45,7 +45,7 @@ bool EnvironmentValue::setValue(const std::string &value, Status *pStatus, bool 
             if (pStatus != nullptr)
             {
                 std::string msg = "Value not set. New value(" + value + ") not valid (" + m_pSchemaValue->getType()->getLimitString() + ")";
-                pStatus->addStatusMsg(statusMsg::error, m_pMyEnvNode.lock()->getId(), m_name, "", msg);
+                pStatus->addMsg(statusMsg::error, m_pMyEnvNode.lock()->getId(), m_name, "", msg);
             }
         }
 
@@ -78,10 +78,10 @@ void EnvironmentValue::validate(Status &status, const std::string &myId) const
     if (isValueSet())
     {
         if (!m_pSchemaValue->isDefined())
-            status.addStatusMsg(statusMsg::warning, myId, m_name, "", "No type information exists");
+            status.addMsg(statusMsg::warning, myId, m_name, "", "No type information exists");
 
         if (m_forcedSet)
-            status.addStatusMsg(statusMsg::warning, myId, m_name, "", "Current value was force set to an invalid value");
+            status.addMsg(statusMsg::warning, myId, m_name, "", "Current value was force set to an invalid value");
 
         // Will generate status based on current value and type
         m_pSchemaValue->validate(status, myId, this);
@@ -95,7 +95,7 @@ void EnvironmentValue::initialize()
     //
     // Is there an auto generated value we should process:
     const std::string &type = m_pSchemaValue->getAutoGenerateType();
-    if (type != "")
+    if (!type.empty())
     {
         //
         // type "prefix" means to use the auto generate value as a name prefix and to append numbers until a new unique name is
