@@ -51,7 +51,7 @@ ESPresponse CommonStatusResponse
 ESPrequest OpenSessionRequest
 {
     string username;
-    string type("XML");           // type of session
+    [optional("extended")] string type("XML");           // type of session
     string schemaPath("");        // location of configuration schema environmentFiles
     string masterSchemaFile("");  // name of master schema control file
     string sourcePath("");        // path to envrionment files

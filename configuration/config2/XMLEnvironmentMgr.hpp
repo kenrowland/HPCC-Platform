@@ -29,7 +29,7 @@ class XMLEnvironmentMgr :   public EnvironmentMgr
 {
     public:
 
-        XMLEnvironmentMgr() { }
+        XMLEnvironmentMgr() : EnvironmentMgr() { }
         ~XMLEnvironmentMgr() { }
 
 

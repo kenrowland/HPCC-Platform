@@ -22,6 +22,7 @@
 #include <string>
 #include <fstream>
 #include <vector>
+#include <atomic>
 #include "SchemaItem.hpp"
 #include "SchemaParser.hpp"
 #include "EnvironmentNode.hpp"
@@ -72,7 +73,7 @@ class DECL_EXPORT EnvironmentMgr
 
     private:
 
-        int m_key;
-};
+        std::atomic_int m_key;
+}
 
 #endif
