@@ -80,14 +80,14 @@ ESPrequest CloseSessionRequest
 
 ESPrequest NodeRequest
 {
-    string sessionId("0");
+    string sessionId();
     string nodeId;
 };
 
 
 ESPrequest RemoveNodeRequest
 {
-    string sessionId("0");
+    string sessionId();
     string sessionLockKey("");   // some functions require a lock key, unused otherwise
     string nodeId;
 };
@@ -192,7 +192,7 @@ ESPresponse [exceptions_inline, encode(0)] GetNodeResponse
 
 ESPrequest InsertNodeRequest  // response is same as GetPathRequest
 {
-    string sessionId("0");
+    string sessionId();
     string sessionLockKey("");
     string parentNodeId;
     string elementType;  // name of new instance to create
@@ -201,7 +201,7 @@ ESPrequest InsertNodeRequest  // response is same as GetPathRequest
 
 ESPrequest SetValuesRequest
 {
-    string sessionId("0");
+    string sessionId();
     string sessionLockKey("");
     string nodeId;    //
     ESParray<ESPstruct attributeValueType, attribute> attributeValues;
