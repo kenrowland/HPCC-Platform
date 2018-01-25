@@ -24,12 +24,13 @@ public:
     virtual bool onsetValues(IEspContext &context, IEspSetValuesRequest &req, IEspSetValuesResponse &resp);
     virtual bool ongetParents(IEspContext &context, IEspNodeRequest &req, IEspGetParentsResponse &resp);
     virtual bool oninsertNode(IEspContext &context, IEspInsertNodeRequest &req, IEspGetNodeResponse &resp);
-    virtual bool onremoveNode(IEspContext &context, IEspRemoveNodeRequest &req, IEspCommonStatusResponse &resp);
+    //virtual bool onremoveNode(IEspContext &context, IEspRemoveNodeRequest &req, IEspCommonStatusResponse &resp);
 
     virtual bool onopenSession(IEspContext &context, IEspOpenSessionRequest &req, IEspOpenSessionResponse &resp);
     virtual bool oncloseSession(IEspContext &context, IEspCloseSessionRequest &req, IEspPassFailResponse &resp);
     virtual bool ongetEnvironmentFileList(IEspContext &context, IEspCommonSessionRequest &req, IEspGetEnvironmentListResponse &resp);
     virtual bool onopenEnvironmentFile(IEspContext &context, IEspOpenEnvironmentFileRequest &req, IEspPassFailResponse &resp);
+    virtual bool oncloseEnvironmentFile(IEspContext &context, IEspCloseEnvironmentFileRequest &req, IEspPassFailResponse &resp);
     virtual bool onsaveEnvironmentFile(IEspContext &context, IEspSaveEnvironmentFileRequest &req, IEspPassFailResponse &resp);
     virtual bool onlockSession(IEspContext &context, IEspCommonSessionRequest &req, IEspLockSessionResponse &resp);
     virtual bool onunlockSession(IEspContext &context, IEspUnlockSessionRequest &req, IEspPassFailResponse &resp);
@@ -40,6 +41,7 @@ private:
     void buildStatusMessageObject(IArrayOf<IEspstatusMsgType> &msgs, const Status &status) const;
     ConfigMgrSession *getConfigSession(const std::string &sessionId);
     ConfigMgrSession *getConfigSessionForUpdate(const std::string &sessionId, const std::string &lockKey);
+    bool deleteConfigSession(const std::string &sessionId);
     void getNodelInfo(const std::shared_ptr<EnvironmentNode> &pNode, IEspGetNodeResponse &resp) const;
 
 

@@ -51,7 +51,7 @@ ESPresponse CommonStatusResponse
 ESPrequest OpenSessionRequest
 {
     string username;
-    [optional("extended")] string type("XML");           // type of session
+    string type("XML");           // type of session
     string schemaPath("");        // location of configuration schema environmentFiles
     string masterSchemaFile("");  // name of master schema control file
     string sourcePath("");        // path to envrionment files
@@ -80,17 +80,17 @@ ESPrequest CloseSessionRequest
 
 ESPrequest NodeRequest
 {
-    string sessionId();
+    string sessionId("0");
     string nodeId;
 };
 
 
-ESPrequest RemoveNodeRequest
-{
-    string sessionId();
-    string sessionLockKey("");   // some functions require a lock key, unused otherwise
-    string nodeId;
-};
+//ESPrequest RemoveNodeRequest
+//{
+//    string sessionId();
+//    string sessionLockKey("");
+//    string nodeId;
+//};
 
 
 ESPstruct instanceType
@@ -192,7 +192,7 @@ ESPresponse [exceptions_inline, encode(0)] GetNodeResponse
 
 ESPrequest InsertNodeRequest  // response is same as GetPathRequest
 {
-    string sessionId();
+    string sessionId("0");
     string sessionLockKey("");
     string parentNodeId;
     string elementType;  // name of new instance to create
@@ -201,9 +201,9 @@ ESPrequest InsertNodeRequest  // response is same as GetPathRequest
 
 ESPrequest SetValuesRequest
 {
-    string sessionId();
+    string sessionId("0");
     string sessionLockKey("");
-    string nodeId;    //
+    string nodeId;
     ESParray<ESPstruct attributeValueType, attribute> attributeValues;
     bool allowInvalid(false);  // true to allow setting an invalid value
     bool forceCreate(false);   // force creaation of new value if not defined
@@ -255,8 +255,16 @@ ESPrequest OpenEnvironmentFileRequest
 {
     string sessionId;
     string filename;
-    //string sessionLockKey("");            // required to force open if modified
+    string sessionLockKey("");            // required to force open if modified
+    bool   discardChanges(false);         // discard modifications (only works of current session owns the file)
     //bool   forceOpenIfModified(false);    // forces any current changes to be discarded
+};
+
+
+ESPrequest CloseEnvironmentFileRequest
+{
+    string sessionId;
+    bool   discardChanges(false);         // discard modifications
 };
 
 
@@ -289,6 +297,7 @@ ESPservice [auth_feature("DEFERRED"),version("2.0"), default_client_version("2.0
     ESPMethod closeSession(CloseSessionRequest, PassFailResponse);
     ESPMethod getEnvironmentFileList(CommonSessionRequest, GetEnvironmentListResponse);
     ESPMethod openEnvironmentFile(OpenEnvironmentFileRequest, PassFailResponse);
+    ESPMethod closeEnvironmentFile(CloseEnvironmentFileRequest, PassFailResponse);
     ESPMethod saveEnvironmentFile(SaveEnvironmentFileRequest, PassFailResponse);
     ESPMethod lockSession(CommonSessionRequest, LockSessionResponse);
     ESPMethod unlockSession(UnlockSessionRequest, PassFailResponse);
@@ -296,7 +305,7 @@ ESPservice [auth_feature("DEFERRED"),version("2.0"), default_client_version("2.0
     ESPMethod setValues(SetValuesRequest, SetValuesResponse);
     ESPMethod getParents(NodeRequest, GetParentsResponse);
     ESPMethod insertNode(InsertNodeRequest, GetNodeResponse);
-    ESPMethod removeNode(RemoveNodeRequest, CommonStatusResponse);
+    //ESPMethod removeNode(RemoveNodeRequest, CommonStatusResponse);
 };
 
 

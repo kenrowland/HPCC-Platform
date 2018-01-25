@@ -23,7 +23,7 @@
 
 
 // static class variables
-std::map<std::string, std::vector<std::shared_ptr<SchemaValue>>> SchemaItem::m_uniqueAttributeValueSets;
+//std::map<std::string, std::vector<std::shared_ptr<SchemaValue>>> SchemaItem::m_uniqueAttributeValueSets;
 
 SchemaItem::SchemaItem(const std::string &name, const std::string &className, const std::shared_ptr<SchemaItem> &pParent) :
     m_pParent(pParent),
@@ -239,12 +239,12 @@ void SchemaItem::addReferenceToUniqueAttributeValueSet(const std::string &setNam
 }
 
 
-void SchemaItem::processUniqueAttributeValueSetReferences()
+void SchemaItem::processUniqueAttributeValueSetReferences(const std::map<std::string, std::vector<std::shared_ptr<SchemaValue>>> &uniqueAttributeValueSets)
 {
     for (auto setRefIt = m_uniqueAttributeValueSetReferences.begin(); setRefIt != m_uniqueAttributeValueSetReferences.end(); ++setRefIt)
     {
-        auto keyIt = m_uniqueAttributeValueSets.find(setRefIt->second.m_setName);
-        if (keyIt != m_uniqueAttributeValueSets.end())
+        auto keyIt = uniqueAttributeValueSets.find(setRefIt->second.m_setName);
+        if (keyIt != uniqueAttributeValueSets.end())
         {
             for (auto cfgIt = keyIt->second.begin(); cfgIt != keyIt->second.end(); ++cfgIt)
             {
@@ -380,12 +380,12 @@ void SchemaItem::findSchemaValues(const std::string &path, std::vector<std::shar
 }
 
 
-void SchemaItem::processUniqueAttributeValueSets()
+void SchemaItem::processDefinedUniqueAttributeValueSets(std::map<std::string, std::vector<std::shared_ptr<SchemaValue>>> &uniqueAttributeValueSets)
 {
     for (auto setIt = m_uniqueAttributeValueSetDefs.begin(); setIt != m_uniqueAttributeValueSetDefs.end(); ++setIt)
     {
-        auto it = m_uniqueAttributeValueSets.find(setIt->first);
-        bool keyDefExists = it != m_uniqueAttributeValueSets.end();
+        auto it = uniqueAttributeValueSets.find(setIt->first);
+        bool keyDefExists = it != uniqueAttributeValueSets.end();
         if (!keyDefExists || setIt->second.m_duplicateOk)
         {
             std::string cfgValuePath = ((setIt->second.m_elementPath != ".") ? setIt->second.m_elementPath : "") + "@" + setIt->second.m_attributeName;
@@ -404,7 +404,7 @@ void SchemaItem::processUniqueAttributeValueSets()
                     {
                         std::vector<std::shared_ptr<SchemaValue>> values;
                         values.push_back(*attrIt);
-                        it = m_uniqueAttributeValueSets.insert({ setIt->second.m_setName, values }).first;  // so the else condition will work
+                        it = uniqueAttributeValueSets.insert({ setIt->second.m_setName, values }).first;  // so the else condition will work
                         keyDefExists = true;  // Now, it does exist
                     }
                     else
@@ -435,13 +435,13 @@ void SchemaItem::processUniqueAttributeValueSets()
     // Post process all of our children now
     for (auto it = m_children.begin(); it != m_children.end(); ++it)
     {
-        it->second->processUniqueAttributeValueSets();
+        it->second->processDefinedUniqueAttributeValueSets(uniqueAttributeValueSets);
     }
 }
 
 
 
-void SchemaItem::postProcessConfig()
+void SchemaItem::postProcessConfig(const std::map<std::string, std::vector<std::shared_ptr<SchemaValue>>> &uniqueAttributeValueSets)
 {
     //
     // Make sure that the item type value for all children that are insertable (minRequired = 0 or maxAllowed > minRequired)
@@ -458,7 +458,7 @@ void SchemaItem::postProcessConfig()
         }
     }
 
-    processUniqueAttributeValueSetReferences();
+    processUniqueAttributeValueSetReferences(uniqueAttributeValueSets);
 
     //
     // Post process the attributes
@@ -493,7 +493,7 @@ void SchemaItem::postProcessConfig()
     // Post process all of our children now
     for (auto it = m_children.begin(); it!= m_children.end(); ++it)
     {
-        it->second->postProcessConfig();
+        it->second->postProcessConfig(uniqueAttributeValueSets);
     }
 }
 

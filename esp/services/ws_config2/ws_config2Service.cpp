@@ -27,11 +27,16 @@ bool Cws_config2Ex::onopenSession(IEspContext &context, IEspOpenSessionRequest &
     std::string inputSchemaPath = req.getSchemaPath();
     std::string inputSourcePath = req.getSourcePath();
     pNewSession->masterConfigFile = (inputMasterFile != "") ? inputMasterFile : CFG2_MASTER_CONFIG_FILE;
-    pNewSession->configType = req.getType();
     pNewSession->username = req.getUsername();
     pNewSession->schemaPath = (inputSchemaPath != "") ? inputSchemaPath : CFG2_CONFIG_DIR;
     pNewSession->sourcePath = (inputSourcePath != "") ? inputSourcePath : CFG2_SOURCE_DIR;
     pNewSession->activePath = req.getActivePath();
+
+    std::string cfgType = req.getType();
+    if (cfgType == "XML")
+    {
+        pNewSession->configType = XML;
+    }
 
     //
     // Open the session by loading the schema, which is done during session init
@@ -57,7 +62,38 @@ bool Cws_config2Ex::onopenSession(IEspContext &context, IEspOpenSessionRequest &
 
 bool Cws_config2Ex::oncloseSession(IEspContext &context, IEspCloseSessionRequest &req, IEspPassFailResponse &resp)
 {
-    return true;
+    std::string sessionId = req.getSessionId();
+    ConfigMgrSession *pSession = getConfigSession(sessionId);
+    Status status;
+
+    bool rc = true;
+
+    if (pSession)
+    {
+        bool doClose = true;
+        //
+        // See if modified
+        if (pSession->modified)
+        {
+            if (!req.getForceClose())
+            {
+                resp.setError(true);
+                resp.setMsg("Current file has been modified, close refused (set forceClose to force close)");
+                doClose = false;
+            }
+        }
+
+        if (doClose)
+        {
+            deleteConfigSession(sessionId);
+        }
+    }
+    else
+    {
+        resp.setError(true);
+        resp.setMsg("The session ID is not valid");
+    }
+    return rc;
 }
 
 
@@ -108,25 +144,36 @@ bool Cws_config2Ex::onopenEnvironmentFile(IEspContext &context, IEspOpenEnvironm
     if (pSession)
     {
         doOpen = true;   // assume we are moving ahead with the open
-        // This code is for forcing access to an environment that is already locked (WIP)
-        //if (pSession->modified)
-        //{
-        //    if (req.getForceOpenIfModified() )
-        //    {
-        //        if (pSession->doesKeyFit(req.getSessionLockKey()))
-        //        {
-        //            resp.setError(true);
-        //            resp.setMsg("Session lock key mismatch when opening new environment with changes in current loaded environment");
-        //            doOpen = false;
-        //        }
-        //    }
-        //    else
-        //    {
-        //        resp.setError(true);
-        //        resp.setMsg("Current environment has been modified without saving the changes");
-        //        doOpen = false;
-        //    }
-        //}
+
+        //
+        // See if modified
+        if (pSession->modified)
+        {
+            //
+            // Code here to make sure a modifed file is only in this session (not someone else)
+            //if (!req.getdiscardChanges())
+            {
+                resp.setError(true);
+                resp.setMsg("Current file has been modified.");
+                doOpen = false;
+            }
+
+            //if (req.getForceOpenIfModified() )
+            //{
+            //    if (pSession->doesKeyFit(req.getSessionLockKey()))
+            //    {
+            //        resp.setError(true);
+            //        resp.setMsg("Session lock key mismatch when opening new environment with changes in current loaded environment");
+            //        doOpen = false;
+            //    }
+            //}
+            //else
+            //{
+            //    resp.setError(true);
+            //    resp.setMsg("Current environment has been modified without saving the changes");
+            //    doOpen = false;
+            //}
+        }
 
         if (doOpen)
         {
@@ -136,6 +183,42 @@ bool Cws_config2Ex::onopenEnvironmentFile(IEspContext &context, IEspOpenEnvironm
                 resp.setError(true);
                 resp.setMsg(pSession->getLastMsg().c_str());
             }
+        }
+    }
+    else
+    {
+        resp.setError(true);
+        resp.setMsg("The session ID is not valid");
+    }
+    return true;
+}
+
+
+bool Cws_config2Ex::oncloseEnvironmentFile(IEspContext &context, IEspCloseEnvironmentFileRequest &req, IEspPassFailResponse &resp)
+{
+    bool doClose = false;
+    ConfigMgrSession *pSession = getConfigSession(req.getSessionId());
+    if (pSession)
+    {
+        doClose = true;   // assume we are moving ahead with the open
+
+        //
+        // See if modified
+        if (pSession->modified)
+        {
+            //
+            // Code here to make sure a modifed file is only in this session (not someone else)
+            if (!req.getDiscardChanges())
+            {
+                resp.setError(true);
+                resp.setMsg("Current file has been modified, close refused (set discardChanges to force close)");
+                doClose = false;
+            }
+        }
+
+        if (doClose)
+        {
+            pSession->closeEnvironment();
         }
     }
     else
@@ -316,7 +399,7 @@ bool Cws_config2Ex::oninsertNode(IEspContext &context, IEspInsertNodeRequest &re
 }
 
 
-bool Cws_config2Ex::onremoveNode(IEspContext &context, IEspRemoveNodeRequest &req, IEspCommonStatusResponse &resp)
+/*bool Cws_config2Ex::onremoveNode(IEspContext &context, IEspRemoveNodeRequest &req, IEspCommonStatusResponse &resp)
 {
     std::string sessionId = req.getSessionId();
     ConfigMgrSession *pSession = getConfigSessionForUpdate(sessionId, req.getSessionLockKey());
@@ -343,7 +426,7 @@ bool Cws_config2Ex::onremoveNode(IEspContext &context, IEspRemoveNodeRequest &re
     resp.updateStatus().setError(status.isError());
 
     return rc;
-}
+}*/
 
 
 bool Cws_config2Ex::onsetValues(IEspContext &context, IEspSetValuesRequest &req, IEspSetValuesResponse &resp)
@@ -473,6 +556,20 @@ ConfigMgrSession *Cws_config2Ex::getConfigSessionForUpdate(const std::string &se
         pSession = nullptr;
     }
     return pSession;
+}
+
+
+bool Cws_config2Ex::deleteConfigSession(const std::string &sessionId)
+{
+    bool rc = false;
+    ConfigMgrSession *pSession = getConfigSession(sessionId);
+    if (pSession)
+    {
+        m_sessions.erase(sessionId);
+        delete pSession;
+        rc = true;
+    }
+    return rc;
 }
 
 

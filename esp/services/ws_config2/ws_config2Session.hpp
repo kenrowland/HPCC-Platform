@@ -31,21 +31,21 @@
 struct ConfigMgrSession {
 
     // NOTE: all paths have NO trailing slash
-    std::string username;            // owner of the session
-    std::string schemaPath;          // path to schema files
-    std::string sourcePath;          // path to environment files
-    std::string activePath;          // path to active environment file
-    std::string configType;          // configuration type (XML, JSON, etc.)
-    std::string masterConfigFile;    // master configuration file for the session
-    std::string lockKey;             // key for write operations when session is locled
-    std::string lastMsg;             // last error message
-    std::string curEnvironmentFile;  // name of currentl loaded envronment file
-    bool locked;                     // true if locked
-    bool modified;                   // true if session has modified loaded environment
-    EnvironmentMgr *m_pEnvMgr;       // ptr to active environment manager for session
+    std::string     username;            // owner of the session
+    std::string     schemaPath;          // path to schema files
+    std::string     sourcePath;          // path to environment files
+    std::string     activePath;          // path to active environment file
+    EnvironmentType configType;          // configuration type (XML, JSON, etc.)
+    std::string     masterConfigFile;    // master configuration file for the session
+    std::string     lockKey;             // key for write operations when session is locled
+    std::string     lastMsg;             // last error message
+    std::string     curEnvironmentFile;  // name of currentl loaded envronment file
+    bool            locked;              // true if locked
+    bool            modified;            // true if session has modified loaded environment
+    EnvironmentMgr  *m_pEnvMgr;          // ptr to active environment manager for session
 
 
-    ConfigMgrSession() : locked(false), modified(false), m_pEnvMgr(nullptr) { }
+    ConfigMgrSession() : locked(false), modified(false), m_pEnvMgr(nullptr), configType(UNDEFINED) { }
     ~ConfigMgrSession()
     {
         if (m_pEnvMgr != nullptr)
@@ -72,7 +72,7 @@ struct ConfigMgrSession {
         else
         {
             rc = false;
-            lastMsg = "Unrecognized configuration type (" + configType + ")";
+            lastMsg = "Unrecognized configuration type";
         }
         return rc;
     }
@@ -82,6 +82,16 @@ struct ConfigMgrSession {
     {
         std::string fullPath = sourcePath + "/" + envFile;
         bool rc = true;
+
+        if (!curEnvironmentFile.empty())
+        {
+            if (modified)
+            {
+
+            }
+        }
+
+
         if (!m_pEnvMgr->loadEnvironment(fullPath))
         {
             rc = false;
@@ -94,6 +104,14 @@ struct ConfigMgrSession {
             lockKey = "";
         }
         return rc;
+    }
+
+
+    void closeEnvironment()
+    {
+        m_pEnvMgr->discardEnvironment();
+        locked = modified = false;
+        lockKey = "";
     }
 
 
@@ -122,7 +140,7 @@ struct ConfigMgrSession {
     std::string getEnvironmentFileExtension() const
     {
         std::string ext = ".unk";
-        if (configType == "XML")
+        if (configType == XML)
         {
             ext = ".xml";
         }

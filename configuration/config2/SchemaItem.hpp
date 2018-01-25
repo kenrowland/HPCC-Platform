@@ -61,10 +61,10 @@ class DECL_EXPORT SchemaItem : public std::enable_shared_from_this<SchemaItem>
         bool addUniqueName(const std::string keyName);
         void addUniqueAttributeValueSetDefinition(const std::string &setName, const std::string &elementPath, const std::string &attributeName, bool duplicateOk = false);
         void addReferenceToUniqueAttributeValueSet(const std::string &setName, const std::string &elementPath, const std::string &attributeName);
-        void processUniqueAttributeValueSets();
-        void processUniqueAttributeValueSetReferences();
+        void processDefinedUniqueAttributeValueSets(std::map<std::string, std::vector<std::shared_ptr<SchemaValue>>> &uniqueAttributeValueSets);
+        void processUniqueAttributeValueSetReferences(const std::map<std::string, std::vector<std::shared_ptr<SchemaValue>>> &uniqueAttributeValueSets);
         void resetEnvironment();
-        void postProcessConfig();
+        void postProcessConfig(const std::map<std::string, std::vector<std::shared_ptr<SchemaValue>>> &uniqueAttributeValueSets);
         bool isInsertable() const { return (m_minInstances == 0) || (m_maxInstances > m_minInstances); }
         bool isRequired() const { return m_minInstances > 0; }
 
@@ -106,7 +106,7 @@ class DECL_EXPORT SchemaItem : public std::enable_shared_from_this<SchemaItem>
         std::map<std::string, SetInfo> m_uniqueAttributeValueSetDefs;
 
         // These are the attribute value sets whose members must be unique
-        static std::map<std::string, std::vector<std::shared_ptr<SchemaValue>>> m_uniqueAttributeValueSets;
+        //static std::map<std::string, std::vector<std::shared_ptr<SchemaValue>>> m_uniqueAttributeValueSets;
 };
 
 #endif // _CONFIG2_CONFIGITEM_HPP_
