@@ -74,6 +74,6 @@ class DECL_EXPORT EnvironmentMgr
     private:
 
         std::atomic_int m_key;
-}
+};
 
 #endif
