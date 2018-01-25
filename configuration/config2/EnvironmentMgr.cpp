@@ -20,10 +20,10 @@
 #include "XMLEnvironmentMgr.hpp"
 
 
-EnvironmentMgr *getEnvironmentMgrInstance(const std::string &envType)
+EnvironmentMgr *getEnvironmentMgrInstance(const EnvironmentType envType)
 {
     EnvironmentMgr *pEnvMgr = nullptr;
-    if (envType == "XML")
+    if (envType == XML)
     {
         pEnvMgr = new XMLEnvironmentMgr();
     }
@@ -46,8 +46,13 @@ bool EnvironmentMgr::loadSchema(const std::string &configPath, const std::string
         rc = m_pSchemaParser->parse(configPath, masterConfigFile, cfgParms);
         if (rc)
         {
-            m_pSchema->processUniqueAttributeValueSets();  // This must be done first
-            m_pSchema->postProcessConfig();
+            // unique attribure value sets are global across a schema. Allocate one here and pass it in
+            // for use in building the necessary references and dependencies across the schema, then pass
+            // it to the post processing for finalization. Once referencs and dependencies are built, the
+            // attribute value sets are no longer needed.
+            std::map<std::string, std::vector<std::shared_ptr<SchemaValue>>> uniqueAttributeValueSets;
+            m_pSchema->processDefinedUniqueAttributeValueSets(uniqueAttributeValueSets);  // This must be done first
+            m_pSchema->postProcessConfig(uniqueAttributeValueSets);
         }
     }
     return rc;

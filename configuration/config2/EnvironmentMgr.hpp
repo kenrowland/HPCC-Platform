@@ -32,8 +32,14 @@
 
 class EnvironmentMgr;
 
-DECL_EXPORT EnvironmentMgr *getEnvironmentMgrInstance(const std::string &envType);
+enum EnvironmentType
+{
+    UNDEFINED,
+    XML
+};
 
+
+DECL_EXPORT EnvironmentMgr *getEnvironmentMgrInstance(const EnvironmentType envType);
 
 class DECL_EXPORT EnvironmentMgr
 {
@@ -50,6 +56,7 @@ class DECL_EXPORT EnvironmentMgr
         std::shared_ptr<EnvironmentNode> addNewEnvironmentNode(const std::shared_ptr<EnvironmentNode> &pParentNode, const std::shared_ptr<SchemaItem> &pNewCfgItem, Status &status);
         bool removeEnvironmentNode(const std::string &nodeId, Status &status);
         bool saveEnvironment(const std::string &file);
+        void discardEnvironment() { m_pRootNode = nullptr; }
         void validate(Status &status) const;
 
 
@@ -74,6 +81,6 @@ class DECL_EXPORT EnvironmentMgr
     private:
 
         std::atomic_int m_key;
-}
+};
 
 #endif
