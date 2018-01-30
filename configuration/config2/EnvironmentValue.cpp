@@ -57,10 +57,10 @@ bool EnvironmentValue::setValue(const std::string &value, Status *pStatus, bool 
 }
 
 
-std::vector<std::string> EnvironmentValue::getAllValues() const
+void EnvironmentValue::getAllValuesForSiblings(std::vector<std::string> &result) const
 {
     std::shared_ptr<EnvironmentNode> pEnvNode = m_pMyEnvNode.lock();
-    return pEnvNode->getAllAttributeValues(m_pSchemaValue->getName());
+    return pEnvNode->getAttributeValueForAllSiblings(m_pSchemaValue->getName(), result);
 }
 
 
@@ -104,7 +104,8 @@ void EnvironmentValue::initialize()
         {
             std::string newName;
             const std::string &prefix = m_pSchemaValue->getAutoGenerateValue();
-            std::vector<std::string> curValues = m_pMyEnvNode.lock()->getAllAttributeValues(m_name);
+            std::vector<std::string> curValues;
+            m_pMyEnvNode.lock()->getAttributeValueForAllSiblings(m_name, curValues);
             size_t count = curValues.size();
             newName = prefix;
             size_t n = 0;

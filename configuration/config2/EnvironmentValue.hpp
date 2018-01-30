@@ -45,7 +45,7 @@ class DECL_EXPORT EnvironmentValue
         bool wasForced() const { return m_forcedSet; }
         bool isValueValid(const std::string &value) const;
         void validate(Status &status, const std::string &myId) const;
-        std::vector<std::string> getAllValues() const;
+        void getAllValuesForSiblings(std::vector<std::string> &result) const;
         std::string getNodeId() const;
         void initialize();
 

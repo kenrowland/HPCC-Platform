@@ -85,7 +85,7 @@ int main()
 
         //
         // Value set test
-        //std::vector<EnvironmentMgr::valueDef> newValues;
+        //std::vector<EnvironmentMgr::NameValue> newValues;
         //newValues.push_back({ "name", "namehasbeenchanged" });
         //pEnvMgr->setAttributeValues("158", newValues, "", false);
 

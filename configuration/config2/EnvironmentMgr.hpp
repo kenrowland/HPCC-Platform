@@ -27,7 +27,7 @@
 #include "SchemaParser.hpp"
 #include "EnvironmentNode.hpp"
 #include "Status.hpp"
-#include "ValueDef.hpp"
+#include "NameValue.hpp"
 #include "platform.h"
 
 class EnvironmentMgr;
@@ -52,10 +52,9 @@ class DECL_EXPORT EnvironmentMgr
         std::string getLastEnvironmentMessage() const { return m_message;  }
         bool loadEnvironment(const std::string &qualifiedFilename);
         std::shared_ptr<EnvironmentNode> getEnvironmentNode(const std::string &nodeId);
-        std::shared_ptr<EnvironmentNode> addNewEnvironmentNode(const std::string &parentNodeId, const std::string &elementType, Status &status);
-        std::shared_ptr<EnvironmentNode> addNewEnvironmentNode(const std::shared_ptr<EnvironmentNode> &pParentNode, const std::shared_ptr<SchemaItem> &pNewCfgItem, Status &status);
+        std::shared_ptr<EnvironmentNode> addNewEnvironmentNode(const std::string &parentNodeId, const std::string &configType, Status &status);
         bool removeEnvironmentNode(const std::string &nodeId, Status &status);
-        bool saveEnvironment(const std::string &file);
+        bool saveEnvironment(const std::string &qualifiedFilename);
         void discardEnvironment() { m_pRootNode = nullptr; }
         void validate(Status &status) const;
 
@@ -64,7 +63,8 @@ class DECL_EXPORT EnvironmentMgr
 
         std::string getUniqueKey();
         void addPath(const std::shared_ptr<EnvironmentNode> pNode);
-        virtual bool createParser(const std::string &configPath, const std::string &masterConfigFile,  const std::vector<std::string> &cfgParms) = 0;
+        virtual bool createParser() = 0;
+        std::shared_ptr<EnvironmentNode> addNewEnvironmentNode(const std::shared_ptr<EnvironmentNode> &pParentNode, const std::shared_ptr<SchemaItem> &pNewCfgItem, Status &status);
         virtual bool doLoadEnvironment(std::istream &in) = 0;
         virtual bool save(std::ostream &out) = 0;
 

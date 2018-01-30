@@ -57,7 +57,7 @@ class DECL_EXPORT SchemaValue
         bool isUniqueValue() const { return bitMask.m_isUnique;  }
         void setUniqueValueSetRef(const std::shared_ptr<SchemaValue> &pValue) { m_pUniqueValueSetRefs.push_back(pValue);  }
         bool isFromUniqueValueSet() const { return !m_pUniqueValueSetRefs.empty(); }
-        std::vector<std::weak_ptr<SchemaValue>> getUniqueValueSetRefs() const { return m_pUniqueValueSetRefs;  }
+        const std::vector<std::weak_ptr<SchemaValue>> &getUniqueValueSetRefs() const { return m_pUniqueValueSetRefs;  }
         bool isDefined() const { return bitMask.m_isDefined;  }
         void resetEnvironment();
         void setMirrorFromPath(const std::string &path) { m_mirrorFromPath = path;  }
@@ -66,15 +66,15 @@ class DECL_EXPORT SchemaValue
         void addMirroredSchemaValue(const std::shared_ptr<SchemaValue> &pVal) { m_mirrorToSchemaValues.push_back(pVal); }
         void mirrorValueToEnvironment(const std::string &oldValue, const std::string &newValue);
         void addEnvironmentValue(const std::shared_ptr<EnvironmentValue> &pEnvValue) { m_envValues.push_back(pEnvValue); }
-        std::vector<std::string> getAllEnvironmentValues() const;
+        void getAllEnvironmentValues(std::vector<std::string> &values) const;
         void setMirroredEnvironmentValues(const std::string &oldValue, const std::string &newValue);
         void validate(Status &status, const std::string &id, const EnvironmentValue *pEnvValue = nullptr) const;
-        std::vector<AllowedValue> getAllowedValues(const EnvironmentValue *pEnvValue = nullptr) const;
+        void getAllowedValues(std::vector<AllowedValue> &allowedValues, const EnvironmentValue *pEnvValue = nullptr) const;
         void setAutoGenerateType(const std::string &type) { m_autoGenerateType = type; }
         const std::string &getAutoGenerateType() const { return m_autoGenerateType; }
         void setAutoGenerateValue(const std::string &value) { m_autoGenerateValue = value; }
         const std::string &getAutoGenerateValue() const { return m_autoGenerateValue; }
-        std::vector<std::string> getAllKeyRefValues() const;
+        void getAllKeyRefValues(std::vector<std::string> &keyRefValues) const;
 
 
     protected:

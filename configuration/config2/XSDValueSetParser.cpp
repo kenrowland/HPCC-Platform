@@ -45,6 +45,8 @@ void XSDValueSetParser::parseAttributeGroup(const pt::ptree &attributeTree)
     std::shared_ptr<SchemaItem> pValueSet = m_pSchemaItem->getSchemaType(groupRefName, true);
     if (pValueSet)
     {
-        m_pSchemaItem->addAttribute(pValueSet->getAttributes());
+        std::vector<std::shared_ptr<SchemaValue>> attributes;
+        pValueSet->getAttributes(attributes);
+        m_pSchemaItem->addAttribute(attributes);
     }
 }

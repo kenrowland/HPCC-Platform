@@ -38,15 +38,15 @@ bool EnvironmentNode::removeChild(const std::shared_ptr<EnvironmentNode> pNode)
 }
 
 
-void EnvironmentNode::addAttribute(const std::string &name, std::shared_ptr<EnvironmentValue> pValue)
+bool EnvironmentNode::addAttribute(const std::string &name, std::shared_ptr<EnvironmentValue> pValue)
 {
     auto retValue = m_attributes.insert(std::make_pair(name, pValue));
+    return retValue.second;
 }
 
 
-std::vector<std::shared_ptr<EnvironmentNode>> EnvironmentNode::getChildren(const std::string &name) const
+void EnvironmentNode::getChildren(std::vector<std::shared_ptr<EnvironmentNode>> &childNodes, const std::string &name) const
 {
-    std::vector<std::shared_ptr<EnvironmentNode>> childNodes;
     if (name.empty())
     {
         for (auto nodeIt = m_children.begin(); nodeIt != m_children.end(); ++nodeIt)
@@ -62,50 +62,6 @@ std::vector<std::shared_ptr<EnvironmentNode>> EnvironmentNode::getChildren(const
             childNodes.push_back(it->second);
         }
     }
-
-    return childNodes;
-}
-
-
-std::map<std::string, std::vector<std::shared_ptr<EnvironmentNode>>> EnvironmentNode::getChildrenByName() const
-{
-    std::map<std::string, std::vector<std::shared_ptr<EnvironmentNode>>> results;
-    for (auto childIt = m_children.begin(); childIt != m_children.end(); ++childIt)
-    {
-        auto it = results.find(childIt->second->getName());
-        if (it == results.end())
-        {
-            std::vector<std::shared_ptr<EnvironmentNode>> nodes;
-            nodes.push_back(childIt->second);
-            results[childIt->second->getName()] = nodes;
-        }
-        else
-        {
-            it->second.push_back(childIt->second);
-        }
-    }
-    return results;
-}
-
-
-std::map<std::string, std::vector<std::shared_ptr<EnvironmentNode>>> EnvironmentNode::getChildrenByConfigType() const
-{
-    std::map<std::string, std::vector<std::shared_ptr<EnvironmentNode>>> results;
-    for (auto childIt = m_children.begin(); childIt != m_children.end(); ++childIt)
-    {
-        auto it = results.find(childIt->second->getSchemaItem()->getItemType());
-        if (it == results.end())
-        {
-            std::vector<std::shared_ptr<EnvironmentNode>> nodes;
-            nodes.push_back(childIt->second);
-            results[childIt->second->getSchemaItem()->getItemType()] = nodes;
-        }
-        else
-        {
-            it->second.push_back(childIt->second);
-        }
-    }
-    return results;
 }
 
 
@@ -120,40 +76,38 @@ std::shared_ptr<EnvironmentNode> EnvironmentNode::getParent() const
 }
 
 
-std::vector<std::shared_ptr<EnvironmentValue>> EnvironmentNode::getAttributes() const
+void EnvironmentNode::getAttributes(std::vector<std::shared_ptr<EnvironmentValue>> &attrs) const
 {
-    std::vector<std::shared_ptr<EnvironmentValue>> attributes;
-
     for (auto attrIt = m_attributes.begin(); attrIt != m_attributes.end(); ++attrIt)
     {
-        attributes.push_back(attrIt->second);
+        attrs.push_back(attrIt->second);
     }
-    return attributes;
 }
 
 
 void EnvironmentNode::addMissingAttributesFromConfig()
 {
-    std::map<std::string, std::shared_ptr<SchemaValue>> configuredAttributes = m_pSchemaItem->getAttributes();
+    std::vector<std::shared_ptr<SchemaValue>> configuredAttributes;
+    m_pSchemaItem->getAttributes(configuredAttributes);
 
     //
     // go through all the configured attrubutes and for each that is not present in our list, add it
     for (auto it = configuredAttributes.begin(); it != configuredAttributes.end(); ++it)
     {
-        auto attrIt = m_attributes.find(it->first);
+        auto attrIt = m_attributes.find((*it)->getName());
         if (attrIt == m_attributes.end())
         {
-            std::shared_ptr<SchemaValue> pCfgValue = it->second;
-            std::shared_ptr<EnvironmentValue> pEnvValue = std::make_shared<EnvironmentValue>(shared_from_this(), pCfgValue, it->first);
+            std::shared_ptr<SchemaValue> pCfgValue = *it;
+            std::shared_ptr<EnvironmentValue> pEnvValue = std::make_shared<EnvironmentValue>(shared_from_this(), pCfgValue, pCfgValue->getName());
             pCfgValue->addEnvironmentValue(pEnvValue);
-            addAttribute(it->first, pEnvValue);
+            addAttribute(pCfgValue->getName(), pEnvValue);
         }
     }
 
 }
 
 
-void EnvironmentNode::setAttributeValues(const std::vector<ValueDef> &values, Status &status, bool allowInvalid, bool forceCreate)
+void EnvironmentNode::setAttributeValues(const std::vector<NameValue> &values, Status &status, bool allowInvalid, bool forceCreate)
 {
     for (auto it = values.begin(); it != values.end(); ++it)
     {
@@ -208,20 +162,31 @@ std::string EnvironmentNode::getAttributeValue(const std::string &name) const
 }
 
 
-bool EnvironmentNode::setNodeValue(const std::string &value, Status &status, bool force)
+bool EnvironmentNode::setLocalValue(const std::string &newValue, Status &status, bool force)
 {
     bool rc = false;
 
     //
     // If no environment value is present, create one first
-    if (!m_pNodeValue)
+    if (!m_pLocalValue)
     {
         std::shared_ptr<SchemaValue> pCfgValue = m_pSchemaItem->getItemSchemaValue();
-        m_pNodeValue = std::make_shared<EnvironmentValue>(shared_from_this(), pCfgValue, "");  // node's value has no name
+        m_pLocalValue = std::make_shared<EnvironmentValue>(shared_from_this(), pCfgValue, "");  // node's value has no name
     }
 
-    rc = m_pNodeValue->setValue(value, &status, force);
+    rc = m_pLocalValue->setValue(newValue, &status, force);
     return rc;
+}
+
+
+std::string EnvironmentNode::getLocalValue() const
+{
+    std::string value;
+    if (m_pLocalValue)
+    {
+        value = m_pLocalValue->getValue();
+    }
+    return value;
 }
 
 
@@ -229,9 +194,9 @@ void EnvironmentNode::validate(Status &status, bool includeChildren) const
 {
     //
     // Check node value
-    if (m_pNodeValue)
+    if (m_pLocalValue)
     {
-        m_pNodeValue->validate(status, "");
+        m_pLocalValue->validate(status, "");
     }
 
     //
@@ -245,7 +210,8 @@ void EnvironmentNode::validate(Status &status, bool includeChildren) const
         if (attrIt->second->getSchemaValue()->isUniqueValue())
         {
             bool found = false;
-            std::vector<std::string> allValues = attrIt->second->getAllValues();
+            std::vector<std::string> allValues;
+            attrIt->second->getAllValuesForSiblings(allValues);
             std::set<std::string> unquieValues;
             for (auto it = allValues.begin(); it != allValues.end() && !found; ++it)
             {
@@ -264,7 +230,8 @@ void EnvironmentNode::validate(Status &status, bool includeChildren) const
         if (attrIt->second->getSchemaValue()->isFromUniqueValueSet())
         {
             bool found = false;
-            std::vector<std::string> allValues = attrIt->second->getSchemaValue()->getAllKeyRefValues();
+            std::vector<std::string> allValues;
+            attrIt->second->getSchemaValue()->getAllKeyRefValues(allValues);
             for (auto it = allValues.begin(); it != allValues.end() && !found; ++it)
                 found = *it == attrIt->second->getValue();
             if (!found)
@@ -286,19 +253,18 @@ void EnvironmentNode::validate(Status &status, bool includeChildren) const
 }
 
 
-std::vector<std::string> EnvironmentNode::getAllAttributeValues(const std::string &attrName) const
+void EnvironmentNode::getAttributeValueForAllSiblings(const std::string &attrName, std::vector<std::string> &result) const
 {
-    std::vector<std::string> values;
     std::shared_ptr<EnvironmentNode> pParentNode = m_pParent.lock();
     if (pParentNode)
     {
-        std::vector<std::shared_ptr<EnvironmentNode>> nodes = pParentNode->getChildren(m_name);
+        std::vector<std::shared_ptr<EnvironmentNode>> nodes;
+        pParentNode->getChildren(nodes, m_name);
         for (auto it = nodes.begin(); it != nodes.end(); ++it)
         {
-            values.push_back((*it)->getAttributeValue(attrName));
+            result.push_back((*it)->getAttributeValue(attrName));
         }
     }
-    return values;
 }
 
 
@@ -314,9 +280,8 @@ const std::shared_ptr<EnvironmentValue> EnvironmentNode::getAttribute(const std:
 }
 
 
-std::vector<std::shared_ptr<SchemaItem>> EnvironmentNode::getInsertableItems() const
+void EnvironmentNode::getInsertableItems(std::vector<std::shared_ptr<SchemaItem>> &insertableItems) const
 {
-    std::vector<std::shared_ptr<SchemaItem>> insertableItems;
     std::map<std::string, unsigned> childCounts;
 
     //
@@ -339,7 +304,8 @@ std::vector<std::shared_ptr<SchemaItem>> EnvironmentNode::getInsertableItems() c
     //
     // Now get the full list of configurable items, then resolve it against the child counts from
     // above to build a vector of insertable items
-    std::vector<std::shared_ptr<SchemaItem>> configChildren = m_pSchemaItem->getChildren();
+    std::vector<std::shared_ptr<SchemaItem>> configChildren;
+    m_pSchemaItem->getChildren(configChildren);
     for (auto cfgIt = configChildren.begin(); cfgIt != configChildren.end(); ++cfgIt)
     {
         auto findIt = childCounts.find((*cfgIt)->getItemType());
@@ -355,7 +321,6 @@ std::vector<std::shared_ptr<SchemaItem>> EnvironmentNode::getInsertableItems() c
             insertableItems.push_back(*cfgIt);
         }
     }
-    return insertableItems;
 }
 
 

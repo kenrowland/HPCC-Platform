@@ -41,7 +41,7 @@ EnvironmentMgr::EnvironmentMgr() :
 bool EnvironmentMgr::loadSchema(const std::string &configPath, const std::string &masterConfigFile, const std::vector<std::string> &cfgParms)
 {
     bool rc = false;
-    if (createParser(configPath, masterConfigFile, cfgParms))
+    if (createParser())
     {
         rc = m_pSchemaParser->parse(configPath, masterConfigFile, cfgParms);
         if (rc)
@@ -70,30 +70,45 @@ std::string EnvironmentMgr::getLastSchemaMessage() const
 bool EnvironmentMgr::loadEnvironment(const std::string &qualifiedFilename)
 {
     bool rc = false;
-    std::ifstream in;
 
-    in.open(qualifiedFilename);
-    if (in.is_open())
+    if (m_pSchema)
     {
-        rc = doLoadEnvironment(in);
+        std::ifstream in;
+
+        in.open(qualifiedFilename);
+        if (in.is_open())
+        {
+            rc = doLoadEnvironment(in);
+        }
+        else
+        {
+            m_message = "Unable to open environment file '" + qualifiedFilename + "'";
+        }
     }
     else
     {
-        m_message = "Unable to open environment file '" + qualifiedFilename + "'";
+        m_message = "No schema loaded";
     }
     return rc;
 }
 
 
-bool EnvironmentMgr::saveEnvironment(const std::string &filename)
+bool EnvironmentMgr::saveEnvironment(const std::string &qualifiedFilename)
 {
     bool rc = false;
-    std::ofstream out;
-
-    out.open(filename);
-    if (out.is_open())
+    if (m_pRootNode)
     {
-        rc = save(out);
+        std::ofstream out;
+
+        out.open(qualifiedFilename);
+        if (out.is_open())
+        {
+            rc = save(out);
+        }
+    }
+    else
+    {
+        m_message = "No environment loaded";
     }
     return rc;
 }
@@ -120,20 +135,25 @@ std::shared_ptr<EnvironmentNode> EnvironmentMgr::getEnvironmentNode(const std::s
 
 
 
-std::shared_ptr<EnvironmentNode> EnvironmentMgr::addNewEnvironmentNode(const std::string &parentNodeId, const std::string &elementType, Status &status)
+std::shared_ptr<EnvironmentNode> EnvironmentMgr::addNewEnvironmentNode(const std::string &parentNodeId, const std::string &configType, Status &status)
 {
     std::shared_ptr<EnvironmentNode> pNewNode;
     std::shared_ptr<EnvironmentNode> pParentNode = getEnvironmentNode(parentNodeId);
     if (pParentNode)
     {
         std::shared_ptr<SchemaItem> pNewCfgItem;
-        std::vector<std::shared_ptr<SchemaItem>> insertableItems = pParentNode->getInsertableItems();  // configured items under the parent
+        std::vector<std::shared_ptr<SchemaItem>> insertableItems;
+        pParentNode->getInsertableItems(insertableItems);
         for (auto it = insertableItems.begin(); it != insertableItems.end(); ++it)
         {
-            if ((*it)->getItemType() == elementType)
+            if ((*it)->getItemType() == configType)
             {
                 pNewNode = addNewEnvironmentNode(pParentNode, *it, status);
                 break;
+            }
+            if (pNewNode == nullptr)
+            {
+                status.addMsg(statusMsg::error, "Configuration type (" + configType + ") not found");
             }
         }
     }
@@ -160,7 +180,8 @@ std::shared_ptr<EnvironmentNode> EnvironmentMgr::addNewEnvironmentNode(const std
 
     //
     // Look through the children and add any that are necessary
-    auto cfgChildren = pNewCfgItem->getChildren();
+    std::vector<std::shared_ptr<SchemaItem>> cfgChildren;
+    pNewCfgItem->getChildren(cfgChildren);
     for (auto childIt = cfgChildren.begin(); childIt != cfgChildren.end(); ++childIt)
     {
         int numReq = (*childIt)->getMinInstances();
@@ -211,5 +232,9 @@ void EnvironmentMgr::validate(Status &status) const
     if (m_pRootNode)
     {
         m_pRootNode->validate(status, true);
+    }
+    else
+    {
+        status.addMsg(statusMsg::error, "No environment loaded");
     }
 }

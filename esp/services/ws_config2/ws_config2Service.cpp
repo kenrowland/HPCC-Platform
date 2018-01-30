@@ -444,11 +444,11 @@ bool Cws_config2Ex::onsetValues(IEspContext &context, IEspSetValuesRequest &req,
             bool forceCreate = req.getForceCreate();
             bool allowInvalid = req.getAllowInvalid();
             IArrayOf<IConstattributeValueType> &attrbuteValues = req.getAttributeValues();
-            std::vector<ValueDef> values;
+            std::vector<NameValue> values;
             ForEachItemIn(i, attrbuteValues)
             {
                 IConstattributeValueType& attrVal = attrbuteValues.item(i);
-                ValueDef value;
+                NameValue value;
                 value.name = attrVal.getName();
                 value.value = attrVal.getValue();
                 values.push_back(value);
@@ -586,7 +586,8 @@ void Cws_config2Ex::getNodelInfo(const std::shared_ptr<EnvironmentNode> &pNode, 
     IArrayOf<IEspattributeType> nodeAttributes;
     if (pNode->hasAttributes())
     {
-        std::vector<std::shared_ptr<EnvironmentValue>> attributes = pNode->getAttributes();
+        std::vector<std::shared_ptr<EnvironmentValue>> attributes;
+        pNode->getAttributes(attributes);
         for (auto it=attributes.begin(); it!=attributes.end(); ++it)
         {
             std::shared_ptr<EnvironmentValue> pAttr = *it;
@@ -625,7 +626,8 @@ void Cws_config2Ex::getNodelInfo(const std::shared_ptr<EnvironmentNode> &pNode, 
             //excludeList.append("username");
             //pAttribute->updateType().updateLimits().setDisallowList(excludeList);
 
-            std::vector<AllowedValue> allowedValues = pSchemaValue->getAllowedValues(pAttr.get());
+            std::vector<AllowedValue> allowedValues;
+            pSchemaValue->getAllowedValues(allowedValues, pAttr.get());
             if (!allowedValues.empty())
             {
                 IArrayOf<IEspchoiceType> choices;
@@ -652,7 +654,8 @@ void Cws_config2Ex::getNodelInfo(const std::shared_ptr<EnvironmentNode> &pNode, 
     // Now the children
     if (pNode->hasChildren())
     {
-        std::vector<std::shared_ptr<EnvironmentNode>> children = pNode->getChildren();
+        std::vector<std::shared_ptr<EnvironmentNode>> children;
+        pNode->getChildren(children);
         for (auto it=children.begin(); it!=children.end(); ++it)
         {
             std::shared_ptr<EnvironmentNode> pNode = *it;
@@ -673,7 +676,8 @@ void Cws_config2Ex::getNodelInfo(const std::shared_ptr<EnvironmentNode> &pNode, 
     //
     // Build a list of items that can be inserted under this node
     IArrayOf<IEspelementInfoType> newElements;
-    std::vector<std::shared_ptr<SchemaItem>> insertableList = pNode->getInsertableItems();
+    std::vector<std::shared_ptr<SchemaItem>> insertableList;
+    pNode->getInsertableItems(insertableList);
     for (auto it=insertableList.begin(); it!=insertableList.end(); ++it)
     {
         std::shared_ptr<SchemaItem> pSchemaItem = *it;
@@ -689,7 +693,7 @@ void Cws_config2Ex::getNodelInfo(const std::shared_ptr<EnvironmentNode> &pNode, 
 
     if (pNodeSchemaItem->isItemValueDefined())
     {
-        resp.setNodeValueDefined(true);
+        resp.setLocalValueDefined(true);
 
         const std::shared_ptr<SchemaValue> &pNodeSchemaValue = pNodeSchemaItem->getItemSchemaValue();
         const std::shared_ptr<SchemaType> &pType = pNodeSchemaValue->getType();
@@ -706,11 +710,11 @@ void Cws_config2Ex::getNodelInfo(const std::shared_ptr<EnvironmentNode> &pNode, 
             resp.updateValue().updateType().updateLimits().setMin(pType->getLimits()->getMin());
         }
 
-        if (pNode->isNodeValueSet())
+        if (pNode->isLocalValueSet())
         {
-            const std::shared_ptr<EnvironmentValue> &pNodeValue = pNode->getNodeEnvValue();
-            resp.setNodeValueSet(true);
-            resp.updateValue().setCurrentValue(pNodeValue->getValue().c_str());
+            const std::shared_ptr<EnvironmentValue> &pLocalValue = pNode->getLocalEnvValue();
+            resp.setLocalValueSet(true);
+            resp.updateValue().setCurrentValue(pLocalValue->getValue().c_str());
         }
     }
 
