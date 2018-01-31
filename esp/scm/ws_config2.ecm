@@ -255,8 +255,8 @@ ESPrequest OpenEnvironmentFileRequest
 {
     string sessionId;
     string filename;
-    string sessionLockKey("");            // required to force open if modified
-    bool   discardChanges(false);         // discard modifications (only works of current session owns the file)
+    //string sessionLockKey("");            // required to force open if modified
+    //bool   discardChanges(false);         // discard modifications (only works of current session owns the file)
     //bool   forceOpenIfModified(false);    // forces any current changes to be discarded
 };
 
@@ -264,6 +264,7 @@ ESPrequest OpenEnvironmentFileRequest
 ESPrequest CloseEnvironmentFileRequest
 {
     string sessionId;
+    string sessionLockKey("");            // required if existing environment is modified and discarding changes
     bool   discardChanges(false);         // discard modifications
 };
 

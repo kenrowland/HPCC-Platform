@@ -206,6 +206,8 @@ bool Cws_config2Ex::oncloseEnvironmentFile(IEspContext &context, IEspCloseEnviro
         // See if modified
         if (pSession->modified)
         {
+            // todo, only allow discard if session lock key matches
+
             //
             // Code here to make sure a modifed file is only in this session (not someone else)
             if (!req.getDiscardChanges())
@@ -232,6 +234,11 @@ bool Cws_config2Ex::oncloseEnvironmentFile(IEspContext &context, IEspCloseEnviro
 
 bool Cws_config2Ex::onsaveEnvironmentFile(IEspContext &context, IEspSaveEnvironmentFileRequest &req, IEspPassFailResponse &resp)
 {
+    // todo: If this envronment file is loaded by any other session, go mark that session that the environment has changed
+    // and don't allow a save w/o reloading first. maybe add a reload request. Add relevant errors.
+    // also make sure if filename is specified that it
+    //  1. does not match the current loaded environment if current environment is modified and lock key is missing or does not match
+    //  2. does not match the name of any other open session's loaded and locked environment.
     std::string sessionId = req.getSessionId();
     ConfigMgrSession *pSession = getConfigSession(sessionId);
     if (pSession)
