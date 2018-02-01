@@ -609,7 +609,7 @@ void Cws_config2Ex::getNodelInfo(const std::shared_ptr<EnvironmentNode> &pNode, 
                 nodeDisplayName = pAttr->getValue();  // better usability value
             }
 
-            pAttribute->updateDoc().setTooltip(pSchemaValue->getTooltip().c_str());
+            pAttribute->setTooltip(pSchemaValue->getTooltip().c_str());
 
             const std::shared_ptr<SchemaType> &pType = pSchemaValue->getType();
             std::shared_ptr<SchemaTypeLimits> &pLimits = pType->getLimits();
@@ -641,7 +641,8 @@ void Cws_config2Ex::getNodelInfo(const std::shared_ptr<EnvironmentNode> &pNode, 
                 for (auto valueIt=allowedValues.begin(); valueIt!=allowedValues.end(); ++valueIt)
                 {
                     Owned<IEspchoiceType> pChoice = createchoiceType();
-                    pChoice->setName((*valueIt).m_value.c_str());
+                    pChoice->setDisplayName((*valueIt).m_displayName.c_str());
+                    pChoice->setValue((*valueIt).m_value.c_str());
                     pChoice->setDesc((*valueIt).m_description.c_str());
                     choices.append(*pChoice.getLink());
                 }
@@ -668,11 +669,11 @@ void Cws_config2Ex::getNodelInfo(const std::shared_ptr<EnvironmentNode> &pNode, 
             std::shared_ptr<EnvironmentNode> pNode = *it;
             const std::shared_ptr<SchemaItem> pSchemaItem = pNode->getSchemaItem();
             Owned<IEspnodeType> pElement = createnodeType();
-            pElement->updateElementInfo().setName(pSchemaItem->getProperty("displayName").c_str());
-            pElement->updateElementInfo().setElementType(pSchemaItem->getItemType().c_str());
-            pElement->updateElementInfo().setClass(pSchemaItem->getProperty("className").c_str());
-            pElement->updateElementInfo().setCategory(pSchemaItem->getProperty("category").c_str());
-            pElement->updateElementInfo().updateDoc().setTooltip("");
+            pElement->updateNodeInfo().setName(pSchemaItem->getProperty("displayName").c_str());
+            pElement->updateNodeInfo().setNodeType(pSchemaItem->getItemType().c_str());
+            pElement->updateNodeInfo().setClass(pSchemaItem->getProperty("className").c_str());
+            pElement->updateNodeInfo().setCategory(pSchemaItem->getProperty("category").c_str());
+            pElement->updateNodeInfo().setTooltip("");
             pElement->setNodeId(pNode->getId().c_str());
             pElement->setNumChildren(pNode->getNumChildren());
             elements.append(*pElement.getLink());
@@ -682,15 +683,15 @@ void Cws_config2Ex::getNodelInfo(const std::shared_ptr<EnvironmentNode> &pNode, 
 
     //
     // Build a list of items that can be inserted under this node
-    IArrayOf<IEspelementInfoType> newElements;
+    IArrayOf<IEspnodeInfoType> newElements;
     std::vector<std::shared_ptr<SchemaItem>> insertableList;
     pNode->getInsertableItems(insertableList);
     for (auto it=insertableList.begin(); it!=insertableList.end(); ++it)
     {
         std::shared_ptr<SchemaItem> pSchemaItem = *it;
-        Owned<IEspelementInfoType> pNewElement = createelementInfoType();
+        Owned<IEspnodeInfoType> pNewElement = createnodeInfoType();
         pNewElement->setName(pSchemaItem->getProperty("displayName").c_str());
-        pNewElement->setElementType(pSchemaItem->getItemType().c_str());
+        pNewElement->setNodeType(pSchemaItem->getItemType().c_str());
         pNewElement->setClass(pSchemaItem->getProperty("className").c_str());
         pNewElement->setCategory(pSchemaItem->getProperty("category").c_str());
         pNewElement->setIsRequired(pSchemaItem->isRequired());
@@ -720,8 +721,28 @@ void Cws_config2Ex::getNodelInfo(const std::shared_ptr<EnvironmentNode> &pNode, 
         if (pNode->isLocalValueSet())
         {
             const std::shared_ptr<EnvironmentValue> &pLocalValue = pNode->getLocalEnvValue();
-            resp.setLocalValueSet(true);
             resp.updateValue().setCurrentValue(pLocalValue->getValue().c_str());
+
+            //
+            // Type information
+            const std::shared_ptr<SchemaValue> pLocalSchemaValue = pLocalValue->getSchemaValue();
+            const std::shared_ptr<SchemaType> &pLocalType = pLocalSchemaValue->getType();
+            std::shared_ptr<SchemaTypeLimits> &pLimits = pLocalType->getLimits();
+            resp.updateValue().updateType().setName(pLocalType->getName().c_str());
+            if (pLocalType->getLimits()->isMaxSet())
+            {
+                resp.updateValue().updateType().updateLimits().setMaxValid(true);
+                resp.updateValue().updateType().updateLimits().setMax(pLocalType->getLimits()->getMax());
+            }
+            if (pLocalType->getLimits()->isMinSet())
+            {
+                resp.updateValue().updateType().updateLimits().setMinValid(true);
+                resp.updateValue().updateType().updateLimits().setMin(pLocalType->getLimits()->getMin());
+            }
+
+            resp.updateValue().setRequired(pLocalSchemaValue->isRequired());
+            resp.updateValue().setReadOnly(pLocalSchemaValue->isReadOnly());
+            resp.updateValue().setHidden(pLocalSchemaValue->isHidden());
         }
     }
 

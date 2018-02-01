@@ -39,8 +39,9 @@ ESPresponse PassFailResponse
 };
 
 
-ESPresponse CommonStatusResponse
+ESPresponse PassFailResponseWithStatus
 {
+    bool error(false);
     ESPstruct statusType status;
 };
 
@@ -200,7 +201,8 @@ ESPrequest SetValuesRequest
     ESParray<ESPstruct attributeValueType, attribute> attributeValues;
     bool allowInvalid(false);  // true to allow setting an invalid value
     bool forceCreate(false);   // force creaation of new value if not defined
-    string value("");   // only valid if valueDefined is true for this path, ignored otherwise
+    bool validateOnly(false);  // only checks validity of new values, no changes are made
+    string localValue("");
 };
 
 
