@@ -102,7 +102,8 @@ ESPstruct instanceType
 
 ESPstruct choiceType
 {
-    string name;
+    string displayName;
+    string value;
     string desc("");
 };
 
@@ -114,9 +115,9 @@ ESPstruct limitsType
     int    min(0);
     int    max(0);
     ESParray<ESPstruct choiceType, choice> choiceList;
-    ESParray<string, disallow> disallowList;
+    //ESParray<string, disallow> disallowList;
     ESParray<string, expr> regex;
-    ESParray<ESPstruct instanceType, instance> allowedInstances;
+    //ESParray<ESPstruct instanceType, instance> allowedInstances;
 };
 
 
@@ -128,37 +129,30 @@ ESPstruct typeInfo
 };
 
 
-ESPstruct docType
-{
-    string tooltip("");
-    string msg("");
-};
-
-
-ESPstruct elementInfoType
+ESPstruct nodeInfoType
 {
     string    name("");
-    string    elementType("");
+    string    nodeType("");
     string    class("");
     string    category("");
     bool      isRequired(false);   // only used when in the insertable list
-    ESPstruct docType doc;
+    string    tooltip("");
 };
 
 
 ESPstruct nodeType
 {
-    ESPstruct elementInfoType elementInfo;
     string    nodeId;
     int       numChildren(0);
+    ESPstruct nodeInfoType nodeInfo;
 };
 
 
 ESPstruct attributeType
 {
-    string    displayName;
-    string    name;
-    ESPstruct docType doc;
+    string     displayName;
+    string     name;
+    string     tooltip("");
     ESPstruct  typeInfo type;
     string currentValue("");
     string defaultValue("");
@@ -183,9 +177,8 @@ ESPresponse [exceptions_inline, encode(0)] GetNodeResponse
     ESPstruct statusType status;
     ESParray<ESPstruct attributeType, attribute> attributes;
     ESParray<ESPstruct nodeType, child> children;
-    ESParray<ESPstruct elementInfoType, item> insertable;        // list of insertable elements under this node
+    ESParray<ESPstruct nodeInfoType, item> insertable;        // list of insertable elements under this node
     bool localValueDefined(false);                                // true if the node is configured to have a value (not usually true)
-    bool localValueSet(false);                                    // if configured, true if the node value has been set
     ESPstruct attributeType value;                               // this would be <element>value</element> not normal, see valueDefined
 };
 
