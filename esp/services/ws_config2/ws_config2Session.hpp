@@ -78,9 +78,16 @@ struct ConfigMgrSession {
     }
 
 
+    void getEnvironmentFullyQualifiedPath(const std::string &envFile, std::string &fullPath)
+    {
+        fullPath = sourcePath + envFile;
+    }
+
+
     bool loadEnvironment(const std::string &envFile)
     {
-        std::string fullPath = sourcePath + "/" + envFile;
+        std::string fullPath;
+        getEnvironmentFullyQualifiedPath(envFile, fullPath);
         bool rc = true;
 
         if (!curEnvironmentFile.empty())

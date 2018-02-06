@@ -39,7 +39,7 @@ ESPresponse PassFailResponse
 };
 
 
-ESPresponse PassFailResponseWithStatus
+ESPresponse PassFailWithStatusResponse
 {
     bool   error(false);
     string msg("");
@@ -169,6 +169,7 @@ ESPresponse [exceptions_inline, encode(0)] GetNodeResponse
 {
     string nodeId;
     bool   error(false);
+    string msg("");
     ESPstruct nodeInfoType nodeInfo;
     ESPstruct statusType status;
     ESParray<ESPstruct attributeType, attribute> attributes;
@@ -184,7 +185,7 @@ ESPrequest InsertNodeRequest  // response is same as GetPathRequest
     string sessionId("0");
     string sessionLockKey("");
     string parentNodeId;
-    string elementType;  // name of new instance to create
+    string nodeType;  // name of new instance to create
 };
 
 
@@ -298,7 +299,7 @@ ESPservice [auth_feature("DEFERRED"),version("2.0"), default_client_version("2.0
     ESPMethod getParents(NodeRequest, GetParentsResponse);
     ESPMethod insertNode(InsertNodeRequest, GetNodeResponse);
     ESPMethod removeNode(RemoveNodeRequest, PassFailResponse);
-    ESPMethod validateEnvironment(CommonSessionRequest, PassFailResponseWithStatus);
+    ESPMethod validateEnvironment(CommonSessionRequest, PassFailWithStatusResponse);
 };
 
 

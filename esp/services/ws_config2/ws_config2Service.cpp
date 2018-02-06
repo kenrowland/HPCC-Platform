@@ -4,8 +4,8 @@
 
 static const std::string CFG2_MASTER_CONFIG_FILE = "environment.xsd";
 static const std::string CFG2_CONFIG_DIR = COMPONENTFILES_DIR  "/config2xml/";
-//static const std::string CFG2_SOURCE_DIR = CFG2_CONFIG_DIR;
 static const std::string CFG2_SOURCE_DIR = CONFIG_SOURCE_DIR;
+static const std::string ACTIVE_ENVIRONMENT_FILE = CONFIG_DIR "/" ENV_XML_FILE;
 
 Cws_config2Ex::Cws_config2Ex()
 {
@@ -26,11 +26,12 @@ bool Cws_config2Ex::onopenSession(IEspContext &context, IEspOpenSessionRequest &
     std::string inputMasterFile = req.getMasterSchemaFile();
     std::string inputSchemaPath = req.getSchemaPath();
     std::string inputSourcePath = req.getSourcePath();
+    std::string inputActivePath = req.getSourcePath();
     pNewSession->masterConfigFile = (inputMasterFile != "") ? inputMasterFile : CFG2_MASTER_CONFIG_FILE;
     pNewSession->username = req.getUsername();
-    pNewSession->schemaPath = (inputSchemaPath != "") ? inputSchemaPath : CFG2_CONFIG_DIR;
-    pNewSession->sourcePath = (inputSourcePath != "") ? inputSourcePath : CFG2_SOURCE_DIR;
-    pNewSession->activePath = req.getActivePath();
+    pNewSession->schemaPath = !inputSchemaPath.empty() ? inputSchemaPath : CFG2_CONFIG_DIR;
+    pNewSession->sourcePath = !inputSourcePath.empty() ? inputSourcePath : CFG2_SOURCE_DIR;
+    pNewSession->activePath = !inputActivePath.empty() ? inputActivePath : ACTIVE_ENVIRONMENT_FILE;
 
     std::string cfgType = req.getType();
     if (cfgType == "XML")
@@ -103,6 +104,11 @@ bool Cws_config2Ex::ongetEnvironmentFileList(IEspContext &context, IEspCommonSes
 
     if (pSession)
     {
+        //
+        // Calculate md5 checksum of the current active config
+        StringBuffer activeConfig_md5sum;
+        md5_filesum(pSession->activePath.c_str(), activeConfig_md5sum);
+
         IArrayOf<IEspenvironmentFileType> environmentFiles;
         Owned<IFile> pDir = createIFile(CFG2_SOURCE_DIR.c_str());
         if (pDir->exists())
@@ -118,6 +124,18 @@ bool Cws_config2Ex::ongetEnvironmentFileList(IEspContext &context, IEspCommonSes
                 {
                     Owned<IEspenvironmentFileType> pEnvFile = createenvironmentFileType();
                     pEnvFile->setFilename(filename.str());
+
+                    //
+                    // See if active
+                    StringBuffer curEnvFile_md5sum;
+                    std::string fullPath;
+                    std::string fname = filename.str();
+                    pSession->getEnvironmentFullyQualifiedPath(fname, fullPath);
+                    md5_filesum(fullPath.c_str(), curEnvFile_md5sum);
+                    if (strcmp(curEnvFile_md5sum.str(),activeConfig_md5sum.str()) == 0)
+                    {
+                        pEnvFile->setIsActive(true);
+                    }
                     environmentFiles.append(*pEnvFile.getLink());
                 }
             }
@@ -272,14 +290,22 @@ bool Cws_config2Ex::onlockSession(IEspContext &context, IEspCommonSessionRequest
     ConfigMgrSession *pSession = getConfigSession(sessionId);
     if (pSession)
     {
-        if (pSession->lock())
+        if (pSession->curEnvironmentFile.empty())
         {
-            resp.setSessionLockKey(pSession->lockKey.c_str());
+            resp.setError(true);
+            resp.setMsg("You must load an environment before locking.");
         }
         else
         {
-            resp.setError(true);
-            resp.setMsg("There was a problem locking the session (already locked?)");
+            if (pSession->lock())
+            {
+                resp.setSessionLockKey(pSession->lockKey.c_str());
+            }
+            else
+            {
+                resp.setError(true);
+                resp.setMsg("There was a problem locking the session (already locked?)");
+            }
         }
     }
     else
@@ -370,7 +396,7 @@ bool Cws_config2Ex::oninsertNode(IEspContext &context, IEspInsertNodeRequest &re
 
         if (pNode)
         {
-            std::shared_ptr<EnvironmentNode> pNewNode = pSession->m_pEnvMgr->addNewEnvironmentNode(parentNodeId, req.getElementType(), status);
+            std::shared_ptr<EnvironmentNode> pNewNode = pSession->m_pEnvMgr->addNewEnvironmentNode(parentNodeId, req.getNodeType(), status);
             if (pNewNode)
             {
                 getNodelInfo(pNewNode, resp);
@@ -428,7 +454,7 @@ bool Cws_config2Ex::onremoveNode(IEspContext &context, IEspRemoveNodeRequest &re
 }
 
 
-bool Cws_config2Ex::onvalidateEnvironment(IEspContext &context, IEspCommonSessionRequest &req, IEspPassFailResponseWithStatus &resp)
+bool Cws_config2Ex::onvalidateEnvironment(IEspContext &context, IEspCommonSessionRequest &req, IEspPassFailWithStatusResponse &resp)
 {
     Status status;
     std::string sessionId = req.getSessionId();

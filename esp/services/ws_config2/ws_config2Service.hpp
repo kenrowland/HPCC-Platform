@@ -34,7 +34,7 @@ public:
     virtual bool onsaveEnvironmentFile(IEspContext &context, IEspSaveEnvironmentFileRequest &req, IEspPassFailResponse &resp);
     virtual bool onlockSession(IEspContext &context, IEspCommonSessionRequest &req, IEspLockSessionResponse &resp);
     virtual bool onunlockSession(IEspContext &context, IEspUnlockSessionRequest &req, IEspPassFailResponse &resp);
-    virtual bool onvalidateEnvironment(IEspContext &context, IEspCommonSessionRequest &req, IEspPassFailResponseWithStatus &resp);
+    virtual bool onvalidateEnvironment(IEspContext &context, IEspCommonSessionRequest &req, IEspPassFailWithStatusResponse &resp);
 
 
 private:
