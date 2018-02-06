@@ -308,16 +308,19 @@ void XSDSchemaParser::parseElement(const pt::ptree &elemTree)
     std::string className = elemTree.get("<xmlattr>.hpcc:class", "");
     std::string category = elemTree.get("<xmlattr>.hpcc:category", "");
     std::string displayName = elemTree.get("<xmlattr>.hpcc:displayName", "");
+    std::string tooltip = elemTree.get("<xmlattr>.hpcc:tooltip", "");
     std::string typeName = elemTree.get("<xmlattr>.type", "");
     unsigned minOccurs = elemTree.get("<xmlattr>.minOccurs", 1);
     std::string maxOccursStr = elemTree.get("<xmlattr>.maxOccurs", "1");
     unsigned maxOccurs = (maxOccursStr != "unbounded") ? stoi(maxOccursStr) : UINTMAX_MAX;
 
-    std::shared_ptr<SchemaItem> pConfigElement = std::make_shared<SchemaItem>(elementName, className, m_pSchemaItem);
-    pConfigElement->setProperty("displayName", displayName);
-    pConfigElement->setMinInstances(minOccurs);
-    pConfigElement->setMaxInstances(maxOccurs);
-    pConfigElement->setProperty("category", category);
+    std::shared_ptr<SchemaItem> pNewSchemaItem = std::make_shared<SchemaItem>(elementName, className, m_pSchemaItem);
+    pNewSchemaItem->setProperty("displayName", displayName);
+    pNewSchemaItem->setMinInstances(minOccurs);
+    pNewSchemaItem->setMaxInstances(maxOccurs);
+    pNewSchemaItem->setProperty("category", category);
+    pNewSchemaItem->setProperty("tooltip", tooltip);
+    pNewSchemaItem->setHidden(elemTree.get("<xmlattr>.hpcc:hidden", "false") == "true");
 
     pt::ptree childTree = elemTree.get_child("", pt::ptree());
 
@@ -338,7 +341,7 @@ void XSDSchemaParser::parseElement(const pt::ptree &elemTree)
             {
                 std::shared_ptr<SchemaValue> pCfgValue = std::make_shared<SchemaValue>("");  // no name value since it's the element's value
                 pCfgValue->setType(pSimpleType);                      // will throw if type is not defined
-                pConfigElement->setItemSchemaValue(pCfgValue);
+                pNewSchemaItem->setItemSchemaValue(pCfgValue);
             }
             else
             {
@@ -347,22 +350,22 @@ void XSDSchemaParser::parseElement(const pt::ptree &elemTree)
                 {
                     //
                     // Insert into this config element the component defined data (attributes, references, etc.)
-                    pConfigElement->insertSchemaType(pConfigType);
+                    pNewSchemaItem->insertSchemaType(pConfigType);
 
                     //
                     // Set element min/max instances to that defined by the component type def (ignore values parsed above)
-                    pConfigElement->setMinInstances(pConfigType->getMinInstances());
-                    pConfigElement->setMaxInstances(pConfigType->getMaxInstances());
+                    pNewSchemaItem->setMinInstances(pConfigType->getMinInstances());
+                    pNewSchemaItem->setMaxInstances(pConfigType->getMaxInstances());
 
                     //
                     // If a component, then set element data (allow overriding with locally parsed values)
                     if (pConfigType->getProperty("className") == "component")
                     {
-                        pConfigElement->setProperty("name", (!elementName.empty()) ? elementName : pConfigType->getProperty("name"));
-                        pConfigElement->setProperty("className", (!className.empty()) ? className : pConfigType->getProperty("className"));
-                        pConfigElement->setProperty("category", (!category.empty()) ? category : pConfigType->getProperty("category"));
-                        pConfigElement->setProperty("displayName", (!displayName.empty()) ? displayName : pConfigType->getProperty("displayName"));
-                        pConfigElement->setProperty("componentName", pConfigType->getProperty("componentName"));
+                        pNewSchemaItem->setProperty("name", (!elementName.empty()) ? elementName : pConfigType->getProperty("name"));
+                        pNewSchemaItem->setProperty("className", (!className.empty()) ? className : pConfigType->getProperty("className"));
+                        pNewSchemaItem->setProperty("category", (!category.empty()) ? category : pConfigType->getProperty("category"));
+                        pNewSchemaItem->setProperty("displayName", (!displayName.empty()) ? displayName : pConfigType->getProperty("displayName"));
+                        pNewSchemaItem->setProperty("componentName", pConfigType->getProperty("componentName"));
                     }
                 }
                 else
@@ -377,13 +380,13 @@ void XSDSchemaParser::parseElement(const pt::ptree &elemTree)
         // Now, if there are children, create a parser and have at it
         if (!childTree.empty())
         {
-            std::shared_ptr<XSDSchemaParser> pXSDParaser = std::make_shared<XSDSchemaParser>(pConfigElement);
+            std::shared_ptr<XSDSchemaParser> pXSDParaser = std::make_shared<XSDSchemaParser>(pNewSchemaItem);
             pXSDParaser->parseXSD(childTree);
         }
 
         //
         // Add the element
-        m_pSchemaItem->addChild(pConfigElement);
+        m_pSchemaItem->addChild(pNewSchemaItem);
 
     }
 }

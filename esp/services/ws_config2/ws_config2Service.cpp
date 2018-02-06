@@ -64,7 +64,6 @@ bool Cws_config2Ex::oncloseSession(IEspContext &context, IEspCloseSessionRequest
 {
     std::string sessionId = req.getSessionId();
     ConfigMgrSession *pSession = getConfigSession(sessionId);
-    Status status;
 
     bool rc = true;
 
@@ -101,9 +100,6 @@ bool Cws_config2Ex::ongetEnvironmentFileList(IEspContext &context, IEspCommonSes
 {
     std::string sessionId = req.getSessionId();
     ConfigMgrSession *pSession = getConfigSession(sessionId);
-    Status status;
-
-    bool rc = true;
 
     if (pSession)
     {
@@ -133,7 +129,7 @@ bool Cws_config2Ex::ongetEnvironmentFileList(IEspContext &context, IEspCommonSes
         resp.setError(true);
         resp.setMsg("The session ID is not valid");
     }
-    return rc;
+    return true;
 }
 
 
@@ -324,8 +320,6 @@ bool Cws_config2Ex::ongetNode(IEspContext &context, IEspNodeRequest &req, IEspGe
     ConfigMgrSession *pSession = getConfigSession(sessionId);
     Status status;
 
-    bool rc;
-
     if (pSession)
     {
         EnvironmentMgr *pEnvMgr = pSession->m_pEnvMgr;
@@ -334,17 +328,18 @@ bool Cws_config2Ex::ongetNode(IEspContext &context, IEspNodeRequest &req, IEspGe
         if (pNode)
         {
             getNodelInfo(pNode, resp);
-
+            pNode->validate(status, false);  // validate this node only
         }
         else
         {
             status.addMsg(statusMsg::error, id.c_str(), "", "", "The input node ID is not a valid not in the environment");
-            rc = false;
+            resp.setError(true);
         }
     }
     else
     {
         status.addMsg(statusMsg::error, id.c_str(), "", "", "The session ID is not valid");
+        resp.setError(true);
     }
 
     //
@@ -358,7 +353,7 @@ bool Cws_config2Ex::ongetNode(IEspContext &context, IEspNodeRequest &req, IEspGe
     // Finalize the response
     resp.setNodeId(id.c_str());
 
-    return rc;
+    return true;
 }
 
 
@@ -367,8 +362,6 @@ bool Cws_config2Ex::oninsertNode(IEspContext &context, IEspInsertNodeRequest &re
     std::string sessionId = req.getSessionId();
     ConfigMgrSession *pSession = getConfigSessionForUpdate(sessionId, req.getSessionLockKey());
     Status status;
-
-    bool rc = true;
 
     if (pSession)
     {
@@ -388,12 +381,13 @@ bool Cws_config2Ex::oninsertNode(IEspContext &context, IEspInsertNodeRequest &re
         else
         {
             status.addMsg(statusMsg::error, sessionId.c_str(), "", "", "The input parent node ID is not a valid not in the environment");
-            rc = false;
+            resp.setError(true);
         }
     }
     else
     {
         status.addMsg(statusMsg::error, sessionId.c_str(), "", "", "The session ID is not valid, session is not locked, or the key is not correct");
+        resp.setError(true);
     }
 
     //
@@ -406,23 +400,47 @@ bool Cws_config2Ex::oninsertNode(IEspContext &context, IEspInsertNodeRequest &re
 }
 
 
-/*bool Cws_config2Ex::onremoveNode(IEspContext &context, IEspRemoveNodeRequest &req, IEspCommonStatusResponse &resp)
+bool Cws_config2Ex::onremoveNode(IEspContext &context, IEspRemoveNodeRequest &req, IEspPassFailResponse &resp)
 {
     std::string sessionId = req.getSessionId();
     ConfigMgrSession *pSession = getConfigSessionForUpdate(sessionId, req.getSessionLockKey());
     Status status;
 
-    bool rc = true;
-
     if (pSession)
     {
         std::string nodeId = req.getNodeId();
-        rc = pSession->m_pEnvMgr->removeEnvironmentNode(nodeId, status);
+        bool rc = pSession->m_pEnvMgr->removeEnvironmentNode(nodeId);
+        resp.setError(!rc);
         pSession->modified = true;
+        if (!rc)
+        {
+            resp.setMsg("There was a problem removing the node (invalid nodeID?)");
+            resp.setError(true);
+        }
     }
     else
     {
-        status.addMsg(statusMsg::error, sessionId.c_str(), "", "", "The session ID is not valid, session is not locked, or the key is not correct");
+        resp.setMsg("The session ID is not valid, session is not locked, or the key is not correct");
+        resp.setError(true);
+    }
+
+    return true;
+}
+
+
+bool Cws_config2Ex::onvalidateEnvironment(IEspContext &context, IEspCommonSessionRequest &req, IEspPassFailResponseWithStatus &resp)
+{
+    Status status;
+    std::string sessionId = req.getSessionId();
+    ConfigMgrSession *pSession = getConfigSession(sessionId);
+    if (pSession)
+    {
+        pSession->m_pEnvMgr->validate(status);
+    }
+    else
+    {
+        resp.setMsg("The session ID is not valid, session is not locked, or the key is not correct");
+        resp.setError(true);
     }
 
     //
@@ -432,8 +450,8 @@ bool Cws_config2Ex::oninsertNode(IEspContext &context, IEspInsertNodeRequest &re
     resp.updateStatus().setStatus(msgs);
     resp.updateStatus().setError(status.isError());
 
-    return rc;
-}*/
+    return true;
+}
 
 
 bool Cws_config2Ex::onsetValues(IEspContext &context, IEspSetValuesRequest &req, IEspSetValuesResponse &resp)
@@ -445,7 +463,6 @@ bool Cws_config2Ex::onsetValues(IEspContext &context, IEspSetValuesRequest &req,
     {
         std::string id = req.getNodeId();
         std::shared_ptr<EnvironmentNode> pNode = pSession->m_pEnvMgr->getEnvironmentNode(id);
-        Status status;
         if (pNode)
         {
             bool forceCreate = req.getForceCreate();
@@ -466,11 +483,13 @@ bool Cws_config2Ex::onsetValues(IEspContext &context, IEspSetValuesRequest &req,
         else
         {
             status.addMsg(statusMsg::error, id.c_str(), "", "", "The input node ID is not a valid not in the environment");
+            resp.setError(true);
         }
     }
     else
     {
         status.addMsg(statusMsg::error, sessionId.c_str(), "", "", "The session ID is not valid, session is not locked, or the key is not correct");
+        resp.setError(true);
     }
 
     //
@@ -482,12 +501,12 @@ bool Cws_config2Ex::onsetValues(IEspContext &context, IEspSetValuesRequest &req,
 
     return true;
 }
-//
+
+
 bool Cws_config2Ex::ongetParents(IEspContext &context, IEspNodeRequest &req, IEspGetParentsResponse &resp)
 {
     std::string nodeId = req.getNodeId();
     std::string sessionId = req.getSessionId();
-    Status status;
 
     ConfigMgrSession *pSession = getConfigSession(sessionId);
     if (pSession)
@@ -508,20 +527,15 @@ bool Cws_config2Ex::ongetParents(IEspContext &context, IEspNodeRequest &req, IEs
         }
         else
         {
-            status.addMsg(statusMsg::error, nodeId.c_str(), "", "", "The input node ID is not a valid not in the environment");
+            resp.setMsg("The input node ID is not a valid not in the environment");
+            resp.setError(true);
         }
     }
     else
     {
-        status.addMsg(statusMsg::error, sessionId.c_str(), "", "", "The session ID is not valid, session is not locked, or the key is not correct");
+        resp.setMsg("The session ID is not valid, session is not locked, or the key is not correct");
+        resp.setError(true);
     }
-
-    //
-    // Add the messages in the status object to the response
-    IArrayOf<IEspstatusMsgType> msgs;
-    buildStatusMessageObject(msgs, status);
-    resp.updateStatus().setStatus(msgs);
-    resp.updateStatus().setError(status.isError());
 
     return true;
 }
@@ -582,11 +596,18 @@ bool Cws_config2Ex::deleteConfigSession(const std::string &sessionId)
 
 void Cws_config2Ex::getNodelInfo(const std::shared_ptr<EnvironmentNode> &pNode, IEspGetNodeResponse &resp) const
 {
-    Status status;
-
     const std::shared_ptr<SchemaItem> &pNodeSchemaItem = pNode->getSchemaItem();
     std::string nodeDisplayName = pNodeSchemaItem->getProperty("displayName");
-    IArrayOf<IEspnodeType> elements;
+
+    //
+    // Fill in base node info struct
+    resp.updateNodeInfo().setName(nodeDisplayName.c_str());
+    resp.updateNodeInfo().setNodeType(pNodeSchemaItem->getItemType().c_str());
+    resp.updateNodeInfo().setClass(pNodeSchemaItem->getProperty("className").c_str());
+    resp.updateNodeInfo().setCategory(pNodeSchemaItem->getProperty("category").c_str());
+    resp.updateNodeInfo().setTooltip(pNodeSchemaItem->getProperty("tooltip").c_str());
+    resp.updateNodeInfo().setIsHidden(pNodeSchemaItem->isHidden());
+    resp.setNodeId(pNode->getId().c_str());
 
     //
     // Handle the attributes
@@ -656,48 +677,51 @@ void Cws_config2Ex::getNodelInfo(const std::shared_ptr<EnvironmentNode> &pNode, 
         }
     }
     resp.setAttributes(nodeAttributes);
-    resp.setNodeName(nodeDisplayName.c_str());
 
     //
     // Now the children
+    IArrayOf<IEspnodeType> childNodes;
     if (pNode->hasChildren())
     {
         std::vector<std::shared_ptr<EnvironmentNode>> children;
         pNode->getChildren(children);
         for (auto it=children.begin(); it!=children.end(); ++it)
         {
-            std::shared_ptr<EnvironmentNode> pNode = *it;
-            const std::shared_ptr<SchemaItem> pSchemaItem = pNode->getSchemaItem();
-            Owned<IEspnodeType> pElement = createnodeType();
-            pElement->updateNodeInfo().setName(pSchemaItem->getProperty("displayName").c_str());
-            pElement->updateNodeInfo().setNodeType(pSchemaItem->getItemType().c_str());
-            pElement->updateNodeInfo().setClass(pSchemaItem->getProperty("className").c_str());
-            pElement->updateNodeInfo().setCategory(pSchemaItem->getProperty("category").c_str());
-            pElement->updateNodeInfo().setTooltip("");
-            pElement->setNodeId(pNode->getId().c_str());
-            pElement->setNumChildren(pNode->getNumChildren());
-            elements.append(*pElement.getLink());
+            std::shared_ptr<EnvironmentNode> pChildEnvNode = *it;
+            const std::shared_ptr<SchemaItem> pSchemaItem = pChildEnvNode->getSchemaItem();
+            Owned<IEspnodeType> pChildNode = createnodeType();
+            pChildNode->updateNodeInfo().setName(pSchemaItem->getProperty("displayName").c_str());
+            pChildNode->updateNodeInfo().setNodeType(pSchemaItem->getItemType().c_str());
+            pChildNode->updateNodeInfo().setClass(pSchemaItem->getProperty("className").c_str());
+            pChildNode->updateNodeInfo().setCategory(pSchemaItem->getProperty("category").c_str());
+            pChildNode->updateNodeInfo().setTooltip(pSchemaItem->getProperty("tooltip").c_str());
+            pChildNode->updateNodeInfo().setIsHidden(pSchemaItem->isHidden());
+            pChildNode->setNodeId(pChildEnvNode->getId().c_str());
+            pChildNode->setNumChildren(pChildEnvNode->getNumChildren());
+            childNodes.append(*pChildNode.getLink());
         }
     }
-    resp.setChildren(elements);
+    resp.setChildren(childNodes);
 
     //
     // Build a list of items that can be inserted under this node
-    IArrayOf<IEspnodeInfoType> newElements;
+    IArrayOf<IEspnodeInfoType> newNodes;
     std::vector<std::shared_ptr<SchemaItem>> insertableList;
     pNode->getInsertableItems(insertableList);
     for (auto it=insertableList.begin(); it!=insertableList.end(); ++it)
     {
         std::shared_ptr<SchemaItem> pSchemaItem = *it;
-        Owned<IEspnodeInfoType> pNewElement = createnodeInfoType();
-        pNewElement->setName(pSchemaItem->getProperty("displayName").c_str());
-        pNewElement->setNodeType(pSchemaItem->getItemType().c_str());
-        pNewElement->setClass(pSchemaItem->getProperty("className").c_str());
-        pNewElement->setCategory(pSchemaItem->getProperty("category").c_str());
-        pNewElement->setIsRequired(pSchemaItem->isRequired());
-        newElements.append(*pNewElement.getLink());
+        Owned<IEspnodeInfoType> pNodeInfo = createnodeInfoType();
+        pNodeInfo->setName(pSchemaItem->getProperty("displayName").c_str());
+        pNodeInfo->setNodeType(pSchemaItem->getItemType().c_str());
+        pNodeInfo->setClass(pSchemaItem->getProperty("className").c_str());
+        pNodeInfo->setCategory(pSchemaItem->getProperty("category").c_str());
+        pNodeInfo->setTooltip(pSchemaItem->getProperty("tooltip").c_str());
+        pNodeInfo->setIsRequired(pSchemaItem->isRequired());
+        pNodeInfo->setIsHidden(pSchemaItem->isHidden());  // not likely, but just to be complete
+        newNodes.append(*pNodeInfo.getLink());
     }
-    resp.setInsertable(newElements);
+    resp.setInsertable(newNodes);
 
     if (pNodeSchemaItem->isItemValueDefined())
     {
@@ -745,12 +769,4 @@ void Cws_config2Ex::getNodelInfo(const std::shared_ptr<EnvironmentNode> &pNode, 
             resp.updateValue().setHidden(pLocalSchemaValue->isHidden());
         }
     }
-
-    //
-    // Add the messages in the status object to the response
-    IArrayOf<IEspstatusMsgType> msgs;
-    buildStatusMessageObject(msgs, status);
-    resp.updateStatus().setStatus(msgs);
-    resp.updateStatus().setError(status.isError());
-
 }

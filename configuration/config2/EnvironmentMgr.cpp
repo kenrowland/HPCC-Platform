@@ -195,7 +195,7 @@ std::shared_ptr<EnvironmentNode> EnvironmentMgr::addNewEnvironmentNode(const std
 }
 
 
-bool EnvironmentMgr::removeEnvironmentNode(const std::string &nodeId, Status &status)
+bool EnvironmentMgr::removeEnvironmentNode(const std::string &nodeId)
 {
     bool rc = false;
     std::shared_ptr<EnvironmentNode> pNode = getEnvironmentNode(nodeId);
@@ -206,15 +206,8 @@ bool EnvironmentMgr::removeEnvironmentNode(const std::string &nodeId, Status &st
         if (pParentNode->removeChild(pNode))
         {
             m_nodeIds.erase(nodeId);
+            rc = true;
         }
-        else
-        {
-            status.addMsg(statusMsg::error, nodeId, "", "", "Unable to remove the node");
-        }
-    }
-    else
-    {
-        status.addMsg(statusMsg::error, nodeId, "", "", "Unable to find indicated node");
     }
 
     return rc;

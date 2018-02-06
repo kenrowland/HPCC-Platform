@@ -196,7 +196,7 @@ void EnvironmentNode::validate(Status &status, bool includeChildren) const
     // Check node value
     if (m_pLocalValue)
     {
-        m_pLocalValue->validate(status, "");
+        m_pLocalValue->validate(status, m_id);
     }
 
     //
@@ -247,7 +247,7 @@ void EnvironmentNode::validate(Status &status, bool includeChildren) const
     {
         for (auto childIt = m_children.begin(); childIt != m_children.end(); ++childIt)
         {
-            childIt->second->validate(status);
+            childIt->second->validate(status, includeChildren);
         }
     }
 }

@@ -41,7 +41,8 @@ ESPresponse PassFailResponse
 
 ESPresponse PassFailResponseWithStatus
 {
-    bool error(false);
+    bool   error(false);
+    string msg("");
     ESPstruct statusType status;
 };
 
@@ -81,23 +82,16 @@ ESPrequest CloseSessionRequest
 
 ESPrequest NodeRequest
 {
-    string sessionId("0");
+    string sessionId;
     string nodeId;
 };
 
 
-//ESPrequest RemoveNodeRequest
-//{
-//    string sessionId();
-//    string sessionLockKey("");
-//    string nodeId;
-//};
-
-
-ESPstruct instanceType
+ESPrequest RemoveNodeRequest
 {
-    string displayName;
-    string type;
+    string sessionId;
+    string sessionLockKey("");
+    string nodeId;
 };
 
 
@@ -118,7 +112,6 @@ ESPstruct limitsType
     ESParray<ESPstruct choiceType, choice> choiceList;
     //ESParray<string, disallow> disallowList;
     ESParray<string, expr> regex;
-    //ESParray<ESPstruct instanceType, instance> allowedInstances;
 };
 
 
@@ -137,6 +130,7 @@ ESPstruct nodeInfoType
     string    class("");
     string    category("");
     bool      isRequired(false);   // only used when in the insertable list
+    bool      isHidden(false);
     string    tooltip("");
 };
 
@@ -174,12 +168,13 @@ ESPstruct attributeValueType
 ESPresponse [exceptions_inline, encode(0)] GetNodeResponse
 {
     string nodeId;
-    string nodeName;
+    bool   error(false);
+    ESPstruct nodeInfoType nodeInfo;
     ESPstruct statusType status;
     ESParray<ESPstruct attributeType, attribute> attributes;
     ESParray<ESPstruct nodeType, child> children;
-    ESParray<ESPstruct nodeInfoType, item> insertable;        // list of insertable elements under this node
-    bool localValueDefined(false);                                // true if the node is configured to have a value (not usually true)
+    ESParray<ESPstruct nodeInfoType, item> insertable;           // list of insertable elements under this node
+    bool localValueDefined(false);                               // true if the node is configured to have a value (not usually true)
     ESPstruct attributeType value;                               // this would be <element>value</element> not normal, see valueDefined
 };
 
@@ -209,6 +204,7 @@ ESPrequest SetValuesRequest
 ESPresponse [exceptions_inline, encode(0)] SetValuesResponse
 {
     string nodeId;
+    bool   error(false);
     ESPstruct statusType status;
 };
 
@@ -216,8 +212,8 @@ ESPresponse [exceptions_inline, encode(0)] SetValuesResponse
 
 ESPresponse [exceptions_inline, encode(0)] GetParentsResponse
 {
-    string nodeId;
-    ESPstruct statusType status;
+    bool   error(false);
+    string msg("");
     ESParray<string, parentId> parentIdList;
 };
 
@@ -301,7 +297,8 @@ ESPservice [auth_feature("DEFERRED"),version("2.0"), default_client_version("2.0
     ESPMethod setValues(SetValuesRequest, SetValuesResponse);
     ESPMethod getParents(NodeRequest, GetParentsResponse);
     ESPMethod insertNode(InsertNodeRequest, GetNodeResponse);
-    //ESPMethod removeNode(RemoveNodeRequest, CommonStatusResponse);
+    ESPMethod removeNode(RemoveNodeRequest, PassFailResponse);
+    ESPMethod validateEnvironment(CommonSessionRequest, PassFailResponseWithStatus);
 };
 
 
