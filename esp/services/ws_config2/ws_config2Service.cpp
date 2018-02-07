@@ -119,7 +119,8 @@ bool Cws_config2Ex::ongetEnvironmentFileList(IEspContext &context, IEspCommonSes
                 StringBuffer filename;
                 it->getName(filename);
 
-                String str(filename.toLowerCase());
+                String str(filename);
+                str.toLowerCase();
                 if (str.endsWith(pSession->getEnvironmentFileExtension().c_str()))
                 {
                     Owned<IEspenvironmentFileType> pEnvFile = createenvironmentFileType();

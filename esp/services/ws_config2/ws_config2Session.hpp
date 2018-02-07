@@ -79,7 +79,7 @@ struct ConfigMgrSession {
 
     void getEnvironmentFullyQualifiedPath(const std::string &envFile, std::string &fullPath)
     {
-        fullPath = sourcePath + envFile;
+        fullPath = sourcePath + "/" + envFile;
     }
 
 

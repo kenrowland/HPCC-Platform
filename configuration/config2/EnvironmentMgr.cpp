@@ -32,7 +32,7 @@ EnvironmentMgr *getEnvironmentMgrInstance(const EnvironmentType envType)
 
 
 EnvironmentMgr::EnvironmentMgr() :
-    m_key(0)
+    m_key(1)  // ID 0 is reserved for the root node
 {
     m_pSchema = std::make_shared<SchemaItem>("root");  // make the root
 }

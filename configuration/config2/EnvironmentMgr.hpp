@@ -55,7 +55,7 @@ class DECL_EXPORT EnvironmentMgr
         std::shared_ptr<EnvironmentNode> addNewEnvironmentNode(const std::string &parentNodeId, const std::string &configType, Status &status);
         bool removeEnvironmentNode(const std::string &nodeId);
         bool saveEnvironment(const std::string &qualifiedFilename);
-        void discardEnvironment() { m_pRootNode = nullptr; }
+        void discardEnvironment() { m_pRootNode = nullptr; m_nodeIds.clear(); m_key=1; }
         void validate(Status &status) const;
 
 
