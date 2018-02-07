@@ -40,7 +40,6 @@ struct DECL_EXPORT statusMsg {
     msgLevel msgLevel;                // Message level
     std::string nodeId;               // if not '', the node ID to which this status applies
     std::string attribute;            // possible name of attribute in nodeId
-    std::vector<std::string> parents;
     std::string msg;                  // message for user
 };
 

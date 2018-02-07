@@ -66,7 +66,6 @@ struct ConfigMgrSession {
            {
                rc = false;
                lastMsg = "Unable to load configuration schema, error = " + m_pEnvMgr->getLastSchemaMessage();
-
            }
         }
         else
@@ -90,33 +89,18 @@ struct ConfigMgrSession {
         getEnvironmentFullyQualifiedPath(envFile, fullPath);
         bool rc = true;
 
-        if (!curEnvironmentFile.empty())
+        closeEnvironment();
+
+        if (!m_pEnvMgr->loadEnvironment(fullPath))
         {
-            if (modified)
-            {
-                rc = false;
-                lastMsg = "Current environment has been modified, either save or close it first";
-            }
-            else
-            {
-                closeEnvironment();
-            }
+            rc = false;
+            lastMsg = "Unable to load environment file, error = " + m_pEnvMgr->getLastEnvironmentMessage();
+        }
+        else
+        {
+            curEnvironmentFile = envFile;
         }
 
-        if (rc)
-        {
-            if (!m_pEnvMgr->loadEnvironment(fullPath))
-            {
-                rc = false;
-                lastMsg = "Unable to load environment file, error = " + m_pEnvMgr->getLastEnvironmentMessage();
-            }
-            else
-            {
-                curEnvironmentFile = envFile;
-                locked = modified = false;
-                lockKey = "";
-            }
-        }
         return rc;
     }
 
@@ -137,7 +121,7 @@ struct ConfigMgrSession {
         if (m_pEnvMgr->saveEnvironment(saveFile))
         {
             modified = false;
-            locked = locked & (curEnvironmentFile == envFile);  // keep it locked?
+            locked = locked && (curEnvironmentFile == envFile);  // keep it locked?
             if (!locked)
                 lockKey = "";   // clear lockKey if no longer locked
             curEnvironmentFile = saveFile;

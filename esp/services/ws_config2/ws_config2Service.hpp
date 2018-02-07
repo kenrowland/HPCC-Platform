@@ -39,11 +39,12 @@ public:
 
 private:
 
-    void buildStatusMessageObject(IArrayOf<IEspstatusMsgType> &msgs, const Status &status) const;
+    void buildStatusMessageObject(IArrayOf<IEspstatusMsgType> &msgs, const Status &status, ConfigMgrSession *pSession) const;
     ConfigMgrSession *getConfigSession(const std::string &sessionId);
     ConfigMgrSession *getConfigSessionForUpdate(const std::string &sessionId, const std::string &lockKey);
     bool deleteConfigSession(const std::string &sessionId);
     void getNodelInfo(const std::shared_ptr<EnvironmentNode> &pNode, IEspGetNodeResponse &resp) const;
+    void getNodeParents(const std::string &nodeId, ConfigMgrSession *pSession, StringArray &parentNodeIds) const;
 
 
 private:

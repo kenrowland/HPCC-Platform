@@ -20,9 +20,9 @@ ESPstruct statusMsgType
 {
     string msgLevel;                // message level ("info", "warning", "error", "fatal")
     string nodeId;                  // node identifier that generated this status message
-    string refNodeId("");           // optional refereence node (message dependent)
     string attribute("");           // name of node's attribute generating the message ("" for the node itself)
     string msg;                     // the message
+    ESParray<string, parentId> parentIdList;
 };
 
 ESPstruct statusType

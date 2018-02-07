@@ -157,36 +157,15 @@ bool Cws_config2Ex::onopenEnvironmentFile(IEspContext &context, IEspOpenEnvironm
     ConfigMgrSession *pSession = getConfigSession(req.getSessionId());
     if (pSession)
     {
-        doOpen = true;   // assume we are moving ahead with the open
+        doOpen = true;
 
         //
-        // See if modified
+        // See if modified (which can only be true if an environment is currently loaded)
         if (pSession->modified)
         {
-            //
-            // Code here to make sure a modifed file is only in this session (not someone else)
-            //if (!req.getdiscardChanges())
-            {
-                resp.setError(true);
-                resp.setMsg("Current file has been modified.");
-                doOpen = false;
-            }
-
-            //if (req.getForceOpenIfModified() )
-            //{
-            //    if (pSession->doesKeyFit(req.getSessionLockKey()))
-            //    {
-            //        resp.setError(true);
-            //        resp.setMsg("Session lock key mismatch when opening new environment with changes in current loaded environment");
-            //        doOpen = false;
-            //    }
-            //}
-            //else
-            //{
-            //    resp.setError(true);
-            //    resp.setMsg("Current environment has been modified without saving the changes");
-            //    doOpen = false;
-            //}
+            resp.setError(true);
+            resp.setMsg("Current environment has been modified, eaither save or close it first.");
+            doOpen = false;
         }
 
         if (doOpen)
@@ -288,7 +267,7 @@ bool Cws_config2Ex::onlockSession(IEspContext &context, IEspCommonSessionRequest
 {
     std::string sessionId = req.getSessionId();
     ConfigMgrSession *pSession = getConfigSession(sessionId);
-    if (pSession)
+    if (pSession && !pSession->locked)
     {
         if (pSession->curEnvironmentFile.empty())
         {
@@ -297,21 +276,37 @@ bool Cws_config2Ex::onlockSession(IEspContext &context, IEspCommonSessionRequest
         }
         else
         {
-            if (pSession->lock())
+            bool okToLock = true;
+            //
+            // Search existing sessions to see if any currently have this environment file locked
+            for (auto sessionIt = m_sessions.begin(); sessionIt != m_sessions.end(); ++sessionIt)
             {
-                resp.setSessionLockKey(pSession->lockKey.c_str());
+                if (sessionIt->second != pSession && sessionIt->second->locked && pSession->curEnvironmentFile == sessionIt->second->curEnvironmentFile)
+                {
+                    okToLock = false;
+                    resp.setError(true);
+                    resp.setMsg("The environment is locked by another session");
+                }
             }
-            else
+
+            if (okToLock)
             {
-                resp.setError(true);
-                resp.setMsg("There was a problem locking the session (already locked?)");
+                if (pSession->lock())
+                {
+                    resp.setSessionLockKey(pSession->lockKey.c_str());
+                }
+                else
+                {
+                    resp.setError(true);
+                    resp.setMsg("There was a problem locking the session (already locked?)");
+                }
             }
         }
     }
     else
     {
         resp.setError(true);
-        resp.setMsg("The session ID is not valid");
+        resp.setMsg("The session ID is not valid or is alredy locked");
     }
     return true;
 }
@@ -371,7 +366,7 @@ bool Cws_config2Ex::ongetNode(IEspContext &context, IEspNodeRequest &req, IEspGe
     //
     // Add the messages in the status object to the response
     IArrayOf<IEspstatusMsgType> msgs;
-    buildStatusMessageObject(msgs, status);
+    buildStatusMessageObject(msgs, status, pSession);
     resp.updateStatus().setStatus(msgs);
     resp.updateStatus().setError(status.isError());
 
@@ -419,7 +414,7 @@ bool Cws_config2Ex::oninsertNode(IEspContext &context, IEspInsertNodeRequest &re
     //
     // Add the messages in the status object to the response
     IArrayOf<IEspstatusMsgType> msgs;
-    buildStatusMessageObject(msgs, status);
+    buildStatusMessageObject(msgs, status, pSession);
     resp.updateStatus().setStatus(msgs);
     resp.updateStatus().setError(status.isError());
     return true;
@@ -472,7 +467,7 @@ bool Cws_config2Ex::onvalidateEnvironment(IEspContext &context, IEspCommonSessio
     //
     // Add the messages in the status object to the response
     IArrayOf<IEspstatusMsgType> msgs;
-    buildStatusMessageObject(msgs, status);
+    buildStatusMessageObject(msgs, status, pSession);
     resp.updateStatus().setStatus(msgs);
     resp.updateStatus().setError(status.isError());
 
@@ -521,7 +516,7 @@ bool Cws_config2Ex::onsetValues(IEspContext &context, IEspSetValuesRequest &req,
     //
     // Add the messages in the status object to the response
     IArrayOf<IEspstatusMsgType> msgs;
-    buildStatusMessageObject(msgs, status);
+    buildStatusMessageObject(msgs, status, pSession);
     resp.updateStatus().setStatus(msgs);
     resp.updateStatus().setError(status.isError());
 
@@ -537,10 +532,10 @@ bool Cws_config2Ex::ongetParents(IEspContext &context, IEspNodeRequest &req, IEs
     ConfigMgrSession *pSession = getConfigSession(sessionId);
     if (pSession)
     {
+        StringArray ids;
         std::shared_ptr<EnvironmentNode> pNode = pSession->m_pEnvMgr->getEnvironmentNode(nodeId);
         if (pNode)
         {
-            StringArray ids;
             while (pNode)
             {
                 pNode = pNode->getParent();
@@ -549,13 +544,13 @@ bool Cws_config2Ex::ongetParents(IEspContext &context, IEspNodeRequest &req, IEs
                     ids.append(pNode->getId().c_str());
                 }
             }
-            resp.setParentIdList(ids);
         }
         else
         {
             resp.setMsg("The input node ID is not a valid not in the environment");
             resp.setError(true);
         }
+        resp.setParentIdList(ids);   // even if empty we should set it
     }
     else
     {
@@ -567,7 +562,7 @@ bool Cws_config2Ex::ongetParents(IEspContext &context, IEspNodeRequest &req, IEs
 }
 
 
-void Cws_config2Ex::buildStatusMessageObject(IArrayOf<IEspstatusMsgType> &msgs, const Status &status) const
+void Cws_config2Ex::buildStatusMessageObject(IArrayOf<IEspstatusMsgType> &msgs, const Status &status, ConfigMgrSession *pSession) const
 {
     std::vector<statusMsg> statusMsgs = status.getMessages();
     for (auto msgIt=statusMsgs.begin(); msgIt!=statusMsgs.end(); ++msgIt)
@@ -577,6 +572,14 @@ void Cws_config2Ex::buildStatusMessageObject(IArrayOf<IEspstatusMsgType> &msgs, 
         pStatusMsg->setMsg((*msgIt).msg.c_str());
         pStatusMsg->setMsgLevel(status.getStatusTypeString((*msgIt).msgLevel).c_str());
         pStatusMsg->setAttribute((*msgIt).attribute.c_str());
+
+        if (!(*msgIt).nodeId.empty() && pSession != nullptr)
+        {
+            StringArray ids;
+            getNodeParents((*msgIt).nodeId, pSession, ids);
+            std::shared_ptr<EnvironmentNode> pNode = pSession->m_pEnvMgr->getEnvironmentNode((*msgIt).nodeId);
+            pStatusMsg->setParentIdList(ids);
+        }
         msgs.append(*pStatusMsg.getLink());
     }
 }
@@ -792,6 +795,23 @@ void Cws_config2Ex::getNodelInfo(const std::shared_ptr<EnvironmentNode> &pNode, 
             resp.updateValue().setRequired(pLocalSchemaValue->isRequired());
             resp.updateValue().setReadOnly(pLocalSchemaValue->isReadOnly());
             resp.updateValue().setHidden(pLocalSchemaValue->isHidden());
+        }
+    }
+}
+
+
+void Cws_config2Ex::getNodeParents(const std::string &nodeId, ConfigMgrSession *pSession, StringArray &parentNodeIds) const
+{
+    std::shared_ptr<EnvironmentNode> pNode = pSession->m_pEnvMgr->getEnvironmentNode(nodeId);
+    if (pNode)
+    {
+        while (pNode)
+        {
+            pNode = pNode->getParent();
+            if (pNode)
+            {
+                parentNodeIds.append(pNode->getId().c_str());
+            }
         }
     }
 }
