@@ -358,13 +358,13 @@ bool Cws_config2Ex::ongetNode(IEspContext &context, IEspNodeRequest &req, IEspGe
         }
         else
         {
-            status.addMsg(statusMsg::error, id.c_str(), "", "", "The input node ID is not a valid not in the environment");
+            status.addMsg(statusMsg::error, id.c_str(), "", "The input node ID is not a valid not in the environment");
             resp.setError(true);
         }
     }
     else
     {
-        status.addMsg(statusMsg::error, id.c_str(), "", "", "The session ID is not valid");
+        status.addMsg(statusMsg::error, id.c_str(), "", "The session ID is not valid");
         resp.setError(true);
     }
 
@@ -406,13 +406,13 @@ bool Cws_config2Ex::oninsertNode(IEspContext &context, IEspInsertNodeRequest &re
         }
         else
         {
-            status.addMsg(statusMsg::error, sessionId.c_str(), "", "", "The input parent node ID is not a valid not in the environment");
+            status.addMsg(statusMsg::error, sessionId.c_str(), "", "The input parent node ID is not a valid not in the environment");
             resp.setError(true);
         }
     }
     else
     {
-        status.addMsg(statusMsg::error, sessionId.c_str(), "", "", "The session ID is not valid, session is not locked, or the key is not correct");
+        status.addMsg(statusMsg::error, sessionId.c_str(), "", "The session ID is not valid, session is not locked, or the key is not correct");
         resp.setError(true);
     }
 
@@ -508,13 +508,13 @@ bool Cws_config2Ex::onsetValues(IEspContext &context, IEspSetValuesRequest &req,
         }
         else
         {
-            status.addMsg(statusMsg::error, id.c_str(), "", "", "The input node ID is not a valid not in the environment");
+            status.addMsg(statusMsg::error, id.c_str(), "", "The input node ID is not a valid not in the environment");
             resp.setError(true);
         }
     }
     else
     {
-        status.addMsg(statusMsg::error, sessionId.c_str(), "", "", "The session ID is not valid, session is not locked, or the key is not correct");
+        status.addMsg(statusMsg::error, sessionId.c_str(), "", "The session ID is not valid, session is not locked, or the key is not correct");
         resp.setError(true);
     }
 
@@ -576,7 +576,6 @@ void Cws_config2Ex::buildStatusMessageObject(IArrayOf<IEspstatusMsgType> &msgs, 
         pStatusMsg->setNodeId((*msgIt).nodeId.c_str());
         pStatusMsg->setMsg((*msgIt).msg.c_str());
         pStatusMsg->setMsgLevel(status.getStatusTypeString((*msgIt).msgLevel).c_str());
-        pStatusMsg->setRefNodeId((*msgIt).referNodeId.c_str());
         pStatusMsg->setAttribute((*msgIt).attribute.c_str());
         msgs.append(*pStatusMsg.getLink());
     }

@@ -159,7 +159,7 @@ std::shared_ptr<EnvironmentNode> EnvironmentMgr::addNewEnvironmentNode(const std
     }
     else
     {
-        status.addMsg(statusMsg::error, parentNodeId, "", "", "Unable to find indicated parent node");
+        status.addMsg(statusMsg::error, parentNodeId, "", "Unable to find indicated parent node");
     }
     return pNewNode;
 }

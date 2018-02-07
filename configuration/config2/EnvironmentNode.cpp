@@ -136,7 +136,7 @@ void EnvironmentNode::setAttributeValue(const std::string &attrName, const std::
         addAttribute(attrName, pEnvValue);
         if (!pCfgValue->isDefined())
         {
-            status.addMsg(statusMsg::warning, getId(), attrName, "", "Undefined attribute did not exist in configuration, was created");
+            status.addMsg(statusMsg::warning, getId(), attrName, "Undefined attribute did not exist in configuration, was created");
         }
     }
 
@@ -146,7 +146,7 @@ void EnvironmentNode::setAttributeValue(const std::string &attrName, const std::
     }
     else
     {
-        status.addMsg(statusMsg::error, getId(), attrName, "", "The attribute does not exist and was not created");
+        status.addMsg(statusMsg::error, getId(), attrName, "The attribute does not exist and was not created");
     }
 
 }
@@ -221,7 +221,7 @@ void EnvironmentNode::validate(Status &status, bool includeChildren) const
 
             if (found)
             {
-                status.addUniqueMsg(statusMsg::error, m_id, attrIt->second->getName(), "", "Attribute value must be unique");
+                status.addUniqueMsg(statusMsg::error, m_id, attrIt->second->getName(), "Attribute value must be unique");
             }
         }
 
@@ -236,7 +236,7 @@ void EnvironmentNode::validate(Status &status, bool includeChildren) const
                 found = *it == attrIt->second->getValue();
             if (!found)
             {
-                status.addMsg(statusMsg::error, m_id, attrIt->second->getName(), "", "Attribute value must be from a unique set");
+                status.addMsg(statusMsg::error, m_id, attrIt->second->getName(), "Attribute value must be from a unique set");
             }
         }
     }
