@@ -97,6 +97,25 @@ bool Cws_config2Ex::oncloseSession(IEspContext &context, IEspCloseSessionRequest
 }
 
 
+bool Cws_config2Ex::ongetOpenSessions(IEspContext &context, IEspListOpenSessionsRequest &req, IEspListOpenSessionsResponse &resp)
+{
+    IArrayOf<IEspopenSessionInfo> openSessions;
+    for (auto sessionIt=m_sessions.begin(); sessionIt != m_sessions.end(); ++sessionIt)
+    {
+        ConfigMgrSession *pSession = sessionIt->second;
+        Owned<IEspopenSessionInfo> pSessionInfo = createopenSessionInfo();
+        pSessionInfo->setSessionId(sessionIt->first.c_str());
+        pSessionInfo->setUsername(pSession->username.c_str());
+        pSessionInfo->setCurEnvironmentFile(pSession->curEnvironmentFile.c_str());
+        pSessionInfo->setLocked(pSession->locked);
+        pSessionInfo->setModified(pSession->modified);
+        openSessions.append(*pSessionInfo.getLink());
+    }
+    resp.setOpenSessions(openSessions);
+    return true;
+}
+
+
 bool Cws_config2Ex::ongetEnvironmentFileList(IEspContext &context, IEspCommonSessionRequest &req, IEspGetEnvironmentListResponse &resp)
 {
     std::string sessionId = req.getSessionId();
@@ -354,13 +373,13 @@ bool Cws_config2Ex::ongetNode(IEspContext &context, IEspNodeRequest &req, IEspGe
         }
         else
         {
-            status.addMsg(statusMsg::error, id.c_str(), "", "The input node ID is not a valid not in the environment");
+            resp.setMsg("The input node ID is not a valid not in the environment");
             resp.setError(true);
         }
     }
     else
     {
-        status.addMsg(statusMsg::error, id.c_str(), "", "The session ID is not valid");
+        resp.setMsg("The session ID is not valid");
         resp.setError(true);
     }
 
@@ -382,7 +401,8 @@ bool Cws_config2Ex::ongetNode(IEspContext &context, IEspNodeRequest &req, IEspGe
 bool Cws_config2Ex::oninsertNode(IEspContext &context, IEspInsertNodeRequest &req, IEspGetNodeResponse &resp)
 {
     std::string sessionId = req.getSessionId();
-    ConfigMgrSession *pSession = getConfigSessionForUpdate(sessionId, req.getSessionLockKey());
+    std::string key = req.getSessionLockKey();
+    ConfigMgrSession *pSession = getConfigSessionForUpdate(sessionId, key);
     Status status;
 
     if (pSession)
@@ -425,7 +445,8 @@ bool Cws_config2Ex::oninsertNode(IEspContext &context, IEspInsertNodeRequest &re
 bool Cws_config2Ex::onremoveNode(IEspContext &context, IEspRemoveNodeRequest &req, IEspPassFailResponse &resp)
 {
     std::string sessionId = req.getSessionId();
-    ConfigMgrSession *pSession = getConfigSessionForUpdate(sessionId, req.getSessionLockKey());
+    std::string key = req.getSessionLockKey();
+    ConfigMgrSession *pSession = getConfigSessionForUpdate(sessionId, key);
     Status status;
 
     if (pSession)
@@ -450,14 +471,14 @@ bool Cws_config2Ex::onremoveNode(IEspContext &context, IEspRemoveNodeRequest &re
 }
 
 
-bool Cws_config2Ex::onvalidateEnvironment(IEspContext &context, IEspCommonSessionRequest &req, IEspPassFailWithStatusResponse &resp)
+bool Cws_config2Ex::onvalidateEnvironment(IEspContext &context, IEspValidateEnvironmentRequest &req, IEspPassFailWithStatusResponse &resp)
 {
     Status status;
     std::string sessionId = req.getSessionId();
     ConfigMgrSession *pSession = getConfigSession(sessionId);
     if (pSession)
     {
-        pSession->m_pEnvMgr->validate(status);
+        pSession->m_pEnvMgr->validate(status, req.getIncludeHiddenNodes());
     }
     else
     {
@@ -480,7 +501,8 @@ bool Cws_config2Ex::onsetValues(IEspContext &context, IEspSetValuesRequest &req,
 {
     Status status;
     std::string sessionId = req.getSessionId();
-    ConfigMgrSession *pSession = getConfigSessionForUpdate(sessionId, req.getSessionLockKey());
+    std::string key = req.getSessionLockKey();
+    ConfigMgrSession *pSession = getConfigSessionForUpdate(sessionId, key);
     if (pSession)
     {
         std::string id = req.getNodeId();
@@ -601,7 +623,7 @@ ConfigMgrSession *Cws_config2Ex::getConfigSession(const std::string &sessionId)
 ConfigMgrSession *Cws_config2Ex::getConfigSessionForUpdate(const std::string &sessionId, const std::string &lockKey)
 {
     ConfigMgrSession *pSession = getConfigSession(sessionId);
-    if (!pSession || pSession->doesKeyFit(lockKey))
+    if (!pSession || !pSession->doesKeyFit(lockKey))
     {
         pSession = nullptr;
     }

@@ -168,7 +168,7 @@ struct ConfigMgrSession {
         bool rc = true;
         if (locked)
         {
-            locked = (lockKey == key);
+            locked = !(lockKey == key);
             rc = !locked;
         }
         return rc;

@@ -56,7 +56,7 @@ class DECL_EXPORT EnvironmentMgr
         bool removeEnvironmentNode(const std::string &nodeId);
         bool saveEnvironment(const std::string &qualifiedFilename);
         void discardEnvironment() { m_pRootNode = nullptr; m_nodeIds.clear(); m_key=1; }
-        void validate(Status &status) const;
+        void validate(Status &status, bool includeHiddenNodes=false) const;
 
 
     protected:

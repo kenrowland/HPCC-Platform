@@ -220,11 +220,11 @@ std::string EnvironmentMgr::getUniqueKey()
 }
 
 
-void EnvironmentMgr::validate(Status &status) const
+void EnvironmentMgr::validate(Status &status, bool includeHiddenNodes) const
 {
     if (m_pRootNode)
     {
-        m_pRootNode->validate(status, true);
+        m_pRootNode->validate(status, true, includeHiddenNodes);
     }
     else
     {

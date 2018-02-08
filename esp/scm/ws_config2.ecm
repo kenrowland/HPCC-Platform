@@ -63,7 +63,7 @@ ESPrequest OpenSessionRequest
 
 ESPresponse OpenSessionResponse
 {
-    bool error(false);
+    bool   error(false);
     string sessionId;
     string msg("");         // any messages from the open session request
 };
@@ -72,9 +72,32 @@ ESPresponse OpenSessionResponse
 ESPrequest CloseSessionRequest
 {
     string sessionId;
-    bool forceClose(false);    // must be true to close a session that have a modified environmrnt file
+    bool forceClose(false);    // must be true to close a session that has a modified environmrnt file
 };
 
+
+ESPrequest ListOpenSessionsRequest
+{
+    string dummyParam("");    // not used
+};
+
+
+ESPstruct openSessionInfo
+{
+    string sessionId;
+    string username;
+    string curEnvironmentFile("");
+    bool   locked;
+    bool   modified;
+};
+
+
+ESPresponse ListOpenSessionsResponse
+{
+    bool   error(false);
+    string msg("");
+    ESParray<ESPstruct openSessionInfo, sessionInfo> openSessions;
+};
 
 
 //
@@ -284,6 +307,13 @@ ESPrequest UnlockSessionRequest
 };
 
 
+ESPrequest ValidateEnvironmentRequest
+{
+    string sessionId;
+    bool   includeHiddenNodes(false);   // includes hidden nodes (hidden attributes always included)
+};
+
+
 ESPservice [auth_feature("DEFERRED"),version("2.0"), default_client_version("2.0"), exceptions_inline("xslt/exceptions.xslt")] ws_config2
 {
     ESPMethod openSession(OpenSessionRequest, OpenSessionResponse);
@@ -299,7 +329,8 @@ ESPservice [auth_feature("DEFERRED"),version("2.0"), default_client_version("2.0
     ESPMethod getParents(NodeRequest, GetParentsResponse);
     ESPMethod insertNode(InsertNodeRequest, GetNodeResponse);
     ESPMethod removeNode(RemoveNodeRequest, PassFailResponse);
-    ESPMethod validateEnvironment(CommonSessionRequest, PassFailWithStatusResponse);
+    ESPMethod validateEnvironment(ValidateEnvironmentRequest, PassFailWithStatusResponse);
+    ESPMethod getOpenSessions(ListOpenSessionsRequest, ListOpenSessionsResponse);
 };
 
 
