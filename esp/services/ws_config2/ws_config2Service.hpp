@@ -36,6 +36,7 @@ public:
     virtual bool onunlockSession(IEspContext &context, IEspUnlockSessionRequest &req, IEspPassFailResponse &resp);
     virtual bool onvalidateEnvironment(IEspContext &context, IEspValidateEnvironmentRequest &req, IEspPassFailWithStatusResponse &resp);
     virtual bool ongetOpenSessions(IEspContext &context, IEspListOpenSessionsRequest &req, IEspListOpenSessionsResponse &resp);
+    virtual bool ongetTree(IEspContext &context, IEspGetTreeRequest &req, IEspGetTreeResponse &resp);
 
 
 private:
@@ -44,8 +45,13 @@ private:
     ConfigMgrSession *getConfigSession(const std::string &sessionId);
     ConfigMgrSession *getConfigSessionForUpdate(const std::string &sessionId, const std::string &lockKey);
     bool deleteConfigSession(const std::string &sessionId);
-    void getNodelInfo(const std::shared_ptr<EnvironmentNode> &pNode, IEspGetNodeResponse &resp) const;
+    void getNodeResponse(const std::shared_ptr<EnvironmentNode> &pNode, IEspGetNodeResponse &resp) const;
+    void getNodeInfo(const std::shared_ptr<EnvironmentNode> &pNode, IEspnodeInfoType &nodeInfo) const;
+    void getNodeInfo(const std::shared_ptr<SchemaItem> &pNodeSchemaItem, IEspnodeInfoType &nodeInfo) const;
+    void getAttributes(const std::vector<std::shared_ptr<EnvironmentValue>> &attributes, IArrayOf<IEspattributeType> &nodeAttributes) const;
+    void getNodeDisplayName(const std::shared_ptr<EnvironmentNode> &pNode, std::string &nodeDisplayName) const;
     void getNodeParents(const std::string &nodeId, ConfigMgrSession *pSession, StringArray &parentNodeIds) const;
+    void getNodeTree(const std::shared_ptr<EnvironmentNode> &pNode, IEsptreeElementType &treeElement, int levels, bool includeAttributes) const;
 
 
 private:

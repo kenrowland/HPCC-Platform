@@ -314,6 +314,34 @@ ESPrequest ValidateEnvironmentRequest
 };
 
 
+ESPrequest GetTreeRequest
+{
+    string sessionId;
+    string nodeId;
+    bool   includeAttributes;
+    int    numLevels(1);        // use -1 for all
+};
+
+
+ESPstruct treeElementType
+{
+    string    nodeId;
+    ESPstruct nodeInfoType nodeInfo;
+    ESParray<ESPstruct attributeType, attribute> attributes;
+    ESParray<ESPstruct treeElementType, node> children;
+};
+
+
+ESPresponse GetTreeResponse
+{
+    bool error(false);
+    string msg("");
+    ESPstruct treeElementType tree;
+};
+
+
+
+
 ESPservice [auth_feature("DEFERRED"),version("2.0"), default_client_version("2.0"), exceptions_inline("xslt/exceptions.xslt")] ws_config2
 {
     ESPMethod openSession(OpenSessionRequest, OpenSessionResponse);
@@ -331,6 +359,7 @@ ESPservice [auth_feature("DEFERRED"),version("2.0"), default_client_version("2.0
     ESPMethod removeNode(RemoveNodeRequest, PassFailResponse);
     ESPMethod validateEnvironment(ValidateEnvironmentRequest, PassFailWithStatusResponse);
     ESPMethod getOpenSessions(ListOpenSessionsRequest, ListOpenSessionsResponse);
+    ESPMethod getTree(GetTreeRequest, GetTreeResponse);
 };
 
 
