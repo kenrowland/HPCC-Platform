@@ -19,6 +19,7 @@
 #include "Exceptions.hpp"
 #include "XMLEnvironmentMgr.hpp"
 
+std::atomic_int EnvironmentMgr::m_key(1);
 
 EnvironmentMgr *getEnvironmentMgrInstance(const EnvironmentType envType)
 {
@@ -31,8 +32,7 @@ EnvironmentMgr *getEnvironmentMgrInstance(const EnvironmentType envType)
 }
 
 
-EnvironmentMgr::EnvironmentMgr() :
-    m_key(1)  // ID 0 is reserved for the root node
+EnvironmentMgr::EnvironmentMgr()
 {
     m_pSchema = std::make_shared<SchemaItem>("root");  // make the root
 }
@@ -78,7 +78,23 @@ bool EnvironmentMgr::loadEnvironment(const std::string &qualifiedFilename)
         in.open(qualifiedFilename);
         if (in.is_open())
         {
-            rc = doLoadEnvironment(in);
+            try
+            {
+                m_pRootNode = doLoadEnvironment(in, m_pSchema);
+                if (m_pRootNode != nullptr)
+                {
+                    assignNodeIds(m_pRootNode);
+                    rc = true;
+                }
+                else
+                {
+                    m_message = "There was an unknown error loading the environment";
+                }
+            }
+            catch (ParseException &pe)
+            {
+                m_message = pe.what();
+            }
         }
         else
         {
@@ -90,6 +106,17 @@ bool EnvironmentMgr::loadEnvironment(const std::string &qualifiedFilename)
         m_message = "No schema loaded";
     }
     return rc;
+}
+
+
+std::string EnvironmentMgr::getRootNodeId() const
+{
+    std::string nodeId;
+    if (m_pRootNode != nullptr)
+    {
+        nodeId = m_pRootNode->getId();
+    }
+    return nodeId;
 }
 
 
@@ -172,7 +199,7 @@ std::shared_ptr<EnvironmentNode> EnvironmentMgr::addNewEnvironmentNode(const std
     //
     // Create the new node and add it to the parent
     pNewNode = std::make_shared<EnvironmentNode>(pNewCfgItem, pNewCfgItem->getProperty("name"), pParentNode);
-    pNewNode->setId(getUniqueKey());
+    pNewNode->setId(EnvironmentMgr::getUniqueKey());
     pParentNode->addChild(pNewNode);
     addPath(pNewNode);
     pNewNode->initialize();
@@ -190,6 +217,17 @@ std::shared_ptr<EnvironmentNode> EnvironmentMgr::addNewEnvironmentNode(const std
             addNewEnvironmentNode(pNewNode, *childIt, status);
         }
     }
+
+    //
+    // See if the schema item has 'extra' stuff that needs to be added
+
+    if (pNewCfgItem->hasNodeInsertData())
+    {
+        std::istringstream extraData(pNewCfgItem->getNodeInsertData());
+        std::shared_ptr<EnvironmentNode> pExtaDataNode = doLoadEnvironment(extraData, pNewCfgItem);
+        int i = 3;
+    }
+
 
     return pNewNode;
 }
@@ -229,5 +267,18 @@ void EnvironmentMgr::validate(Status &status, bool includeHiddenNodes) const
     else
     {
         status.addMsg(statusMsg::error, "No environment loaded");
+    }
+}
+
+
+void EnvironmentMgr::assignNodeIds(const std::shared_ptr<EnvironmentNode> &pNode)
+{
+    pNode->setId(getUniqueKey());
+    addPath(pNode);
+    std::vector<std::shared_ptr<EnvironmentNode>> children;
+    pNode->getChildren(children);
+    for (auto it=children.begin(); it!=children.end(); ++it)
+    {
+        assignNodeIds(*it);
     }
 }

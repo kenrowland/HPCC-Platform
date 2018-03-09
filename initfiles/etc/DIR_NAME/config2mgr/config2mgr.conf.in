@@ -1,7 +1,7 @@
 ## Default configuration file for config2
 
 [components]
-configmgr=esp;${CONFIG_DIR}/config2
+configmgr=esp;${CONFIG_DIR}/config2mgr
 brokenconntimeout=60
 buildset=buildset.xml
 wizardalgorithm=genenvrules.conf

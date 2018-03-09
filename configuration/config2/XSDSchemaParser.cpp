@@ -170,6 +170,10 @@ void XSDSchemaParser::parseXSD(const pt::ptree &keys)
         {
             parseKeyRef(it->second);
         }
+        else if (elemType == "xs:annotation")
+        {
+            parseAppInfo(it->second.get_child("xs:appinfo", pt::ptree()));
+        }
     }
 }
 
@@ -315,7 +319,7 @@ void XSDSchemaParser::parseElement(const pt::ptree &elemTree)
     std::string typeName = elemTree.get("<xmlattr>.type", "");
     unsigned minOccurs = elemTree.get("<xmlattr>.minOccurs", 1);
     std::string maxOccursStr = elemTree.get("<xmlattr>.maxOccurs", "1");
-    unsigned maxOccurs = (maxOccursStr != "unbounded") ? stoi(maxOccursStr) : UINTMAX_MAX;
+    unsigned maxOccurs = (maxOccursStr != "unbounded") ? stoi(maxOccursStr) : UINT_MAX;
 
     std::shared_ptr<SchemaItem> pNewSchemaItem = std::make_shared<SchemaItem>(elementName, className, m_pSchemaItem);
     pNewSchemaItem->setProperty("displayName", displayName);
@@ -391,6 +395,24 @@ void XSDSchemaParser::parseElement(const pt::ptree &elemTree)
         // Add the element
         m_pSchemaItem->addChild(pNewSchemaItem);
 
+    }
+}
+
+
+void XSDSchemaParser::parseAppInfo(const pt::ptree &elemTree)
+{
+    std::string appInfoType = elemTree.get("<xmlattr>.hpcc:infoType", "");
+
+    //
+    // insert_xml represents xml to be inserted with this node when inserted into an environment
+    if (appInfoType == "insertXml")
+    {
+        pt::ptree emptyTree;
+        const pt::ptree &insertXMLTree = elemTree.get_child("", emptyTree);
+
+        std::ostringstream out;
+        pt::write_xml(out, insertXMLTree);
+        m_pSchemaItem->setNodeInsertData(out.str());
     }
 }
 

@@ -17,6 +17,8 @@
 
 #include "XMLEnvironmentMgr.hpp"
 #include "XSDSchemaParser.hpp"
+#include "XMLEnvironmentLoader.hpp"
+#include "Exceptions.hpp"
 
 
 bool XMLEnvironmentMgr::createParser()
@@ -26,34 +28,21 @@ bool XMLEnvironmentMgr::createParser()
 }
 
 
-bool XMLEnvironmentMgr::doLoadEnvironment(std::istream &in)
+std::shared_ptr<EnvironmentNode>  XMLEnvironmentMgr::doLoadEnvironment(std::istream &in, const std::shared_ptr<SchemaItem> &pSchemaItem)
 {
-
-    bool rc = true;
-    pt::ptree envTree;
+    std::shared_ptr<EnvironmentNode> pEnvNode;
     try
     {
-        pt::read_xml(in, envTree, pt::xml_parser::trim_whitespace | pt::xml_parser::no_comments);
-        auto rootIt = envTree.begin();
-
-        //
-        // Start at root, these better match!
-        std::string rootName = rootIt->first;
-        if (rootName == m_pSchema->getProperty("name"))
-        {
-            m_pRootNode = std::make_shared<EnvironmentNode>(m_pSchema, rootName);
-            m_pRootNode->setId("0");
-            addPath(m_pRootNode);
-            parse(rootIt->second, m_pSchema, m_pRootNode);
-        }
+        XMLEnvironmentLoader envLoader;
+        pEnvNode = envLoader.load(in, pSchemaItem);
     }
     catch (const std::exception &e)
     {
         std::string xmlError = e.what();
-        m_message = "Unable to read/parse Environment file. Error = " + xmlError;
-        rc = false;
+        std::string msg = "Unable to read/parse Environment file. Error = " + xmlError;
+        throw (ParseException(msg));
     }
-    return rc;
+    return pEnvNode;
 }
 
 
@@ -79,7 +68,6 @@ bool XMLEnvironmentMgr::save(std::ostream &out)
 
 void XMLEnvironmentMgr::parse(const pt::ptree &envTree, const std::shared_ptr<SchemaItem> &pConfigItem, std::shared_ptr<EnvironmentNode> &pEnvNode)
 {
-
     //
     // First see if the node has a value
     std::string value;
@@ -130,6 +118,7 @@ void XMLEnvironmentMgr::parse(const pt::ptree &envTree, const std::shared_ptr<Sc
             {
                 pSchemaItem = pConfigItem->getChild(elemName);
             }
+            // todo: need to handle pSchemaitem (remant to pChildConfigItem) not found (throw exception or make a default config item)
             std::shared_ptr<EnvironmentNode> pElementNode = std::make_shared<EnvironmentNode>(pSchemaItem, elemName, pEnvNode);
             pElementNode->setId(getUniqueKey());
             addPath(pElementNode);

@@ -73,6 +73,10 @@ class DECL_EXPORT SchemaItem : public std::enable_shared_from_this<SchemaItem>
         void setHidden(bool hidden) { m_hidden = hidden; }
         bool isHidden() const { return m_hidden; }
 
+        const std::string &getNodeInsertData() const { return m_nodeInsertData; }
+        void setNodeInsertData(const std::string &data) { m_nodeInsertData = data; }
+        bool hasNodeInsertData() const { return !m_nodeInsertData.empty(); }
+
 
     protected:
 
@@ -107,6 +111,8 @@ class DECL_EXPORT SchemaItem : public std::enable_shared_from_this<SchemaItem>
         // Attribute unique sets and references to unique sets are stored during parsing and post processed
         std::map<std::string, SetInfo> m_uniqueAttributeValueSetReferences;
         std::map<std::string, SetInfo> m_uniqueAttributeValueSetDefs;
+
+        std::string m_nodeInsertData;  // data to be inserted in environment if a node of this type is inserted (env/schema type dependent)
 
         // These are the attribute value sets whose members must be unique
         //static std::map<std::string, std::vector<std::shared_ptr<SchemaValue>>> m_uniqueAttributeValueSets;

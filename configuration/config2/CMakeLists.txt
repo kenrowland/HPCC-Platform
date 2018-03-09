@@ -20,6 +20,7 @@ project ( config2 )
 SET(  SRCS
       EnvironmentMgr.cpp
       XMLEnvironmentMgr.cpp
+      XMLEnvironmentLoader.cpp
       SchemaParser.cpp
       SchemaItem.cpp
       SchemaValue.cpp

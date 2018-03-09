@@ -244,6 +244,12 @@ ESPrequest OpenEnvironmentFileRequest
 };
 
 
+ESPresponse [exceptions_inline] OpenEnvironmentFileResponse
+{
+    string rootNodeId;
+};
+
+
 ESPrequest CloseEnvironmentFileRequest
 {
     string sessionId;
@@ -321,7 +327,7 @@ ESPservice [auth_feature("DEFERRED"),version("2.0"), default_client_version("2.0
     ESPMethod 
         [
             description("Open an environment file")
-        ] OpenEnvironmentFile(OpenEnvironmentFileRequest, EmptyResponse);
+        ] OpenEnvironmentFile(OpenEnvironmentFileRequest, OpenEnvironmentFileResponse);
     ESPMethod 
         [ 
             description("Close an open environment file")

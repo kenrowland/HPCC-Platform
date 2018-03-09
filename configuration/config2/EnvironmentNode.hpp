@@ -42,6 +42,7 @@ class DECL_EXPORT EnvironmentNode : public std::enable_shared_from_this<Environm
         bool hasChildren() const { return m_children.size() != 0; }
         int getNumChildren() const { return m_children.size(); }
         std::shared_ptr<EnvironmentNode> getParent() const;
+        void setParent(const std::shared_ptr<EnvironmentNode> &pParent) { m_pParent = pParent; }
         bool addAttribute(const std::string &name, std::shared_ptr<EnvironmentValue> pValue);
         void setAttributeValues(const std::vector<NameValue> &values, Status &status, bool allowInvalid, bool forceCreate);
         void setAttributeValue(const std::string &name, const std::string &value, Status &status, bool allowInvalid=false, bool forceCreate=false);   // candidate for a variant?

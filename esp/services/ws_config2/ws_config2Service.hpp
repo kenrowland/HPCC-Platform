@@ -46,7 +46,7 @@ public:
     virtual bool onOpenSession(IEspContext &context, IEspOpenSessionRequest &req, IEspOpenSessionResponse &resp);
     virtual bool onCloseSession(IEspContext &context, IEspCloseSessionRequest &req, IEspEmptyResponse &resp);
     virtual bool onGetEnvironmentFileList(IEspContext &context, IEspCommonSessionRequest &req, IEspGetEnvironmentListResponse &resp);
-    virtual bool onOpenEnvironmentFile(IEspContext &context, IEspOpenEnvironmentFileRequest &req, IEspEmptyResponse &resp);
+    virtual bool onOpenEnvironmentFile(IEspContext &context, IEspOpenEnvironmentFileRequest &req, IEspOpenEnvironmentFileResponse &resp);
     virtual bool onCloseEnvironmentFile(IEspContext &context, IEspCloseEnvironmentFileRequest &req, IEspEmptyResponse &resp);
     virtual bool onSaveEnvironmentFile(IEspContext &context, IEspSaveEnvironmentFileRequest &req, IEspEmptyResponse &resp);
     virtual bool onLockSession(IEspContext &context, IEspCommonSessionRequest &req, IEspLockSessionResponse &resp);

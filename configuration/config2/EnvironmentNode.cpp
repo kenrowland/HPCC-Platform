@@ -326,7 +326,6 @@ void EnvironmentNode::getInsertableItems(std::vector<std::shared_ptr<SchemaItem>
     }
 }
 
-
 //
 // Called to initialize a newly added node to the environment (not just read from the environment)
 void EnvironmentNode::initialize()
@@ -336,13 +335,12 @@ void EnvironmentNode::initialize()
     addMissingAttributesFromConfig();
 
     //
-    // If we are a comonent and there is a buildSet attribute, set the value to the configItem's type
+    // If we are a component and there is a buildSet attribute, set the value to the configItem's type
     if (!(m_pSchemaItem->getProperty("componentName").empty())  && hasAttribute("buildSet"))
     {
         Status status;
         setAttributeValue("buildSet", m_pSchemaItem->getProperty("componentName"), status);
     }
-
 
     //
     // Initilize each attribute
@@ -350,4 +348,7 @@ void EnvironmentNode::initialize()
     {
         attrIt->second->initialize();
     }
+
+    //
+    // See if there are any nodes that need to be inserted as part of this node
 }

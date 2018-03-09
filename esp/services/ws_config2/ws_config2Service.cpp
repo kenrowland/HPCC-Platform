@@ -159,7 +159,7 @@ bool Cws_config2Ex::onGetEnvironmentFileList(IEspContext &context, IEspCommonSes
 }
 
 
-bool Cws_config2Ex::onOpenEnvironmentFile(IEspContext &context, IEspOpenEnvironmentFileRequest &req, IEspEmptyResponse &resp)
+bool Cws_config2Ex::onOpenEnvironmentFile(IEspContext &context, IEspOpenEnvironmentFileRequest &req, IEspOpenEnvironmentFileResponse &resp)
 {
     bool doOpen = false;
     ConfigMgrSession *pSession = getConfigSession(req.getSessionId());
@@ -176,6 +176,8 @@ bool Cws_config2Ex::onOpenEnvironmentFile(IEspContext &context, IEspOpenEnvironm
     {
         throw MakeStringException(CFGMGR_ERROR_ENVIRONMENT_NOT_LOADED, "Unable to load environment, error = %s", pSession->getLastMsg().c_str());
     }
+
+    resp.setRootNodeId(pSession->m_pEnvMgr->getRootNodeId().c_str());
     
     return true;
 }

@@ -185,6 +185,10 @@ void SchemaItem::insertSchemaType(const std::shared_ptr<SchemaItem> pTypeItem)
     {
         m_uniqueAttributeValueSetReferences.insert({ it->first, it->second });
     }
+
+    //
+    // Extra data
+    m_nodeInsertData = pTypeItem->m_nodeInsertData;
 }
 
 
