@@ -285,7 +285,7 @@ void XSDSchemaParser::parseComplexType(const pt::ptree &typeTree)
         // and add it to the
         else
         {
-            std::shared_ptr<SchemaItem> pTypeItem = std::make_shared<SchemaItem>(complexTypeName, "", m_pSchemaItem);
+            std::shared_ptr<SchemaItem> pTypeItem = std::make_shared<SchemaItem>(complexTypeName, "complex", m_pSchemaItem);
             pt::ptree childTree = typeTree.get_child("", pt::ptree());
             if (!childTree.empty())
             {
@@ -356,8 +356,24 @@ void XSDSchemaParser::parseElement(const pt::ptree &elemTree)
                 if (pConfigType != nullptr)
                 {
                     //
-                    // Insert into this config element the component defined data (attributes, references, etc.)
-                    pNewSchemaItem->insertSchemaType(pConfigType);
+                    // Look at the class to see if this is a complex type class. A complex type has an extra parent
+                    // on top of the actual items that have to be inserted. So, for this type, iterate of the
+                    // children inserting each. Otherwise, just insert the top level type item.
+                    if (pConfigType->getProperty("className") == "complex")
+                    {
+                        std::vector<std::shared_ptr<SchemaItem>> typeChildren;
+                        pConfigType->getChildren(typeChildren);
+                        for (auto childIt = typeChildren.begin(); childIt != typeChildren.end(); ++childIt)
+                        {
+                            std::shared_ptr<SchemaItem> pNewItem = std::make_shared<SchemaItem>(*(*childIt));
+                            pNewSchemaItem->addChild(pNewItem);
+                        }
+                    }
+                    else
+                    {
+                        pNewSchemaItem->insertSchemaType(pConfigType);
+                    }
+
 
                     //
                     // Set element min/max instances to that defined by the component type def (ignore values parsed above)

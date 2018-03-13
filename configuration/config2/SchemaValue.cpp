@@ -30,6 +30,29 @@ SchemaValue::SchemaValue(const std::string &name, bool isDefined) :
 }
 
 
+SchemaValue::SchemaValue(const SchemaValue &value)
+{
+    m_pType = value.m_pType;
+
+    //std::shared_ptr<SchemaType> m_pType;
+    //std::vector<std::weak_ptr<EnvironmentValue>> m_envValues;
+   
+    m_name = value.m_name;
+    m_displayName = value.m_displayName;
+    m_mirrorFromPath = value.m_mirrorFromPath;
+    m_autoGenerateValue = value.m_autoGenerateValue;
+    m_autoGenerateType = value.m_autoGenerateType;
+    bitMask = value.bitMask;
+    m_default = value.m_default;
+    m_tooltip = value.m_tooltip;
+    m_modifiers = value.m_modifiers;
+
+    // special processing? Maybe after inserting?
+    std::vector<std::shared_ptr<SchemaValue>> m_mirrorToSchemaValues;
+    std::vector<std::weak_ptr<SchemaValue>> m_pUniqueValueSetRefs;    // this value serves as the key from which values are valid
+}
+
+
 bool SchemaValue::isValueValid(const std::string &value, const EnvironmentValue *pEnvValue) const
 {
     bool isValid = true;   // assume valid

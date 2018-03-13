@@ -39,26 +39,28 @@ int main()
 
         //pCfgParser->parseEnvironmentConfig("newenv.xsd", "");
 
-        EnvironmentMgr *pEnvMgr = getEnvironmentMgrInstance("XML");
+        EnvironmentMgr *pEnvMgr = getEnvironmentMgrInstance(EnvironmentType::XML);
         std::vector<std::string> cfgParms;
         cfgParms.push_back("buildset.xml");  // not used right now
-        pEnvMgr->loadSchema(c_path, "newenv.xsd", cfgParms);
+        pEnvMgr->loadSchema(c_path, "environment.xsd", cfgParms);
         pEnvMgr->loadEnvironment(c_path + "/environment.xml");
+
+
 
         // 158
         //auto pNode = envMgr.getNodeFromPath("158");
         // auto pNode = pEnvMgr->getEnvironmentNode("74");     // 29 is Hardware/Computer
-        auto pNode = pEnvMgr->getEnvironmentNode("35");
+        //auto pNode = pEnvMgr->getEnvironmentNode("35");
 
         //auto x = pNode->getAllFieldValues("name");
 
-        auto list = pNode->getInsertableItems();
+        //auto list = pNode->getInsertableItems();
 
         Status status;
-        auto pNewNode = pEnvMgr->addNewEnvironmentNode("35", "ws_ecl", status);
-        auto newList = pNewNode->getInsertableItems();
-        pEnvMgr->addNewEnvironmentNode("35", "ws_ecl", status);
-        pEnvMgr->addNewEnvironmentNode("35", "ws_ecl", status);
+        auto pNewNode = pEnvMgr->addNewEnvironmentNode("108", "espsmc", status);
+        //auto newList = pNewNode->getInsertableItems();
+        //pEnvMgr->addNewEnvironmentNode("35", "ws_ecl", status);
+        //pEnvMgr->addNewEnvironmentNode("35", "ws_ecl", status);
 
 
         /*auto attributes = pNode->getAttributes();
@@ -91,7 +93,7 @@ int main()
 
         //pEnvMgr->saveEnvironment("testout.xml", status);
 
-        auto results = pEnvMgr->getEnvironmentNode(".");
+        //auto results = pEnvMgr->getEnvironmentNode(".");
 
     }
     catch (ParseException &e)

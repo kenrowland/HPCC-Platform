@@ -33,6 +33,7 @@ class DECL_EXPORT SchemaItem : public std::enable_shared_from_this<SchemaItem>
     public:
 
         SchemaItem(const std::string &name, const std::string &className = "category", const std::shared_ptr<SchemaItem> &pParent = nullptr);
+        SchemaItem(const SchemaItem &schemaItem);
         ~SchemaItem() { }
         std::string getItemType() const;
         void setMinInstances(unsigned num) { m_minInstances = num; }
@@ -76,6 +77,7 @@ class DECL_EXPORT SchemaItem : public std::enable_shared_from_this<SchemaItem>
         const std::string &getNodeInsertData() const { return m_nodeInsertData; }
         void setNodeInsertData(const std::string &data) { m_nodeInsertData = data; }
         bool hasNodeInsertData() const { return !m_nodeInsertData.empty(); }
+        void setParent(const std::shared_ptr<SchemaItem> &parent) { m_pParent = parent; }
 
 
     protected:

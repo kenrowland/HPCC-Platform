@@ -51,6 +51,43 @@ SchemaItem::SchemaItem(const std::string &name, const std::string &className, co
 }
 
 
+
+SchemaItem::SchemaItem(const SchemaItem &item)
+{
+    //
+    // Copy stuff that doesn't have to be unique
+    m_hidden = item.m_hidden;
+    m_maxInstances = item.m_maxInstances;
+    m_minInstances = item.m_minInstances;
+    m_nodeInsertData = item.m_nodeInsertData;
+    m_properties = item.m_properties;
+    m_types = item.m_types;
+    m_schemaTypes = item.m_schemaTypes;
+    
+    if (m_pItemValue)
+        m_pItemValue = std::make_shared<SchemaValue>(*(item.m_pItemValue));  // copy constructed
+
+    //
+    // Make a copy of the children now
+    for (auto childIt = item.m_children.begin(); childIt != item.m_children.end(); ++childIt)
+    {
+        addChild(std::make_shared<SchemaItem>(*(childIt->second)));
+    }
+
+    //
+    // Copy the attributes
+    for (auto attrIt = item.m_attributes.begin(); attrIt != item.m_attributes.end(); ++attrIt)
+    {
+        addAttribute(std::make_shared<SchemaValue>(*(attrIt->second)));
+    }
+
+    m_uniqueAttributeValueSetReferences = item.m_uniqueAttributeValueSetReferences;
+    m_uniqueAttributeValueSetDefs = item.m_uniqueAttributeValueSetDefs;
+}
+
+
+
+
 void SchemaItem::addSchemaValueType(const std::shared_ptr<SchemaType> &pType)
 {
     m_types[pType->getName()] = pType;
@@ -139,21 +176,7 @@ std::shared_ptr<SchemaItem> SchemaItem::getSchemaType(const std::string &name, b
 // of the relevant members and inserting them into this instance
 void SchemaItem::insertSchemaType(const std::shared_ptr<SchemaItem> pTypeItem)
 {
-    //
-    // To insert a schema type (for example a previously defined complexType name="" XSD definition)
-    // loop through each set of configurable pieces of the input type, make a copy of each, and add it to
-    // this element.
-
-    //
-    // Children
-    std::vector<std::shared_ptr<SchemaItem>> typeChildren;
-    pTypeItem->getChildren(typeChildren);
-    for (auto childIt = typeChildren.begin(); childIt != typeChildren.end(); ++childIt)
-    {
-        std::shared_ptr<SchemaItem> pNewItem = std::make_shared<SchemaItem>(*(*childIt));
-        addChild(pNewItem);
-    }
-
+    
     //
     // Attributes
     std::vector< std::shared_ptr<SchemaValue>> typeAttributes;
@@ -189,6 +212,16 @@ void SchemaItem::insertSchemaType(const std::shared_ptr<SchemaItem> pTypeItem)
     //
     // Extra data
     m_nodeInsertData = pTypeItem->m_nodeInsertData;
+
+    //
+    // Children
+    std::vector<std::shared_ptr<SchemaItem>> typeChildren;
+    pTypeItem->getChildren(typeChildren);
+    for (auto childIt = typeChildren.begin(); childIt != typeChildren.end(); ++childIt)
+    {
+        std::shared_ptr<SchemaItem> pNewItem = std::make_shared<SchemaItem>(*(*childIt));
+        addChild(pNewItem);
+    }
 }
 
 

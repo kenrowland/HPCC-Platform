@@ -32,6 +32,7 @@ std::shared_ptr<EnvironmentNode> XMLEnvironmentLoader::load(std::istream &in, co
 
         //
         // The starting schema item and the root of this property tree better have the same name
+        std::string elemName = rootIt->first;
         if (rootIt->first == pSchemaItem->getProperty("name"))
         {
             pEnvNode = std::make_shared<EnvironmentNode>(pSchemaItem, rootIt->first);  // caller may need to set the parent
