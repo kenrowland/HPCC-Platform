@@ -178,10 +178,10 @@ std::shared_ptr<EnvironmentNode> EnvironmentMgr::addNewEnvironmentNode(const std
                 pNewNode = addNewEnvironmentNode(pParentNode, *it, status);
                 break;
             }
-            if (pNewNode == nullptr)
-            {
-                status.addMsg(statusMsg::error, "Configuration type (" + configType + ") not found");
-            }
+        }
+        if (pNewNode == nullptr)
+        {
+            status.addMsg(statusMsg::error, "Configuration type (" + configType + ") not found");
         }
     }
     else
@@ -203,6 +203,7 @@ std::shared_ptr<EnvironmentNode> EnvironmentMgr::addNewEnvironmentNode(const std
     pParentNode->addChild(pNewNode);
     addPath(pNewNode);
     pNewNode->initialize();
+    pNewNode->validate(status, true, false);
 
 
     //
@@ -224,10 +225,10 @@ std::shared_ptr<EnvironmentNode> EnvironmentMgr::addNewEnvironmentNode(const std
     if (pNewCfgItem->hasNodeInsertData())
     {
         std::istringstream extraData(pNewCfgItem->getNodeInsertData());
-        std::shared_ptr<EnvironmentNode> pExtaDataNode = doLoadEnvironment(extraData, pNewCfgItem);
-        int i = 3;
+        std::shared_ptr<EnvironmentNode> pExtraDataNode = doLoadEnvironment(extraData, pNewCfgItem);
+        assignNodeIds(pExtraDataNode);
+        pNewNode->addChild(pExtraDataNode);  // link extra node data to the newly created node
     }
-
 
     return pNewNode;
 }

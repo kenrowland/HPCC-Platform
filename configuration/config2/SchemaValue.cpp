@@ -112,13 +112,6 @@ void SchemaValue::validate(Status &status, const std::string &id, const Environm
         }
         isValid = false;
     }
-
-    // get currentvalue from pEnvValue
-    // for keyed, make sure all values are unique
-    // call pType with value to see if good
-    // call pType->limits->toString(value) if bad to get message about whats bad
-    // add to status
-
 }
 
 

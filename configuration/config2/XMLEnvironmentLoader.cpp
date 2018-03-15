@@ -33,16 +33,27 @@ std::shared_ptr<EnvironmentNode> XMLEnvironmentLoader::load(std::istream &in, co
         //
         // The starting schema item and the root of this property tree better have the same name
         std::string elemName = rootIt->first;
-        if (rootIt->first == pSchemaItem->getProperty("name"))
+        std::shared_ptr<SchemaItem> pParseRootSchemaItem = pSchemaItem;
+
+        //
+        // If the root of the input environment tree does not match the input root schema, look for a child schema item that matches.
+        // If not found, that's OK, a default schema item is returned that allows the environment tree to be parsed, it just won't have
+        // any real schema information
+        if (rootIt->first != pParseRootSchemaItem->getProperty("name"))  // only check if pSchemaItem is non null
         {
-            pEnvNode = std::make_shared<EnvironmentNode>(pSchemaItem, rootIt->first);  // caller may need to set the parent
-            parse(rootIt->second, pSchemaItem, pEnvNode);
+            pParseRootSchemaItem = pParseRootSchemaItem->getChild(rootIt->first);
         }
-        else
+
+        //if (rootIt->first == pSchemaItem->getProperty("name"))  // only check if pSchemaItem is non null
         {
-            std::string msg = "XML environment tree root element (" + rootIt->first + ") does not match intended schema root (" + pSchemaItem->getProperty("name");
-            throw (ParseException(msg));
+            pEnvNode = std::make_shared<EnvironmentNode>(pParseRootSchemaItem, rootIt->first);  // caller may need to set the parent
+            parse(rootIt->second, pParseRootSchemaItem, pEnvNode);
         }
+        //else
+        //{
+        //    std::string msg = "XML environment tree root element (" + rootIt->first + ") does not match intended schema root (" + pSchemaItem->getProperty("name");
+        //    throw (ParseException(msg));
+        //}
     }
     catch (const std::exception &e)
     {

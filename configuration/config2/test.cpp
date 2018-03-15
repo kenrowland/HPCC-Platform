@@ -14,7 +14,7 @@
 
 // namespace pt = boost::property_tree;
 
-const std::string c_path = "configfiles/"; ///opt/HPCCSystems/componentfiles/config2xml/";
+const std::string c_path = "e:\\Projects\\config2xml\\"; ///opt/HPCCSystems/componentfiles/config2xml/";
 
 // void parseComponentXSD(pt::ptree &xsdTree);
 // void parseIncludes(pt::ptree &xsdTree);
@@ -61,6 +61,12 @@ int main()
         //auto newList = pNewNode->getInsertableItems();
         //pEnvMgr->addNewEnvironmentNode("35", "ws_ecl", status);
         //pEnvMgr->addNewEnvironmentNode("35", "ws_ecl", status);
+
+        auto pNode = pEnvMgr->getEnvironmentNode("138");
+        std::vector<std::shared_ptr<SchemaItem>> espBindingItems;
+        pNode->getInsertableItems(espBindingItems);
+        Status status2;
+        pNewNode = pEnvMgr->addNewEnvironmentNode("138", "espbinding", status2);  // todo: when valildating, look at required flag first
 
 
         /*auto attributes = pNode->getAttributes();

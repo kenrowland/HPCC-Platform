@@ -253,50 +253,22 @@ void XSDSchemaParser::parseComplexType(const pt::ptree &typeTree)
 
     if (!complexTypeName.empty())
     {
-        if (!className.empty())
-        {
-            if (className == "component")
-            {
-                std::shared_ptr<SchemaItem> pComponent = std::make_shared<SchemaItem>(complexTypeName, "component", m_pSchemaItem);
-                pComponent->setProperty("category", catName);
-                pComponent->setProperty("componentName", componentName);
-                pComponent->setProperty("displayName", displayName);
-                pComponent->setHidden(hidden);
-                pt::ptree componentTree = typeTree.get_child("", pt::ptree());
-                if (!componentTree.empty())
-                {
-                    std::shared_ptr<XSDComponentParser> pComponentXSDParaser = std::make_shared<XSDComponentParser>(std::dynamic_pointer_cast<SchemaItem>(pComponent));
-                    pComponentXSDParaser->parseXSD(typeTree);
-                    m_pSchemaItem->addSchemaType(pComponent, complexTypeName);
-                }
-                else
-                {
-                    throw(ParseException("Component definition empty: " + displayName));
-                }
-            }
-            else
-            {
-                throw(ParseException("Unrecognized class name for complex type: " + className));
-            }
-        }
+        std::shared_ptr<SchemaItem> pComplexType = std::make_shared<SchemaItem>(complexTypeName, "component", m_pSchemaItem);
+        pComplexType->setProperty("category", catName);
+        pComplexType->setProperty("componentName", componentName);
+        pComplexType->setProperty("displayName", displayName);
+        pComplexType->setHidden(hidden);
 
-        //
-        // This is a complex type definition of just regular XSD statements, no special format. Create a parser and parse it
-        // and add it to the
+        pt::ptree childTree = typeTree.get_child("", pt::ptree());
+        if (!childTree.empty())
+        {
+            std::shared_ptr<XSDSchemaParser> pXSDParaser = std::make_shared<XSDSchemaParser>(pComplexType);
+            pXSDParaser->parseXSD(childTree);
+            m_pSchemaItem->addSchemaType(pComplexType, complexTypeName);
+        }
         else
         {
-            std::shared_ptr<SchemaItem> pTypeItem = std::make_shared<SchemaItem>(complexTypeName, "complex", m_pSchemaItem);
-            pt::ptree childTree = typeTree.get_child("", pt::ptree());
-            if (!childTree.empty())
-            {
-                std::shared_ptr<XSDSchemaParser> pXSDParaser = std::make_shared<XSDSchemaParser>(pTypeItem);
-                pXSDParaser->parseXSD(childTree);
-                m_pSchemaItem->addSchemaType(pTypeItem, complexTypeName);
-            }
-            else
-            {
-                throw(ParseException("Complex type definition empty: " + displayName));
-            }
+            throw(ParseException("Complex type definition empty: " + displayName));
         }
     }
 
@@ -308,87 +280,143 @@ void XSDSchemaParser::parseComplexType(const pt::ptree &typeTree)
     }
 }
 
+//void XSDSchemaParser::parseComplexType(const pt::ptree &typeTree)
+//{
+//    std::string complexTypeName = getXSDAttributeValue(typeTree, "<xmlattr>.name", false, "");
+//    std::string className = typeTree.get("<xmlattr>.hpcc:class", "");
+//    std::string catName = typeTree.get("<xmlattr>.hpcc:category", "");
+//    std::string componentName = typeTree.get("<xmlattr>.hpcc:componentName", "");
+//    std::string displayName = typeTree.get("<xmlattr>.hpcc:displayName", "");
+//    bool hidden = typeTree.get("<xmlattr>.hpcc:hidden", "false") == "true";
+//
+//    if (!complexTypeName.empty())
+//    {
+//        if (!className.empty())
+//        {
+//            if (className == "component")
+//            {
+//                std::shared_ptr<SchemaItem> pComponent = std::make_shared<SchemaItem>(complexTypeName, "component", m_pSchemaItem);
+//                pComponent->setProperty("category", catName);
+//                pComponent->setProperty("componentName", componentName);
+//                pComponent->setProperty("displayName", displayName);
+//                pComponent->setHidden(hidden);
+//                pt::ptree componentTree = typeTree.get_child("", pt::ptree());
+//                if (!componentTree.empty())
+//                {
+//                    std::shared_ptr<XSDComponentParser> pComponentXSDParaser = std::make_shared<XSDComponentParser>(std::dynamic_pointer_cast<SchemaItem>(pComponent));
+//                    pComponentXSDParaser->parseXSD(typeTree);
+//                    m_pSchemaItem->addSchemaType(pComponent, complexTypeName);
+//                }
+//                else
+//                {
+//                    throw(ParseException("Component definition empty: " + displayName));
+//                }
+//            }
+//            else
+//            {
+//                throw(ParseException("Unrecognized class name for complex type: " + className));
+//            }
+//        }
+//
+//        //
+//        // This is a complex type definition of just regular XSD statements, no special format. Create a parser and parse it
+//        // and add it to the
+//        else
+//        {
+//            std::shared_ptr<SchemaItem> pTypeItem = std::make_shared<SchemaItem>(complexTypeName, "complex", m_pSchemaItem);
+//            pt::ptree childTree = typeTree.get_child("", pt::ptree());
+//            if (!childTree.empty())
+//            {
+//                std::shared_ptr<XSDSchemaParser> pXSDParaser = std::make_shared<XSDSchemaParser>(pTypeItem);
+//                pXSDParaser->parseXSD(childTree);
+//                m_pSchemaItem->addSchemaType(pTypeItem, complexTypeName);
+//            }
+//            else
+//            {
+//                throw(ParseException("Complex type definition empty: " + displayName));
+//            }
+//        }
+//    }
+//
+//    //
+//    // Just a complexType delimiter, ignore and parse the children
+//    else
+//    {
+//        parseXSD(typeTree.get_child("", pt::ptree()));
+//    }
+//}
+
 
 void XSDSchemaParser::parseElement(const pt::ptree &elemTree)
 {
+    //
+    // Get a couple attributes to help figure out how to handle the element
     std::string elementName = elemTree.get("<xmlattr>.name", "");
-    std::string className = elemTree.get("<xmlattr>.hpcc:class", "");
-    std::string category = elemTree.get("<xmlattr>.hpcc:category", "");
-    std::string displayName = elemTree.get("<xmlattr>.hpcc:displayName", "");
-    std::string tooltip = elemTree.get("<xmlattr>.hpcc:tooltip", "");
-    std::string typeName = elemTree.get("<xmlattr>.type", "");
-    unsigned minOccurs = elemTree.get("<xmlattr>.minOccurs", 1);
-    std::string maxOccursStr = elemTree.get("<xmlattr>.maxOccurs", "1");
-    unsigned maxOccurs = (maxOccursStr != "unbounded") ? stoi(maxOccursStr) : UINT_MAX;
+    std::string category = elemTree.get("<xmlattr>.hpcc:category", ""); 
 
-    std::shared_ptr<SchemaItem> pNewSchemaItem = std::make_shared<SchemaItem>(elementName, className, m_pSchemaItem);
-    pNewSchemaItem->setProperty("displayName", displayName);
-    pNewSchemaItem->setMinInstances(minOccurs);
-    pNewSchemaItem->setMaxInstances(maxOccurs);
-    pNewSchemaItem->setProperty("category", category);
-    pNewSchemaItem->setProperty("tooltip", tooltip);
-    pNewSchemaItem->setHidden(elemTree.get("<xmlattr>.hpcc:hidden", "false") == "true");
+    pt::ptree emptyTree;
+    pt::ptree childTree = elemTree.get_child("", emptyTree);
 
-    pt::ptree childTree = elemTree.get_child("", pt::ptree());
-
-    // special case to set the root since the top level schema can't specify it
-    if (category == "root")  // special case to set the root since the top level schema can't specify it
+    if (category == "root")
     {
         m_pSchemaItem->setProperty("name", elementName);
         parseXSD(childTree);
     }
     else
     {
+        std::string className = elemTree.get("<xmlattr>.hpcc:class", "");
+        std::string displayName = elemTree.get("<xmlattr>.hpcc:displayName", "");
+        std::string tooltip = elemTree.get("<xmlattr>.hpcc:tooltip", "");
+        std::string typeName = elemTree.get("<xmlattr>.type", "");
+        std::string componentName = elemTree.get("<xmlattr>.hpcc:componentName", "");
+        std::string itemType = elemTree.get("<xmlattr>.hpcc:itemType", "");
+        unsigned minOccurs = elemTree.get("<xmlattr>.minOccurs", 1);
+        std::string maxOccursStr = elemTree.get("<xmlattr>.maxOccurs", "1");
+        unsigned maxOccurs = (maxOccursStr != "unbounded") ? stoi(maxOccursStr) : UINT_MAX;
+        std::shared_ptr<SchemaItem> pNewSchemaItem = std::make_shared<SchemaItem>(elementName, className, m_pSchemaItem);
+
+        if (!className.empty()) pNewSchemaItem->setProperty("className", className);
+        if (!displayName.empty()) pNewSchemaItem->setProperty("displayName", displayName);
+        if (!tooltip.empty()) pNewSchemaItem->setProperty("tooltip", tooltip);
+        if (!componentName.empty()) pNewSchemaItem->setProperty("componentName", componentName);
+        if (!itemType.empty()) pNewSchemaItem->setProperty("itemType", itemType);
+        pNewSchemaItem->setMinInstances(minOccurs);
+        pNewSchemaItem->setMaxInstances(maxOccurs);
+
         //
-        // If a type is specified, then either it's a simple value type (which could be previously defined) for this element, or a named complex type.
+        // Type specified?
         if (!typeName.empty())
         {
+            //
+            // If a simple type, then it represents the element value type, so allocate a value object, set its type and add
+            // it to the item.
             const std::shared_ptr<SchemaType> pSimpleType = m_pSchemaItem->getSchemaValueType(typeName, false);
             if (pSimpleType != nullptr)
             {
+                //pNewSchemaItem = std::make_shared<SchemaItem>(elementName, className, m_pSchemaItem);
                 std::shared_ptr<SchemaValue> pCfgValue = std::make_shared<SchemaValue>("");  // no name value since it's the element's value
                 pCfgValue->setType(pSimpleType);                      // will throw if type is not defined
                 pNewSchemaItem->setItemSchemaValue(pCfgValue);
+                std::shared_ptr<XSDSchemaParser> pXSDParaser = std::make_shared<XSDSchemaParser>(pNewSchemaItem);
+                pXSDParaser->parseXSD(childTree);
+                m_pSchemaItem->addChild(pNewSchemaItem);
             }
             else
             {
+                //
+                // Wasn't a simple type, complex?
                 std::shared_ptr<SchemaItem> pConfigType = m_pSchemaItem->getSchemaType(typeName, false);
                 if (pConfigType != nullptr)
                 {
                     //
-                    // Look at the class to see if this is a complex type class. A complex type has an extra parent
-                    // on top of the actual items that have to be inserted. So, for this type, iterate of the
-                    // children inserting each. Otherwise, just insert the top level type item.
-                    if (pConfigType->getProperty("className") == "complex")
+                    // A complex type was found. Insert it
+                    std::vector<std::shared_ptr<SchemaItem>> typeChildren;
+                    pConfigType->getChildren(typeChildren);
+                    for (auto childIt = typeChildren.begin(); childIt != typeChildren.end(); ++childIt)
                     {
-                        std::vector<std::shared_ptr<SchemaItem>> typeChildren;
-                        pConfigType->getChildren(typeChildren);
-                        for (auto childIt = typeChildren.begin(); childIt != typeChildren.end(); ++childIt)
-                        {
-                            std::shared_ptr<SchemaItem> pNewItem = std::make_shared<SchemaItem>(*(*childIt));
-                            pNewSchemaItem->addChild(pNewItem);
-                        }
-                    }
-                    else
-                    {
-                        pNewSchemaItem->insertSchemaType(pConfigType);
-                    }
-
-
-                    //
-                    // Set element min/max instances to that defined by the component type def (ignore values parsed above)
-                    pNewSchemaItem->setMinInstances(pConfigType->getMinInstances());
-                    pNewSchemaItem->setMaxInstances(pConfigType->getMaxInstances());
-
-                    //
-                    // If a component, then set element data (allow overriding with locally parsed values)
-                    if (pConfigType->getProperty("className") == "component")
-                    {
-                        pNewSchemaItem->setProperty("name", (!elementName.empty()) ? elementName : pConfigType->getProperty("name"));
-                        pNewSchemaItem->setProperty("className", (!className.empty()) ? className : pConfigType->getProperty("className"));
-                        pNewSchemaItem->setProperty("category", (!category.empty()) ? category : pConfigType->getProperty("category"));
-                        pNewSchemaItem->setProperty("displayName", (!displayName.empty()) ? displayName : pConfigType->getProperty("displayName"));
-                        pNewSchemaItem->setProperty("componentName", pConfigType->getProperty("componentName"));
+                        std::shared_ptr<SchemaItem> pNewItem = std::make_shared<SchemaItem>(*(*childIt));
+                        pNewItem->setParent(m_pSchemaItem);
+                        m_pSchemaItem->addChild(pNewItem);
                     }
                 }
                 else
@@ -398,19 +426,15 @@ void XSDSchemaParser::parseElement(const pt::ptree &elemTree)
                 }
             }
         }
-
-        //
-        // Now, if there are children, create a parser and have at it
-        if (!childTree.empty())
+        else
         {
+            //
+            // No type, just continue parsing a new element
+            //pNewSchemaItem = std::make_shared<SchemaItem>(elementName, className, m_pSchemaItem);
             std::shared_ptr<XSDSchemaParser> pXSDParaser = std::make_shared<XSDSchemaParser>(pNewSchemaItem);
             pXSDParaser->parseXSD(childTree);
+            m_pSchemaItem->addChild(pNewSchemaItem);
         }
-
-        //
-        // Add the element
-        m_pSchemaItem->addChild(pNewSchemaItem);
-
     }
 }
 

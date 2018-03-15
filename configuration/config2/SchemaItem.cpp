@@ -63,6 +63,7 @@ SchemaItem::SchemaItem(const SchemaItem &item)
     m_properties = item.m_properties;
     m_types = item.m_types;
     m_schemaTypes = item.m_schemaTypes;
+    m_pParent = item.m_pParent;
     
     if (m_pItemValue)
         m_pItemValue = std::make_shared<SchemaValue>(*(item.m_pItemValue));  // copy constructed

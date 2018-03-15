@@ -218,7 +218,7 @@ void EnvironmentNode::validate(Status &status, bool includeChildren, bool includ
                 for (auto it = allValues.begin(); it != allValues.end() && !found; ++it)
                 {
                     auto ret = unquieValues.insert(*it);
-                    found = ret.second;
+                    found = !ret.second;
                 }
 
                 if (found)
