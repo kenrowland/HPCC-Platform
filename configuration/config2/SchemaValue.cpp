@@ -42,6 +42,8 @@ SchemaValue::SchemaValue(const SchemaValue &value)
     m_mirrorFromPath = value.m_mirrorFromPath;
     m_autoGenerateValue = value.m_autoGenerateValue;
     m_autoGenerateType = value.m_autoGenerateType;
+    m_onChangeData = value.m_onChangeData;
+    m_onChangeType = value.m_onChangeType;
     bitMask = value.bitMask;
     m_default = value.m_default;
     m_tooltip = value.m_tooltip;

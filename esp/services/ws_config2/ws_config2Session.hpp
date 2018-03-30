@@ -63,11 +63,11 @@ struct ConfigMgrSession {
         m_pEnvMgr = getEnvironmentMgrInstance(configType);
         if (m_pEnvMgr)
         {
-           if (!m_pEnvMgr->loadSchema(schemaPath, masterConfigFile, cfgParms))
-           {
-               rc = false;
-               lastMsg = "Unable to load configuration schema, error = " + m_pEnvMgr->getLastSchemaMessage();
-           }
+            if (!m_pEnvMgr->loadSchema(schemaPath, masterConfigFile, cfgParms))
+            {
+                rc = false;
+                lastMsg = "Unable to load configuration schema, error = " + m_pEnvMgr->getLastSchemaMessage();
+            }
         }
         else
         {
@@ -115,16 +115,13 @@ struct ConfigMgrSession {
     }
 
 
-    bool saveEnvironment(const std::string &envFile)
+    bool saveEnvironment(const std::string &saveAsFilename)
     {
         bool rc = false;
-        std::string saveFile = (envFile != "") ? envFile : curEnvironmentFile;
+        std::string saveFile = (saveAsFilename != "") ? saveAsFilename : curEnvironmentFile;
         if (m_pEnvMgr->saveEnvironment(saveFile))
         {
             modified = false;
-            locked = locked && (curEnvironmentFile == envFile);  // keep it locked?
-            if (!locked)
-                lockKey = "";   // clear lockKey if no longer locked
             curEnvironmentFile = saveFile;
             rc = true;
         }

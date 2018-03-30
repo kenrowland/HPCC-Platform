@@ -38,7 +38,7 @@ class DECL_EXPORT EnvironmentNode : public std::enable_shared_from_this<Environm
         const std::string &getName() const { return m_name;  }
         void addChild(std::shared_ptr<EnvironmentNode> pNode);
         bool removeChild(std::shared_ptr<EnvironmentNode> pNode);
-        void getChildren(std::vector<std::shared_ptr<EnvironmentNode>> &children, const std::string &name="") const;
+        void getChildren(std::vector<std::shared_ptr<EnvironmentNode>> &children, const std::string &name=std::string("")) const;
         bool hasChildren() const { return m_children.size() != 0; }
         int getNumChildren() const { return m_children.size(); }
         std::shared_ptr<EnvironmentNode> getParent() const;
@@ -64,6 +64,8 @@ class DECL_EXPORT EnvironmentNode : public std::enable_shared_from_this<Environm
         const std::shared_ptr<SchemaItem> &getSchemaItem() const { return m_pSchemaItem; }
         void getInsertableItems(std::vector<std::shared_ptr<SchemaItem>> &items) const;
         void initialize();
+        void findNodes(const std::string &path, std::vector<std::shared_ptr<EnvironmentNode>> &nodes) const;
+        std::shared_ptr<const EnvironmentNode> findRoot() const;
 
 
     protected:

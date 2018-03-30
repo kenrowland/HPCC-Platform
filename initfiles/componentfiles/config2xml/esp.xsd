@@ -71,7 +71,7 @@
                                     </xs:simpleType>
                                 </xs:attribute>
                                 <xs:attribute name="resourcesBasedn" type="xs:string" use="optional" hpcc:displayName="" hpcc:tooltip="Base location for resources (used with ldap security)"/>
-                                <xs:attribute name="service" type="xs:string" use="required" hpcc:displayName="Service"/>
+                                <xs:attribute name="service" type="xs:string" use="required" hpcc:displayName="Service" hpcc:onChangeType="insertXML" hpcc:onChangeData="/Environment/Software/ESPService@name=$value/Properties,." />
                                 <xs:attribute name="type" type="xs:string" use="optional" hpcc:displayName="Security Manager Plugin" hpcc:tooltip="The Security Manager to be used by the Esp Service"/>
                                 <xs:attribute name="workunitsBasedn" type="xs:string" use="optional" default="ou=workunits,ou=ecl" hpcc:displayName="WorkUnits BaseDn" hpcc:tooltip="Base location for workunit resources (used with ldap security)" hpcc:requiredIf="xpath,xpath..."/>
                                 <xs:attribute name="wsdlServiceAddress" type="xs:string" use="optional"hpcc:displayName="wsdlServiceAddress" hpcc:tooltip="Overrides the address used by client applications to connect to the service"/>

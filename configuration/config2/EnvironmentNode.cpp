@@ -16,6 +16,7 @@
 ############################################################################## */
 
 #include "EnvironmentNode.hpp"
+#include "Exceptions.hpp"
 
 void EnvironmentNode::addChild(std::shared_ptr<EnvironmentNode> pNode)
 {
@@ -351,4 +352,144 @@ void EnvironmentNode::initialize()
 
     //
     // See if there are any nodes that need to be inserted as part of this node
+}
+
+
+void EnvironmentNode::findNodes(const std::string &path, std::vector<std::shared_ptr<EnvironmentNode>> &nodes) const
+{
+    //
+    // If path starts with / and we are not the root, get the root and do the find
+    if (path[0] == '/')
+    {
+        std::string remainingPath = path.substr(1);
+        std::string rootName = remainingPath;
+        std::shared_ptr<const EnvironmentNode> pRoot = findRoot();
+        size_t slashPos = path.find_first_of('/', 1);
+        if (slashPos != std::string::npos)
+        {
+            rootName = path.substr(1, slashPos-1);
+            remainingPath = path.substr(slashPos + 1);
+            size_t atPos = rootName.find_first_of('@');
+            if (atPos != std::string::npos)
+            {
+                rootName.erase(atPos, std::string::npos);
+            }
+        }
+
+        if (pRoot->getName() == rootName)
+        {
+            pRoot->findNodes(remainingPath, nodes);
+        }
+    }
+    else if (path[0] == '.')
+    {
+        //
+        // Parent ?
+        if (path[1] == '.')
+        {
+            if (!m_pParent.expired())
+            {
+                m_pParent.lock()->findNodes(path.substr(2), nodes);
+            }
+            else
+            {
+                throw new ParseException("Attempt to navigate to parent with no parent");
+            }
+        }
+        else
+        {
+            findNodes(path.substr(1), nodes); // do the find from here stripping the '.' indicator
+        }
+    }
+
+    //
+    // Otherwise, start searching
+    else
+    {
+        std::string nodeName = path;
+        std::string remainingPath, attributeName, attributeValue;
+
+        //
+        // Get our portion of the path which is up to the next / or the remaining string and
+        // set the remaining portion of the path to search
+        size_t slashPos = nodeName.find_first_of('/');
+        if (slashPos != std::string::npos)
+        {
+            remainingPath = nodeName.substr(slashPos + 1);
+            nodeName.erase(slashPos, std::string::npos);  // truncate
+        }
+
+        //
+        // Any attributes we need to look for?
+        size_t atPos = nodeName.find_first_of('@');
+        if (atPos != std::string::npos)
+        {
+            attributeName = nodeName.substr(atPos + 1);
+            nodeName.erase(atPos, std::string::npos);
+            size_t equalPos = attributeName.find_first_of('=');
+            if (equalPos != std::string::npos)
+            {
+                attributeValue = attributeName.substr(equalPos + 1);
+                attributeName.erase(equalPos, std::string::npos);
+            }
+        }
+
+        //
+        // Now search the children for nodes matching the node name
+        std::vector<std::shared_ptr<EnvironmentNode>> childNodes;
+        getChildren(childNodes, nodeName);
+
+        //
+        // If there is an attribute specified, dig deeper
+        if (!attributeName.empty())
+        {
+            auto childNodeIt = childNodes.begin();
+            while (childNodeIt != childNodes.end())
+            {
+                std::shared_ptr<EnvironmentValue> pValue = (*childNodeIt)->getAttribute(attributeName);
+                if (pValue)
+                {
+                    if (!attributeValue.empty() && pValue->getValue() != attributeValue)
+                    {
+                        childNodeIt = childNodes.erase(childNodeIt);
+                    }
+                    else
+                    {
+                        ++childNodeIt;
+                    }
+                }
+                else
+                {
+                    childNodeIt = childNodes.erase(childNodeIt);
+                }
+            }
+        }
+
+        //
+        // If there is path remaining, call the children in childNodes with the remaining path, otherwise we've reached
+        // the end. Whatever nodes are in childNodes are appended to the input nodes vector for return
+        if (!remainingPath.empty())
+        {
+            for (auto childNodeIt = childNodes.begin(); childNodeIt != childNodes.end(); ++childNodeIt)
+            {
+                (*childNodeIt)->findNodes(remainingPath, nodes);
+            }
+        }
+        else
+        {
+            nodes.insert(nodes.end(), childNodes.begin(), childNodes.end());
+        }
+    }
+}
+
+
+std::shared_ptr<const EnvironmentNode> EnvironmentNode::findRoot() const
+{
+    if (!m_pParent.expired())
+    {
+        return m_pParent.lock()->findRoot();
+    }
+    
+    std::shared_ptr <const EnvironmentNode> ptr = shared_from_this();
+    return ptr;
 }

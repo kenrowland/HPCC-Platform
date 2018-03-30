@@ -283,3 +283,10 @@ void EnvironmentMgr::assignNodeIds(const std::shared_ptr<EnvironmentNode> &pNode
         assignNodeIds(*it);
     }
 }
+
+
+void EnvironmentMgr::findNodes(const std::string path, std::vector<std::shared_ptr<EnvironmentNode>> &nodes, const std::shared_ptr<EnvironmentNode> &pStartNode) const
+{
+    const std::shared_ptr<EnvironmentNode> pStart = (pStartNode != nullptr) ? pStartNode : m_pRootNode;
+    pStart->findNodes(path, nodes);
+}

@@ -14,7 +14,7 @@
 
 // namespace pt = boost::property_tree;
 
-const std::string c_path = "e:\\Projects\\config2xml\\"; ///opt/HPCCSystems/componentfiles/config2xml/";
+const std::string c_path = "..\\..\\initfiles\\componentfiles\\config2xml\\"; ///opt/HPCCSystems/componentfiles/config2xml/";
 
 // void parseComponentXSD(pt::ptree &xsdTree);
 // void parseIncludes(pt::ptree &xsdTree);
@@ -45,7 +45,8 @@ int main()
         pEnvMgr->loadSchema(c_path, "environment.xsd", cfgParms);
         pEnvMgr->loadEnvironment(c_path + "/environment.xml");
 
-
+        std::vector<std::shared_ptr<EnvironmentNode>> nodes;
+        pEnvMgr->findNodes("/Environment/Software/EspService@buildSet=espsmc", nodes);
 
         // 158
         //auto pNode = envMgr.getNodeFromPath("158");
