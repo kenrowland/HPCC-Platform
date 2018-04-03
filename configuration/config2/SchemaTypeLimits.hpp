@@ -26,12 +26,23 @@
 
 class EnvironmentValue;
 
+
+struct DECL_EXPORT DependentValue
+{
+    DependentValue(const std::string &attribute, const std::string &value) : m_attribute(attribute), m_value(value) { }
+    std::string m_attribute;
+    std::string m_value;
+};
+
 struct DECL_EXPORT AllowedValue
 {
     AllowedValue(const std::string &value, const std::string &desc="") : m_value(value), m_displayName(value), m_description(desc) { }
+    void addDependentValue(const std::string &attribute, const std::string &value);
+    const std::vector<DependentValue> &getDependencies() const { return m_dependencies;  }
     std::string m_displayName;
     std::string m_value;
     std::string m_description;
+    std::vector<DependentValue> m_dependencies;
 };
 
 class DECL_EXPORT SchemaTypeLimits

@@ -47,3 +47,9 @@ bool SchemaTypeLimits::isValidEnumeratedValue(const std::string &testValue) cons
     }
     return rc;
 }
+
+
+void AllowedValue::addDependentValue(const std::string &attribute, const std::string &value)
+{
+    m_dependencies.push_back(DependentValue(attribute, value));
+}
