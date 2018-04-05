@@ -26,6 +26,9 @@
 #include "SchemaType.hpp"
 #include "SchemaValue.hpp"
 #include "platform.h"
+#include "EnvironmentEvents.hpp"
+
+class EnvironmentNode;
 
 
 class DECL_EXPORT SchemaItem : public std::enable_shared_from_this<SchemaItem>
@@ -47,7 +50,7 @@ class DECL_EXPORT SchemaItem : public std::enable_shared_from_this<SchemaItem>
         void insertSchemaType(const std::shared_ptr<SchemaItem> pTypeItem);
         void addChild(const std::shared_ptr<SchemaItem> &pItem) { m_children.insert({ pItem->getProperty("name"), pItem }); }
         void addChild(const std::shared_ptr<SchemaItem> &pItem, const std::string &name) { m_children.insert({ name, pItem }); }
-        void getChildren(std::vector<std::shared_ptr<SchemaItem>> &children);
+        void getChildren(std::vector<std::shared_ptr<SchemaItem>> &children) const;
         std::shared_ptr<SchemaItem> getChild(const std::string &name);
         std::shared_ptr<SchemaItem> getChildByComponent(const std::string &name, std::string &componentName);
         void setItemSchemaValue(const std::shared_ptr<SchemaValue> &pValue) { m_pItemValue = pValue; }
@@ -78,6 +81,9 @@ class DECL_EXPORT SchemaItem : public std::enable_shared_from_this<SchemaItem>
         void setNodeInsertData(const std::string &data) { m_nodeInsertData = data; }
         bool hasNodeInsertData() const { return !m_nodeInsertData.empty(); }
         void setParent(const std::shared_ptr<SchemaItem> &parent) { m_pParent = parent; }
+        std::shared_ptr<const SchemaItem> findSchemaRoot() const;
+        void processEvent(const std::string &eventType, const std::shared_ptr<EnvironmentNode> &pEnvNode) const;
+        void addEventHandler(const std::shared_ptr<EnvironmentEvent> &pHandler) { m_eventHandlers.push_back(pHandler); }
 
 
     protected:
@@ -113,6 +119,8 @@ class DECL_EXPORT SchemaItem : public std::enable_shared_from_this<SchemaItem>
         // Attribute unique sets and references to unique sets are stored during parsing and post processed
         std::map<std::string, SetInfo> m_uniqueAttributeValueSetReferences;
         std::map<std::string, SetInfo> m_uniqueAttributeValueSetDefs;
+
+        std::vector<std::shared_ptr<EnvironmentEvent>> m_eventHandlers;
 
         std::string m_nodeInsertData;  // data to be inserted in environment if a node of this type is inserted (env/schema type dependent)
 

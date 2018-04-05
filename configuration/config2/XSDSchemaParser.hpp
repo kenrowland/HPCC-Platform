@@ -53,6 +53,7 @@ class XSDSchemaParser : public SchemaParser
         virtual void parseSimpleType(const pt::ptree &typeTree);
         virtual void parseComplexType(const pt::ptree &typeTree);
         virtual void parseElement(const pt::ptree &elemTree);
+        virtual void parseAnnotation(const pt::ptree &elemTree);
         virtual void parseAppInfo(const pt::ptree &elemTree);
 
         virtual std::shared_ptr<SchemaType> getSchemaType(const pt::ptree &typeTree, bool nameRequired=true);

@@ -17,6 +17,7 @@
 
 #include "EnvironmentNode.hpp"
 #include "Exceptions.hpp"
+#include "Utils.hpp"
 
 void EnvironmentNode::addChild(std::shared_ptr<EnvironmentNode> pNode)
 {
@@ -327,6 +328,7 @@ void EnvironmentNode::getInsertableItems(std::vector<std::shared_ptr<SchemaItem>
     }
 }
 
+
 //
 // Called to initialize a newly added node to the environment (not just read from the environment)
 void EnvironmentNode::initialize()
@@ -350,8 +352,16 @@ void EnvironmentNode::initialize()
         attrIt->second->initialize();
     }
 
+    
     //
-    // See if there are any nodes that need to be inserted as part of this node
+    // Any events to send? If so, it's a comma separated list
+    std::vector<std::string> events = splitString(m_pSchemaItem->getProperty("event"), ",");
+    for (auto eventIt = events.begin(); eventIt != events.end(); ++eventIt)
+    {
+        m_pSchemaItem->findSchemaRoot()->processEvent(*eventIt, shared_from_this());
+    }
+    
+
 }
 
 

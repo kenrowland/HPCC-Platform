@@ -71,6 +71,15 @@
                                     </ProcessFilters>
                                 </Properties>
                             </xs:appinfo>
+                            <xs:appinfo hpcc:infoType="event">
+                                <eventType>create</eventType>
+                                <eventAction>addAttributeDependencies</eventAction>
+                                <eventData>
+                                    <itemType>espbinding</itemType>
+                                    <attribute attributeName="protocol" attributeValue="http" dependentAttribute="port" dependentValue="8010"/>
+                                    <attribute attributeName="protocol" attributeValue="https" dependentAttribute="port" dependentValue="18010"/>
+                                </eventData>
+                            </xs:appinfo>
                         </xs:annotation>
                         <xs:element type="espservice_properties"/>
                     </xs:sequence>

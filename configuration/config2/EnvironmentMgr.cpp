@@ -192,45 +192,45 @@ std::shared_ptr<EnvironmentNode> EnvironmentMgr::addNewEnvironmentNode(const std
 }
 
 
-std::shared_ptr<EnvironmentNode> EnvironmentMgr::addNewEnvironmentNode(const std::shared_ptr<EnvironmentNode> &pParentNode, const std::shared_ptr<SchemaItem> &pNewCfgItem, Status &status)
+std::shared_ptr<EnvironmentNode> EnvironmentMgr::addNewEnvironmentNode(const std::shared_ptr<EnvironmentNode> &pParentNode, const std::shared_ptr<SchemaItem> &pCfgItem, Status &status)
 {
-    std::shared_ptr<EnvironmentNode> pNewNode;
+    std::shared_ptr<EnvironmentNode> pNewEnvNode;
 
     //
     // Create the new node and add it to the parent
-    pNewNode = std::make_shared<EnvironmentNode>(pNewCfgItem, pNewCfgItem->getProperty("name"), pParentNode);
-    pNewNode->setId(EnvironmentMgr::getUniqueKey());
-    pParentNode->addChild(pNewNode);
-    addPath(pNewNode);
-    pNewNode->initialize();
-    pNewNode->validate(status, true, false);
+    pNewEnvNode = std::make_shared<EnvironmentNode>(pCfgItem, pCfgItem->getProperty("name"), pParentNode);
+    pNewEnvNode->setId(EnvironmentMgr::getUniqueKey());
+    pParentNode->addChild(pNewEnvNode);
+    addPath(pNewEnvNode);
+    pNewEnvNode->initialize();
+    pNewEnvNode->validate(status, true, false);
 
 
     //
     // Look through the children and add any that are necessary
     std::vector<std::shared_ptr<SchemaItem>> cfgChildren;
-    pNewCfgItem->getChildren(cfgChildren);
+    pCfgItem->getChildren(cfgChildren);
     for (auto childIt = cfgChildren.begin(); childIt != cfgChildren.end(); ++childIt)
     {
         int numReq = (*childIt)->getMinInstances();
         for (int i=0; i<numReq; ++i)
         {
-            addNewEnvironmentNode(pNewNode, *childIt, status);
+            addNewEnvironmentNode(pNewEnvNode, *childIt, status);
         }
     }
 
     //
     // See if the schema item has 'extra' stuff that needs to be added
 
-    if (pNewCfgItem->hasNodeInsertData())
+    if (pCfgItem->hasNodeInsertData())
     {
-        std::istringstream extraData(pNewCfgItem->getNodeInsertData());
-        std::shared_ptr<EnvironmentNode> pExtraDataNode = doLoadEnvironment(extraData, pNewCfgItem);
+        std::istringstream extraData(pCfgItem->getNodeInsertData());
+        std::shared_ptr<EnvironmentNode> pExtraDataNode = doLoadEnvironment(extraData, pCfgItem);
         assignNodeIds(pExtraDataNode);
-        pNewNode->addChild(pExtraDataNode);  // link extra node data to the newly created node
+        pNewEnvNode->addChild(pExtraDataNode);  // link extra node data to the newly created node
     }
 
-    return pNewNode;
+    return pNewEnvNode;
 }
 
 

@@ -82,6 +82,10 @@ SchemaItem::SchemaItem(const SchemaItem &item)
         addAttribute(std::make_shared<SchemaValue>(*(attrIt->second)));
     }
 
+    //
+    // Event handlers 
+    m_eventHandlers = item.m_eventHandlers;
+
     m_uniqueAttributeValueSetReferences = item.m_uniqueAttributeValueSetReferences;
     m_uniqueAttributeValueSetDefs = item.m_uniqueAttributeValueSetDefs;
 }
@@ -321,7 +325,7 @@ void SchemaItem::processUniqueAttributeValueSetReferences(const std::map<std::st
 }
 
 
-void SchemaItem::getChildren(std::vector<std::shared_ptr<SchemaItem>> &children)
+void SchemaItem::getChildren(std::vector<std::shared_ptr<SchemaItem>> &children) const
 {
     for (auto it = m_children.begin(); it != m_children.end(); ++it)
     {
@@ -371,7 +375,7 @@ void SchemaItem::resetEnvironment()
 
 void SchemaItem::findSchemaValues(const std::string &path, std::vector<std::shared_ptr<SchemaValue>> &schemaValues)
 {
-    bool rootPath = path[0] == '/';
+    bool rootPath = path[0] == '/';   //todo: convert this to use the findSchemaRoot below
 
     //
     // If path is from the root, and we aren't the root, pass the request to our parent
@@ -425,6 +429,18 @@ void SchemaItem::findSchemaValues(const std::string &path, std::vector<std::shar
     }
 
     return;
+}
+
+
+std::shared_ptr<const SchemaItem> SchemaItem::findSchemaRoot() const
+{
+    if (!m_pParent.expired())
+    {
+        return m_pParent.lock()->findSchemaRoot();
+    }
+
+    std::shared_ptr<const SchemaItem> ptr = shared_from_this();
+    return ptr;
 }
 
 
@@ -569,3 +585,22 @@ std::string SchemaItem::getProperty(const std::string &name, const std::string &
     }
     return retVal;
 }
+
+
+void SchemaItem::processEvent(const std::string &eventType, const std::shared_ptr<EnvironmentNode> &pEnvNode) const
+{
+    //
+    // Loop through any event handlers we may have, then pass the envent to our children
+    for (auto eventIt = m_eventHandlers.begin(); eventIt != m_eventHandlers.end(); ++eventIt)
+    {
+        (*eventIt)->handleEvent(eventType, pEnvNode);
+    }
+
+    std::vector<std::shared_ptr<SchemaItem>> children;
+    getChildren(children);
+    for (auto childIt = children.begin(); childIt != children.end(); ++childIt)
+    {
+        (*childIt)->processEvent(eventType, pEnvNode);
+    }
+}
+

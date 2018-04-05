@@ -24,6 +24,8 @@
 #include "XSDValueSetParser.hpp"
 #include "SchemaTypeStringLimits.hpp"
 #include "SchemaTypeIntegerLimits.hpp"
+#include "EnvironmentEvents.hpp"
+#include "Utils.hpp"
 
 namespace pt = boost::property_tree;
 
@@ -172,7 +174,8 @@ void XSDSchemaParser::parseXSD(const pt::ptree &keys)
         }
         else if (elemType == "xs:annotation")
         {
-            parseAppInfo(it->second.get_child("xs:appinfo", pt::ptree()));
+            parseAnnotation(it->second);
+            //parseAppInfo(it->second.get_child("xs:appinfo", pt::ptree()));
         }
     }
 }
@@ -370,6 +373,8 @@ void XSDSchemaParser::parseElement(const pt::ptree &elemTree)
         std::string typeName = elemTree.get("<xmlattr>.type", "");
         std::string componentName = elemTree.get("<xmlattr>.hpcc:componentName", "");
         std::string itemType = elemTree.get("<xmlattr>.hpcc:itemType", "");
+        std::string eventType = elemTree.get("<xmlattr>.hpcc:event", "");
+        std::string insertChoice = elemTree.get("<xmlattr>.hpcc:insertChoice", "");
         unsigned minOccurs = elemTree.get("<xmlattr>.minOccurs", 1);
         std::string maxOccursStr = elemTree.get("<xmlattr>.maxOccurs", "1");
         unsigned maxOccurs = (maxOccursStr != "unbounded") ? stoi(maxOccursStr) : UINT_MAX;
@@ -380,6 +385,8 @@ void XSDSchemaParser::parseElement(const pt::ptree &elemTree)
         if (!tooltip.empty()) pNewSchemaItem->setProperty("tooltip", tooltip);
         if (!componentName.empty()) pNewSchemaItem->setProperty("componentName", componentName);
         if (!itemType.empty()) pNewSchemaItem->setProperty("itemType", itemType);
+        if (!eventType.empty()) pNewSchemaItem->setProperty("event", eventType);
+        if (!insertChoice.empty()) pNewSchemaItem->setProperty("insertChoice", insertChoice);
         pNewSchemaItem->setMinInstances(minOccurs);
         pNewSchemaItem->setMaxInstances(maxOccurs);
 
@@ -439,9 +446,66 @@ void XSDSchemaParser::parseElement(const pt::ptree &elemTree)
 }
 
 
+void XSDSchemaParser::parseAnnotation(const pt::ptree &elemTree)
+{
+    pt::ptree emptyTree;
+    const pt::ptree &keys = elemTree.get_child("", emptyTree);
+
+    //
+    // Parse app info sections
+    for (auto it = keys.begin(); it != keys.end(); ++it)
+    {
+        if (it->first == "xs:appinfo")
+        {
+            parseAppInfo(it->second);
+        }
+    }
+}
+
+
+
 void XSDSchemaParser::parseAppInfo(const pt::ptree &elemTree)
 {
     std::string appInfoType = elemTree.get("<xmlattr>.hpcc:infoType", "");
+    pt::ptree emptyTree, childTree;
+
+    //
+    // 
+    if (appInfoType == "event")
+    {
+        childTree = elemTree.get_child("", emptyTree);
+
+        std::string eventType = getXSDAttributeValue(childTree, "eventType");
+        if (eventType == "create")
+        {
+            std::string eventAction = getXSDAttributeValue(childTree, "eventAction");
+            if (eventAction == "addAttributeDependencies")
+            {
+                std::shared_ptr<AttributeDependencyCreateEvent> pDep = std::make_shared<AttributeDependencyCreateEvent>();
+                pt::ptree dataTree = childTree.get_child("eventData", emptyTree);
+                for (auto it = dataTree.begin(); it != dataTree.end(); ++it)
+                {
+                    if (it->first == "itemType")
+                    {
+                        pDep->setItemType(it->second.data());
+                    }
+                    else if (it->first == "attribute")
+                    {
+                        std::string attrName = getXSDAttributeValue(it->second, "<xmlattr>.attributeName");
+                        std::string attrVal = getXSDAttributeValue(it->second, "<xmlattr>.attributeValue");
+                        std::string depAttr = getXSDAttributeValue(it->second, "<xmlattr>.dependentAttribute");
+                        std::string depVal = getXSDAttributeValue(it->second, "<xmlattr>.dependentValue");
+                        pDep->addDependency(attrName, attrVal, depAttr, depVal);
+                    }
+                }
+                m_pSchemaItem->addEventHandler(pDep);
+            }
+            
+        }
+
+    }
+
+
 
     //
     // insert_xml represents xml to be inserted with this node when inserted into an environment
@@ -576,7 +640,7 @@ std::shared_ptr<SchemaValue> XSDSchemaParser::getSchemaValue(const pt::ptree &at
     std::string modList = attr.get("<xmlattr>.hpcc:modifiers", "");
     if (modList.length())
     {
-        pCfgValue->setModifiers(split(modList, ","));
+        pCfgValue->setModifiers(splitString(modList, ","));
     }
 
     std::string typeName = attr.get("<xmlattr>.type", "");

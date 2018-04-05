@@ -34,6 +34,7 @@ struct DECL_EXPORT DependentValue
     std::string m_value;
 };
 
+
 struct DECL_EXPORT AllowedValue
 {
     AllowedValue(const std::string &value, const std::string &desc="") : m_value(value), m_displayName(value), m_description(desc) { }
@@ -45,6 +46,7 @@ struct DECL_EXPORT AllowedValue
     std::vector<DependentValue> m_dependencies;
 };
 
+
 class DECL_EXPORT SchemaTypeLimits
 {
     public:
@@ -52,6 +54,7 @@ class DECL_EXPORT SchemaTypeLimits
         SchemaTypeLimits() { }
         virtual ~SchemaTypeLimits() { }
         void addAllowedValue(const std::string &value, const std::string &desc="") { m_enumeratedValues.push_back(AllowedValue(value, desc)); }
+        void addDependentAttributeValue(const std::string &value, const std::string &depAttr, const std::string &depAttrVal);
         std::vector<AllowedValue> getEnumeratedValues() const;
         bool isEnumerated() const { return !m_enumeratedValues.empty(); }
         bool isValueValid(const std::string &testValue) const;
