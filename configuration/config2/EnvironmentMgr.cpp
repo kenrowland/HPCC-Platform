@@ -222,6 +222,8 @@ std::shared_ptr<EnvironmentNode> EnvironmentMgr::addNewEnvironmentNode(const std
     //
     // See if the schema item has 'extra' stuff that needs to be added
 
+    // this needs to traverse the entire environment for extra data to add
+
     if (pCfgItem->hasNodeInsertData())
     {
         std::istringstream extraData(pCfgItem->getNodeInsertData());

@@ -32,20 +32,20 @@ void AttributeDependencyCreateEvent::addDependency(const std::string &attrName, 
 }
 
 
-bool CreateEnvironmentEvent::handleEvent(const std::string &eventType, std::shared_ptr<EnvironmentNode> pEnvNode)
+bool CreateEnvironmentEvent::handleEvent(const std::string &eventType, std::shared_ptr<EnvironmentNode> pEventNode)
 {
-    return pEnvNode->getSchemaItem()->getItemType() == m_itemType;
+    return pEventNode->getSchemaItem()->getItemType() == m_itemType;
 }
 
 
-bool AttributeDependencyCreateEvent::handleEvent(const std::string &eventType, std::shared_ptr<EnvironmentNode> pEnvNode)
+bool AttributeDependencyCreateEvent::handleEvent(const std::string &eventType, std::shared_ptr<EnvironmentNode> pEventNode)
 {
     bool rc = false;
-    if (CreateEnvironmentEvent::handleEvent(eventType, pEnvNode))
+    if (CreateEnvironmentEvent::handleEvent(eventType, pEventNode))
     {
         for (auto attrIt = m_depAttrVals.begin(); attrIt != m_depAttrVals.end(); ++attrIt)
         {
-            std::shared_ptr<EnvironmentValue> pAttr = pEnvNode->getAttribute(attrIt->first);
+            std::shared_ptr<EnvironmentValue> pAttr = pEventNode->getAttribute(attrIt->first);
             if (pAttr && pAttr->getSchemaValue()->getType()->isEnumerated())
             {
                 rc = true;   // we handled at least one
@@ -54,6 +54,52 @@ bool AttributeDependencyCreateEvent::handleEvent(const std::string &eventType, s
                     pAttr->getSchemaValue()->getType()->getLimits()->addDependentAttributeValue(valueIt->first, valueIt->second.first, valueIt->second.second);
                 }
             }
+        }
+    }
+    return rc;
+}
+
+
+bool InsertEnvironmentDataCreateEvent::handleEvent(const std::string &eventType, std::shared_ptr<EnvironmentNode> pEventNode)
+{
+    bool rc = false;
+    if (CreateEnvironmentEvent::handleEvent(eventType, pEventNode))
+    {
+        if (!m_itemAttribute.empty())
+        {
+            std::vector<std::shared_ptr<EnvironmentNode>> matchNodes;
+
+            if (!m_matchPath.empty())
+            {
+                pEventNode->findNodes(m_matchPath, matchNodes);
+            }
+            else
+            {
+                matchNodes.push_back(pEventNode);
+            }
+
+            for (auto nodeIt = matchNodes.begin(); nodeIt != matchNodes.end(); ++nodeIt)
+            {
+                if (!m_itemAttribute.empty())
+                {
+                    std::shared_ptr<EnvironmentValue> pItemAttr = pEventNode->getAttribute(m_itemAttribute);
+                    if (pItemAttr)
+                    {
+                        std::shared_ptr<EnvironmentValue> pMatchAttr = (*nodeIt)->getAttribute(m_matchAttribute);
+                        if (pMatchAttr)
+                        {
+                            if (pMatchAttr->getValue() == pItemAttr->getValue())
+                            {
+                                pEventNode->addEnvironmentInsertData(m_envData);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        else
+        {
+            pEventNode->addEnvironmentInsertData(m_envData);
         }
     }
     return rc;

@@ -500,12 +500,46 @@ void XSDSchemaParser::parseAppInfo(const pt::ptree &elemTree)
                 }
                 m_pSchemaItem->addEventHandler(pDep);
             }
-            
+
+            //
+            // Insert XML, which becomes a generic insert environment data
+            else if (eventAction == "insertXML")
+            {
+                std::shared_ptr<InsertEnvironmentDataCreateEvent> pInsert = std::make_shared<InsertEnvironmentDataCreateEvent>();
+
+                pt::ptree dataTree = childTree.get_child("eventData", emptyTree);
+                for (auto it = dataTree.begin(); it != dataTree.end(); ++it)
+                {
+                    if (it->first == "itemType")
+                    {
+                        pInsert->setItemType(it->second.data());
+                    }
+                    else if (it->first == "match")
+                    {
+                        std::string attrName = it->second.get("itemAttribute", "");
+                        pInsert->setItemAttributeName(attrName);
+                        std::string matchAttrName = it->second.get("localAttribute", "");
+                        if (!matchAttrName.empty())
+                        {
+                            pInsert->setMatchAttributeName(matchAttrName);
+                        }
+                        std::string path = it->second.get("path", "");
+                        pInsert->setMatchPath(path);
+                    }
+                    else if (it->first == "xml")
+                    {
+                        pt::ptree emptyTree;
+                        const pt::ptree &insertXMLTree = elemTree.get_child("", emptyTree);
+
+                        std::ostringstream out;
+                        pt::write_xml(out, insertXMLTree);
+                        pInsert->setEnvironmentInsertData(out.str());
+                    }
+                }
+                m_pSchemaItem->addEventHandler(pInsert);
+            }   
         }
-
     }
-
-
 
     //
     // insert_xml represents xml to be inserted with this node when inserted into an environment

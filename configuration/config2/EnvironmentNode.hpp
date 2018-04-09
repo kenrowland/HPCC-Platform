@@ -66,6 +66,8 @@ class DECL_EXPORT EnvironmentNode : public std::enable_shared_from_this<Environm
         void initialize();
         void findNodes(const std::string &path, std::vector<std::shared_ptr<EnvironmentNode>> &nodes) const;
         std::shared_ptr<const EnvironmentNode> findRoot() const;
+        void addEnvironmentInsertData(const std::string &envData) { m_insertData = envData; }
+        const std::string &getEnvironmentInsertData() const { return m_insertData; }
 
 
     protected:
@@ -77,7 +79,7 @@ class DECL_EXPORT EnvironmentNode : public std::enable_shared_from_this<Environm
         std::shared_ptr<EnvironmentValue> m_pLocalValue;   // not normal because values usually in attributes
         std::map<std::string, std::shared_ptr<EnvironmentValue>> m_attributes;
         std::string m_id;
+        std::string m_insertData;
 };
-
 
 #endif

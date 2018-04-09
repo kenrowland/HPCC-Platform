@@ -47,8 +47,9 @@ class CreateEnvironmentEvent : public EnvironmentEvent
         CreateEnvironmentEvent() : EnvironmentEvent("create") {}
         virtual ~CreateEnvironmentEvent() {}
         void setItemType(const std::string &type) { m_itemType = type; }
+        
         virtual bool handleEvent(const std::string &eventType, std::shared_ptr<EnvironmentNode> pEnvNode);
- 
+
 
     protected:
 
@@ -72,6 +73,25 @@ class AttributeDependencyCreateEvent : public CreateEnvironmentEvent
 };
 
 
+class InsertEnvironmentDataCreateEvent : public CreateEnvironmentEvent
+{
+    public:
 
+        InsertEnvironmentDataCreateEvent() {}
+        virtual ~InsertEnvironmentDataCreateEvent() {}
+        void setEnvironmentInsertData(const std::string &envData) { m_envData = envData;  }
+        void setMatchPath(const std::string &path) { m_matchPath = path; }
+        void setItemAttributeName(const std::string &name) { m_itemAttribute = m_matchAttribute = name; }
+        void setMatchAttributeName(const std::string &name) { m_matchAttribute = name; }
+        virtual bool handleEvent(const std::string &envType, std::shared_ptr<EnvironmentNode> pEventNode);
+
+
+    protected:
+
+        std::string m_envData;
+        std::string m_matchPath;
+        std::string m_itemAttribute;
+        std::string m_matchAttribute;
+};
 
 #endif
