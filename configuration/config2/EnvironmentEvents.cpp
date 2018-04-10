@@ -90,7 +90,7 @@ bool InsertEnvironmentDataCreateEvent::handleEvent(const std::string &eventType,
                         {
                             if (pMatchAttr->getValue() == pItemAttr->getValue())
                             {
-                                (*nodeIt)->addEnvironmentInsertData(m_envData);
+                                pEventNode->addEnvironmentInsertData(m_envData);
                             }
                         }
                     }

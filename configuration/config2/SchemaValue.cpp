@@ -164,7 +164,7 @@ void SchemaValue::getAllowedValues(std::vector<AllowedValue> &allowedValues, con
     {
         allowedValues = m_pType->getEnumeratedValues();
     }
-    else if (isFromUniqueValueSet() && pEnvValue != nullptr)
+    else if (isFromUniqueValueSet()) // && pEnvValue != nullptr)
     {
         std::vector<std::string> refValues;
         getAllKeyRefValues(refValues);

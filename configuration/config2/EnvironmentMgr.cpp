@@ -80,9 +80,10 @@ bool EnvironmentMgr::loadEnvironment(const std::string &qualifiedFilename)
         {
             try
             {
-                m_pRootNode = doLoadEnvironment(in, m_pSchema);
-                if (m_pRootNode != nullptr)
+                std::vector<std::shared_ptr<EnvironmentNode>> rootNodes = doLoadEnvironment(in, m_pSchema);  // root
+                if (rootNodes.size() == 1)
                 {
+                    m_pRootNode = rootNodes[0];
                     assignNodeIds(m_pRootNode);
                     rc = true;
                 }
@@ -170,12 +171,29 @@ std::shared_ptr<EnvironmentNode> EnvironmentMgr::addNewEnvironmentNode(const std
     {
         std::shared_ptr<SchemaItem> pNewCfgItem;
         std::vector<std::shared_ptr<SchemaItem>> insertableItems;
+        std::string itemType = configType;
+        std::pair<std::string, std::string> initAttributeValue;
+        size_t atPos = itemType.find_first_of('@');
+        if (atPos != std::string::npos)
+        {
+            std::string attrNameValue = itemType.substr(atPos + 1);
+            itemType.erase(atPos, std::string::npos);
+
+            size_t equalPos = attrNameValue.find_first_of('=');
+            if (equalPos != std::string::npos)
+            {
+                initAttributeValue.first = attrNameValue.substr(0, equalPos);
+                initAttributeValue.second = attrNameValue.substr(equalPos + 1);
+            }
+        }
         pParentNode->getInsertableItems(insertableItems);
         for (auto it = insertableItems.begin(); it != insertableItems.end(); ++it)
         {
-            if ((*it)->getItemType() == configType)
+            
+
+            if ((*it)->getItemType() == itemType)
             {
-                pNewNode = addNewEnvironmentNode(pParentNode, *it, status);
+                pNewNode = addNewEnvironmentNode(pParentNode, *it, status, initAttributeValue);
                 break;
             }
         }
@@ -188,11 +206,13 @@ std::shared_ptr<EnvironmentNode> EnvironmentMgr::addNewEnvironmentNode(const std
     {
         status.addMsg(statusMsg::error, parentNodeId, "", "Unable to find indicated parent node");
     }
+    pNewNode->validate(status, true, false);
     return pNewNode;
 }
 
 
-std::shared_ptr<EnvironmentNode> EnvironmentMgr::addNewEnvironmentNode(const std::shared_ptr<EnvironmentNode> &pParentNode, const std::shared_ptr<SchemaItem> &pCfgItem, Status &status)
+std::shared_ptr<EnvironmentNode> EnvironmentMgr::addNewEnvironmentNode(const std::shared_ptr<EnvironmentNode> &pParentNode, const std::shared_ptr<SchemaItem> &pCfgItem, Status &status, 
+                                                                       const std::pair<std::string, std::string> &initAttribute)
 {
     std::shared_ptr<EnvironmentNode> pNewEnvNode;
 
@@ -200,7 +220,41 @@ std::shared_ptr<EnvironmentNode> EnvironmentMgr::addNewEnvironmentNode(const std
     // Create the new node and add it to the parent
     pNewEnvNode = std::make_shared<EnvironmentNode>(pCfgItem, pCfgItem->getProperty("name"), pParentNode);
     pNewEnvNode->setId(EnvironmentMgr::getUniqueKey());
+
+    addPath(pNewEnvNode);
+    pNewEnvNode->initialize();
+    if (!initAttribute.first.empty())
+    {
+        std::shared_ptr<EnvironmentValue> pAttr = pNewEnvNode->getAttribute(initAttribute.first);
+        if (pAttr)
+        {
+            pAttr->setValue(initAttribute.second, nullptr);
+        }
+    }
     pParentNode->addChild(pNewEnvNode);
+
+    //
+    // Send a create event now that it's been added to the environment
+    pCfgItem->findSchemaRoot()->processEvent("create", pNewEnvNode);
+    insertExtraEnvironmentData(m_pRootNode);
+
+    //
+    // Look through the children and add any that are necessary
+    std::vector<std::shared_ptr<SchemaItem>> cfgChildren;
+    pCfgItem->getChildren(cfgChildren);
+    for (auto childIt = cfgChildren.begin(); childIt != cfgChildren.end(); ++childIt)
+    {
+        int numReq = (*childIt)->getMinInstances();
+        for (int i = 0; i<numReq; ++i)
+        {
+            std::pair<std::string, std::string> empty;
+            addNewEnvironmentNode(pNewEnvNode, *childIt, status, empty);
+        }
+    }
+
+    return pNewEnvNode;
+
+    /*pParentNode->addChild(pNewEnvNode);
     addPath(pNewEnvNode);
     pNewEnvNode->initialize();
 
@@ -218,45 +272,48 @@ std::shared_ptr<EnvironmentNode> EnvironmentMgr::addNewEnvironmentNode(const std
         }
     }
 
+
+
     //
-    // See if the schema item has 'extra' stuff that needs to be added
-
-    // this needs to traverse the entire environment for extra data to add
-
-    /*if (pCfgItem->hasNodeInsertData())
-    {
-        std::istringstream extraData(pCfgItem->getNodeInsertData());
-        std::shared_ptr<EnvironmentNode> pExtraDataNode = doLoadEnvironment(extraData, pCfgItem);
-        assignNodeIds(pExtraDataNode);
-        pNewEnvNode->addChild(pExtraDataNode);  // link extra node data to the newly created node
-    }*/
+    // Send a create event now that it's been added to the environment
+    pCfgItem->findSchemaRoot()->processEvent("create", pNewEnvNode);
 
     insertExtraEnvironmentData(m_pRootNode);
 
-    pNewEnvNode->validate(status, true, false);
+    //pNewEnvNode->validate(status, true, false);
 
-    return pNewEnvNode;
+    return pNewEnvNode; */
 }
 
 
-void EnvironmentMgr::insertExtraEnvironmentData(std::shared_ptr<EnvironmentNode> pNode)
+void EnvironmentMgr::insertExtraEnvironmentData(std::shared_ptr<EnvironmentNode> pParentNode)
 {
-    std::string insertData = pNode->getEnvironmentInsertData();
+    std::string insertData = pParentNode->getEnvironmentInsertData();
     if (!insertData.empty())
     {
         std::istringstream extraData(insertData);
-        std::shared_ptr<EnvironmentNode> pExtraDataNode = doLoadEnvironment(extraData, pNode->getSchemaItem());
-        assignNodeIds(pExtraDataNode);
-        pNode->addChild(pExtraDataNode);  // link extra node data to the newly created node
-        pNode->clearEnvironmentInsertData();
+        std::vector<std::shared_ptr<EnvironmentNode>> extraNodes = doLoadEnvironment(extraData, pParentNode->getSchemaItem());  // not root
+        for (auto &&envNode : extraNodes)
+        {
+            assignNodeIds(envNode);
+            pParentNode->addChild(envNode);  // link extra node data to the newly created node
+            pParentNode->clearEnvironmentInsertData();
+        }
+        //assignNodeIds(pExtraDataNode);
+        //pNode->addChild(pExtraDataNode);  // link extra node data to the newly created node
+        //pNode->clearEnvironmentInsertData();
     }
 
     std::vector<std::shared_ptr<EnvironmentNode>> childNodes;
-    pNode->getChildren(childNodes);
-    for (auto childIt = childNodes.begin(); childIt != childNodes.end(); ++childIt)
+    pParentNode->getChildren(childNodes);
+    for (auto &&child : childNodes)
     {
-        insertExtraEnvironmentData(*childIt);
+        insertExtraEnvironmentData(child);
     }
+    //for (auto childIt = childNodes.begin(); childIt != childNodes.end(); ++childIt)
+    //{
+     //   insertExtraEnvironmentData(*childIt);
+    //}
 }
 
 

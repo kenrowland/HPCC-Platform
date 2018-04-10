@@ -334,7 +334,7 @@ void EnvironmentNode::getInsertableItems(std::vector<std::shared_ptr<SchemaItem>
 void EnvironmentNode::initialize()
 {
     //
-    // Add any attributes that are requried
+    // Add missing attributes
     addMissingAttributesFromConfig();
 
     //
@@ -351,12 +351,6 @@ void EnvironmentNode::initialize()
     {
         attrIt->second->initialize();
     }
-
-    
-    //
-    // Since this method is called to initialize a newly added node, send a create event so anyone watching
-    // for one of these to be created can act on it
-    m_pSchemaItem->findSchemaRoot()->processEvent("create", shared_from_this());
 }
 
 

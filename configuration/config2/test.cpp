@@ -66,8 +66,22 @@ int main()
         auto pNode = pEnvMgr->getEnvironmentNode("138");
         std::vector<std::shared_ptr<SchemaItem>> espBindingItems;
         pNode->getInsertableItems(espBindingItems);
+
+        for (auto it = espBindingItems.begin(); it != espBindingItems.end(); ++it)
+        {
+            if ((*it)->getProperty("insertChoice") != "")
+            {
+                std::string choice = (*it)->getProperty("insertChoice");
+                std::shared_ptr<SchemaValue> pSchemaValue = (*it)->getAttribute(choice);
+                std::vector<AllowedValue> allowedValues;
+                pSchemaValue->getAllowedValues(allowedValues);
+            }
+        }
+
+
+
         Status status2;
-        pNewNode = pEnvMgr->addNewEnvironmentNode("138", "espbinding", status2);  // todo: when valildating, look at required flag first
+        pNewNode = pEnvMgr->addNewEnvironmentNode("138", "espbinding@service=EclWatch1", status2);  // todo: when valildating, look at required flag first
 
 
         /*auto attributes = pNode->getAttributes();

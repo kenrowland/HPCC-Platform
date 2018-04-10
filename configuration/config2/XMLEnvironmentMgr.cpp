@@ -28,13 +28,13 @@ bool XMLEnvironmentMgr::createParser()
 }
 
 
-std::shared_ptr<EnvironmentNode>  XMLEnvironmentMgr::doLoadEnvironment(std::istream &in, const std::shared_ptr<SchemaItem> &pSchemaItem)
+std::vector<std::shared_ptr<EnvironmentNode>> XMLEnvironmentMgr::doLoadEnvironment(std::istream &in, const std::shared_ptr<SchemaItem> &pSchemaItem)
 {
-    std::shared_ptr<EnvironmentNode> pEnvNode;
+    std::vector<std::shared_ptr<EnvironmentNode>> envNodes;
     try
     {
         XMLEnvironmentLoader envLoader;
-        pEnvNode = envLoader.load(in, pSchemaItem);
+        envNodes = envLoader.load(in, pSchemaItem);
     }
     catch (const std::exception &e)
     {
@@ -42,7 +42,7 @@ std::shared_ptr<EnvironmentNode>  XMLEnvironmentMgr::doLoadEnvironment(std::istr
         std::string msg = "Unable to read/parse Environment file. Error = " + xmlError;
         throw (ParseException(msg));
     }
-    return pEnvNode;
+    return envNodes;
 }
 
 
