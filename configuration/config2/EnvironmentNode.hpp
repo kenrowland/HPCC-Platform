@@ -68,6 +68,7 @@ class DECL_EXPORT EnvironmentNode : public std::enable_shared_from_this<Environm
         std::shared_ptr<const EnvironmentNode> findRoot() const;
         void addEnvironmentInsertData(const std::string &envData) { m_insertData = envData; }
         const std::string &getEnvironmentInsertData() const { return m_insertData; }
+        void clearEnvironmentInsertData() { m_insertData.clear();  }
 
 
     protected:

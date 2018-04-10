@@ -36,9 +36,9 @@
 								<eventData>
 									<itemType>espbinding</itemType>
 									<match>
-										<itemAttribute>service</itemAttribute>
-										<path>/Environment/Software/EspService</path>
-										<localAttribute>name</localAttribute>
+										<matchItemAttribute>service</matchItemAttribute>
+										<matchPath>/Environment/Software/EspService</matchPath>
+										<matchLocalAttribute>name</matchLocalAttribute>
 									</match>
 									<xml>
 										<Authenticate access="Read" description="Root access to SMC service" path="/" required="Read" resource="SmcAccess"/>

@@ -373,7 +373,6 @@ void XSDSchemaParser::parseElement(const pt::ptree &elemTree)
         std::string typeName = elemTree.get("<xmlattr>.type", "");
         std::string componentName = elemTree.get("<xmlattr>.hpcc:componentName", "");
         std::string itemType = elemTree.get("<xmlattr>.hpcc:itemType", "");
-        std::string eventType = elemTree.get("<xmlattr>.hpcc:event", "");
         std::string insertChoice = elemTree.get("<xmlattr>.hpcc:insertChoice", "");
         unsigned minOccurs = elemTree.get("<xmlattr>.minOccurs", 1);
         std::string maxOccursStr = elemTree.get("<xmlattr>.maxOccurs", "1");
@@ -385,7 +384,6 @@ void XSDSchemaParser::parseElement(const pt::ptree &elemTree)
         if (!tooltip.empty()) pNewSchemaItem->setProperty("tooltip", tooltip);
         if (!componentName.empty()) pNewSchemaItem->setProperty("componentName", componentName);
         if (!itemType.empty()) pNewSchemaItem->setProperty("itemType", itemType);
-        if (!eventType.empty()) pNewSchemaItem->setProperty("event", eventType);
         if (!insertChoice.empty()) pNewSchemaItem->setProperty("insertChoice", insertChoice);
         pNewSchemaItem->setMinInstances(minOccurs);
         pNewSchemaItem->setMaxInstances(maxOccurs);
@@ -510,26 +508,41 @@ void XSDSchemaParser::parseAppInfo(const pt::ptree &elemTree)
                 pt::ptree dataTree = childTree.get_child("eventData", emptyTree);
                 for (auto it = dataTree.begin(); it != dataTree.end(); ++it)
                 {
+                    //
+                    // itemType is the type of the item that was created for which xml must be added to the environment
                     if (it->first == "itemType")
                     {
                         pInsert->setItemType(it->second.data());
                     }
+
+                    //
+                    // The match section is used to insert the XML into a node other than the node that generated the event. It contains
+                    // the data to find the target node into which the XML is inserted. If the XML insertion target is the node generating
+                    // the event, no match section is necessary.
+                    // The members are
+                    //    matchItemAttribute - the name of an attribute in the created node whose value is matched to a value in the local node (required)
+                    //    matchLocalAttribute - if present, names the local attribute whose value is compared with matchItemAttribute's value. if
+                    //                          not present, the local attribute name used is matchItemAttribute. (optional)
+                    //    matchPath           - Path to the local node used for the match comparison (required)
                     else if (it->first == "match")
                     {
-                        std::string attrName = it->second.get("itemAttribute", "");
+                        std::string attrName = it->second.get("matchItemAttribute", "").data();
                         pInsert->setItemAttributeName(attrName);
-                        std::string matchAttrName = it->second.get("localAttribute", "");
+                        std::string matchAttrName = it->second.get("matchLocalAttribute", "");
                         if (!matchAttrName.empty())
                         {
                             pInsert->setMatchAttributeName(matchAttrName);
                         }
-                        std::string path = it->second.get("path", "");
+                        std::string path = it->second.get("matchPath", "");
                         pInsert->setMatchPath(path);
                     }
+
+                    //
+                    // the XML to be inserted. It is inserted based on the match section
                     else if (it->first == "xml")
                     {
                         pt::ptree emptyTree;
-                        const pt::ptree &insertXMLTree = elemTree.get_child("", emptyTree);
+                        const pt::ptree &insertXMLTree = it->second.get_child("", emptyTree);
 
                         std::ostringstream out;
                         pt::write_xml(out, insertXMLTree);
@@ -543,7 +556,7 @@ void XSDSchemaParser::parseAppInfo(const pt::ptree &elemTree)
 
     //
     // insert_xml represents xml to be inserted with this node when inserted into an environment
-    if (appInfoType == "insertXml")
+    /*if (appInfoType == "insertXml")
     {
         pt::ptree emptyTree;
         const pt::ptree &insertXMLTree = elemTree.get_child("", emptyTree);
@@ -551,7 +564,7 @@ void XSDSchemaParser::parseAppInfo(const pt::ptree &elemTree)
         std::ostringstream out;
         pt::write_xml(out, insertXMLTree);
         m_pSchemaItem->setNodeInsertData(out.str());
-    }
+    }*/
 }
 
 

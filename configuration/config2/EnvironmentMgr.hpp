@@ -70,6 +70,7 @@ class DECL_EXPORT EnvironmentMgr
         virtual std::shared_ptr<EnvironmentNode> doLoadEnvironment(std::istream &in, const std::shared_ptr<SchemaItem> &pSchemaItem) = 0;
         virtual bool save(std::ostream &out) = 0;
         void assignNodeIds(const std::shared_ptr<EnvironmentNode> &pNode);
+        void insertExtraEnvironmentData(std::shared_ptr<EnvironmentNode> pNode);
 
 
     protected:

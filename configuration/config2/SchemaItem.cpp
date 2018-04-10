@@ -59,7 +59,7 @@ SchemaItem::SchemaItem(const SchemaItem &item)
     m_hidden = item.m_hidden;
     m_maxInstances = item.m_maxInstances;
     m_minInstances = item.m_minInstances;
-    m_nodeInsertData = item.m_nodeInsertData;
+    //m_nodeInsertData = item.m_nodeInsertData;
     m_properties = item.m_properties;
     m_types = item.m_types;
     m_schemaTypes = item.m_schemaTypes;
@@ -213,10 +213,6 @@ void SchemaItem::insertSchemaType(const std::shared_ptr<SchemaItem> pTypeItem)
     {
         m_uniqueAttributeValueSetReferences.insert({ it->first, it->second });
     }
-
-    //
-    // Extra data
-    m_nodeInsertData = pTypeItem->m_nodeInsertData;
 
     //
     // Children
@@ -587,20 +583,22 @@ std::string SchemaItem::getProperty(const std::string &name, const std::string &
 }
 
 
-void SchemaItem::processEvent(const std::string &eventType, const std::shared_ptr<EnvironmentNode> &pEnvNode) const
+void SchemaItem::processEvent(const std::string &eventType, const std::shared_ptr<EnvironmentNode> &pEventSourceNode) const
 {
     //
-    // Loop through any event handlers we may have, then pass the envent to our children
+    // Loop through any event handlers we may have
     for (auto eventIt = m_eventHandlers.begin(); eventIt != m_eventHandlers.end(); ++eventIt)
     {
-        (*eventIt)->handleEvent(eventType, pEnvNode);
+        (*eventIt)->handleEvent(eventType, pEventSourceNode);
     }
 
+    //
+    // Pass the event on because events are broadcast
     std::vector<std::shared_ptr<SchemaItem>> children;
     getChildren(children);
     for (auto childIt = children.begin(); childIt != children.end(); ++childIt)
     {
-        (*childIt)->processEvent(eventType, pEnvNode);
+        (*childIt)->processEvent(eventType, pEventSourceNode);
     }
 }
 

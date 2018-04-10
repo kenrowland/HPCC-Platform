@@ -203,7 +203,6 @@ std::shared_ptr<EnvironmentNode> EnvironmentMgr::addNewEnvironmentNode(const std
     pParentNode->addChild(pNewEnvNode);
     addPath(pNewEnvNode);
     pNewEnvNode->initialize();
-    pNewEnvNode->validate(status, true, false);
 
 
     //
@@ -224,15 +223,40 @@ std::shared_ptr<EnvironmentNode> EnvironmentMgr::addNewEnvironmentNode(const std
 
     // this needs to traverse the entire environment for extra data to add
 
-    if (pCfgItem->hasNodeInsertData())
+    /*if (pCfgItem->hasNodeInsertData())
     {
         std::istringstream extraData(pCfgItem->getNodeInsertData());
         std::shared_ptr<EnvironmentNode> pExtraDataNode = doLoadEnvironment(extraData, pCfgItem);
         assignNodeIds(pExtraDataNode);
         pNewEnvNode->addChild(pExtraDataNode);  // link extra node data to the newly created node
-    }
+    }*/
+
+    insertExtraEnvironmentData(m_pRootNode);
+
+    pNewEnvNode->validate(status, true, false);
 
     return pNewEnvNode;
+}
+
+
+void EnvironmentMgr::insertExtraEnvironmentData(std::shared_ptr<EnvironmentNode> pNode)
+{
+    std::string insertData = pNode->getEnvironmentInsertData();
+    if (!insertData.empty())
+    {
+        std::istringstream extraData(insertData);
+        std::shared_ptr<EnvironmentNode> pExtraDataNode = doLoadEnvironment(extraData, pNode->getSchemaItem());
+        assignNodeIds(pExtraDataNode);
+        pNode->addChild(pExtraDataNode);  // link extra node data to the newly created node
+        pNode->clearEnvironmentInsertData();
+    }
+
+    std::vector<std::shared_ptr<EnvironmentNode>> childNodes;
+    pNode->getChildren(childNodes);
+    for (auto childIt = childNodes.begin(); childIt != childNodes.end(); ++childIt)
+    {
+        insertExtraEnvironmentData(*childIt);
+    }
 }
 
 

@@ -77,9 +77,6 @@ class DECL_EXPORT SchemaItem : public std::enable_shared_from_this<SchemaItem>
         void setHidden(bool hidden) { m_hidden = hidden; }
         bool isHidden() const { return m_hidden; }
 
-        const std::string &getNodeInsertData() const { return m_nodeInsertData; }
-        void setNodeInsertData(const std::string &data) { m_nodeInsertData = data; }
-        bool hasNodeInsertData() const { return !m_nodeInsertData.empty(); }
         void setParent(const std::shared_ptr<SchemaItem> &parent) { m_pParent = parent; }
         std::shared_ptr<const SchemaItem> findSchemaRoot() const;
         void processEvent(const std::string &eventType, const std::shared_ptr<EnvironmentNode> &pEnvNode) const;
@@ -121,11 +118,6 @@ class DECL_EXPORT SchemaItem : public std::enable_shared_from_this<SchemaItem>
         std::map<std::string, SetInfo> m_uniqueAttributeValueSetDefs;
 
         std::vector<std::shared_ptr<EnvironmentEvent>> m_eventHandlers;
-
-        std::string m_nodeInsertData;  // data to be inserted in environment if a node of this type is inserted (env/schema type dependent)
-
-        // These are the attribute value sets whose members must be unique
-        //static std::map<std::string, std::vector<std::shared_ptr<SchemaValue>>> m_uniqueAttributeValueSets;
 };
 
 #endif // _CONFIG2_CONFIGITEM_HPP_

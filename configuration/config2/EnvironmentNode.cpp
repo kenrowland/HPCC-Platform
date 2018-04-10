@@ -354,14 +354,9 @@ void EnvironmentNode::initialize()
 
     
     //
-    // Any events to send? If so, it's a comma separated list
-    std::vector<std::string> events = splitString(m_pSchemaItem->getProperty("event"), ",");
-    for (auto eventIt = events.begin(); eventIt != events.end(); ++eventIt)
-    {
-        m_pSchemaItem->findSchemaRoot()->processEvent(*eventIt, shared_from_this());
-    }
-    
-
+    // Since this method is called to initialize a newly added node, send a create event so anyone watching
+    // for one of these to be created can act on it
+    m_pSchemaItem->findSchemaRoot()->processEvent("create", shared_from_this());
 }
 
 
