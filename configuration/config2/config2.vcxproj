@@ -114,6 +114,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="EnvironmentEvents.cpp" />
+    <ClCompile Include="InsertableItem.cpp" />
     <ClCompile Include="SchemaItem.cpp" />
     <ClCompile Include="SchemaParser.cpp" />
     <ClCompile Include="SchemaTypeIntegerLimits.cpp" />
@@ -136,6 +137,7 @@
     <ClInclude Include="EnvironmentEvents.hpp" />
     <ClInclude Include="EnvironmentLoader.hpp" />
     <ClInclude Include="Exceptions.hpp" />
+    <ClInclude Include="InsertableItem.hpp" />
     <ClInclude Include="SchemaItem.hpp" />
     <ClInclude Include="SchemaParser.hpp" />
     <ClInclude Include="SchemaTypeIntegerLimits.hpp" />

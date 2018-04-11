@@ -22,6 +22,7 @@ const std::string c_path = "..\\..\\initfiles\\componentfiles\\config2xml\\"; //
 #include "SchemaItem.hpp"
 #include "XSDSchemaParser.hpp"
 #include "XMLEnvironmentMgr.hpp"
+#include "InsertableItem.hpp"
 
 
 int main()
@@ -64,19 +65,19 @@ int main()
         //pEnvMgr->addNewEnvironmentNode("35", "ws_ecl", status);
 
         auto pNode = pEnvMgr->getEnvironmentNode("138");
-        std::vector<std::shared_ptr<SchemaItem>> espBindingItems;
+        std::vector<InsertableItem> espBindingItems;
         pNode->getInsertableItems(espBindingItems);
 
-        for (auto it = espBindingItems.begin(); it != espBindingItems.end(); ++it)
+        /*for (auto it = espBindingItems.begin(); it != espBindingItems.end(); ++it)
         {
-            if ((*it)->getProperty("insertChoice") != "")
+            if ((*it).m_pSchemaItem->getProperty("insertChoice") != "")
             {
-                std::string choice = (*it)->getProperty("insertChoice");
-                std::shared_ptr<SchemaValue> pSchemaValue = (*it)->getAttribute(choice);
+                std::string choice = (*it).m_pSchemaItem->getProperty("insertChoice");
+                std::shared_ptr<SchemaValue> pSchemaValue = (*it).m_pSchemaItem->getAttribute(choice);
                 std::vector<AllowedValue> allowedValues;
                 pSchemaValue->getAllowedValues(allowedValues);
             }
-        }
+        }*/
 
 
 

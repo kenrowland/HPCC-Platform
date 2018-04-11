@@ -18,6 +18,7 @@
 #include "EnvironmentMgr.hpp"
 #include "Exceptions.hpp"
 #include "XMLEnvironmentMgr.hpp"
+#include "InsertableItem.hpp"
 
 std::atomic_int EnvironmentMgr::m_key(1);
 
@@ -170,7 +171,7 @@ std::shared_ptr<EnvironmentNode> EnvironmentMgr::addNewEnvironmentNode(const std
     if (pParentNode)
     {
         std::shared_ptr<SchemaItem> pNewCfgItem;
-        std::vector<std::shared_ptr<SchemaItem>> insertableItems;
+        std::vector<InsertableItem> insertableItems;
         std::string itemType = configType;
         std::pair<std::string, std::string> initAttributeValue;
         size_t atPos = itemType.find_first_of('@');
@@ -191,9 +192,9 @@ std::shared_ptr<EnvironmentNode> EnvironmentMgr::addNewEnvironmentNode(const std
         {
             
 
-            if ((*it)->getItemType() == itemType)
+            if ((*it).m_pSchemaItem->getItemType() == itemType)
             {
-                pNewNode = addNewEnvironmentNode(pParentNode, *it, status, initAttributeValue);
+                pNewNode = addNewEnvironmentNode(pParentNode, (*it).m_pSchemaItem, status, initAttributeValue);
                 break;
             }
         }

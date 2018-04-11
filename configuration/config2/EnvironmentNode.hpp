@@ -24,6 +24,7 @@
 #include "EnvironmentValue.hpp"
 #include "SchemaValue.hpp"
 #include "Status.hpp"
+#include "InsertableItem.hpp"
 #include "NameValue.hpp"
 #include "platform.h"
 
@@ -62,7 +63,7 @@ class DECL_EXPORT EnvironmentNode : public std::enable_shared_from_this<Environm
         void validate(Status &status, bool includeChildren=false, bool includeHiddenNodes=false) const;
         void getAttributeValueForAllSiblings(const std::string &attrName, std::vector<std::string> &result) const;
         const std::shared_ptr<SchemaItem> &getSchemaItem() const { return m_pSchemaItem; }
-        void getInsertableItems(std::vector<std::shared_ptr<SchemaItem>> &items) const;
+        void getInsertableItems(std::vector<InsertableItem> &items) const;
         void initialize();
         void findNodes(const std::string &path, std::vector<std::shared_ptr<EnvironmentNode>> &nodes) const;
         std::shared_ptr<const EnvironmentNode> findRoot() const;

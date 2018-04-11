@@ -285,7 +285,7 @@ const std::shared_ptr<EnvironmentValue> EnvironmentNode::getAttribute(const std:
 }
 
 
-void EnvironmentNode::getInsertableItems(std::vector<std::shared_ptr<SchemaItem>> &insertableItems) const
+void EnvironmentNode::getInsertableItems(std::vector<InsertableItem> &insertableItems) const
 {
     std::map<std::string, unsigned> childCounts;
 
@@ -318,12 +318,12 @@ void EnvironmentNode::getInsertableItems(std::vector<std::shared_ptr<SchemaItem>
         {
             if (findIt->second < (*cfgIt)->getMaxInstances())
             {
-                insertableItems.push_back(*cfgIt);
+                insertableItems.push_back(InsertableItem(*cfgIt));
             }
         }
         else
         {
-            insertableItems.push_back(*cfgIt);
+            insertableItems.push_back(InsertableItem(*cfgIt));
         }
     }
 }

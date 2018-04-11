@@ -373,7 +373,8 @@ void XSDSchemaParser::parseElement(const pt::ptree &elemTree)
         std::string typeName = elemTree.get("<xmlattr>.type", "");
         std::string componentName = elemTree.get("<xmlattr>.hpcc:componentName", "");
         std::string itemType = elemTree.get("<xmlattr>.hpcc:itemType", "");
-        std::string insertChoice = elemTree.get("<xmlattr>.hpcc:insertChoice", "");
+        std::string insertLimitType = elemTree.get("<xmlattr>.hpcc:insertLimitType", "");
+        std::string insertLimitData = elemTree.get("<xmlattr>.hpcc:insertLimitData", "");
         unsigned minOccurs = elemTree.get("<xmlattr>.minOccurs", 1);
         std::string maxOccursStr = elemTree.get("<xmlattr>.maxOccurs", "1");
         unsigned maxOccurs = (maxOccursStr != "unbounded") ? stoi(maxOccursStr) : UINT_MAX;
@@ -384,7 +385,8 @@ void XSDSchemaParser::parseElement(const pt::ptree &elemTree)
         if (!tooltip.empty()) pNewSchemaItem->setProperty("tooltip", tooltip);
         if (!componentName.empty()) pNewSchemaItem->setProperty("componentName", componentName);
         if (!itemType.empty()) pNewSchemaItem->setProperty("itemType", itemType);
-        if (!insertChoice.empty()) pNewSchemaItem->setProperty("insertChoice", insertChoice);
+        if (!insertLimitType.empty()) pNewSchemaItem->setProperty("insertLimitType", insertLimitType);
+        if (!insertLimitData.empty()) pNewSchemaItem->setProperty("insertLimitData", insertLimitData);
         pNewSchemaItem->setMinInstances(minOccurs);
         pNewSchemaItem->setMaxInstances(maxOccurs);
 

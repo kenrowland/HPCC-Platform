@@ -12,7 +12,7 @@
                 <xs:complexType>
                     <xs:sequence>
 
-                        <xs:element name="EspBinding" maxOccurs="unbounded" hpcc:itemType="espbinding" hpcc:category="ESP Bindings" hpcc:insertChoice="service" hpcc:displayName="ESP Service Bindings" hpcc:class="valueSet" hpcc:event="create">
+                        <xs:element name="EspBinding" maxOccurs="unbounded" hpcc:itemType="espbinding" hpcc:category="ESP Bindings" hpcc:insertLimitType="attribute" hpcc:insertLimitData="service" hpcc:displayName="ESP Service Bindings" hpcc:class="valueSet" hpcc:event="create">
                             <xs:complexType>
                                 <xs:sequence>
                                     <xs:element name="Authenticate" minOccurs="0" maxOccurs="unbounded" hpcc:displayName="URL Authentication" hpcc:docid="ESP.t1">
