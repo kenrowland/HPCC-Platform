@@ -329,6 +329,20 @@ ESPresponse [exceptions_inline] GetTreeResponse
 };
 
 
+ESPrequest FindNodesRequest
+{
+    string sessionId;
+    string startingNodeId("");   // optional stataring node for the find, "" for none
+    string path;                 // path to search (uses XPath syntax). If startingNodeId specified, path may not start at root ("/")
+};
+
+
+ESPresponse [exceptions_inline] FindNodesResponse
+{
+    ESParray<string, nodeId> nodeIds;
+};
+
+
 ESPservice [auth_feature("DEFERRED"),version("2.0"), default_client_version("2.0"), exceptions_inline("xslt/exceptions.xslt")] ws_config2
 {
     ESPMethod 
@@ -395,6 +409,10 @@ ESPservice [auth_feature("DEFERRED"),version("2.0"), default_client_version("2.0
         [
             description("Return the tree of nodes beneath the indicated node for the indicated number of levels")
         ] GetNodeTree(GetTreeRequest, GetTreeResponse);
+    ESPMethod
+        [
+            description("Find nodes matching the indicated path")
+        ] FindNodes(FindNodesRequest, FindNodesResponse);
 };
 
 

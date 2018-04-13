@@ -464,6 +464,7 @@ bool Cws_config2Ex::onGetParents(IEspContext &context, IEspNodeRequest &req, IEs
             ids.append(pNode->getId().c_str());
         }
     }
+    resp.setParentIdList(ids);
 
     return true;
 }
@@ -485,6 +486,44 @@ bool Cws_config2Ex::onGetNodeTree(IEspContext &context, IEspGetTreeRequest &req,
     return true;
 }
 
+
+bool Cws_config2Ex::onFindNodes(IEspContext &context, IEspFindNodesRequest &req, IEspFindNodesResponse &resp)
+{
+    std::string sessionId = req.getSessionId();
+    std::string path = req.getPath();
+    std::string startingNodeId = req.getStartingNodeId();
+    std::shared_ptr<EnvironmentNode> pStartingNode;
+    ConfigMgrSession *pSession = getConfigSession(sessionId);
+
+    if (startingNodeId != "")
+    {
+        if (path[0] == '/')
+        {
+            throw MakeStringException(CDGMGR_ERROR_PATH_INVALID, "Path may not begin at root if starting node specified");
+        }
+
+        pStartingNode = pSession->m_pEnvMgr->getEnvironmentNode(startingNodeId);
+        if (!pStartingNode)
+        {
+            throw MakeStringException(CFGMGR_ERROR_NODE_INVALID, "The starting node ID is not valid");
+        }
+    }
+    else if (path[0] != '/')
+    {
+        throw MakeStringException(CDGMGR_ERROR_PATH_INVALID, "Path must begin at root (/) if no starting node is specified");
+    }
+
+    std::vector<std::shared_ptr<EnvironmentNode>> nodes;
+    pSession->m_pEnvMgr->findNodes(path, nodes, pStartingNode);
+    StringArray ids;
+    for ( auto &&pNode : nodes)
+    {
+        ids.append(pNode->getId().c_str());
+    }
+    resp.setNodeIds(ids);
+
+    return true;
+}
 
 void Cws_config2Ex::addStatusToResponse(const Status &status, ConfigMgrSession *pSession, IEspStatusResponse &resp) const
 {

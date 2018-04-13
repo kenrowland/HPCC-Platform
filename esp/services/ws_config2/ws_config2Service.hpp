@@ -54,6 +54,7 @@ public:
     virtual bool onValidateEnvironment(IEspContext &context, IEspValidateEnvironmentRequest &req, IEspStatusResponse &resp);
     virtual bool onGetOpenSessions(IEspContext &context, IEspListOpenSessionsRequest &req, IEspListOpenSessionsResponse &resp);
     virtual bool onGetNodeTree(IEspContext &context, IEspGetTreeRequest &req, IEspGetTreeResponse &resp);
+    virtual bool onFindNodes(IEspContext &context, IEspFindNodesRequest &req, IEspFindNodesResponse &resp);
 
 
 private:
