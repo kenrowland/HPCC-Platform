@@ -52,38 +52,6 @@ std::vector<std::shared_ptr<EnvironmentNode>> XMLEnvironmentLoader::load(std::is
             parse(envIt->second, pParseRootSchemaItem, pEnvNode);
             envNodes.push_back(pEnvNode);
         }
-
-
-        //auto rootIt = envTree.begin();
-        //
-        //for (auto it = envTree.begin(); it != envTree.end(); ++it)
-        //{
-        //    std::string name = it->first;
-        //}
-        //
-        //
-        //std::string elemName = rootIt->first;
-        //pParseRootSchemaItem = pSchemaItem;
-        //
-        ////
-        //// If the root of the input environment tree does not match the input root schema, look for a child schema item that matches.
-        //// If not found, that's OK, a default schema item is returned that allows the environment tree to be parsed, it just won't have
-        //// any real schema information
-        //if (rootIt->first != pParseRootSchemaItem->getProperty("name"))  // only check if pSchemaItem is non null
-        //{
-        //    pParseRootSchemaItem = pParseRootSchemaItem->getChild(rootIt->first);
-        //}
-        //
-        ////if (rootIt->first == pSchemaItem->getProperty("name"))  // only check if pSchemaItem is non null
-        //{
-        //    pEnvNode = std::make_shared<EnvironmentNode>(pParseRootSchemaItem, rootIt->first);  // caller may need to set the parent
-        //    parse(rootIt->second, pParseRootSchemaItem, pEnvNode);
-        //}
-        ////else
-        ////{
-        ////    std::string msg = "XML environment tree root element (" + rootIt->first + ") does not match intended schema root (" + pSchemaItem->getProperty("name");
-        ////    throw (ParseException(msg));
-        ////}
     }
     catch (const std::exception &e)
     {
@@ -93,7 +61,6 @@ std::vector<std::shared_ptr<EnvironmentNode>> XMLEnvironmentLoader::load(std::is
     }
     return envNodes;
 }
-
 
 
 void XMLEnvironmentLoader::parse(const pt::ptree &envTree, const std::shared_ptr<SchemaItem> &pConfigItem, std::shared_ptr<EnvironmentNode> &pEnvNode) const
@@ -149,8 +116,8 @@ void XMLEnvironmentLoader::parse(const pt::ptree &envTree, const std::shared_ptr
             {
                 pSchemaItem = pConfigItem->getChild(elemName);
             }
-            // If no schema item is found, that's ok, the node just has no defined configuration
 
+            // If no schema item is found, that's ok, the node just has no defined configuration
             std::shared_ptr<EnvironmentNode> pElementNode = std::make_shared<EnvironmentNode>(pSchemaItem, elemName, pEnvNode);
             parse(it->second, pSchemaItem, pElementNode);
             pEnvNode->addChild(pElementNode);

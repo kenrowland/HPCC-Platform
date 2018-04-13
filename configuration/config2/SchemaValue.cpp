@@ -33,10 +33,6 @@ SchemaValue::SchemaValue(const std::string &name, bool isDefined) :
 SchemaValue::SchemaValue(const SchemaValue &value)
 {
     m_pType = value.m_pType;
-
-    //std::shared_ptr<SchemaType> m_pType;
-    //std::vector<std::weak_ptr<EnvironmentValue>> m_envValues;
-   
     m_name = value.m_name;
     m_displayName = value.m_displayName;
     m_mirrorFromPath = value.m_mirrorFromPath;

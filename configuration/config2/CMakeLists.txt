@@ -33,6 +33,9 @@ SET(  SRCS
       XSDSchemaParser.cpp
       XSDValueSetParser.cpp
       Status.cpp
+      EnvironmentEvents.cpp
+      Utils.cpp
+      InsertableItem.cpp
 )
 
 INCLUDE_DIRECTORIES(

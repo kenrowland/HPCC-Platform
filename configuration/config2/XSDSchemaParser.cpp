@@ -175,7 +175,6 @@ void XSDSchemaParser::parseXSD(const pt::ptree &keys)
         else if (elemType == "xs:annotation")
         {
             parseAnnotation(it->second);
-            //parseAppInfo(it->second.get_child("xs:appinfo", pt::ptree()));
         }
     }
 }
@@ -283,72 +282,6 @@ void XSDSchemaParser::parseComplexType(const pt::ptree &typeTree)
     }
 }
 
-//void XSDSchemaParser::parseComplexType(const pt::ptree &typeTree)
-//{
-//    std::string complexTypeName = getXSDAttributeValue(typeTree, "<xmlattr>.name", false, "");
-//    std::string className = typeTree.get("<xmlattr>.hpcc:class", "");
-//    std::string catName = typeTree.get("<xmlattr>.hpcc:category", "");
-//    std::string componentName = typeTree.get("<xmlattr>.hpcc:componentName", "");
-//    std::string displayName = typeTree.get("<xmlattr>.hpcc:displayName", "");
-//    bool hidden = typeTree.get("<xmlattr>.hpcc:hidden", "false") == "true";
-//
-//    if (!complexTypeName.empty())
-//    {
-//        if (!className.empty())
-//        {
-//            if (className == "component")
-//            {
-//                std::shared_ptr<SchemaItem> pComponent = std::make_shared<SchemaItem>(complexTypeName, "component", m_pSchemaItem);
-//                pComponent->setProperty("category", catName);
-//                pComponent->setProperty("componentName", componentName);
-//                pComponent->setProperty("displayName", displayName);
-//                pComponent->setHidden(hidden);
-//                pt::ptree componentTree = typeTree.get_child("", pt::ptree());
-//                if (!componentTree.empty())
-//                {
-//                    std::shared_ptr<XSDComponentParser> pComponentXSDParaser = std::make_shared<XSDComponentParser>(std::dynamic_pointer_cast<SchemaItem>(pComponent));
-//                    pComponentXSDParaser->parseXSD(typeTree);
-//                    m_pSchemaItem->addSchemaType(pComponent, complexTypeName);
-//                }
-//                else
-//                {
-//                    throw(ParseException("Component definition empty: " + displayName));
-//                }
-//            }
-//            else
-//            {
-//                throw(ParseException("Unrecognized class name for complex type: " + className));
-//            }
-//        }
-//
-//        //
-//        // This is a complex type definition of just regular XSD statements, no special format. Create a parser and parse it
-//        // and add it to the
-//        else
-//        {
-//            std::shared_ptr<SchemaItem> pTypeItem = std::make_shared<SchemaItem>(complexTypeName, "complex", m_pSchemaItem);
-//            pt::ptree childTree = typeTree.get_child("", pt::ptree());
-//            if (!childTree.empty())
-//            {
-//                std::shared_ptr<XSDSchemaParser> pXSDParaser = std::make_shared<XSDSchemaParser>(pTypeItem);
-//                pXSDParaser->parseXSD(childTree);
-//                m_pSchemaItem->addSchemaType(pTypeItem, complexTypeName);
-//            }
-//            else
-//            {
-//                throw(ParseException("Complex type definition empty: " + displayName));
-//            }
-//        }
-//    }
-//
-//    //
-//    // Just a complexType delimiter, ignore and parse the children
-//    else
-//    {
-//        parseXSD(typeTree.get_child("", pt::ptree()));
-//    }
-//}
-
 
 void XSDSchemaParser::parseElement(const pt::ptree &elemTree)
 {
@@ -400,7 +333,6 @@ void XSDSchemaParser::parseElement(const pt::ptree &elemTree)
             const std::shared_ptr<SchemaType> pSimpleType = m_pSchemaItem->getSchemaValueType(typeName, false);
             if (pSimpleType != nullptr)
             {
-                //pNewSchemaItem = std::make_shared<SchemaItem>(elementName, className, m_pSchemaItem);
                 std::shared_ptr<SchemaValue> pCfgValue = std::make_shared<SchemaValue>("");  // no name value since it's the element's value
                 pCfgValue->setType(pSimpleType);                      // will throw if type is not defined
                 pNewSchemaItem->setItemSchemaValue(pCfgValue);
@@ -470,15 +402,20 @@ void XSDSchemaParser::parseAppInfo(const pt::ptree &elemTree)
     pt::ptree emptyTree, childTree;
 
     //
-    // 
+    // Process the app info based on its type
     if (appInfoType == "event")
     {
         childTree = elemTree.get_child("", emptyTree);
-
         std::string eventType = getXSDAttributeValue(childTree, "eventType");
+
+        //
+        // Fir a create event type, get the eventAction attrbute to decide what to do
         if (eventType == "create")
         {
             std::string eventAction = getXSDAttributeValue(childTree, "eventAction");
+
+            //
+            // addAttributeDependencies is used to set dependent values for an attribute based on the value of another attribute.
             if (eventAction == "addAttributeDependencies")
             {
                 std::shared_ptr<AttributeDependencyCreateEvent> pDep = std::make_shared<AttributeDependencyCreateEvent>();
@@ -502,7 +439,7 @@ void XSDSchemaParser::parseAppInfo(const pt::ptree &elemTree)
             }
 
             //
-            // Insert XML, which becomes a generic insert environment data
+            // Insert XML is ued to insert XML ino the environment based on what's in the eventData section
             else if (eventAction == "insertXML")
             {
                 std::shared_ptr<InsertEnvironmentDataCreateEvent> pInsert = std::make_shared<InsertEnvironmentDataCreateEvent>();
@@ -511,21 +448,23 @@ void XSDSchemaParser::parseAppInfo(const pt::ptree &elemTree)
                 for (auto it = dataTree.begin(); it != dataTree.end(); ++it)
                 {
                     //
-                    // itemType is the type of the item that was created for which xml must be added to the environment
+                    // itemTye is the type of the item that was created for which the create event shall be sent.
                     if (it->first == "itemType")
                     {
                         pInsert->setItemType(it->second.data());
                     }
 
                     //
-                    // The match section is used to insert the XML into a node other than the node that generated the event. It contains
-                    // the data to find the target node into which the XML is inserted. If the XML insertion target is the node generating
-                    // the event, no match section is necessary.
-                    // The members are
-                    //    matchItemAttribute - the name of an attribute in the created node whose value is matched to a value in the local node (required)
-                    //    matchLocalAttribute - if present, names the local attribute whose value is compared with matchItemAttribute's value. if
-                    //                          not present, the local attribute name used is matchItemAttribute. (optional)
-                    //    matchPath           - Path to the local node used for the match comparison (required)
+                    // The match section is optional. It is used to further qualify the conditions when XML is inserted. If missing,
+                    // the XML is inserted whenever a new node of "itemType" is inserted. When present, the following fields further
+                    // qualify when the XML is inserted.
+                    //
+                    //    matchItemAttribute  - name of attribute from created node whose value is compared with the value of an attribute in
+                    //                          another node (defined by matchLocalAttribte and matchPath)
+                    //    matchPath           - XPath to select the node for comparing attribute values
+                    //    matchLocalAttribute - name of attribute from node selected by matchPath for value comparison. This option is
+                    //                          optional. If not present, the name of the attribute for comparison in the selected node is
+                    //                          matchItemAttribute
                     else if (it->first == "match")
                     {
                         std::string attrName = it->second.get("matchItemAttribute", "").data();
@@ -555,18 +494,6 @@ void XSDSchemaParser::parseAppInfo(const pt::ptree &elemTree)
             }   
         }
     }
-
-    //
-    // insert_xml represents xml to be inserted with this node when inserted into an environment
-    /*if (appInfoType == "insertXml")
-    {
-        pt::ptree emptyTree;
-        const pt::ptree &insertXMLTree = elemTree.get_child("", emptyTree);
-
-        std::ostringstream out;
-        pt::write_xml(out, insertXMLTree);
-        m_pSchemaItem->setNodeInsertData(out.str());
-    }*/
 }
 
 

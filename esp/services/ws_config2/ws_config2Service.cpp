@@ -18,6 +18,7 @@
 #include "ws_config2Service.hpp"
 #include "jfile.hpp"
 #include "SchemaItem.hpp"
+#include "InsertableItem.hpp"
 #include "jexcept.hpp"
 #include "ws_config2Error.hpp"
 
@@ -604,16 +605,35 @@ void Cws_config2Ex::getNodeResponse(const std::shared_ptr<EnvironmentNode> &pNod
 
     //
     // Build a list of items that can be inserted under this node
-    IArrayOf<IEspNodeInfoType> newNodes;
-    std::vector<std::shared_ptr<SchemaItem>> insertableList;
+    IArrayOf<IEspInsertItemType> newNodes;
+    std::vector<InsertableItem> insertableList;
     pNode->getInsertableItems(insertableList);
     for (auto it=insertableList.begin(); it!=insertableList.end(); ++it)
     {
-        std::shared_ptr<SchemaItem> pSchemaItem = *it;
-        Owned<IEspNodeInfoType> pNodeInfo = createNodeInfoType();
-        getNodeInfo(pSchemaItem, *pNodeInfo);
-        pNodeInfo->setRequired(pSchemaItem->isRequired());   // only filled in for insertable items
-        newNodes.append(*pNodeInfo.getLink());
+        std::shared_ptr<SchemaItem> pSchemaItem = (*it).m_pSchemaItem;
+        Owned<IEspInsertItemType> pInsertInfo = createInsertItemType();
+        pInsertInfo->setName(pSchemaItem->getProperty("displayName").c_str());
+        pInsertInfo->setNodeType(pSchemaItem->getItemType().c_str());
+        pInsertInfo->setClass(pSchemaItem->getProperty("className").c_str());
+        pInsertInfo->setCategory(pSchemaItem->getProperty("category").c_str());
+        pInsertInfo->setRequired(pSchemaItem->isRequired());
+        pInsertInfo->setTooltip(pSchemaItem->getProperty("tooltip").c_str());
+        std::string limitType = pSchemaItem->getProperty("insertLimitType");
+        if (!limitType.empty())
+        {
+            pInsertInfo->setFixedChoices(true);
+            IArrayOf<IEspChoiceLimitType> fixedChoices;
+            for (auto &&fc : (*it).m_itemLimits)
+            {
+                Owned<IEspChoiceLimitType> pChoice = createChoiceLimitType();
+                pChoice->setDisplayName(fc.itemName.c_str());
+                std::string itemType = pSchemaItem->getItemType() + "@" + fc.attributeName + "=" + fc.attributeValue;
+                pChoice->setItemType(itemType.c_str());
+                fixedChoices.append(*pChoice.getLink());
+            }
+            pInsertInfo->setChoiceList(fixedChoices);
+        }
+        newNodes.append(*pInsertInfo.getLink());
     }
     resp.setInsertable(newNodes);
 

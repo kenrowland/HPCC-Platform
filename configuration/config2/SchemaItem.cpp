@@ -500,7 +500,6 @@ void SchemaItem::processDefinedUniqueAttributeValueSets(std::map<std::string, st
 }
 
 
-
 void SchemaItem::postProcessConfig(const std::map<std::string, std::vector<std::shared_ptr<SchemaValue>>> &uniqueAttributeValueSets)
 {
     //

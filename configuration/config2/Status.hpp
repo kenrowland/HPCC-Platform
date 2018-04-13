@@ -43,6 +43,7 @@ struct DECL_EXPORT statusMsg {
     std::string msg;                  // message for user
 };
 
+
 class DECL_EXPORT Status
 {
     public:
