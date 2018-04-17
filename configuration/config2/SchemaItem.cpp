@@ -51,6 +51,45 @@ SchemaItem::SchemaItem(const std::string &name, const std::string &className, co
 }
 
 
+SchemaItem::SchemaItem(const SchemaItem &item)
+{
+    //
+    // Copy stuff that doesn't have to be unique
+    m_hidden = item.m_hidden;
+    m_maxInstances = item.m_maxInstances;
+    m_minInstances = item.m_minInstances;
+    //m_nodeInsertData = item.m_nodeInsertData;
+    m_properties = item.m_properties;
+    m_types = item.m_types;
+    m_schemaTypes = item.m_schemaTypes;
+    m_pParent = item.m_pParent;
+
+    if (m_pItemValue)
+        m_pItemValue = std::make_shared<SchemaValue>(*(item.m_pItemValue));  // copy constructed
+
+    //
+    // Make a copy of the children now
+    for (auto childIt = item.m_children.begin(); childIt != item.m_children.end(); ++childIt)
+    {
+        addChild(std::make_shared<SchemaItem>(*(childIt->second)));
+    }
+
+    //
+    // Copy the attributes
+    for (auto attrIt = item.m_attributes.begin(); attrIt != item.m_attributes.end(); ++attrIt)
+    {
+        addAttribute(std::make_shared<SchemaValue>(*(attrIt->second)));
+    }
+
+    //
+    // Event handlers
+    m_eventHandlers = item.m_eventHandlers;
+
+    m_uniqueAttributeValueSetReferences = item.m_uniqueAttributeValueSetReferences;
+    m_uniqueAttributeValueSetDefs = item.m_uniqueAttributeValueSetDefs;
+}
+
+
 void SchemaItem::addSchemaValueType(const std::shared_ptr<SchemaType> &pType)
 {
     m_types[pType->getName()] = pType;
@@ -140,21 +179,6 @@ std::shared_ptr<SchemaItem> SchemaItem::getSchemaType(const std::string &name, b
 void SchemaItem::insertSchemaType(const std::shared_ptr<SchemaItem> pTypeItem)
 {
     //
-    // To insert a schema type (for example a previously defined complexType name="" XSD definition)
-    // loop through each set of configurable pieces of the input type, make a copy of each, and add it to
-    // this element.
-
-    //
-    // Children
-    std::vector<std::shared_ptr<SchemaItem>> typeChildren;
-    pTypeItem->getChildren(typeChildren);
-    for (auto childIt = typeChildren.begin(); childIt != typeChildren.end(); ++childIt)
-    {
-        std::shared_ptr<SchemaItem> pNewItem = std::make_shared<SchemaItem>(*(*childIt));
-        addChild(pNewItem);
-    }
-
-    //
     // Attributes
     std::vector< std::shared_ptr<SchemaValue>> typeAttributes;
     pTypeItem->getAttributes(typeAttributes);
@@ -184,6 +208,16 @@ void SchemaItem::insertSchemaType(const std::shared_ptr<SchemaItem> pTypeItem)
     for (auto it = pTypeItem->m_uniqueAttributeValueSetReferences.begin(); it != pTypeItem->m_uniqueAttributeValueSetReferences.end(); ++it)
     {
         m_uniqueAttributeValueSetReferences.insert({ it->first, it->second });
+    }
+
+    //
+    // Children
+    std::vector<std::shared_ptr<SchemaItem>> typeChildren;
+    pTypeItem->getChildren(typeChildren);
+    for (auto childIt = typeChildren.begin(); childIt != typeChildren.end(); ++childIt)
+    {
+        std::shared_ptr<SchemaItem> pNewItem = std::make_shared<SchemaItem>(*(*childIt));
+        addChild(pNewItem);
     }
 }
 
@@ -283,7 +317,7 @@ void SchemaItem::processUniqueAttributeValueSetReferences(const std::map<std::st
 }
 
 
-void SchemaItem::getChildren(std::vector<std::shared_ptr<SchemaItem>> &children)
+void SchemaItem::getChildren(std::vector<std::shared_ptr<SchemaItem>> &children) const
 {
     for (auto it = m_children.begin(); it != m_children.end(); ++it)
     {
@@ -333,7 +367,7 @@ void SchemaItem::resetEnvironment()
 
 void SchemaItem::findSchemaValues(const std::string &path, std::vector<std::shared_ptr<SchemaValue>> &schemaValues)
 {
-    bool rootPath = path[0] == '/';
+    bool rootPath = path[0] == '/';   //todo: convert this to use the findSchemaRoot below
 
     //
     // If path is from the root, and we aren't the root, pass the request to our parent
@@ -387,6 +421,18 @@ void SchemaItem::findSchemaValues(const std::string &path, std::vector<std::shar
     }
 
     return;
+}
+
+
+std::shared_ptr<const SchemaItem> SchemaItem::findSchemaRoot() const
+{
+    if (!m_pParent.expired())
+    {
+        return m_pParent.lock()->findSchemaRoot();
+    }
+
+    std::shared_ptr<const SchemaItem> ptr = shared_from_this();
+    return ptr;
 }
 
 
@@ -448,7 +494,6 @@ void SchemaItem::processDefinedUniqueAttributeValueSets(std::map<std::string, st
         it->second->processDefinedUniqueAttributeValueSets(uniqueAttributeValueSets);
     }
 }
-
 
 
 void SchemaItem::postProcessConfig(const std::map<std::string, std::vector<std::shared_ptr<SchemaValue>>> &uniqueAttributeValueSets)
@@ -530,4 +575,24 @@ std::string SchemaItem::getProperty(const std::string &name, const std::string &
         retVal = it->second;
     }
     return retVal;
+}
+
+
+void SchemaItem::processEvent(const std::string &eventType, const std::shared_ptr<EnvironmentNode> &pEventSourceNode) const
+{
+    //
+    // Loop through any event handlers we may have
+    for (auto eventIt = m_eventHandlers.begin(); eventIt != m_eventHandlers.end(); ++eventIt)
+    {
+        (*eventIt)->processEvent(eventType, pEventSourceNode);
+    }
+
+    //
+    // Pass the event on because events are broadcast
+    std::vector<std::shared_ptr<SchemaItem>> children;
+    getChildren(children);
+    for (auto childIt = children.begin(); childIt != children.end(); ++childIt)
+    {
+        (*childIt)->processEvent(eventType, pEventSourceNode);
+    }
 }

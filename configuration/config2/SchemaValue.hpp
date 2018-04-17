@@ -29,6 +29,7 @@ class DECL_EXPORT SchemaValue
     public:
 
         SchemaValue(const std::string &name, bool isDefined = true);
+        SchemaValue(const SchemaValue &value);
         virtual ~SchemaValue() { }
         void setType(const std::shared_ptr<SchemaType> pType) { m_pType = pType; }
         const std::shared_ptr<SchemaType> &getType() const { return m_pType; }
