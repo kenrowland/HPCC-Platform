@@ -362,7 +362,7 @@ void EnvironmentNode::findNodes(const std::string &path, std::vector<std::shared
     {
         std::string remainingPath = path.substr(1);
         std::string rootName = remainingPath;
-        std::shared_ptr<const EnvironmentNode> pRoot = findRoot();
+        std::shared_ptr<const EnvironmentNode> pRoot = getRoot();
         size_t slashPos = path.find_first_of('/', 1);
         if (slashPos != std::string::npos)
         {
@@ -482,11 +482,11 @@ void EnvironmentNode::findNodes(const std::string &path, std::vector<std::shared
 }
 
 
-std::shared_ptr<const EnvironmentNode> EnvironmentNode::findRoot() const
+std::shared_ptr<const EnvironmentNode> EnvironmentNode::getRoot() const
 {
     if (!m_pParent.expired())
     {
-        return m_pParent.lock()->findRoot();
+        return m_pParent.lock()->getRoot();
     }
     std::shared_ptr <const EnvironmentNode> ptr = shared_from_this();
     return ptr;

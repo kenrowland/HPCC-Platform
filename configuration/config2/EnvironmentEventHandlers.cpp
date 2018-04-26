@@ -1,6 +1,6 @@
 /*##############################################################################
 
-HPCC SYSTEMS software Copyright (C) 2018 HPCC Systems®.
+HPCC SYSTEMS software Copyright (C) 2018 HPCC Systemsï¿½.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -15,11 +15,18 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ############################################################################## */
 
-#include "EnvironmentEvents.hpp"
+#include "EnvironmentEventHandlers.hpp"
 #include "EnvironmentNode.hpp"
 #include "EnvironmentValue.hpp"
 
-void AttributeDependencyCreateEvent::addDependency(const std::string &attrName, const std::string &attrVal, const std::string &depAttr, const std::string &depVal)
+
+bool CreateEnvironmentEventHandler::handleEvent(const std::string &eventType, std::shared_ptr<EnvironmentNode> pEventNode)
+{
+    return pEventNode->getSchemaItem()->getItemType() == m_itemType;
+}
+
+
+void AttributeDependencyCreateEventHandler::addDependency(const std::string &attrName, const std::string &attrVal, const std::string &depAttr, const std::string &depVal)
 {
     auto valSetMapIt = m_depAttrVals.find(attrName);
     if (valSetMapIt == m_depAttrVals.end())
@@ -32,16 +39,10 @@ void AttributeDependencyCreateEvent::addDependency(const std::string &attrName, 
 }
 
 
-bool CreateEnvironmentEvent::handleEvent(const std::string &eventType, std::shared_ptr<EnvironmentNode> pEventNode)
-{
-    return pEventNode->getSchemaItem()->getItemType() == m_itemType;
-}
-
-
-bool AttributeDependencyCreateEvent::handleEvent(const std::string &eventType, std::shared_ptr<EnvironmentNode> pEventNode)
+bool AttributeDependencyCreateEventHandler::handleEvent(const std::string &eventType, std::shared_ptr<EnvironmentNode> pEventNode)
 {
     bool rc = false;
-    if (CreateEnvironmentEvent::handleEvent(eventType, pEventNode))
+    if (CreateEnvironmentEventHandler::handleEvent(eventType, pEventNode))
     {
         for (auto attrIt = m_depAttrVals.begin(); attrIt != m_depAttrVals.end(); ++attrIt)
         {
@@ -60,10 +61,20 @@ bool AttributeDependencyCreateEvent::handleEvent(const std::string &eventType, s
 }
 
 
-bool InsertEnvironmentDataCreateEvent::handleEvent(const std::string &eventType, std::shared_ptr<EnvironmentNode> pEventNode)
+void InsertEnvironmentDataCreateEventHandler::setItemAttributeName(const std::string &name)
+{
+    m_itemAttribute = name;
+    if (m_matchAttribute.empty())
+    {
+        m_matchAttribute = name;
+    }
+}
+
+
+bool InsertEnvironmentDataCreateEventHandler::handleEvent(const std::string &eventType, std::shared_ptr<EnvironmentNode> pEventNode)
 {
     bool rc = false;
-    if (CreateEnvironmentEvent::handleEvent(eventType, pEventNode))
+    if (CreateEnvironmentEventHandler::handleEvent(eventType, pEventNode))
     {
         if (!m_itemAttribute.empty())
         {

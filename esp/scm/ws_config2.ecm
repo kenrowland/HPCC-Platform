@@ -332,7 +332,7 @@ ESPresponse [exceptions_inline] GetTreeResponse
 ESPrequest FindNodesRequest
 {
     string sessionId;
-    string startingNodeId("");   // optional stataring node for the find, "" for none
+    string startingNodeId("");   // optional starting node for the find, "" for none
     string path;                 // path to search (uses XPath syntax). If startingNodeId specified, path may not start at root ("/")
 };
 

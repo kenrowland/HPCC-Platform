@@ -367,7 +367,7 @@ void SchemaItem::resetEnvironment()
 
 void SchemaItem::findSchemaValues(const std::string &path, std::vector<std::shared_ptr<SchemaValue>> &schemaValues)
 {
-    bool rootPath = path[0] == '/';   //todo: convert this to use the findSchemaRoot below
+    bool rootPath = path[0] == '/';
 
     //
     // If path is from the root, and we aren't the root, pass the request to our parent
@@ -424,11 +424,11 @@ void SchemaItem::findSchemaValues(const std::string &path, std::vector<std::shar
 }
 
 
-std::shared_ptr<const SchemaItem> SchemaItem::findSchemaRoot() const
+std::shared_ptr<const SchemaItem> SchemaItem::getSchemaRoot() const
 {
     if (!m_pParent.expired())
     {
-        return m_pParent.lock()->findSchemaRoot();
+        return m_pParent.lock()->getSchemaRoot();
     }
 
     std::shared_ptr<const SchemaItem> ptr = shared_from_this();

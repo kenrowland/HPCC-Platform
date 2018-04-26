@@ -1,6 +1,6 @@
 /*##############################################################################
 
-HPCC SYSTEMS software Copyright (C) 2018 HPCC Systems�.
+HPCC SYSTEMS software Copyright (C) 2018 HPCC Systems®.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -25,12 +25,12 @@ limitations under the License.
 
 class EnvironmentNode;
 
-class EnvironmentEvent
+class EnvironmentEventHandler
 {
     public:
 
-        EnvironmentEvent(const std::string &type) : m_eventType(type) {}
-        virtual ~EnvironmentEvent() {}
+        EnvironmentEventHandler(const std::string &type) : m_eventType(type) {}
+        virtual ~EnvironmentEventHandler() {}
         virtual bool handleEvent(const std::string &eventType, std::shared_ptr<EnvironmentNode> pEnvNode) { return false; }
 
 
@@ -40,12 +40,12 @@ class EnvironmentEvent
 };
 
 
-class CreateEnvironmentEvent : public EnvironmentEvent
+class CreateEnvironmentEventHandler : public EnvironmentEventHandler
 {
     public:
 
-        CreateEnvironmentEvent() : EnvironmentEvent("create") {}
-        virtual ~CreateEnvironmentEvent() {}
+        CreateEnvironmentEventHandler() : EnvironmentEventHandler("create") {}
+        virtual ~CreateEnvironmentEventHandler() {}
         void setItemType(const std::string &type) { m_itemType = type; }
 
         virtual bool handleEvent(const std::string &eventType, std::shared_ptr<EnvironmentNode> pEnvNode);
@@ -57,12 +57,12 @@ class CreateEnvironmentEvent : public EnvironmentEvent
 };
 
 
-class AttributeDependencyCreateEvent : public CreateEnvironmentEvent
+class AttributeDependencyCreateEventHandler : public CreateEnvironmentEventHandler
 {
     public:
 
-        AttributeDependencyCreateEvent() {}
-        virtual ~AttributeDependencyCreateEvent() {}
+        AttributeDependencyCreateEventHandler() {}
+        virtual ~AttributeDependencyCreateEventHandler() {}
         void addDependency(const std::string &attrName, const std::string &attrValr, const std::string &depAttr, const std::string &depVal);
         virtual bool handleEvent(const std::string &eventType, std::shared_ptr<EnvironmentNode> pEnvNode);
 
@@ -73,15 +73,15 @@ class AttributeDependencyCreateEvent : public CreateEnvironmentEvent
 };
 
 
-class InsertEnvironmentDataCreateEvent : public CreateEnvironmentEvent
+class InsertEnvironmentDataCreateEventHandler : public CreateEnvironmentEventHandler
 {
     public:
 
-        InsertEnvironmentDataCreateEvent() {}
-        virtual ~InsertEnvironmentDataCreateEvent() {}
+        InsertEnvironmentDataCreateEventHandler() {}
+        virtual ~InsertEnvironmentDataCreateEventHandler() {}
         void setEnvironmentInsertData(const std::string &envData) { m_envData = envData;  }
         void setMatchPath(const std::string &path) { m_matchPath = path; }
-        void setItemAttributeName(const std::string &name) { m_itemAttribute = m_matchAttribute = name; }
+        void setItemAttributeName(const std::string &name);
         void setMatchAttributeName(const std::string &name) { m_matchAttribute = name; }
         virtual bool handleEvent(const std::string &envType, std::shared_ptr<EnvironmentNode> pEventNode);
 

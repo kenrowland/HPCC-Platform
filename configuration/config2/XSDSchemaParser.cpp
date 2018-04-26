@@ -24,7 +24,7 @@
 #include "XSDValueSetParser.hpp"
 #include "SchemaTypeStringLimits.hpp"
 #include "SchemaTypeIntegerLimits.hpp"
-#include "EnvironmentEvents.hpp"
+#include "EnvironmentEventHandlers.hpp"
 #include "Utils.hpp"
 
 namespace pt = boost::property_tree;
@@ -418,7 +418,7 @@ void XSDSchemaParser::parseAppInfo(const pt::ptree &elemTree)
             // addAttributeDependencies is used to set dependent values for an attribute based on the value of another attribute.
             if (eventAction == "addAttributeDependencies")
             {
-                std::shared_ptr<AttributeDependencyCreateEvent> pDep = std::make_shared<AttributeDependencyCreateEvent>();
+                std::shared_ptr<AttributeDependencyCreateEventHandler> pDep = std::make_shared<AttributeDependencyCreateEventHandler>();
                 pt::ptree dataTree = childTree.get_child("eventData", emptyTree);
                 for (auto it = dataTree.begin(); it != dataTree.end(); ++it)
                 {
@@ -442,7 +442,7 @@ void XSDSchemaParser::parseAppInfo(const pt::ptree &elemTree)
             // Insert XML is ued to insert XML ino the environment based on what's in the eventData section
             else if (eventAction == "insertXML")
             {
-                std::shared_ptr<InsertEnvironmentDataCreateEvent> pInsert = std::make_shared<InsertEnvironmentDataCreateEvent>();
+                std::shared_ptr<InsertEnvironmentDataCreateEventHandler> pInsert = std::make_shared<InsertEnvironmentDataCreateEventHandler>();
 
                 pt::ptree dataTree = childTree.get_child("eventData", emptyTree);
                 for (auto it = dataTree.begin(); it != dataTree.end(); ++it)

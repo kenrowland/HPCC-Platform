@@ -33,7 +33,7 @@ SET(  SRCS
       XSDSchemaParser.cpp
       XSDValueSetParser.cpp
       Status.cpp
-      EnvironmentEvents.cpp
+      EnvironmentEventHandlers.cpp
       Utils.cpp
       InsertableItem.cpp
 )
