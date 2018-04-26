@@ -36,7 +36,7 @@ class DECL_EXPORT XMLEnvironmentLoader : public EnvironmentLoader
 
         XMLEnvironmentLoader() { }
         virtual ~XMLEnvironmentLoader() { }
-        virtual std::vector<std::shared_ptr<EnvironmentNode>> load(std::istream &in, const std::shared_ptr<SchemaItem> &pSchemaItem) const;
+        virtual std::vector<std::shared_ptr<EnvironmentNode>> load(std::istream &in, const std::shared_ptr<SchemaItem> &pSchemaItem) const override;
         void parse(const pt::ptree &envTree, const std::shared_ptr<SchemaItem> &pConfigItem, std::shared_ptr<EnvironmentNode> &pEnvNode) const;
 
 };

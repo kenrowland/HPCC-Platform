@@ -234,7 +234,7 @@ std::shared_ptr<EnvironmentNode> EnvironmentMgr::addNewEnvironmentNode(const std
 
     //
     // Send a create event now that it's been added to the environment
-    pCfgItem->findSchemaRoot()->processEvent("create", pNewEnvNode);
+    pCfgItem->getSchemaRoot()->processEvent("create", pNewEnvNode);
     insertExtraEnvironmentData(m_pRootNode);
 
     //
@@ -252,36 +252,6 @@ std::shared_ptr<EnvironmentNode> EnvironmentMgr::addNewEnvironmentNode(const std
     }
 
     return pNewEnvNode;
-
-    /*pParentNode->addChild(pNewEnvNode);
-    addPath(pNewEnvNode);
-    pNewEnvNode->initialize();
-
-
-    //
-    // Look through the children and add any that are necessary
-    std::vector<std::shared_ptr<SchemaItem>> cfgChildren;
-    pCfgItem->getChildren(cfgChildren);
-    for (auto childIt = cfgChildren.begin(); childIt != cfgChildren.end(); ++childIt)
-    {
-        int numReq = (*childIt)->getMinInstances();
-        for (int i=0; i<numReq; ++i)
-        {
-            addNewEnvironmentNode(pNewEnvNode, *childIt, status);
-        }
-    }
-
-
-
-    //
-    // Send a create event now that it's been added to the environment
-    pCfgItem->findSchemaRoot()->processEvent("create", pNewEnvNode);
-
-    insertExtraEnvironmentData(m_pRootNode);
-
-    //pNewEnvNode->validate(status, true, false);
-
-    return pNewEnvNode; */
 }
 
 
@@ -298,9 +268,6 @@ void EnvironmentMgr::insertExtraEnvironmentData(std::shared_ptr<EnvironmentNode>
             pParentNode->addChild(envNode);  // link extra node data to the newly created node
             pParentNode->clearEnvironmentInsertData();
         }
-        //assignNodeIds(pExtraDataNode);
-        //pNode->addChild(pExtraDataNode);  // link extra node data to the newly created node
-        //pNode->clearEnvironmentInsertData();
     }
 
     std::vector<std::shared_ptr<EnvironmentNode>> childNodes;
@@ -309,10 +276,6 @@ void EnvironmentMgr::insertExtraEnvironmentData(std::shared_ptr<EnvironmentNode>
     {
         insertExtraEnvironmentData(child);
     }
-    //for (auto childIt = childNodes.begin(); childIt != childNodes.end(); ++childIt)
-    //{
-     //   insertExtraEnvironmentData(*childIt);
-    //}
 }
 
 

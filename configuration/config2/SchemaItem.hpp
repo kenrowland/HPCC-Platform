@@ -26,7 +26,7 @@
 #include "SchemaType.hpp"
 #include "SchemaValue.hpp"
 #include "platform.h"
-#include "EnvironmentEvents.hpp"
+#include "EnvironmentEventHandlers.hpp"
 
 class EnvironmentNode;
 
@@ -78,9 +78,9 @@ class DECL_EXPORT SchemaItem : public std::enable_shared_from_this<SchemaItem>
         bool isHidden() const { return m_hidden; }
 
         void setParent(const std::shared_ptr<SchemaItem> &parent) { m_pParent = parent; }
-        std::shared_ptr<const SchemaItem> findSchemaRoot() const;
+        std::shared_ptr<const SchemaItem> getSchemaRoot() const;
         void processEvent(const std::string &eventType, const std::shared_ptr<EnvironmentNode> &pEnvNode) const;
-        void addEventHandler(const std::shared_ptr<EnvironmentEvent> &pHandler) { m_eventHandlers.push_back(pHandler); }
+        void addEventHandler(const std::shared_ptr<EnvironmentEventHandler> &pHandler) { m_eventHandlers.push_back(pHandler); }
 
 
     protected:
@@ -117,7 +117,7 @@ class DECL_EXPORT SchemaItem : public std::enable_shared_from_this<SchemaItem>
         std::map<std::string, SetInfo> m_uniqueAttributeValueSetReferences;
         std::map<std::string, SetInfo> m_uniqueAttributeValueSetDefs;
 
-        std::vector<std::shared_ptr<EnvironmentEvent>> m_eventHandlers;
+        std::vector<std::shared_ptr<EnvironmentEventHandler>> m_eventHandlers;
 };
 
 #endif // _CONFIG2_CONFIGITEM_HPP_

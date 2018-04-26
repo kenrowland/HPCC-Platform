@@ -424,11 +424,11 @@ void SchemaItem::findSchemaValues(const std::string &path, std::vector<std::shar
 }
 
 
-std::shared_ptr<const SchemaItem> SchemaItem::findSchemaRoot() const
+std::shared_ptr<const SchemaItem> SchemaItem::getSchemaRoot() const
 {
     if (!m_pParent.expired())
     {
-        return m_pParent.lock()->findSchemaRoot();
+        return m_pParent.lock()->getSchemaRoot();
     }
 
     std::shared_ptr<const SchemaItem> ptr = shared_from_this();

@@ -35,15 +35,12 @@ class DECL_EXPORT EnvironmentLoader
 
         EnvironmentLoader() { }
         virtual ~EnvironmentLoader() { }
-        //void addPath(const std::shared_ptr<EnvironmentNode> pNode);
         virtual std::vector<std::shared_ptr<EnvironmentNode>> load(std::istream &in, const std::shared_ptr<SchemaItem> &pSchemaItem) const = 0;
 
 
     protected:
 
         std::shared_ptr<SchemaItem> m_pSchemaItem;
-        //std::shared_ptr<EnvironmentNode> m_pEnvNode;
-        //std::map<std::string, std::shared_ptr<EnvironmentNode>> &m_nodeIds
 };
 
 #endif
