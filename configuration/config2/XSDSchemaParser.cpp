@@ -509,7 +509,7 @@ void XSDSchemaParser::parseAppInfo(const pt::ptree &elemTree)
             // addAttributeDependencies is used to set dependent values for an attribute based on the value of another attribute.
             else if (eventAction == "setAttributeValue")
             {
-                std::shared_ptr<AttributeSetValueCreateEvent> pSetAttrValue = std::make_shared<AttributeSetValueCreateEvent>();
+                std::shared_ptr<AttributeSetValueCreateEventHandler> pSetAttrValue = std::make_shared<AttributeSetValueCreateEventHandler>();
                 pt::ptree dataTree = childTree.get_child("eventData", emptyTree);
                 for (auto it = dataTree.begin(); it != dataTree.end(); ++it)
                 {
