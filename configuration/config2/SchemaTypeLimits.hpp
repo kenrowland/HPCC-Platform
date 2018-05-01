@@ -40,6 +40,7 @@ struct DECL_EXPORT AllowedValue
     AllowedValue(const std::string &value, const std::string &desc="") : m_value(value), m_displayName(value), m_description(desc) { }
     void addDependentValue(const std::string &attribute, const std::string &value);
     const std::vector<DependentValue> &getDependencies() const { return m_dependencies;  }
+    bool hasDependencies() const { return m_dependencies.size() > 0; }
     std::string m_displayName;
     std::string m_value;
     std::string m_description;

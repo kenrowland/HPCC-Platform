@@ -656,6 +656,7 @@ std::shared_ptr<SchemaValue> XSDSchemaParser::getSchemaValue(const pt::ptree &at
     pCfgValue->setAutoGenerateType(attr.get("<xmlattr>.hpcc:autoGenerateType", ""));
     pCfgValue->setAutoGenerateValue(attr.get("<xmlattr>.hpcc:autoGenerateValue", ""));
     pCfgValue->setDefaultValue(attr.get("<xmlattr>.default", ""));
+    pCfgValue->setCodeDefault(attr.get("<xmlattr>.hpcc:codeDefault", ""));
     std::string modList = attr.get("<xmlattr>.hpcc:modifiers", "");
     if (modList.length())
     {

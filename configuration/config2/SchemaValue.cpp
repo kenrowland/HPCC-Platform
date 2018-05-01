@@ -141,11 +141,11 @@ void SchemaValue::setMirroredEnvironmentValues(const std::string &oldValue, cons
 }
 
 
-void SchemaValue::getAllEnvironmentValues(std::vector<std::string> &values) const
+void SchemaValue::getAllEnvironmentValues(std::vector<std::shared_ptr<EnvironmentValue>> &envValues) const
 {
     for (auto it = m_envValues.begin(); it != m_envValues.end(); ++it)
     {
-        values.push_back((*it).lock()->getValue());
+        envValues.push_back(it->lock());
     }
 }
 
@@ -158,7 +158,7 @@ void SchemaValue::getAllowedValues(std::vector<AllowedValue> &allowedValues, con
     {
         allowedValues = m_pType->getEnumeratedValues();
     }
-    else if (isFromUniqueValueSet()) // && pEnvValue != nullptr)
+    else if (isFromUniqueValueSet())
     {
         std::vector<std::string> refValues;
         getAllKeyRefValues(refValues);
@@ -166,6 +166,10 @@ void SchemaValue::getAllowedValues(std::vector<AllowedValue> &allowedValues, con
         {
             allowedValues.push_back({ *it, "" });
         }
+
+        //need to add isFromUniqueValueSet check for this value, and if true, remove current values (us and any siblings)
+        //also need to check schemaItem for a hpcc:limit attribute value which limits the list to only one of this type (will also need to check current values/siblings)
+
     }
 }
 
@@ -176,8 +180,12 @@ void SchemaValue::getAllKeyRefValues(std::vector<std::string> &keyRefValues) con
     for (auto refCfgValueIt = refCfgValues.begin(); refCfgValueIt != refCfgValues.end(); ++refCfgValueIt)
     {
         std::shared_ptr<SchemaValue> pRefCfgValue = (*refCfgValueIt).lock();
-        std::vector<std::string> allValues;
-        pRefCfgValue->getAllEnvironmentValues(allValues);
-        keyRefValues.insert(keyRefValues.end(), allValues.begin(), allValues.end());
+        std::vector<std::shared_ptr<EnvironmentValue>> allEnvValues;
+        pRefCfgValue->getAllEnvironmentValues(allEnvValues);
+        for (auto &envIt: allEnvValues)
+        {
+            keyRefValues.push_back(envIt->getValue());
+            //keyRefValues.insert(keyRefValues.end(), allValues.begin(), allValues.end());
+        }
     }
 }

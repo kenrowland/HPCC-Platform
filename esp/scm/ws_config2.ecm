@@ -108,12 +108,21 @@ ESPrequest RemoveNodeRequest
 };
 
 
+ESPstruct DependentValueType
+{
+    string attributeName;
+    string attributeValue;
+};
+
+
 ESPstruct ChoiceType
 {
     string displayName;
     string value;
     string desc("");
+    ESParray<ESPstruct DependentValueType, dependentValue> dependencies;
 };
+
 
 
 ESPstruct LimitsType
@@ -180,11 +189,13 @@ ESPstruct AttributeType
     string     name;
     string     tooltip("");
     ESPstruct  TypeInfo type;
-    string currentValue("");
-    string defaultValue("");
-    bool   required(true);
-    bool   readOnly(false);
-    bool   hidden(false);
+    string     currentValue("");
+    string     defaultValue("");
+    string     codeDefault("");
+    bool       required(true);
+    bool       readOnly(false);
+    bool       hidden(false);
+    bool       deprecated(false);
 };
 
 

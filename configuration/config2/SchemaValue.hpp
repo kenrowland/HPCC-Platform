@@ -67,7 +67,7 @@ class DECL_EXPORT SchemaValue
         void addMirroredSchemaValue(const std::shared_ptr<SchemaValue> &pVal) { m_mirrorToSchemaValues.push_back(pVal); }
         void mirrorValueToEnvironment(const std::string &oldValue, const std::string &newValue);
         void addEnvironmentValue(const std::shared_ptr<EnvironmentValue> &pEnvValue) { m_envValues.push_back(pEnvValue); }
-        void getAllEnvironmentValues(std::vector<std::string> &values) const;
+        void getAllEnvironmentValues(std::vector<std::shared_ptr<EnvironmentValue>> &envValues) const;
         void setMirroredEnvironmentValues(const std::string &oldValue, const std::string &newValue);
         void validate(Status &status, const std::string &id, const EnvironmentValue *pEnvValue = nullptr) const;
         void getAllowedValues(std::vector<AllowedValue> &allowedValues, const EnvironmentValue *pEnvValue = nullptr) const;
@@ -81,6 +81,8 @@ class DECL_EXPORT SchemaValue
         bool isOnChangeSet() const { return !m_onChangeType.empty(); }
         void setOnChangeData(const std::string &data) { m_onChangeData = data; }
         const std::string &getOnChangeData() const { return m_onChangeData;  }
+        void setCodeDefault(const std::string &value) { m_codeDefault = value; }
+        const std::string getCodeDefault() const { return m_codeDefault; }
 
 
     protected:
@@ -105,7 +107,8 @@ class DECL_EXPORT SchemaValue
             unsigned m_isDefined : 1;
         } bitMask;
 
-        std::string m_default;
+        std::string m_default;        // value written to environment if no user value supplied
+        std::string m_codeDefault;    // informational value nform user code default if no value supplied
         std::string m_tooltip;
         std::vector<std::string> m_modifiers;
         std::vector<std::weak_ptr<SchemaValue>> m_pUniqueValueSetRefs;    // this value serves as the key from which values are valid

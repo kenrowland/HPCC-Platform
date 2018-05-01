@@ -386,13 +386,13 @@ void EnvironmentNode::findNodes(const std::string &path, std::vector<std::shared
         // Parent ?
         if (path[1] == '.')
         {
-            if (!m_pParent.expired())
+            if (!m_pParent.expired() && path.length() >= 4)
             {
-                m_pParent.lock()->findNodes(path.substr(2), nodes);
+                m_pParent.lock()->findNodes(path.substr(3), nodes);  // note skipping over '..'
             }
             else
             {
-                throw new ParseException("Attempt to navigate to parent with no parent");
+                throw new ParseException("Attempt to navigate to parent with no parent or path is incomplete");
             }
         }
         else

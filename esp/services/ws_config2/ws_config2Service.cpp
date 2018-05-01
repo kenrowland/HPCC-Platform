@@ -779,6 +779,7 @@ void Cws_config2Ex::getAttributes(const std::vector<std::shared_ptr<EnvironmentV
         pAttribute->setRequired(pSchemaValue->isRequired());
         pAttribute->setReadOnly(pSchemaValue->isReadOnly());
         pAttribute->setHidden(pSchemaValue->isHidden());
+        pAttribute->setDeprecated(pSchemaValue->isDeprecated());
 
         std::vector<AllowedValue> allowedValues;
         pSchemaValue->getAllowedValues(allowedValues, pAttr.get());
@@ -791,6 +792,22 @@ void Cws_config2Ex::getAttributes(const std::vector<std::shared_ptr<EnvironmentV
                 pChoice->setDisplayName((*valueIt).m_displayName.c_str());
                 pChoice->setValue((*valueIt).m_value.c_str());
                 pChoice->setDesc((*valueIt).m_description.c_str());
+
+                //
+                // Add dependencies
+                if ((*valueIt).hasDependencies())
+                {
+                    IArrayOf<IEspDependentValueType> dependencies;
+                    for (auto &depIt: (*valueIt).getDependencies())
+                    {
+                        Owned<IEspDependentValueType> pDep = createDependentValueType();
+                        pDep->setAttributeName(depIt.m_attribute.c_str());
+                        pDep->setAttributeValue(depIt.m_value.c_str());
+                        dependencies.append(*pDep.getLink());
+                    }
+                    pChoice->setDependencies(dependencies);
+                }
+
                 choices.append(*pChoice.getLink());
             }
             pAttribute->updateType().updateLimits().setChoiceList(choices);

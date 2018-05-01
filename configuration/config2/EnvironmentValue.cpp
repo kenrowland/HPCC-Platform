@@ -96,6 +96,16 @@ void EnvironmentValue::validate(Status &status, const std::string &myId) const
 // Called when a new value has been created, not read from existing environment, but created and added
 void EnvironmentValue::initialize()
 {
+
+    // todo: I think we need to check that the value is empty before auto generating a value.
+    // also, we need a way to "override" a value that is already set, for example a port number
+    // may need to auto increment until unique.
+    //    - is unique then get all values, pick a new one (may need to look at type for how such as xs:unsigned get highest number and add one)
+    //      for string may need a prefix and start adding numbers (like what is done below)
+    //      for enumerated find the first entry that is not already used
+    // probably need to add a valueset changed event so that when a value is changed, an action can be taken. Should be done before validation.
+
+
     //
     // Is there an auto generated value we should process:
     const std::string &type = m_pSchemaValue->getAutoGenerateType();
