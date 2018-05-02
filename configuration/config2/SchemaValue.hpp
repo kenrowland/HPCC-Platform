@@ -23,6 +23,8 @@
 #include "Status.hpp"
 #include "platform.h"
 
+class EnvironmentNode;
+
 
 class DECL_EXPORT SchemaValue
 {
@@ -70,23 +72,23 @@ class DECL_EXPORT SchemaValue
         void getAllEnvironmentValues(std::vector<std::shared_ptr<EnvironmentValue>> &envValues) const;
         void setMirroredEnvironmentValues(const std::string &oldValue, const std::string &newValue);
         void validate(Status &status, const std::string &id, const EnvironmentValue *pEnvValue = nullptr) const;
-        void getAllowedValues(std::vector<AllowedValue> &allowedValues, const EnvironmentValue *pEnvValue = nullptr) const;
+        void getAllowedValues(std::vector<AllowedValue> &allowedValues, const std::shared_ptr<const EnvironmentNode> &pEnvNode) const;
         void setAutoGenerateType(const std::string &type) { m_autoGenerateType = type; }
         const std::string &getAutoGenerateType() const { return m_autoGenerateType; }
         void setAutoGenerateValue(const std::string &value) { m_autoGenerateValue = value; }
         const std::string &getAutoGenerateValue() const { return m_autoGenerateValue; }
         void getAllKeyRefValues(std::vector<std::string> &keyRefValues) const;
-        void setOnChangeType(const std::string &type) { m_onChangeType = type;  }
-        const std::string &getOnChangeType() const { return m_onChangeType;  }
-        bool isOnChangeSet() const { return !m_onChangeType.empty(); }
-        void setOnChangeData(const std::string &data) { m_onChangeData = data; }
-        const std::string &getOnChangeData() const { return m_onChangeData;  }
         void setCodeDefault(const std::string &value) { m_codeDefault = value; }
-        const std::string getCodeDefault() const { return m_codeDefault; }
+        const std::string &getCodeDefault() const { return m_codeDefault; }
+        void setValueLimitRuleType(const std::string &type) { m_valueLimitRuleType = type; }
+        const std::string &getValueLimitRuleType() { return m_valueLimitRuleType; }
+        void setValueLimitRuleData(const std::string &data) { m_valueLimitRuleData = data; }
+        const std::string &getValueLimitRuleData() { return m_valueLimitRuleData; }
 
 
     protected:
 
+        // DON'T FORGET IF DATA ADDED, IT MAY MAY TO BE COPIED IN THE COPY CONSTRUCTOR!!
         std::shared_ptr<SchemaType> m_pType;
         std::vector<std::weak_ptr<EnvironmentValue>> m_envValues;
         std::vector<std::shared_ptr<SchemaValue>> m_mirrorToSchemaValues;
@@ -95,8 +97,8 @@ class DECL_EXPORT SchemaValue
         std::string m_mirrorFromPath;
         std::string m_autoGenerateValue;
         std::string m_autoGenerateType;
-        std::string m_onChangeType;
-        std::string m_onChangeData;
+        std::string m_valueLimitRuleType;
+        std::string m_valueLimitRuleData;
 
         struct {
             unsigned m_required  : 1;

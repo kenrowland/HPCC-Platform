@@ -17,6 +17,9 @@
 
 #include "SchemaValue.hpp"
 #include "EnvironmentValue.hpp"
+#include "EnvironmentNode.hpp"
+#include <algorithm>
+#include "Utils.hpp"
 
 SchemaValue::SchemaValue(const std::string &name, bool isDefined) :
     m_name(name), m_displayName(name)
@@ -42,6 +45,8 @@ SchemaValue::SchemaValue(const SchemaValue &value)
     m_default = value.m_default;
     m_tooltip = value.m_tooltip;
     m_modifiers = value.m_modifiers;
+    m_valueLimitRuleType = value.m_valueLimitRuleType;
+    m_valueLimitRuleData = value.m_valueLimitRuleData;
 
     // special processing? Maybe after inserting?
     std::vector<std::shared_ptr<SchemaValue>> m_mirrorToSchemaValues;
@@ -150,14 +155,86 @@ void SchemaValue::getAllEnvironmentValues(std::vector<std::shared_ptr<Environmen
 }
 
 
-void SchemaValue::getAllowedValues(std::vector<AllowedValue> &allowedValues, const EnvironmentValue *pEnvValue) const
+void SchemaValue::getAllowedValues(std::vector<AllowedValue> &allowedValues, const std::shared_ptr<const EnvironmentNode> &pEnvNode) const
 {
     //
-    // Either the type is enumerated, or there is a keyref.
+    // If enumerated, get the allowed values
     if (m_pType->isEnumerated())
     {
         allowedValues = m_pType->getEnumeratedValues();
     }
+
+    //
+    // Is there a specialized rule that limits the values?
+    else if (!m_valueLimitRuleType.empty())
+    {
+        //
+        // uniqueItemType_1 - value is based on a unique item type described by the data for the rule. This is version 1
+        if (m_valueLimitRuleType == "uniqueItemType_1")
+        {
+            std::vector<std::string> params = splitString(m_valueLimitRuleData, ",");
+            std::vector<std::string> parts;
+
+            //
+            // First parameter is the source values for an attribute search. The two parts of the parameter are the path to the
+            // node set where the atttribute, the second part, name is found (not that there may be no entries). Find all the nodes
+            // for the path (parts[0]), then get all of the values for the attribute (parts[1]). This serves as the list of existing
+            // values that are eliminated from the final list of allowable values.
+            parts = splitString(params[0], "@");
+            std::vector<std::shared_ptr<EnvironmentNode>> existingSourceNodes;
+            pEnvNode->findNodes(parts[0], existingSourceNodes);
+            std::vector<std::string> existingSourceAttributeValues;
+            for (auto &existingNodeIt: existingSourceNodes)
+            {
+                existingSourceAttributeValues.push_back( existingNodeIt->getAttributeValue(parts[1]));
+            }
+
+            //
+            // Get the full set of possible values using the params[1] values. From its parts, parts[0] is the path
+            // to find the set of all possible nodes that could serve as an allowable value.
+            std::vector<std::shared_ptr<EnvironmentNode>> allSourceNodes;
+            parts = splitString(params[0], "@");
+            std::string sourceAttributeName = parts[1];  // for use below in case parts is reused later
+            pEnvNode->findNodes(parts[0], allSourceNodes);
+
+            //
+            // For each exising source node, using the existingSourceAttributeValues, matching the name to the value in
+            // sourceAttributeName, and collect the itemType values found.
+            std::vector<std::string> existingItemTypes;
+            for (auto &existingValueIt: existingSourceAttributeValues)
+            {
+                std::vector<std::shared_ptr<EnvironmentNode>>::iterator sourceIt = std::find_if(allSourceNodes.begin(), allSourceNodes.end(),
+                    [&](std::shared_ptr<EnvironmentNode> &srcIt) {
+                        return srcIt->getAttributeValue(sourceAttributeName) == existingValueIt;
+                });
+
+                if (sourceIt != allSourceNodes.end())
+                {
+                    existingItemTypes.push_back((*sourceIt)->getSchemaItem()->getItemType());
+                }
+            }
+
+            //
+            // Build the allowable value list by only adding itmes from the all sources list that don't hvae
+            // an entry in the existing item type vector
+            for (auto &sourceIt: allSourceNodes)
+            {
+                std::vector<std::string>::const_iterator itemTypeIt = std::find_if(existingItemTypes.begin(), existingItemTypes.end(), [&](const std::string &itemIt) {
+                    return itemIt == sourceIt->getSchemaItem()->getItemType();
+                });
+
+                if (itemTypeIt == existingItemTypes.end())
+                {
+                    allowedValues.push_back({ sourceIt->getAttributeValue(sourceAttributeName), "" });
+                }
+            }
+        }
+
+    }
+
+    //
+    // Or, keyed? (note that the keyed check MUST be last since a more restrictie rule may be defined for UI purposes
+    // while a keyed reference is present for XML schema validation)
     else if (isFromUniqueValueSet())
     {
         std::vector<std::string> refValues;
@@ -166,10 +243,6 @@ void SchemaValue::getAllowedValues(std::vector<AllowedValue> &allowedValues, con
         {
             allowedValues.push_back({ *it, "" });
         }
-
-        //need to add isFromUniqueValueSet check for this value, and if true, remove current values (us and any siblings)
-        //also need to check schemaItem for a hpcc:limit attribute value which limits the list to only one of this type (will also need to check current values/siblings)
-
     }
 }
 

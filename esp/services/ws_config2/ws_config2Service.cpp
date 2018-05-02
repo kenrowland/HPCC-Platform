@@ -782,7 +782,7 @@ void Cws_config2Ex::getAttributes(const std::vector<std::shared_ptr<EnvironmentV
         pAttribute->setDeprecated(pSchemaValue->isDeprecated());
 
         std::vector<AllowedValue> allowedValues;
-        pSchemaValue->getAllowedValues(allowedValues, pAttr.get());
+        pSchemaValue->getAllowedValues(allowedValues, pAttr->getEnvironmentNode());
         if (!allowedValues.empty())
         {
             IArrayOf<IEspChoiceType> choices;
