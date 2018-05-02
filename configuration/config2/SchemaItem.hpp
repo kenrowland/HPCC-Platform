@@ -56,7 +56,7 @@ class DECL_EXPORT SchemaItem : public std::enable_shared_from_this<SchemaItem>
         void setItemSchemaValue(const std::shared_ptr<SchemaValue> &pValue) { m_pItemValue = pValue; }
         std::shared_ptr<SchemaValue> getItemSchemaValue() const { return m_pItemValue; }
         bool isItemValueDefined() { return m_pItemValue != nullptr; }
-        void findSchemaValues(const std::string &path, std::vector<std::shared_ptr<SchemaValue>> &schemaValues);
+        void fetchSchemaValues(const std::string &path, std::vector<std::shared_ptr<SchemaValue>> &schemaValues);
         void addAttribute(const std::shared_ptr<SchemaValue> &pCfgValue);
         void addAttribute(const std::vector<std::shared_ptr<SchemaValue>> &attributes);
         void addAttribute(const std::map<std::string, std::shared_ptr<SchemaValue>> &attributes);

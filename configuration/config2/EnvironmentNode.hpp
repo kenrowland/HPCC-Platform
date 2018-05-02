@@ -65,7 +65,7 @@ class DECL_EXPORT EnvironmentNode : public std::enable_shared_from_this<Environm
         const std::shared_ptr<SchemaItem> &getSchemaItem() const { return m_pSchemaItem; }
         void getInsertableItems(std::vector<InsertableItem> &items) const;
         void initialize();
-        void findNodes(const std::string &path, std::vector<std::shared_ptr<EnvironmentNode>> &nodes) const;
+        void fetchNodes(const std::string &path, std::vector<std::shared_ptr<EnvironmentNode>> &nodes) const;
         std::shared_ptr<const EnvironmentNode> getRoot() const;
         void addEnvironmentInsertData(const std::string &envData) { m_insertData = envData; }
         const std::string &getEnvironmentInsertData() const { return m_insertData; }

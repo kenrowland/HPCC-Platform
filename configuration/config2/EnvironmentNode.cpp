@@ -354,7 +354,7 @@ void EnvironmentNode::initialize()
 }
 
 
-void EnvironmentNode::findNodes(const std::string &path, std::vector<std::shared_ptr<EnvironmentNode>> &nodes) const
+void EnvironmentNode::fetchNodes(const std::string &path, std::vector<std::shared_ptr<EnvironmentNode>> &nodes) const
 {
     //
     // If path starts with / and we are not the root, get the root and do the find
@@ -377,7 +377,7 @@ void EnvironmentNode::findNodes(const std::string &path, std::vector<std::shared
 
         if (pRoot->getName() == rootName)
         {
-            pRoot->findNodes(remainingPath, nodes);
+            pRoot->fetchNodes(remainingPath, nodes);
         }
     }
     else if (path[0] == '.')
@@ -388,7 +388,7 @@ void EnvironmentNode::findNodes(const std::string &path, std::vector<std::shared
         {
             if (!m_pParent.expired() && path.length() >= 4)
             {
-                m_pParent.lock()->findNodes(path.substr(3), nodes);  // note skipping over '..'
+                m_pParent.lock()->fetchNodes(path.substr(3), nodes);  // note skipping over '..'
             }
             else
             {
@@ -397,7 +397,7 @@ void EnvironmentNode::findNodes(const std::string &path, std::vector<std::shared
         }
         else
         {
-            findNodes(path.substr(1), nodes); // do the find from here stripping the '.' indicator
+            fetchNodes(path.substr(1), nodes); // do the find from here stripping the '.' indicator
         }
     }
 
@@ -471,7 +471,7 @@ void EnvironmentNode::findNodes(const std::string &path, std::vector<std::shared
         {
             for (auto childNodeIt = childNodes.begin(); childNodeIt != childNodes.end(); ++childNodeIt)
             {
-                (*childNodeIt)->findNodes(remainingPath, nodes);
+                (*childNodeIt)->fetchNodes(remainingPath, nodes);
             }
         }
         else

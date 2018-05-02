@@ -32,7 +32,7 @@ void MatchEnvironmentEventHandler::processEvent(const std::string &eventType, st
             // We need to check aginst an attribute in the event node. Build a list of comparison nodes using the
             // target path
             std::vector<std::shared_ptr<EnvironmentNode>> matchNodes;
-            pEventNode->findNodes(m_targetPath, matchNodes);
+            pEventNode->fetchNodes(m_targetPath, matchNodes);
             for (auto &nodeIt: matchNodes)
             {
                 std::shared_ptr<EnvironmentValue> pItemAttr = pEventNode->getAttribute(m_targetAttribute);

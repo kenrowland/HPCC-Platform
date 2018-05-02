@@ -182,7 +182,7 @@ void SchemaValue::getAllowedValues(std::vector<AllowedValue> &allowedValues, con
             // values that are eliminated from the final list of allowable values.
             parts = splitString(params[0], "@");
             std::vector<std::shared_ptr<EnvironmentNode>> existingSourceNodes;
-            pEnvNode->findNodes(parts[0], existingSourceNodes);
+            pEnvNode->fetchNodes(parts[0], existingSourceNodes);
             std::vector<std::string> existingSourceAttributeValues;
             for (auto &existingNodeIt: existingSourceNodes)
             {
@@ -195,7 +195,7 @@ void SchemaValue::getAllowedValues(std::vector<AllowedValue> &allowedValues, con
             std::vector<std::shared_ptr<EnvironmentNode>> allSourceNodes;
             parts = splitString(params[0], "@");
             std::string sourceAttributeName = parts[1];  // for use below in case parts is reused later
-            pEnvNode->findNodes(parts[0], allSourceNodes);
+            pEnvNode->fetchNodes(parts[0], allSourceNodes);
 
             //
             // For each exising source node, using the existingSourceAttributeValues, matching the name to the value in

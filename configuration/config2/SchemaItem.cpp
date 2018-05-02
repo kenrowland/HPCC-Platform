@@ -295,7 +295,7 @@ void SchemaItem::processUniqueAttributeValueSetReferences(const std::map<std::st
                 std::shared_ptr<SchemaValue> pKeyRefAttribute = *cfgIt;     // this is the reference attribute from which attributeName must be a member
                 std::string cfgValuePath = ((setRefIt->second.m_elementPath != ".") ? setRefIt->second.m_elementPath : "") + "@" + setRefIt->second.m_attributeName;
                 std::vector<std::shared_ptr<SchemaValue>> cfgValues;
-                findSchemaValues(cfgValuePath, cfgValues);
+                fetchSchemaValues(cfgValuePath, cfgValues);
                 if (!cfgValues.empty())
                 {
                     for (auto attrIt = cfgValues.begin(); attrIt != cfgValues.end(); ++attrIt)
@@ -365,7 +365,7 @@ void SchemaItem::resetEnvironment()
 
 
 
-void SchemaItem::findSchemaValues(const std::string &path, std::vector<std::shared_ptr<SchemaValue>> &schemaValues)
+void SchemaItem::fetchSchemaValues(const std::string &path, std::vector<std::shared_ptr<SchemaValue>> &schemaValues)
 {
     bool rootPath = path[0] == '/';   //todo: convert this to use the findSchemaRoot below
 
@@ -376,7 +376,7 @@ void SchemaItem::findSchemaValues(const std::string &path, std::vector<std::shar
         std::shared_ptr<SchemaItem> pParent = m_pParent.lock();
         if (pParent)
         {
-            return pParent->findSchemaValues(path, schemaValues);
+            return pParent->fetchSchemaValues(path, schemaValues);
         }
     }
 
@@ -392,7 +392,7 @@ void SchemaItem::findSchemaValues(const std::string &path, std::vector<std::shar
         {
             if (m_properties["name"] == elem)
             {
-                return findSchemaValues(path.substr(end + 1), schemaValues);
+                return fetchSchemaValues(path.substr(end + 1), schemaValues);
             }
             else
             {
@@ -415,7 +415,7 @@ void SchemaItem::findSchemaValues(const std::string &path, std::vector<std::shar
             auto rangeIt = m_children.equal_range(elem);
             for (auto it = rangeIt.first; it != rangeIt.second; ++it)
             {
-                it->second->findSchemaValues(path.substr(end + ((path[end] == '/') ? 1 : 0)), schemaValues);
+                it->second->fetchSchemaValues(path.substr(end + ((path[end] == '/') ? 1 : 0)), schemaValues);
             }
         }
     }
@@ -446,7 +446,7 @@ void SchemaItem::processDefinedUniqueAttributeValueSets(std::map<std::string, st
         {
             std::string cfgValuePath = ((setIt->second.m_elementPath != ".") ? setIt->second.m_elementPath : "") + "@" + setIt->second.m_attributeName;
             std::vector<std::shared_ptr<SchemaValue>> cfgValues;
-            findSchemaValues(cfgValuePath, cfgValues);
+            fetchSchemaValues(cfgValuePath, cfgValues);
             if (!cfgValues.empty())
             {
                 //
@@ -525,7 +525,7 @@ void SchemaItem::postProcessConfig(const std::map<std::string, std::vector<std::
         if (it->second->isMirroredValue())
         {
             std::vector<std::shared_ptr<SchemaValue>> cfgValues;
-            findSchemaValues(it->second->getMirrorFromPath(), cfgValues);
+            fetchSchemaValues(it->second->getMirrorFromPath(), cfgValues);
             if (!cfgValues.empty() && cfgValues.size() == 1)
             {
                 if (cfgValues.size() == 1)

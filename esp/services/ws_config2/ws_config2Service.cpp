@@ -487,7 +487,7 @@ bool Cws_config2Ex::onGetNodeTree(IEspContext &context, IEspGetTreeRequest &req,
 }
 
 
-bool Cws_config2Ex::onFindNodes(IEspContext &context, IEspFindNodesRequest &req, IEspFindNodesResponse &resp)
+bool Cws_config2Ex::onFetchNodes(IEspContext &context, IEspFetchNodesRequest &req, IEspFetchNodesResponse &resp)
 {
     std::string sessionId = req.getSessionId();
     std::string path = req.getPath();
@@ -514,7 +514,7 @@ bool Cws_config2Ex::onFindNodes(IEspContext &context, IEspFindNodesRequest &req,
     }
 
     std::vector<std::shared_ptr<EnvironmentNode>> nodes;
-    pSession->m_pEnvMgr->findNodes(path, nodes, pStartingNode);
+    pSession->m_pEnvMgr->fetchNodes(path, nodes, pStartingNode);
     StringArray ids;
     for ( auto &&pNode : nodes)
     {

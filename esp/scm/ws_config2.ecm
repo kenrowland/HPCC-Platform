@@ -340,15 +340,15 @@ ESPresponse [exceptions_inline] GetTreeResponse
 };
 
 
-ESPrequest FindNodesRequest
+ESPrequest FetchNodesRequest
 {
     string sessionId;
-    string startingNodeId("");   // optional starting node for the find, "" for none
+    string startingNodeId("");   // optional starting node for the fetch, "" for none
     string path;                 // path to search (uses XPath syntax). If startingNodeId specified, path may not start at root ("/")
 };
 
 
-ESPresponse [exceptions_inline] FindNodesResponse
+ESPresponse [exceptions_inline] FetchNodesResponse
 {
     ESParray<string, nodeId> nodeIds;
 };
@@ -422,8 +422,8 @@ ESPservice [auth_feature("DEFERRED"),version("2.0"), default_client_version("2.0
         ] GetNodeTree(GetTreeRequest, GetTreeResponse);
     ESPMethod
         [
-            description("Find nodes matching the indicated path")
-        ] FindNodes(FindNodesRequest, FindNodesResponse);
+            description("Fetch nodes matching the indicated path")
+        ] FetchNodes(FetchNodesRequest, FetchNodesResponse);
 };
 
 

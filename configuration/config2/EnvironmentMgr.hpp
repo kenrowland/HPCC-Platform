@@ -59,7 +59,7 @@ class DECL_EXPORT EnvironmentMgr
         void validate(Status &status, bool includeHiddenNodes=false) const;
         std::string getRootNodeId() const;
         static std::string getUniqueKey();
-        void findNodes(const std::string path, std::vector<std::shared_ptr<EnvironmentNode>> &nodes, const std::shared_ptr<EnvironmentNode> &pStartNode = nullptr) const;
+        void fetchNodes(const std::string path, std::vector<std::shared_ptr<EnvironmentNode>> &nodes, const std::shared_ptr<EnvironmentNode> &pStartNode = nullptr) const;
 
 
     protected:
