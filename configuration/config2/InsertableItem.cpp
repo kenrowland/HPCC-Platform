@@ -19,11 +19,9 @@ limitations under the License.
 #include "EnvironmentNode.hpp"
 
 
-InsertableItem::InsertableItem(std::shared_ptr<const EnvironmentNode> pEnvNode) :
-    m_pEnvNode(pEnvNode)
+InsertableItem::InsertableItem(std::shared_ptr<const EnvironmentNode> pParentEnvNode, const std::shared_ptr<SchemaItem> &pSchemaItem) :
+    m_pParentEnvNode(pParentEnvNode), m_pSchemaItem(pSchemaItem)
 {
-    m_pSchemaItem = m_pEnvNode->getSchemaItem();
-
     std::string insertLimitType = m_pSchemaItem->getProperty("insertLimitType");
     if (!insertLimitType.empty())
     {
@@ -32,7 +30,7 @@ InsertableItem::InsertableItem(std::shared_ptr<const EnvironmentNode> pEnvNode) 
             std::string attributeName = m_pSchemaItem->getProperty("insertLimitData");
             std::shared_ptr<SchemaValue> pSchemaValue = m_pSchemaItem->getAttribute(attributeName);
             std::vector<AllowedValue> allowedValues;
-            pSchemaValue->getAllowedValues(allowedValues, m_pEnvNode);
+            pSchemaValue->getAllowedValues(allowedValues, m_pParentEnvNode);
             for (auto &&av : allowedValues)
             {
                 m_itemLimits.push_back(InsertItemLimitChoice(av.m_value, attributeName, av.m_value));

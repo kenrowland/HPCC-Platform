@@ -318,12 +318,12 @@ void EnvironmentNode::getInsertableItems(std::vector<InsertableItem> &insertable
         {
             if (findIt->second < (*cfgIt)->getMaxInstances())
             {
-                insertableItems.push_back(InsertableItem(shared_from_this()));
+                insertableItems.push_back(InsertableItem(shared_from_this(), *cfgIt));
             }
         }
         else
         {
-            insertableItems.push_back(InsertableItem(shared_from_this()));
+            insertableItems.push_back(InsertableItem(shared_from_this(), *cfgIt));
         }
     }
 }
