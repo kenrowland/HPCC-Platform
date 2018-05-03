@@ -40,6 +40,7 @@ struct InsertableItem
     std::shared_ptr<const EnvironmentNode> m_pParentEnvNode;
     std::shared_ptr<SchemaItem> m_pSchemaItem;
     std::vector<InsertItemLimitChoice> m_itemLimits;
+    bool m_limitChoices;
 };
 
 #endif

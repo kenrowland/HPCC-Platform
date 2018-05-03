@@ -20,11 +20,12 @@ limitations under the License.
 
 
 InsertableItem::InsertableItem(std::shared_ptr<const EnvironmentNode> pParentEnvNode, const std::shared_ptr<SchemaItem> &pSchemaItem) :
-    m_pParentEnvNode(pParentEnvNode), m_pSchemaItem(pSchemaItem)
+    m_pParentEnvNode(pParentEnvNode), m_pSchemaItem(pSchemaItem), m_limitChoices(false)
 {
     std::string insertLimitType = m_pSchemaItem->getProperty("insertLimitType");
     if (!insertLimitType.empty())
     {
+        m_limitChoices = true;
         if (insertLimitType == "attribute")
         {
             std::string attributeName = m_pSchemaItem->getProperty("insertLimitData");

@@ -193,7 +193,7 @@ void SchemaValue::getAllowedValues(std::vector<AllowedValue> &allowedValues, con
             // Get the full set of possible values using the params[1] values. From its parts, parts[0] is the path
             // to find the set of all possible nodes that could serve as an allowable value.
             std::vector<std::shared_ptr<EnvironmentNode>> allSourceNodes;
-            parts = splitString(params[0], "@");
+            parts = splitString(params[1], "@");
             std::string sourceAttributeName = parts[1];  // for use below in case parts is reused later
             pEnvNode->fetchNodes(parts[0], allSourceNodes);
 

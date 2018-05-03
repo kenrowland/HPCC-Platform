@@ -120,6 +120,8 @@ ESPstruct ChoiceType
     string displayName;
     string value;
     string desc("");
+    string msgType("");
+    string msg("");
     ESParray<ESPstruct DependentValueType, dependentValue> dependencies;
 };
 

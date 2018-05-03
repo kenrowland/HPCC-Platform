@@ -649,6 +649,7 @@ void Cws_config2Ex::getNodeResponse(const std::shared_ptr<EnvironmentNode> &pNod
     pNode->getInsertableItems(insertableList);
     for (auto it=insertableList.begin(); it!=insertableList.end(); ++it)
     {
+        bool addItem = true;
         std::shared_ptr<SchemaItem> pSchemaItem = (*it).m_pSchemaItem;
         Owned<IEspInsertItemType> pInsertInfo = createInsertItemType();
         pInsertInfo->setName(pSchemaItem->getProperty("displayName").c_str());
@@ -657,22 +658,27 @@ void Cws_config2Ex::getNodeResponse(const std::shared_ptr<EnvironmentNode> &pNod
         pInsertInfo->setCategory(pSchemaItem->getProperty("category").c_str());
         pInsertInfo->setRequired(pSchemaItem->isRequired());
         pInsertInfo->setTooltip(pSchemaItem->getProperty("tooltip").c_str());
-        std::string limitType = pSchemaItem->getProperty("insertLimitType");
-        if (!limitType.empty())
+        if (it->m_limitChoices)
         {
+            addItem = false;   // don't add this item unless we find a limited choice
             pInsertInfo->setFixedChoices(true);
             IArrayOf<IEspChoiceLimitType> fixedChoices;
-            for (auto &&fc : (*it).m_itemLimits)
+            for (auto &fc : (*it).m_itemLimits)
             {
                 Owned<IEspChoiceLimitType> pChoice = createChoiceLimitType();
                 pChoice->setDisplayName(fc.itemName.c_str());
                 std::string itemType = pSchemaItem->getItemType() + "@" + fc.attributeName + "=" + fc.attributeValue;
                 pChoice->setItemType(itemType.c_str());
                 fixedChoices.append(*pChoice.getLink());
+                addItem = true;
             }
             pInsertInfo->setChoiceList(fixedChoices);
         }
-        newNodes.append(*pInsertInfo.getLink());
+
+        if (addItem)
+        {
+            newNodes.append(*pInsertInfo.getLink());
+        }
     }
     resp.setInsertable(newNodes);
 
@@ -792,6 +798,8 @@ void Cws_config2Ex::getAttributes(const std::vector<std::shared_ptr<EnvironmentV
                 pChoice->setDisplayName((*valueIt).m_displayName.c_str());
                 pChoice->setValue((*valueIt).m_value.c_str());
                 pChoice->setDesc((*valueIt).m_description.c_str());
+                pChoice->setMsg((*valueIt).m_userMessage.c_str());
+                pChoice->setMsgType((*valueIt).m_userMessageType.c_str());
 
                 //
                 // Add dependencies
