@@ -322,6 +322,7 @@ void XSDSchemaParser::parseElement(const pt::ptree &elemTree)
         if (!insertLimitData.empty()) pNewSchemaItem->setProperty("insertLimitData", insertLimitData);
         pNewSchemaItem->setMinInstances(minOccurs);
         pNewSchemaItem->setMaxInstances(maxOccurs);
+        pNewSchemaItem->setHidden(elemTree.get("<xmlattr>.hpcc:hidden", "false") == "true");
 
         //
         // Type specified?
@@ -604,13 +605,6 @@ void XSDSchemaParser::parseIntegerTypeLimits(const pt::ptree &restrictTree, std:
             pIntegerLimits->setMaxExclusive(it->second.get<int>("<xmlattr>.value"));
         else if (restrictionType == "xs:enumeration")
         {
-            //AllowedValue allowedValue;
-            //allowedValue.m_value           = it->second.get("<xmlattr>.value", "badbadbad");
-            //allowedValue.m_displayName     = it->second.get("<xmlattr>.hpcc:displayName", allowedValue.m_value);
-            //allowedValue.m_description     = it->second.get("<xmlattr>.hpcc:description", "");
-            //allowedValue.m_userMessage     = it->second.get("<xmlattr>.hpcc:userMessage", "");
-            //allowedValue.m_userMessageType = it->second.get("<xmlattr>.hpcc:userMessageType", allowedValue.m_userMessage.empty() ? "" : "info");
-            //pIntegerLimits->addAllowedValue(allowedValue);
             parseAllowedValue(it->second, &(*pIntegerLimits));
         }
         else if (restrictionType != "<xmlattr>")
@@ -638,13 +632,6 @@ void XSDSchemaParser::parseStringTypeLimits(const pt::ptree &restrictTree, std::
             pStringLimits->addPattern(it->second.get("<xmlattr>.value", "0"));
         else if (restrictionType == "xs:enumeration")
         {
-            //AllowedValue allowedValue;
-            //allowedValue.m_value = it->second.get("<xmlattr>.value", "badbadbad");
-            //allowedValue.m_displayName = it->second.get("<xmlattr>.hpcc:displayName", allowedValue.m_value);
-            //allowedValue.m_description = it->second.get("<xmlattr>.hpcc:description", "");
-            //allowedValue.m_userMessage = it->second.get("<xmlattr>.hpcc:userMessage", "");
-            //allowedValue.m_userMessageType = it->second.get("<xmlattr>.hpcc:userMessageType", allowedValue.m_userMessage.empty() ? "" : "info");
-            //pStringLimits->addAllowedValue(allowedValue);
             parseAllowedValue(it->second, &(*pStringLimits));
         }
         else if (restrictionType != "<xmlattr>")
@@ -685,6 +672,7 @@ std::shared_ptr<SchemaValue> XSDSchemaParser::getSchemaValue(const pt::ptree &at
     pCfgValue->setCodeDefault(attr.get("<xmlattr>.hpcc:codeDefault", ""));
     pCfgValue->setValueLimitRuleType(attr.get("<xmlattr>.hpcc:valueLimitRuleType", ""));
     pCfgValue->setValueLimitRuleData(attr.get("<xmlattr>.hpcc:valueLimitRuleData", ""));
+    pCfgValue->setRequiredIfSet(attr.get("<xmlattr>.hpcc:requiredIfSet", ""));
 
     std::string modList = attr.get("<xmlattr>.hpcc:modifiers", "");
     if (modList.length())

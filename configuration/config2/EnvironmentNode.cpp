@@ -406,7 +406,7 @@ void EnvironmentNode::fetchNodes(const std::string &path, std::vector<std::share
     else
     {
         std::string nodeName = path;
-        std::string remainingPath, attributeName, attributeValue;
+        std::string remainingPath, searchAttrName, searchAttrValue;
 
         //
         // Get our portion of the path which is up to the next / or the remaining string and
@@ -423,13 +423,13 @@ void EnvironmentNode::fetchNodes(const std::string &path, std::vector<std::share
         size_t atPos = nodeName.find_first_of('@');
         if (atPos != std::string::npos)
         {
-            attributeName = nodeName.substr(atPos + 1);
+            searchAttrName = nodeName.substr(atPos + 1);
             nodeName.erase(atPos, std::string::npos);
-            size_t equalPos = attributeName.find_first_of('=');
+            size_t equalPos = searchAttrName.find_first_of('=');
             if (equalPos != std::string::npos)
             {
-                attributeValue = attributeName.substr(equalPos + 1);
-                attributeName.erase(equalPos, std::string::npos);
+                searchAttrValue = searchAttrName.substr(equalPos + 1);
+                searchAttrName.erase(equalPos, std::string::npos);
             }
         }
 
@@ -440,21 +440,24 @@ void EnvironmentNode::fetchNodes(const std::string &path, std::vector<std::share
 
         //
         // If there is an attribute specified, dig deeper
-        if (!attributeName.empty())
+        if (!searchAttrName.empty())
         {
             auto childNodeIt = childNodes.begin();
             while (childNodeIt != childNodes.end())
             {
-                std::shared_ptr<EnvironmentValue> pValue = (*childNodeIt)->getAttribute(attributeName);
+                std::shared_ptr<EnvironmentValue> pValue = (*childNodeIt)->getAttribute(searchAttrName);
                 if (pValue)
                 {
-                    if (!attributeValue.empty() && pValue->getValue() != attributeValue)
+                    //
+                    // The attribute value must be present and, if necessary, must match the search value
+                    std::string curAttrValue = pValue->getValue();
+                    if (!curAttrValue.empty() && (searchAttrValue.empty() || (searchAttrValue == curAttrValue)))
                     {
-                        childNodeIt = childNodes.erase(childNodeIt);
+                        ++childNodeIt;  // keep it
                     }
                     else
                     {
-                        ++childNodeIt;
+                        childNodeIt = childNodes.erase(childNodeIt);
                     }
                 }
                 else

@@ -113,9 +113,10 @@ void EnvironmentValue::initialize()
     {
         //
         // type "prefix" means to use the auto generate value as a name prefix and to append numbers until a new unique name is
-        // found
-        if (type == "prefix")
+        // found. ("prefix_" is a variation that adds an underbar (_) when appending numbers)
+        if (type == "prefix" || type=="prefix_")
         {
+            std::string connector = (type == "prefix_") ? "_" : "";
             std::string newName;
             const std::string &prefix = m_pSchemaValue->getAutoGenerateValue();
             std::vector<std::string> curValues;
@@ -138,7 +139,7 @@ void EnvironmentValue::initialize()
                     break;
                 }
                 ++n;
-                newName = prefix + std::to_string(n);
+                newName = prefix + connector + std::to_string(n);
             }
         }
 

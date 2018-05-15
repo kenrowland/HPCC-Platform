@@ -518,7 +518,10 @@ bool Cws_config2Ex::onFetchNodes(IEspContext &context, IEspFetchNodesRequest &re
     StringArray ids;
     for ( auto &&pNode : nodes)
     {
-        ids.append(pNode->getId().c_str());
+        if (!pNode->getSchemaItem()->isHidden())
+        {
+            ids.append(pNode->getId().c_str());
+        }
     }
     resp.setNodeIds(ids);
 
@@ -786,6 +789,7 @@ void Cws_config2Ex::getAttributes(const std::vector<std::shared_ptr<EnvironmentV
         pAttribute->setReadOnly(pSchemaValue->isReadOnly());
         pAttribute->setHidden(pSchemaValue->isHidden());
         pAttribute->setDeprecated(pSchemaValue->isDeprecated());
+        pAttribute->setGroup(pSchemaValue->getGroup().c_str());
 
         std::vector<AllowedValue> allowedValues;
         pSchemaValue->getAllowedValues(allowedValues, pAttr->getEnvironmentNode());

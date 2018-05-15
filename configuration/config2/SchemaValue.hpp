@@ -84,6 +84,10 @@ class DECL_EXPORT SchemaValue
         const std::string &getValueLimitRuleType() { return m_valueLimitRuleType; }
         void setValueLimitRuleData(const std::string &data) { m_valueLimitRuleData = data; }
         const std::string &getValueLimitRuleData() { return m_valueLimitRuleData; }
+        void setRequiredIfSet(const std::string &reqIf) { m_requiredIfSet = reqIf; }
+        const std::string &getRequiredIfSet() const { return m_requiredIfSet; }
+        void setGroup(const std::string &group) { m_group = group; }
+        const std::string &getGroup() const { return m_group; }
 
 
     protected:
@@ -99,6 +103,9 @@ class DECL_EXPORT SchemaValue
         std::string m_autoGenerateType;
         std::string m_valueLimitRuleType;
         std::string m_valueLimitRuleData;
+        std::string m_requiredIfSet;
+        std::string m_group;
+        // DON'T FORGET IF DATA ADDED, IT MAY MAY TO BE COPIED IN THE COPY CONSTRUCTOR!!
 
         struct {
             unsigned m_required  : 1;
@@ -109,11 +116,13 @@ class DECL_EXPORT SchemaValue
             unsigned m_isDefined : 1;
         } bitMask;
 
+        // DON'T FORGET IF DATA ADDED, IT MAY MAY TO BE COPIED IN THE COPY CONSTRUCTOR!!
         std::string m_default;        // value written to environment if no user value supplied
         std::string m_codeDefault;    // informational value nform user code default if no value supplied
         std::string m_tooltip;
         std::vector<std::string> m_modifiers;
         std::vector<std::weak_ptr<SchemaValue>> m_pUniqueValueSetRefs;    // this value serves as the key from which values are valid
+        // DON'T FORGET IF DATA ADDED, IT MAY MAY TO BE COPIED IN THE COPY CONSTRUCTOR!!
 };
 
 #endif // _CONFIG2_VALUE_HPP_

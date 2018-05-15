@@ -22,6 +22,7 @@
 #include <vector>
 #include <string>
 #include "platform.h"
+#include "Status.hpp"
 
 
 class EnvironmentValue;
@@ -68,6 +69,8 @@ class DECL_EXPORT SchemaTypeLimits
         virtual bool isMinSet() const { return false; }
         virtual int getMax() const { return 0; }
         virtual int getMin() const { return 0; }
+        const std::string &getValidateMsg() const { return m_validateMsg; }
+        const std::string &getValidateMsgType() const { return m_validateMsgType; }
 
 
     protected:
@@ -79,6 +82,8 @@ class DECL_EXPORT SchemaTypeLimits
     protected:
 
         std::vector<AllowedValue> m_enumeratedValues;
+        mutable std::string m_validateMsg;
+        mutable std::string m_validateMsgType;
 };
 
 

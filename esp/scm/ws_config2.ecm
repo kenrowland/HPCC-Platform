@@ -180,7 +180,7 @@ ESPstruct InsertItemType
     string    category("");
     bool      required(false);
     string    tooltip("");
-    ESParray<ESPstruct ChoiceLimitType, Choice> choiceList;
+    ESParray<ESPstruct ChoiceLimitType, ChoiceLimit> choiceList;
     bool      fixedChoices(false);
 };
 
@@ -189,6 +189,7 @@ ESPstruct AttributeType
 {
     string     displayName;
     string     name;
+    string     group("");
     string     tooltip("");
     ESPstruct  TypeInfo type;
     string     currentValue("");

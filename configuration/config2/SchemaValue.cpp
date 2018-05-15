@@ -47,6 +47,8 @@ SchemaValue::SchemaValue(const SchemaValue &value)
     m_modifiers = value.m_modifiers;
     m_valueLimitRuleType = value.m_valueLimitRuleType;
     m_valueLimitRuleData = value.m_valueLimitRuleData;
+    m_requiredIfSet = value.m_requiredIfSet;
+    m_group = value.m_group;
 
     // special processing? Maybe after inserting?
     std::vector<std::shared_ptr<SchemaValue>> m_mirrorToSchemaValues;
@@ -96,11 +98,35 @@ bool SchemaValue::isValueValid(const std::string &value, const EnvironmentValue 
 void SchemaValue::validate(Status &status, const std::string &id, const EnvironmentValue *pEnvValue) const
 {
     std::string curValue = pEnvValue->getValue();
-    bool isValid;
+    bool isValid = m_pType->isValueValid(curValue);
 
-    if (!m_pType->isValueValid(curValue))
+    //
+    // If we have an environment value, more specific information can be provided
+    if (pEnvValue)
     {
-        if (pEnvValue)
+        //
+        // See if there is a dependency on another value being set.
+        if (!m_requiredIfSet.empty() && isValid)
+        {
+            //
+            // Required if set string format is path[@attribute[=value]]. Search this environment value's owning node
+            // for a match.
+            std::vector<std::shared_ptr<EnvironmentNode>> nodes;
+            pEnvValue->getEnvironmentNode()->fetchNodes(m_requiredIfSet, nodes);
+            if (!nodes.empty())
+            {
+                if (pEnvValue->getValue().empty())
+                {
+                    isValid = false;
+                    std::string msg = "Environment value required based on requiredIf rule " + m_requiredIfSet + " being set.";
+                    status.addMsg(statusMsg::error, pEnvValue->getNodeId(), pEnvValue->getName(), msg);
+                }
+            }
+        }
+
+        //
+        // If not valid, provide the reason
+        if (!isValid)
         {
             std::string msg;
             if (pEnvValue->wasForced())
@@ -111,7 +137,17 @@ void SchemaValue::validate(Status &status, const std::string &id, const Environm
 
             status.addMsg(pEnvValue->wasForced() ? statusMsg::warning : statusMsg::error, pEnvValue->getNodeId(), pEnvValue->getName(), msg);
         }
-        isValid = false;
+
+        //
+        // Otherwise, the value is valid, but there could be a validate message
+        else
+        {
+            const std::string &validateMsg = m_pType->getValidateMsg();
+            if (!validateMsg.empty())
+            {
+                status.addMsg(status.getMsgLevelFromString(m_pType->getValidateMsgType()), pEnvValue->getNodeId(), pEnvValue->getName(), validateMsg);
+            }
+        }
     }
 }
 
@@ -229,11 +265,10 @@ void SchemaValue::getAllowedValues(std::vector<AllowedValue> &allowedValues, con
                 }
             }
         }
-
     }
 
     //
-    // Or, keyed? (note that the keyed check MUST be last since a more restrictie rule may be defined for UI purposes
+    // Or, keyed? (note that the keyed check MUST be last since a more restrictive rule may be defined for UI purposes
     // while a keyed reference is present for XML schema validation)
     else if (isFromUniqueValueSet())
     {
@@ -258,7 +293,6 @@ void SchemaValue::getAllKeyRefValues(std::vector<std::string> &keyRefValues) con
         for (auto &envIt: allEnvValues)
         {
             keyRefValues.push_back(envIt->getValue());
-            //keyRefValues.insert(keyRefValues.end(), allValues.begin(), allValues.end());
         }
     }
 }
