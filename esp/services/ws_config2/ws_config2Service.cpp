@@ -867,8 +867,11 @@ void Cws_config2Ex::getAttributes(const std::vector<std::shared_ptr<EnvironmentV
             pAttribute->setModifiers(modifiers);
         }
 
-        pAttribute->setCurrentValue(pAttr->getValue().c_str());
+        std::string curValue = pAttr->getValue();
+        std::string dfltValue = pSchemaValue->getDefaultValue();
+        pAttribute->setCurrentValue(!curValue.empty() ? curValue.c_str() : (!dfltValue.empty() ? dfltValue.c_str() : ""));
         pAttribute->setDefaultValue(pSchemaValue->getDefaultValue().c_str());
+        pAttribute->setDefaultInCode(pSchemaValue->getCodeDefault().c_str());
 
         nodeAttributes.append(*pAttribute.getLink());
     }

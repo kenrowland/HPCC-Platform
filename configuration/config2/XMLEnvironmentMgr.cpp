@@ -135,8 +135,14 @@ void XMLEnvironmentMgr::serialize(pt::ptree &envTree, std::shared_ptr<Environmen
     pEnvNode->getAttributes(attributes);
     for (auto attrIt = attributes.begin(); attrIt != attributes.end(); ++attrIt)
     {
-        if ((*attrIt)->isValueSet())
-            envTree.put("<xmlattr>." + (*attrIt)->getName(), (*attrIt)->getValue());
+        std::string attrValue, dfltValue;
+        dfltValue = (*attrIt)->getDefaultValue();
+        attrValue = (*attrIt)->isValueSet() ? (*attrIt)->getValue() : ((*attrIt)->hasDefaultValue() ? (*attrIt)->getDefaultValue() : "");
+
+        if (!attrValue.empty())
+        {
+            envTree.put("<xmlattr>." + (*attrIt)->getName(), attrValue);
+        }
     }
     std::shared_ptr<EnvironmentValue> pNodeValue = pEnvNode->getLocalEnvValue();
     if (pNodeValue)
