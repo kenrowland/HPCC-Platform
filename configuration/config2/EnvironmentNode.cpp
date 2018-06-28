@@ -206,29 +206,28 @@ void EnvironmentNode::validate(Status &status, bool includeChildren, bool includ
 
         //
         // Check any attributes
-        //for (auto attrIt = m_attributes.begin(); attrIt != m_attributes.end(); ++attrIt)
-        //{
-        //    attrIt->second->validate(status, m_id);
+        for (auto attrIt = m_attributes.begin(); attrIt != m_attributes.end(); ++attrIt)
+        {
+            attrIt->second->validate(status, m_id);
 //
-        //    //
-        //    // If this value must be unique, make sure it is
-        //    if (attrIt->second->getSchemaValue()->isUniqueValue())
-        //    {
-        //        bool found = false;
-        //        std::vector<std::string> allValues;
-        //        attrIt->second->getAllValuesForSiblings(allValues);
-        //        std::set<std::string> unquieValues;
-        //        for (auto it = allValues.begin(); it != allValues.end() && !found; ++it)
-        //        {
-        //            auto ret = unquieValues.insert(*it);
-        //            found = !ret.second;
-        //        }
-//
-        //        if (found)
-        //        {
-        //            status.addUniqueMsg(statusMsg::error, m_id, attrIt->second->getName(), "Attribute value must be unique");
-        //        }
-        //    }
+            //
+            // If this value must be unique, make sure it is
+            if (attrIt->second->getSchemaValue()->isUniqueValue())
+            {
+                bool found = false;
+                std::vector<std::string> allValues;
+                attrIt->second->getAllValuesForSiblings(allValues);
+                std::set<std::string> unquieValues;
+                for (auto it = allValues.begin(); it != allValues.end() && !found; ++it)
+                {
+                    auto ret = unquieValues.insert(*it);
+                    found = !ret.second;
+                }
+                if (found)
+                {
+                    status.addUniqueMsg(statusMsg::error, m_id, attrIt->second->getName(), "Attribute value must be unique");
+                }
+            }
 //
         //    //
         //    // Does this value need to be from another set of values?
@@ -244,7 +243,7 @@ void EnvironmentNode::validate(Status &status, bool includeChildren, bool includ
         //            status.addMsg(statusMsg::error, m_id, attrIt->second->getName(), "Attribute value must be from a unique set");
         //        }
         //    }
-        //}
+        }
 
         //
         // Now check all children
