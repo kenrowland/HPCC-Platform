@@ -201,14 +201,14 @@ void EnvironmentNode::validate(Status &status, bool includeChildren, bool includ
         // Check node value
         if (m_pLocalValue)
         {
-        //    m_pLocalValue->validate(status, m_id);
+            m_pLocalValue->validate(status, m_id);
         }
 
         //
         // Check any attributes
         for (auto attrIt = m_attributes.begin(); attrIt != m_attributes.end(); ++attrIt)
         {
-            attrIt->second->validate(status, m_id);
+            //attrIt->second->validate(status, m_id);
 
             //
             // If this value must be unique, make sure it is
