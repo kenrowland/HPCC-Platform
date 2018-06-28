@@ -99,7 +99,7 @@ bool SchemaValue::isValueValid(const std::string &value, const EnvironmentValue 
 
 void SchemaValue::validate(Status &status, const std::string &id, const EnvironmentValue *pEnvValue) const
 {
-    //std::string curValue = pEnvValue->getValue();
+    std::string curValue = pEnvValue->getValue();
     bool isValid = false; //m_pType->isValueValid(curValue);
 
     //
