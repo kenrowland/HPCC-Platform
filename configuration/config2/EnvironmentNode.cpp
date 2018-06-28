@@ -209,10 +209,10 @@ void EnvironmentNode::validate(Status &status, bool includeChildren, bool includ
         for (auto attrIt = m_attributes.begin(); attrIt != m_attributes.end(); ++attrIt)
         {
             attrIt->second->validate(status, m_id);
-//
+
             //
             // If this value must be unique, make sure it is
-            if (attrIt->second->getSchemaValue()->isUniqueValue())
+            //if (attrIt->second->getSchemaValue()->isUniqueValue())
             {
                 //bool found = false;
                 //std::vector<std::string> allValues;
