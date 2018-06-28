@@ -214,19 +214,19 @@ void EnvironmentNode::validate(Status &status, bool includeChildren, bool includ
             // If this value must be unique, make sure it is
             if (attrIt->second->getSchemaValue()->isUniqueValue())
             {
-                bool found = false;
-                std::vector<std::string> allValues;
-                attrIt->second->getAllValuesForSiblings(allValues);
-                std::set<std::string> unquieValues;
-                for (auto it = allValues.begin(); it != allValues.end() && !found; ++it)
-                {
-                    auto ret = unquieValues.insert(*it);
-                    found = !ret.second;
-                }
-                if (found)
-                {
-                    status.addUniqueMsg(statusMsg::error, m_id, attrIt->second->getName(), "Attribute value must be unique");
-                }
+                //bool found = false;
+                //std::vector<std::string> allValues;
+                //attrIt->second->getAllValuesForSiblings(allValues);
+                //std::set<std::string> unquieValues;
+                //for (auto it = allValues.begin(); it != allValues.end() && !found; ++it)
+                //{
+                //    auto ret = unquieValues.insert(*it);
+                //    found = !ret.second;
+                //}
+                //if (found)
+                //{
+                //    status.addUniqueMsg(statusMsg::error, m_id, attrIt->second->getName(), "Attribute value must be unique");
+                //}
             }
 //
         //    //
