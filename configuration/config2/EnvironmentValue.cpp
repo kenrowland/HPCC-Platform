@@ -74,21 +74,24 @@ bool EnvironmentValue::isValueValid(const std::string &value) const
 void EnvironmentValue::validate(Status &status, const std::string &myId) const
 {
     //
-    // Only validate if value is set, otherwise, it's valid
-    if (isValueSet())
+    // Only validate
+    if (m_pSchemaValue)
     {
-        if (!m_pSchemaValue->isDefined())
-            status.addMsg(statusMsg::warning, myId, m_name, "No type information exists");
+        if (isValueSet())
+        {
+            if (!m_pSchemaValue->isDefined())
+                status.addMsg(statusMsg::warning, myId, m_name, "No type information exists");
 
-        if (m_forcedSet)
-            status.addMsg(statusMsg::warning, myId, m_name, "Current value was force set to an invalid value");
+            if (m_forcedSet)
+                status.addMsg(statusMsg::warning, myId, m_name, "Current value was force set to an invalid value");
 
-        // Will generate status based on current value and type
-        m_pSchemaValue->validate(status, myId, this);
-    }
-    else if (m_pSchemaValue->isRequired())
-    {
-        status.addMsg(statusMsg::error, myId, m_name, "Required value has not been set");
+            // Will generate status based on current value and type
+            m_pSchemaValue->validate(status, myId, this);
+        }
+        else if (m_pSchemaValue->isRequired())
+        {
+            status.addMsg(statusMsg::error, myId, m_name, "Required value has not been set");
+        }
     }
 }
 
