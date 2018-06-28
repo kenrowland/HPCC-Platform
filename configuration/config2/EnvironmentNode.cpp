@@ -201,7 +201,7 @@ void EnvironmentNode::validate(Status &status, bool includeChildren, bool includ
         // Check node value
         if (m_pLocalValue)
         {
-            m_pLocalValue->validate(status, m_id);
+        //    m_pLocalValue->validate(status, m_id);
         }
 
         //
