@@ -86,7 +86,7 @@ void EnvironmentValue::validate(Status &status, const std::string &myId) const
                 status.addMsg(statusMsg::warning, myId, m_name, "Current value was force set to an invalid value");
 
             // Will generate status based on current value and type
-            m_pSchemaValue->validate(status, myId, this);
+            ////m_pSchemaValue->validate(status, myId, this);
         }
         else if (m_pSchemaValue->isRequired())
         {
