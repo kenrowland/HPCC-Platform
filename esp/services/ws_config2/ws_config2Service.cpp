@@ -340,7 +340,7 @@ bool Cws_config2Ex::onGetNode(IEspContext &context, IEspNodeRequest &req, IEspGe
     }
 
     getNodeResponse(pNode, resp);
-    //pNode->validate(status, false);  // validate this node only
+    pNode->validate(status, false);  // validate this node only
     buildStatusResponse(status, pSession, resp.updateStatus());
 
     //
