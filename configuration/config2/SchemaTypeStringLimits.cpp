@@ -17,7 +17,8 @@
 
 #include "SchemaTypeStringLimits.hpp"
 #include "EnvironmentValue.hpp"
-#include <regex>
+#include <boost/regex.hpp>
+//#include <regex>
 
 std::string SchemaTypeStringLimits::getLimitString() const
 {
@@ -33,10 +34,10 @@ bool SchemaTypeStringLimits::doValueTest(const std::string &testValue) const
     isValid = len >= m_minLength && len <= m_maxLength;
 
     // test patterns
-    //for (auto it = m_patterns.begin(); it != m_patterns.end() && isValid; ++it)
-    //{
-    //    std::regex expr ((*it).c_str());
-    //    isValid = std::regex_match(testValue, expr);
-    //}
+    for (auto it = m_patterns.begin(); it != m_patterns.end() && isValid; ++it)
+    {
+        static const boost::regex e(*it);
+        isValid = boost::regex_match(testValue, e);
+    }
     return isValid;
 }
