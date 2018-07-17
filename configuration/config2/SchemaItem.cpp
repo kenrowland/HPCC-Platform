@@ -479,6 +479,17 @@ std::shared_ptr<const SchemaItem> SchemaItem::getSchemaRoot() const
 }
 
 
+void SchemaItem::getPath(std::string &path) const
+{
+    path = getProperty("name") + path;
+    if (!m_pParent.expired())
+    {
+        path = "/" + path;
+        m_pParent.lock()->getPath(path);
+    }
+}
+
+
 void SchemaItem::processDefinedUniqueAttributeValueSets(std::map<std::string, std::vector<std::shared_ptr<SchemaValue>>> &uniqueAttributeValueSets)
 {
     for (auto setIt = m_uniqueAttributeValueSetDefs.begin(); setIt != m_uniqueAttributeValueSetDefs.end(); ++setIt)

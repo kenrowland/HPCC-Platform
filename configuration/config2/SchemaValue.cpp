@@ -19,6 +19,7 @@
 #include "EnvironmentValue.hpp"
 #include "EnvironmentNode.hpp"
 #include <algorithm>
+#include "ConfigPath.hpp"
 #include "Utils.hpp"
 
 SchemaValue::SchemaValue(const std::string &name, bool isDefined) :
@@ -211,29 +212,30 @@ void SchemaValue::getAllowedValues(std::vector<AllowedValue> &allowedValues, con
         if (m_valueLimitRuleType == "uniqueItemType_1")
         {
             std::vector<std::string> params = splitString(m_valueLimitRuleData, ",");
-            std::vector<std::string> parts;
 
             //
             // First parameter is the source values for an attribute search. The two parts of the parameter are the path to the
             // node set where the atttribute, the second part, name is found (not that there may be no entries). Find all the nodes
             // for the path (parts[0]), then get all of the values for the attribute (parts[1]). This serves as the list of existing
             // values that are eliminated from the final list of allowable values.
-            parts = splitString(params[0], "@");
+            ConfigPath sourcePath(params[0]);
+            std::shared_ptr<ConfigPathItem> pSourcePath = sourcePath.getNextPathItem();
             std::vector<std::shared_ptr<EnvironmentNode>> existingSourceNodes;
-            pEnvNode->fetchNodes(parts[0], existingSourceNodes);
+            pEnvNode->fetchNodes(pSourcePath->getElementName(), existingSourceNodes);
             std::vector<std::string> existingSourceAttributeValues;
             for (auto &existingNodeIt: existingSourceNodes)
             {
-                existingSourceAttributeValues.push_back( existingNodeIt->getAttributeValue(parts[1]));
+                existingSourceAttributeValues.push_back( existingNodeIt->getAttributeValue(pSourcePath->getAttributeName()));
             }
 
             //
             // Get the full set of possible values using the params[1] values. From its parts, parts[0] is the path
             // to find the set of all possible nodes that could serve as an allowable value.
             std::vector<std::shared_ptr<EnvironmentNode>> allSourceNodes;
-            parts = splitString(params[1], "@");
-            std::string sourceAttributeName = parts[1];  // for use below in case parts is reused later
-            pEnvNode->fetchNodes(parts[0], allSourceNodes);
+            ConfigPath valuesPath(params[1]);
+            std::shared_ptr<ConfigPathItem> pValuesPath = valuesPath.getNextPathItem();
+            std::string sourceAttributeName = pValuesPath->getAttributeName();  // for use below in case parts is reused later
+            pEnvNode->fetchNodes(pValuesPath->getElementName(), allSourceNodes);
 
             //
             // For each exising source node, using the existingSourceAttributeValues, matching the name to the value in
@@ -297,4 +299,9 @@ void SchemaValue::getAllKeyRefValues(std::vector<std::string> &keyRefValues) con
             keyRefValues.push_back(envIt->getValue());
         }
     }
+}
+
+bool SchemaValue::hasModifier(const std::string &modifier) const
+{
+    return std::find(m_modifiers.begin(), m_modifiers.end(), modifier) != m_modifiers.end();
 }
