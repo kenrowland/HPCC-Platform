@@ -20,20 +20,22 @@
 #include "Utils.hpp"
 
 
-bool ConfigPathItem::isValuePresentInValueList(const std::string val, bool returnTrueIfValueListEmpty) const
+bool ConfigPathItem::checkValueAgainstValueList(const std::string val, bool returnTrueIfValueListEmpty) const
 {
+    bool found = false;
+
     if (m_attributeValues.empty())
     {
         return returnTrueIfValueListEmpty;
     }
 
-    for (auto it=m_attributeValues.begin(); it!=m_attributeValues.end(); ++it)
+    for (auto it=m_attributeValues.begin(); it!=m_attributeValues.end() && !found; ++it)
     {
-        if (*it == val)
-            return true;
+        found = (*it == val);
     }
 
-    return false;
+    bool rc = found == m_presentInList;
+    return rc;
 }
 
 
@@ -118,10 +120,12 @@ void ConfigPath::parsePathElement(std::size_t start, const std::shared_ptr<Confi
 
             //
             // Value present?
+            std::size_t notPos = attr.find_first_of('!');
             std::size_t equalPos = attr.find_first_of('=');
             if (equalPos != std::string::npos)
             {
-                pPathItem->setAttributeName(attr.substr(1, equalPos-1));
+                std::size_t compareLength = (notPos == std::string::npos) ? 1 : 2;
+                pPathItem->setAttributeName(attr.substr(1, equalPos-compareLength));
                 std::string valueStr;
                 extractEnclosedString(attr.substr(equalPos + 1), valueStr, '(', ')', true);
                 std::vector<std::string> values = splitString(valueStr, ",");
@@ -131,6 +135,7 @@ void ConfigPath::parsePathElement(std::size_t start, const std::shared_ptr<Confi
                     extractEnclosedString(valstr, value, '\'', '\'', false);
                     pPathItem->addAttributeValue(value);
                 }
+                pPathItem->setExcludeValueList(notPos != std::string::npos);
             }
             else
             {
