@@ -182,9 +182,11 @@
                 </xs:complexType>
             </xs:element>
         </xs:sequence>
+        <xs:attribute name="bindingType" type="xs:string"/>
         <xs:attribute name="defaultPort" type="xs:string"/>
         <xs:attribute name="defaultResourcesBasedn" type="xs:string"/>
         <xs:attribute name="defaultSecurePort" type="xs:string"/>
+        <xs:attribute name="plugin" type="xs:string"/>
         <xs:attribute name="type" type="xs:string"/>
     </xs:complexType>
 

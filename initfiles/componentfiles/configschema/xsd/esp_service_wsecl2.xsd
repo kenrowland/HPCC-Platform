@@ -1,64 +1,74 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+#    HPCC SYSTEMS software Copyright (C) 2018 HPCC Systems®.
+#
+#    Licensed under the Apache License, Version 2.0 (the "License");
+#    you may not use this file except in compliance with the License.
+#    You may obtain a copy of the License at
+#
+#       http://www.apache.org/licenses/LICENSE-2.0
+#
+#    Unless required by applicable law or agreed to in writing, software
+#    distributed under the License is distributed on an "AS IS" BASIS,
+#    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#    See the License for the specific language governing permissions and
+#    limitations under the License.
+-->
+
 <xs:schema
         xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" attributeFormDefault="unqualified"
         xmlns:hpcc="someuri">
     <xs:include schemaLocation="types.xsd"/>
     <hpcc:insert hpcc:schemaPath="/Environment/Software">
-        <xs:element name="EspService" hpcc:class="component" hpcc:category="ESP Service" hpcc:itemType="espsmc"
-                    hpcc:displayName="ESP SMC" maxOccurs="unbounded" hpcc:docid="SMC-T01">
+        <xs:element name="EspService" maxOccurs="unbounded" hpcc:class="component" hpcc:category="ESP Service"
+                    hpcc:itemType="ws_ecl" hpcc:displayName="WS ECL" hpcc:docid="MyWS2-T03">
             <xs:complexType>
-                <xs:attributeGroup name="monitoring" hpcc:groupByName="Monitoring" hpcc:docid="SMC-T02">
-                    <xs:attribute name="monitorDaliFileServer" type="xs:boolean" use="true" hpcc:presetValue="false"
-                                  hpcc:displayName="Monior Dali File Server"
-                                  hpcc:tooltip="Warn if dafilesrv process is not running on computers"/>
-                    <xs:attribute name="excludePartitions" type="xs:string" use="optional"
-                                  hpcc:presetValue="/dev*,/sys,/proc/*" hpcc:displayName="Exclude Partitions"
-                                  hpcc:tooltip="Comma, space or semicolon delimited list of partitions not to be monitored for free space"/>
-                    <xs:attribute name="warnIfCpuLoadOver" type="xs:nonNegativeInteger" use="optional"
-                                  hpcc:presetValue="95" hpcc:displayName="Warn CPU Load"
-                                  hpcc:tooltip="CPU load over this value is flagged as warning in monitoring output"/>
-                    <xs:attribute name="warnIfFreeStorageUnder" type="xs:nonNegativeInteger" use="optional"
-                                  hpcc:presetValue="5" hpcc:displayName="Warn Free Storage"
-                                  hpcc:tooltip="Available disk storage space under this value is flagged as warning in monitoring output"/>
-                    <xs:attribute name="warnIfFreeMemoryUnder" type="xs:nonNegativeInteger" use="optional"
-                                  hpcc:presetValue="5" hpcc:displayName="Warn Free Memory"
-                                  hpcc:tooltip="Available memory under this value is flagged as warning in monitoring output"/>
-                </xs:attributeGroup>
-
-                <xs:attributeGroup name="elkintegration">
-                    <xs:attribute name="integrateKibana" type="xs:boolean" use="required" hpcc:presetValue="false"
-                                  hpcc:tooltip="Declare if Kibana dashboard to be integrated in ECLWatch"/>
-                    <xs:attribute name="kibanaAddress" type="xs:string" use="optional" hpcc:presetValue="localhost"
-                                  hpcc:tooltip="Address (ip/hostname) of Kibana server"/>
-                    <xs:attribute name="kibanaPort" type="xs:nonNegativeInteger" use="optional" hpcc:presetValue="5601"
-                                  hpcc:tooltip="Port number of target Kibana server"/>
-                    <xs:attribute name="kibanaEntryPointURI" type="xs:string"
-                                  hpcc:tooltip="Declares the ECLWatch integration entry point URI for the target Kibana dashboard"/>
-                    <xs:attribute name="reportLogStashHealth" type="xs:boolean" use="required" hpcc:presetValue="true"
-                                  hpcc:tooltip="Declare if connectivity to LogStash nodes is to be reported in ECLWatch"/>
-                    <xs:attribute name="logStashAdresses" type="xs:string" use="optional"
-                                  hpcc:tooltip="Declares the target LogStash nodes' adresses (semicolon seperated)"/>
-                    <xs:attribute name="logStashPort" type="xs:nonNegativeInteger" use="optional"
-                                  hpcc:tooltip="Declares the target LogStash nodes' port"/>
-                    <xs:attribute name="reportElasticHealth" type="xs:boolean" use="required" hpcc:presetValue="true"
-                                  hpcc:tooltip="Declare if connectivity to Elastic Search nodes is to be reported in ECLWatch"/>
-                    <xs:attribute name="elasticSearchAdresses" type="xs:string" use="optional"
-                                  hpcc:tooltip="Declares the target ElasticSearch nodes' adresses (semicolon seperated)"/>
-                    <xs:attribute name="elasticSearchPort" type="xs:string" use="optional"
-                                  hpcc:tooltip="Declares the target LogStash nodes' port"/>
-                </xs:attributeGroup>
                 <xs:sequence>
+
+                    <xs:element name="ProcessCluster" minOccurs="0" maxOccurs="unbounded" hpcc:displayName="VIPS"
+                                hpcc:class="elementSet" hpcc:docid="MyWS2-T01">
+                        <xs:complexType>
+                            <!-- Why is there a unique name that is hidden ? -->
+                            <xs:attribute name="name" type="xs:string" use="required" hpcc:hidden="true"
+                                          hpcc:autoGenerateType="prefix" hpcc:autoGenerateValue="proc"/>
+                            <xs:attribute name="roxie" type="xs:string" use="required" hpcc:displayName="Roxie"
+                                          hpcc:uniqueKey="roxiecluster_name" hpcc:tooltip=""/>
+                            <xs:attribute name="vip" type="xs:string" use="required" hpcc:displayName="VIP"
+                                          hpcc:tooltip=""/>
+                            <xs:attribute name="dnsInterval" type="xs:integer"
+                                          hpcc:displayName="DNS Cache timeout interval"
+                                          hpcc:tooltip="DNS lookup cache timeout in seconds. Set to 0 to resolve DNS for every transaction.  Set to -1 (default) to keep DNS lookup cached indefinitely."/>
+                            <xs:attribute name="sendTargetToRoxie" type="xs:boolean"
+                                          hpcc:displayName="Send Target To Roxie" hpcc:presetValue="true"
+                                          hpcc:tooltip="Send roxie the target from which to run query (disable for backward compatibility issues)"/>
+                        </xs:complexType>
+                    </xs:element>
+
+                    <xs:element name="Target" minOccurs="0" maxOccurs="unbounded" hpcc:class="elementSet"
+                                hpcc:displayName="Restrict To Target(s)" hpcc:docid="MyWS2-T02">
+                        <xs:complexType>
+                            <xs:attribute name="name" type="xs:string" use="required"
+                                          hpcc:sourceKey="topology_cluster_name"
+                                          hpcc:tooltip="WsEcl will only display specified targets, if none specified WsEcl will display all targets."/>
+                        </xs:complexType>
+                    </xs:element>
+
                     <xs:element name="Properties" type="espservice_properties" minOccurs="0" maxOccurs="1"
                                 hpcc:hidden="true"/>
+
                     <xs:annotation>
                         <xs:appinfo hpcc:infoType="event">
                             <eventType>create</eventType>
                             <eventAction>insertXML</eventAction>
                             <eventData>
-                                <itemType>espsmc</itemType>
+                                <itemType>ws_ecl</itemType>
                                 <xml>
-                                    <Properties defaultPort="8010" defaultResourcesBasedn="ou=SMC,ou=EspServices,ou=ecl"
-                                                defaultSecurePort="18010" type="WsSMC"/>
+                                    <Properties bindingType="ws_eclSoapBinding"
+                                                defaultPort="8002"
+                                                defaultResourcesBasedn="ou=SMC,ou=EspServices,ou=ecl"
+                                                defaultSecurePort="18002"
+                                                plugin="ws_ecl"
+                                                type="ws_ecl"/>
                                 </xml>
                             </eventData>
                         </xs:appinfo>
@@ -197,54 +207,26 @@
                             </eventData>
                         </xs:appinfo>
                     </xs:annotation>
+
+
                 </xs:sequence>
 
                 <xs:attributeGroup ref="buildInfo"/>
-                <xs:attribute name="name" type="xs:string" use="required" hpcc:displayName="Name"
-                              hpcc:autoGenerateType="prefix" hpcc:autoGenerateValue="EclWatch"
-                              hpcc:uniqueKey="espservice_name" hpcc:tooltip="Name for this ESP service"/>
-                <xs:attribute name="description" type="xs:string" use="optional" hpcc:displayName="Description"
-                              hpcc:tooltip="Description for this process"/>
-                <xs:attribute name="syntaxCheckQueue" type="xs:string" use="optional"
-                              hpcc:displayName="Syntax Check Queue"
-                              hpcc:tooltip="Queue Name of ECL server which is used for ECL Syntax Check"/>
-                <xs:attribute name="pluginsPath" type="xs:string" use="optional" hpcc:presetValue="${PLUGINS_PATH}"
-                              hpcc:displayName="Plugins Path" hpcc:tooltip="Path where plugin files are deployed"/>
-                <xs:attribute name="viewTimeout" type="xs:nonNegativeInteger" use="optional" hpcc:presetValue="1000"
-                              hpcc:displayName="View Timeout" hpcc:tooltip="timeout for XXXX (in seconds)"/>
-                <xs:attribute name="clusterQueryStateThreadPoolSize" type="xs:nonNegativeInteger" use="optional"
-                              hpcc:presetValue="25" hpcc:displayName=""
-                              hpcc:tooltip="Default thread pool size for checking query state on clusters"/>
-                <xs:attribute name="AWUsCacheTimeout" type="xs:nonNegativeInteger" use="optional" hpcc:presetValue="15"
-                              hpcc:displayName="AWUs Cache Timeout"
-                              hpcc:tooltip="timeout for archived WU search cache (in minutes)"/>
-                <xs:attribute name="NodeGroupCacheMinutes" type="xs:nonNegativeInteger" use="optional"
-                              hpcc:presetValue="30" hpcc:displayName="Node Group Cache Minutes"
-                              hpcc:tooltip="timeout for node group cache (in minutes)"/>
-                <xs:attribute name="ActivityInfoCacheSeconds" type="xs:nonNegativeInteger" use="optional"
-                              hpcc:presetValue="10" hpcc:displayName="Activity Info Cache Sectonds"
-                              hpcc:tooltip="timeout for activity info cache (in seconds)"/>
-                <xs:attribute name="serverForArchivedECLWU" type="xs:string" use="optional"
-                              hpcc:displayName="Server For Archived ECLWU"
-                              hpcc:tooltip="Specify Sasha server for archiving ECL workunits"/>
-                <xs:attribute name="enableSystemUseRewrite" type="xs:boolean" use="optional" hpcc:presetValue="false"
-                              hpcc:displayName="Enable system Use Rewrite"
-                              hpcc:tooltip="To disable ESP Service links for System Servers that use rewrite rules"/>
-                <xs:attribute name="defaultTargetCluster" type="xs:string" use="optional"
-                              hpcc:displayName="Default Target Cluster"
-                              hpcc:tooltip="Default target for published queries"/>
-                <xs:attribute name="disableUppercaseTranslation" type="xs:boolean" use="optional"
-                              hpcc:presetValue="false" hpcc:displayName="Disable Uppercase Translation"
-                              hpcc:tooltip="To disable upper case translation for filter values in ViewKeyFile function"/>
-                <xs:attribute name="enableLogDaliConnection" type="xs:boolean" use="optional" hpcc:presetValue="false"
-                              hpcc:displayName="Enable Log Dali Connection"
-                              hpcc:tooltip="Enable ESP/Dali Connection ID to be logged into esp.xml"/>
-                <xs:attribute name="allowNewRoxieOnDemandQuery" type="xs:boolean" use="optional"
-                              hpcc:presetValue="false" hpcc:displayName="Allow New Roxie On Demand Query"
-                              hpcc:tooltip="allow new queries to be used by roxie on demand and roxie browser"/>
-                <xs:attributeGroup ref="monitoring"/>
-                <xs:attributeGroup ref="elkintegration"/>
+                <xs:attribute name="name" type="xs:string" use="required" hpcc:autogenerateType="prefix_"
+                              hpcc:autoGenerateValue="wsecl" hpcc:displayName="Service Name"
+                              hpcc:uniqueKey="espservice_key" hpcc:tooltip="Name for this ESP service"/>
+                <xs:attribute name="description" type="xs:string" hpcc:presetValue="WS ECL Service"
+                              hpcc:displayName="Description"
+                              hpcc:tooltip="Allows creation of web services using ECL language"/>
+                <xs:attribute name="roxieTimeout" type="xs:unsignedInt" hpcc:presetValue="300"
+                              hpcc:displayName="Roxie Timeout"
+                              hpcc:tooltip="Timeout (in seconds) for WsEcl connections to roxie (0 == wait forever)"/>
+                <xs:attribute name="workunitTimeout" type="xs:unsignedInt" hpcc:presetValue="600"
+                              hpcc:displayName="Workunit Timeout"
+                              hpcc:tooltip="Timeout (in seconds), for WsEcl to wait for workunit to complete (0 == wait forever)"/>
+
             </xs:complexType>
+
         </xs:element>
     </hpcc:insert>
 </xs:schema>
