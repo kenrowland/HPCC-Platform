@@ -42,7 +42,7 @@ SET(  SRCS
         mod_template_support/EnvModTemplate.cpp
         mod_template_support/Variable.cpp
         mod_template_support/TemplateException.cpp
-        mod_template_support/Operation.cpp
+        mod_template_support/OperationNode.cpp
         mod_template_support/OperationCreateNode.cpp
         mod_template_support/OperationFindNode.cpp
         mod_template_support/OperationModifyNode.cpp
@@ -51,6 +51,7 @@ SET(  SRCS
         mod_template_support/IPAddressVariable.cpp
         mod_template_support/HostNameVariable.cpp
         mod_template_support/OperationDeleteNode.cpp
+        mod_template_support/OperationIncludeTemplate.cpp
 )
 
 INCLUDE_DIRECTORIES(

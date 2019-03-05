@@ -17,11 +17,11 @@
 
 #include "OperationModifyNode.hpp"
 
-#include "Operation.hpp"
+#include "OperationNode.hpp"
 #include "TemplateExecutionException.hpp"
 
 
-void OperationModifyNode::doExecute(EnvironmentMgr *pEnvMgr, Variables *pVariables)
+void OperationModifyNode::doExecute(EnvironmentMgr *pEnvMgr, std::shared_ptr<Variables> pVariables)
 {
     std::shared_ptr<EnvironmentNode> pEnvNode;
 

@@ -1,0 +1,92 @@
+/*##############################################################################
+
+    HPCC SYSTEMS software Copyright (C) 2018 HPCC Systems®.
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+############################################################################## */
+
+#ifndef HPCCSYSTEMS_PLATFORM_OPERATIONNODE_HPP
+#define HPCCSYSTEMS_PLATFORM_OPERATIONNODE_HPP
+
+#include "Variable.hpp"
+#include "EnvironmentMgr.hpp"
+#include "Operation.hpp"
+#include <string>
+#include <vector>
+
+
+struct modAttribute {
+    modAttribute() : accumulateValuesOk(false), doNotSet(false),
+            errorIfNotFound(false), errorIfEmpty(false), saveValueLocal(false) {}
+    ~modAttribute() = default;
+    void addName(const std::string &_name) { names.emplace_back(_name); }
+    const std::string &getName(std::size_t idx=0) { return names[idx]; }
+    std::size_t getNumNames() { return names.size(); }
+    std::vector<std::string> names;  // attribute name. Vector is for first_of use when finding the first match.
+    std::string value;
+    std::string startIndex;
+    std::string cookedValue;
+    std::string saveVariableName;
+    bool saveValueLocal;
+    bool doNotSet;
+    bool accumulateValuesOk;
+    bool errorIfNotFound;
+    bool errorIfEmpty;
+};
+
+
+class EnvironmentMgr;
+
+class OperationNode : public Operation
+{
+
+    public:
+
+        OperationNode() : m_count("1"), m_startIndex("0") {}
+        bool execute(EnvironmentMgr *pEnvMgr, std::shared_ptr<Variables> pVariables) override;
+        void addAttribute(modAttribute &newAttribute);
+        void assignAttributeCookedValues(std::shared_ptr<Variables> pVariables);
+
+
+    protected:
+
+        virtual void doExecute(EnvironmentMgr *pEnvMgr, std::shared_ptr<Variables> pVariables) = 0;
+        void getParentNodeIds(EnvironmentMgr *pEnvMgr, std::shared_ptr<Variables> pVariables);
+        std::shared_ptr<Variable> createVariable(std::string inputName, const std::string &inputType,
+                                                 std::shared_ptr<Variables> pVariables, bool existingOk);
+        bool createAttributeSaveInputs(std::shared_ptr<Variables> pVariables);
+        void saveAttributeValues(std::shared_ptr<Variables> pVariables, const std::shared_ptr<EnvironmentNode> &pEnvNode);
+        void processNodeValue(std::shared_ptr<Variables> pVariables, const std::shared_ptr<EnvironmentNode> &pEnvNode);
+
+
+    protected:
+
+        std::string m_path;
+        std::string m_parentNodeId;
+        std::vector<std::string> m_parentNodeIds;
+        std::vector<modAttribute> m_attributes;
+        std::string m_count;
+        std::string m_startIndex;
+        modAttribute m_nodeValue;
+        bool m_nodeValueValid = false;
+        bool m_throwOnEmpty = true;
+        std::string m_saveNodeIdName;
+        bool m_accumulateSaveNodeIdOk = false;
+        bool m_saveNodeIdAsLocalValue = false;
+
+
+    friend class EnvModTemplate;
+};
+
+
+#endif //HPCCSYSTEMS_PLATFORM_OPERATIONNODE_HPP

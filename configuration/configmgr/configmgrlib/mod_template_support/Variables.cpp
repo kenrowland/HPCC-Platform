@@ -22,6 +22,13 @@
 
 void Variables::add(const std::shared_ptr<Variable> pVariable)
 {
+    //
+    // If the variable has local context, alter the name accordingly
+    if (pVariable->isLocal())
+    {
+        pVariable->setName(getContext().append(pVariable->getName()));
+    }
+
     for (auto &pVar: m_variables)
     {
         if (pVar->getName() == pVariable->getName())
@@ -37,7 +44,7 @@ void Variables::add(const std::shared_ptr<Variable> pVariable)
 std::shared_ptr<Variable> Variables::getVariable(const std::string &name, bool throwIfNotFound) const
 {
     std::shared_ptr<Variable> pRetVar;
-    std::string varName = name;
+    std::string varName;
 
     //
     // Accept both a regular string or a {{name}} string for the input name
@@ -48,13 +55,30 @@ std::shared_ptr<Variable> Variables::getVariable(const std::string &name, bool t
         varName = name.substr(bracesStartPos + 2, bracesEndPos - bracesStartPos - 2);
     }
 
+    //
+    // Search for the variable name. First, search for the local named variable, then a general variable that is not
+    // a local variable.
+    std::string localVarName = getContext() + varName;
 
     for (auto &pVar: m_variables)
     {
-        if (pVar->getName() == varName)
+        if (pVar->getName() == localVarName)
         {
             pRetVar = pVar;
             break;
+        }
+    }
+
+
+    if (!pRetVar)
+    {
+        for (auto &pVar: m_variables)
+        {
+            if (pVar->getName() == varName && !pVar->isLocal())
+            {
+                pRetVar = pVar;
+                break;
+            }
         }
     }
 
@@ -68,12 +92,19 @@ std::shared_ptr<Variable> Variables::getVariable(const std::string &name, bool t
 
 void Variables::prepare()
 {
+    std::string localContextPrefix = getContext() + "_";
+    //
+    // Prepare all non-local variables and variables local to the current context
+
     for (auto &pVar: m_variables)
     {
-        std::string preparedValue = pVar->getPreparedValue();
-        if (!preparedValue.empty())
+        if (!pVar->isLocal() || pVar->getName().find(localContextPrefix) == 0)
         {
-            pVar->addValue(doValueSubstitution(preparedValue));
+            std::string preparedValue = pVar->getPreparedValue();
+            if (!preparedValue.empty())
+            {
+                pVar->addValue(doValueSubstitution(preparedValue));
+            }
         }
     }
 }
@@ -225,4 +256,23 @@ std::string Variables::evaluate(const std::string &expr) const
 void Variables::clear()
 {
     m_variables.clear();
+}
+
+
+void Variables::popContext()
+{
+    std::string contextPrefix = getContext() + "_";
+    auto varIt = m_variables.begin();
+    while (varIt != m_variables.end())
+    {
+        if ((*varIt)->getName().find(contextPrefix) == 0)
+        {
+            varIt = m_variables.erase(varIt);
+        }
+        else
+        {
+            ++varIt;
+        }
+    }
+    m_localPrefix.pop();
 }

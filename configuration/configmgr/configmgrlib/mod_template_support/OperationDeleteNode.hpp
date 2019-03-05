@@ -18,9 +18,9 @@
 #ifndef HPCCSYSTEMS_PLATFORM_OPERATIONDELETENODE_HPP
 #define HPCCSYSTEMS_PLATFORM_OPERATIONDELETENODE_HPP
 
-#include "Operation.hpp"
+#include "OperationNode.hpp"
 
-class OperationDeleteNode :public Operation
+class OperationDeleteNode :public OperationNode
 {
     public:
 
@@ -30,7 +30,7 @@ class OperationDeleteNode :public Operation
 
     protected:
 
-        void doExecute(EnvironmentMgr *pEnvMgr, Variables *pVariables) override;
+        void doExecute(EnvironmentMgr *pEnvMgr, std::shared_ptr<Variables> pVariables) override;
 
     friend class EnvModTemplate;
 };

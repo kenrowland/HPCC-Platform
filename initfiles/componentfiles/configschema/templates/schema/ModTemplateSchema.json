@@ -27,7 +27,8 @@
                 "properties": {
                     "name": {
                         "type": "string",
-                        "description" : "Name of the variable to which the input is assigned. This value is available using {{name}} anywhere in the template"
+                        "description" : "Name of the variable to which the input is assigned. This value is available using {{name}} anywhere in the template",
+                        "pattern" : "^[A-Za-z0-9]*$"
                     },
                     "type": {
                         "type": "string",
@@ -62,6 +63,11 @@
                     "prepared_value": {
                         "type": "string",
                         "description" : "Optional. Used to prepare the final value for use during template execution. Usually combined with other variable values of the form {{varname}}"
+                    },
+                    "local" : {
+                        "type" : "boolean",
+                        "default" : false,
+                        "description" : "Indicates if the variable is for use within the current template only and is deleted after execution"
                     }
                 },
                 "required": [
@@ -97,15 +103,10 @@
                         "create",
                         "modify",
                         "find",
-                        "delete"
+                        "delete",
+                        "include"
                     ],
-                    "description" : "Action to perform for this operation"
-                },
-                "target_path": {
-                    "type": "string"
-                },
-                "target_nodeid": {
-                    "type": "string"
+                    "description" : "Action to perform"
                 }
             },
             "allOf": [
@@ -120,11 +121,15 @@
                                 },
                                 "data": {
                                     "$ref": "#/definitions/create_data_info"
+                                },
+                                "target" : {
+                                    "$ref" : "#/definitions/target_node_or_path"
                                 }
                             },
                             "required": [
                                 "action",
-                                "data"
+                                "data",
+                                "target"
                             ]
                         },
                         {
@@ -136,11 +141,15 @@
                                 },
                                 "data": {
                                     "$ref": "#/definitions/modify_data_info"
+                                },
+                                "target" : {
+                                    "$ref" : "#/definitions/target_node_or_path"
                                 }
                             },
                             "required": [
                                 "action",
-                                "data"
+                                "data",
+                                "target"
                             ]
                         },
                         {
@@ -152,11 +161,14 @@
                                 },
                                 "data": {
                                     "$ref": "#/definitions/find_data_info"
+                                },
+                                "target" : {
+                                    "$ref" : "#/definitions/target_path"
                                 }
                             },
                             "required": [
                                 "action",
-                                "target_path"
+                                "target"
                             ]
                         },
                         {
@@ -168,24 +180,30 @@
                                 },
                                 "data": {
                                     "$ref": "#/definitions/delete_data_info"
+                                },
+                                "target" : {
+                                    "$ref" : "#/definitions/target_node_or_path"
                                 }
                             },
                             "required": [
-                                "action"
-                            ]
-                        }
-                    ]
-                },
-                {
-                    "oneOf": [
-                        {
-                            "required": [
-                                "target_path"
+                                "action",
+                                "target"
                             ]
                         },
                         {
+                            "properties": {
+                                "action": {
+                                    "enum": [
+                                        "include"
+                                    ]
+                                },
+                                "target" : {
+                                    "$ref" : "#/definitions/target_file"
+                                }
+                            },
                             "required": [
-                                "target_nodeid"
+                                "action",
+                                "target"
                             ]
                         }
                     ]
@@ -448,7 +466,7 @@
                 "name": {
                     "type": "string"
                 },
-                "save": {
+                "save" : {
                     "$ref": "#/definitions/save_info"
                 },
                 "error_if_not_found" : {
@@ -497,27 +515,35 @@
                 }
             ]
         },
-        "attribute_refs": {
+        "attribute_refs" : {
             "type": "array",
             "items": {
                 "$ref": "#/definitions/attribute_ref"
             }
         },
-        "save_info": {
+        "save_info" : {
             "type": "object",
             "properties": {
                 "name": {
                     "type": "string"
                 },
-                "duplicate_ok": {
-                    "type": "boolean"
+                "accumulate": {
+                    "type": "boolean",
+                    "default" : false,
+                    "description" : "Indicates if accumulating values in this variable is allowed or not."
+
+                },
+                "local" : {
+                    "type" : "boolean",
+                    "default" : false,
+                    "description" : "Indicates the variable is local to execution of the current template only"
                 }
             },
             "required": [
                 "name"
             ]
         },
-        "node_value_ref" :{
+        "node_value_ref" : {
             "type" : "object",
             "properties" : {
                 "save": {
@@ -530,7 +556,7 @@
                 }
             }
         },
-        "node_value_new" :{
+        "node_value_new" : {
             "type" : "object",
             "properties" : {
                 "value" : {
@@ -542,7 +568,7 @@
                 }
             }
         },
-        "node_value_mod" :{
+        "node_value_mod" : {
             "type" : "object",
             "properties" : {
                 "value" : {
@@ -559,6 +585,72 @@
                     "description" : "Halt execution if the node has no value"
                 }
             }
+        },
+        "target_node_or_path" : {
+            "type" : "object",
+            "properties" : {
+                "path" : {
+                    "type" : "string",
+                    "description" : "Path to the target (xpath like syntax)"
+                },
+                "nodeid" : {
+                    "type" : "string",
+                    "description" : "Node id of the target"
+                }
+            },
+            "oneOf" : [
+                {
+                    "allOf" : [
+                        {
+                            "required" : [ "path" ]
+                        },
+                        {
+                            "not" : {
+                                "required" : [ "nodeid" ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "allOf" : [
+                        {
+                            "required" : [ "nodeid" ]
+                        },
+                        {
+                            "not" : {
+                                "required" : [ "path" ]
+                            }
+                        }
+                    ]
+                }
+            ]
+        },
+        "target_path" : {
+            "type" : "object",
+            "properties" : {
+                "path" : {
+                    "type" : "string"
+                }
+            },
+            "required" : [ "path" ]
+        },
+        "target_node" : {
+            "type" : "object",
+            "properties" : {
+                "nodeid" : {
+                    "type" : "string"
+                }
+            },
+            "required" : [ "nodeid" ]
+        },
+        "target_file" : {
+            "type" : "object",
+            "properties" : {
+                "filepath" : {
+                    "type" : "string"
+                }
+            },
+            "required" : [ "filepath" ]
         }
     }
 }

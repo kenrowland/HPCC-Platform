@@ -21,10 +21,10 @@
 #include "EnvironmentNode.hpp"
 #include "TemplateExecutionException.hpp"
 #include "Status.hpp"
-#include "Operation.hpp"
+#include "OperationNode.hpp"
 
 
-void OperationFindNode::doExecute(EnvironmentMgr *pEnvMgr, Variables *pVariables)
+void OperationFindNode::doExecute(EnvironmentMgr *pEnvMgr, std::shared_ptr<Variables> pVariables)
 {
     //
     // Any parent node IDs found?
@@ -36,7 +36,7 @@ void OperationFindNode::doExecute(EnvironmentMgr *pEnvMgr, Variables *pVariables
         std::shared_ptr<Variable> pSaveNodeIdVar;
         if (!m_saveNodeIdName.empty())
         {
-            pSaveNodeIdVar = createInput(m_saveNodeIdName, "string", pVariables, m_duplicateSaveNodeIdInputOk);
+            pSaveNodeIdVar = createVariable(m_saveNodeIdName, "string", pVariables, m_accumulateSaveNodeIdOk);
         }
 
         //

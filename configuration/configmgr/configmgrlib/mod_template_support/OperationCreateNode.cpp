@@ -24,7 +24,7 @@
 #include "Status.hpp"
 
 
-void OperationCreateNode::doExecute(EnvironmentMgr *pEnvMgr, Variables *pVariables)
+void OperationCreateNode::doExecute(EnvironmentMgr *pEnvMgr, std::shared_ptr<Variables> pVariables)
 {
     std::shared_ptr<EnvironmentNode> pNewEnvNode;
 
@@ -34,7 +34,7 @@ void OperationCreateNode::doExecute(EnvironmentMgr *pEnvMgr, Variables *pVariabl
     std::shared_ptr<Variable> pSaveNodeIdInput;
     if (!m_saveNodeIdName.empty())
     {
-        pSaveNodeIdInput = createInput(m_saveNodeIdName, "string", pVariables, m_duplicateSaveNodeIdInputOk);
+        pSaveNodeIdInput = createVariable(m_saveNodeIdName, "string", pVariables, m_accumulateSaveNodeIdOk);
     }
 
     //

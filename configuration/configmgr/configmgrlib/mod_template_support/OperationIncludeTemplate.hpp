@@ -1,6 +1,6 @@
 /*##############################################################################
 
-    HPCC SYSTEMS software Copyright (C) 2018 HPCC Systems®.
+    HPCC SYSTEMS software Copyright (C) 2019 HPCC Systems®.
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -15,30 +15,27 @@
     limitations under the License.
 ############################################################################## */
 
-#ifndef HPCCSYSTEMS_PLATFORM_OPERATIONMODIFYNODE_HPP
-#define HPCCSYSTEMS_PLATFORM_OPERATIONMODIFYNODE_HPP
 
-#include "OperationNode.hpp"
+#ifndef HPCCSYSTEMS_PLATFORM_OPERATIONINCLUDETEMPLATE_HPP
+#define HPCCSYSTEMS_PLATFORM_OPERATIONINCLUDETEMPLATE_HPP
 
-class OperationModifyNode : public OperationNode
+#include "Operation.hpp"
+#include "EnvModTemplate.hpp"
+
+class OperationIncludeTemplate : public Operation
 {
     public:
 
-        OperationModifyNode() = default;
-        ~OperationModifyNode() override = default;
-        void addAttributeForDeletion(std::string name) { m_deleteAttributes.emplace_back(name); }
+        OperationIncludeTemplate() = default;
+        ~OperationIncludeTemplate() override = default;
+        bool execute(EnvironmentMgr *pEnvMgr, std::shared_ptr<Variables> pVariables) override;
 
 
     protected:
 
-        void doExecute(EnvironmentMgr *pEnvMgr, std::shared_ptr<Variables> pVariables) override;
-
-
-    protected:
-
-        std::vector<std::string> m_deleteAttributes;
+        std::shared_ptr<EnvModTemplate> m_pEnvModTemplate;
+        std::string m_path;
 
 };
 
-
-#endif //HPCCSYSTEMS_PLATFORM_OPERATIONMODIFYNODE_HPP
+#endif //HPCCSYSTEMS_PLATFORM_OPERATIONINCLUDETEMPLATE_HPP

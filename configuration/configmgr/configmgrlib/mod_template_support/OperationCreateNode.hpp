@@ -18,10 +18,10 @@
 #ifndef HPCCSYSTEMS_PLATFORM_OPERATIONCREATENODE_HPP
 #define HPCCSYSTEMS_PLATFORM_OPERATIONCREATENODE_HPP
 
-#include "Operation.hpp"
+#include "OperationNode.hpp"
 
 
-class OperationCreateNode : public Operation
+class OperationCreateNode : public OperationNode
 {
     public:
 
@@ -31,7 +31,7 @@ class OperationCreateNode : public Operation
 
     protected:
 
-        void doExecute(EnvironmentMgr *pEnvMgr, Variables *pVariables) override;
+        void doExecute(EnvironmentMgr *pEnvMgr, std::shared_ptr<Variables> pVariables) override;
 
 
     protected:
