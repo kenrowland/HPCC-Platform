@@ -20,26 +20,24 @@
 #define HPCCSYSTEMS_PLATFORM_INPUTS_HPP
 
 #include <string>
-#include <list>
+#include <vector>
 #include <memory>
 #include <stack>
 
 class Variable;
 
-class Variables
+class Variables : public std::enable_shared_from_this<Variables>
 {
     public:
 
-        Variables() = default;
+        explicit Variables(std::shared_ptr<Variables> pGlobalVars = std::shared_ptr<Variables>()); // { m_pGlobalVariables = std::move(pGlobalVars); }
         ~Variables() = default;
-        void add(std::shared_ptr<Variable> pVariable);
-        const std::list<std::shared_ptr<Variable>> &all() const  { return m_variables; }
-        std::shared_ptr<Variable> getVariable(const std::string &name, bool throwIfNotFound = true) const;
-        void setInputIndex(size_t idx) { m_curIndex = idx; }
+        void add(std::shared_ptr<Variable> pVariable, bool global = false);
+        std::shared_ptr<Variable> getVariable(const std::string &name, bool localOnly = true, bool throwIfNotFound = true) const;
+        std::shared_ptr<Variable> getGlobalVariable(const std::string &name, bool throwIfNotFound = true) const;
+        std::shared_ptr<Variables> getGlobalVariables() { return (m_pGlobalVariables ? m_pGlobalVariables : shared_from_this()); }
+        void setInputIndex(size_t idx);
         std::string doValueSubstitution(const std::string &value) const;
-        void pushContext() { m_localPrefix.emplace(m_localPrefix.top() + "$"); }
-        void popContext();
-        std::string getContext() const { return m_localPrefix.top(); }
         void prepare();
         void clear();
 
@@ -52,9 +50,9 @@ class Variables
 
     private:
 
-        std::list<std::shared_ptr<Variable>> m_variables;
+        std::vector<std::shared_ptr<Variable>> m_variables;
+        std::shared_ptr<Variables> m_pGlobalVariables;
         size_t m_curIndex = 0;
-        std::stack<std::string> m_localPrefix;
 };
 
 

@@ -27,13 +27,15 @@ class TemplateExecutionException : public std::exception
 {
     public:
 
-        TemplateExecutionException(const std::string &reason) :
-                m_reason(reason) { }
+        explicit TemplateExecutionException(std::string reason) :
+                m_reason(std::move(reason)) { }
+        TemplateExecutionException(std::string reason, const std::string &step, const std::string &filename) :
+                m_reason(std::move(reason)) { setContext(step, filename); }
         TemplateExecutionException() = default;
 
-        void setStep(const std::string &step)
+        void setContext(const std::string &step, const std::string &filename)
         {
-            m_reason = "There was a problem executing " + step + ", the cause is " + m_reason;
+            m_reason = "There was a problem in template '" + filename + "', executing step " + step + ", cause: " + m_reason;
         }
 
         const char *what() const throw() override

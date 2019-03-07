@@ -400,7 +400,7 @@ void EnvironmentNode::doFetchNodes(ConfigPath &configPath, std::vector<std::shar
             }
             else
             {
-                throw new ParseException("Invalid root element name ('" + pPathItem->getElementName() + "') specified in path");
+                throw ParseException("Invalid root element name ('" + pPathItem->getElementName() + "') specified in path");
             }
         }
         else if (pPathItem->isParentPathtItem())

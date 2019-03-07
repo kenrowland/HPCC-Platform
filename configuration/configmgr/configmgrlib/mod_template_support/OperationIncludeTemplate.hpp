@@ -20,7 +20,9 @@
 #define HPCCSYSTEMS_PLATFORM_OPERATIONINCLUDETEMPLATE_HPP
 
 #include "Operation.hpp"
-#include "EnvModTemplate.hpp"
+//#include "EnvModTemplate.hpp"
+
+class EnvModTemplate;
 
 class OperationIncludeTemplate : public Operation
 {
@@ -36,6 +38,7 @@ class OperationIncludeTemplate : public Operation
         std::shared_ptr<EnvModTemplate> m_pEnvModTemplate;
         std::string m_path;
 
+        friend class EnvModTemplate;
 };
 
 #endif //HPCCSYSTEMS_PLATFORM_OPERATIONINCLUDETEMPLATE_HPP

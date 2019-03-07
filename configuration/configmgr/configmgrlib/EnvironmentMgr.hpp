@@ -53,14 +53,17 @@ class CFGMGRLIB_API EnvironmentMgr
         std::string getLastSchemaMessage() const;
         std::string getLastEnvironmentMessage() const { return m_message;  }
         bool loadEnvironment(const std::string &qualifiedFilename);
+        bool initializeEmptyEnvironment();
         std::shared_ptr<EnvironmentNode> findEnvironmentNodeById(const std::string &nodeId) const;
         std::shared_ptr<EnvironmentNode> getNewEnvironmentNode(const std::string &parentNodeId, const std::string &inputItem, Status &status) const;
         std::shared_ptr<EnvironmentNode> addNewEnvironmentNode(const std::string &parentNodeId, const std::string &configType,
-                std::vector<NameValue> &initAttributes, Status &status, bool allowInvalid=false, bool forceCreate=false);
+                std::vector<NameValue> &initAttributes, Status &status, bool allowInvalid=false, bool forceCreate=false,
+                bool createRequiredChildren = true);
         std::shared_ptr<EnvironmentNode> addNewEnvironmentNode(const std::shared_ptr<EnvironmentNode> &pParentNode, const std::string &nodeData,
                 Status &status, const std::string &itemType);
         std::shared_ptr<EnvironmentNode> addNewEnvironmentNode(const std::shared_ptr<EnvironmentNode> &pParentNode, const std::shared_ptr<SchemaItem> &pNewCfgItem,
-                std::vector<NameValue> &initAttributes, Status &status, bool allowInvalid=false, bool forceCreate=false);
+                std::vector<NameValue> &initAttributes, Status &status, bool allowInvalid=false, bool forceCreate=false,
+                bool createRequiredChildren = true);
         bool removeEnvironmentNode(const std::string &nodeId);
         virtual bool serialize(std::ostream &out, const std::shared_ptr<EnvironmentNode> &pStartNode);
         bool saveEnvironment(const std::string &qualifiedFilename);

@@ -28,8 +28,10 @@
 #include "Variables.hpp"
 #include "OperationNode.hpp"
 #include "OperationFindNode.hpp"
+#include "OperationIncludeTemplate.hpp"
 #include <map>
 #include <vector>
+#include <memory>
 #include "platform.h"
 #include "Cfgmgrlib.hpp"
 
@@ -44,6 +46,7 @@ class CFGMGRLIB_API EnvModTemplate
 
         void loadTemplateFromJson(const std::string &templateJson);
         void loadTemplateFromFile(const std::string &fqTemplateFile);
+        std::string getTemplateFilename() const { return m_templateFile; }
         std::shared_ptr<Variable> getVariable(const std::string &name, bool throwIfNotFound = true) const;
         std::vector<std::shared_ptr<Variable>> getVariables(bool userInputOnly = false) const;
         void assignVariablesFromFile(const std::string &filepath);
@@ -62,6 +65,7 @@ class CFGMGRLIB_API EnvModTemplate
         void parseOperationNodeCommonData(const rapidjson::Value &operationData, std::shared_ptr<OperationNode> pOpNode);
         void parseAttribute(const rapidjson::Value &attributeData, modAttribute *pAttribute);
         void parseTarget(const rapidjson::Value &targetData, std::shared_ptr<OperationNode> pOp);
+        void parseIncludeOperation(const rapidjson::Value &include, std::shared_ptr<OperationIncludeTemplate> pOpInc);
 
 
     protected:
@@ -71,6 +75,7 @@ class CFGMGRLIB_API EnvModTemplate
         EnvironmentMgr *m_pEnvMgr;
         std::shared_ptr<Variables> m_pVariables;
         std::vector<std::shared_ptr<Operation>> m_operations;
+        std::string m_templateFile;
 };
 
 

@@ -34,7 +34,7 @@ void OperationCreateNode::doExecute(EnvironmentMgr *pEnvMgr, std::shared_ptr<Var
     std::shared_ptr<Variable> pSaveNodeIdInput;
     if (!m_saveNodeIdName.empty())
     {
-        pSaveNodeIdInput = createVariable(m_saveNodeIdName, "string", pVariables, m_accumulateSaveNodeIdOk);
+        pSaveNodeIdInput = createVariable(m_saveNodeIdName, "string", pVariables, m_accumulateSaveNodeIdOk, m_saveNodeIdAsGlobalValue);
     }
 
     //
@@ -71,7 +71,7 @@ void OperationCreateNode::doExecute(EnvironmentMgr *pEnvMgr, std::shared_ptr<Var
 
                 //
                 // Add the new node to the environment
-                pNewEnvNode = pEnvMgr->addNewEnvironmentNode(parentNodeId, m_nodeType, attrValues, status, true, true);
+                pNewEnvNode = pEnvMgr->addNewEnvironmentNode(parentNodeId, m_nodeType, attrValues, status, true, true, false);
                 if (pNewEnvNode)
                 {
                     // construct a status for just this new node's ID so we can see if there is an error

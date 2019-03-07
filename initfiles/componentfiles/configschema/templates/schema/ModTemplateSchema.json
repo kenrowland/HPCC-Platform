@@ -64,10 +64,10 @@
                         "type": "string",
                         "description" : "Optional. Used to prepare the final value for use during template execution. Usually combined with other variable values of the form {{varname}}"
                     },
-                    "local" : {
+                    "global" : {
                         "type" : "boolean",
                         "default" : false,
-                        "description" : "Indicates if the variable is for use within the current template only and is deleted after execution"
+                        "description" : "Save the value as a global variable as opposed to a local value"
                     }
                 },
                 "required": [
@@ -109,103 +109,83 @@
                     "description" : "Action to perform"
                 }
             },
-            "allOf": [
+            "oneOf": [
                 {
-                    "oneOf": [
-                        {
-                            "properties": {
-                                "action": {
-                                    "enum": [
-                                        "create"
-                                    ]
-                                },
-                                "data": {
-                                    "$ref": "#/definitions/create_data_info"
-                                },
-                                "target" : {
-                                    "$ref" : "#/definitions/target_node_or_path"
-                                }
-                            },
-                            "required": [
-                                "action",
-                                "data",
-                                "target"
+                    "properties": {
+                        "action": {
+                            "enum": [
+                                "create"
                             ]
                         },
-                        {
-                            "properties": {
-                                "action": {
-                                    "enum": [
-                                        "modify"
-                                    ]
-                                },
-                                "data": {
-                                    "$ref": "#/definitions/modify_data_info"
-                                },
-                                "target" : {
-                                    "$ref" : "#/definitions/target_node_or_path"
-                                }
-                            },
-                            "required": [
-                                "action",
-                                "data",
-                                "target"
-                            ]
-                        },
-                        {
-                            "properties": {
-                                "action": {
-                                    "enum": [
-                                        "find"
-                                    ]
-                                },
-                                "data": {
-                                    "$ref": "#/definitions/find_data_info"
-                                },
-                                "target" : {
-                                    "$ref" : "#/definitions/target_path"
-                                }
-                            },
-                            "required": [
-                                "action",
-                                "target"
-                            ]
-                        },
-                        {
-                            "properties": {
-                                "action": {
-                                    "enum": [
-                                        "delete"
-                                    ]
-                                },
-                                "data": {
-                                    "$ref": "#/definitions/delete_data_info"
-                                },
-                                "target" : {
-                                    "$ref" : "#/definitions/target_node_or_path"
-                                }
-                            },
-                            "required": [
-                                "action",
-                                "target"
-                            ]
-                        },
-                        {
-                            "properties": {
-                                "action": {
-                                    "enum": [
-                                        "include"
-                                    ]
-                                },
-                                "target" : {
-                                    "$ref" : "#/definitions/target_file"
-                                }
-                            },
-                            "required": [
-                                "action",
-                                "target"
-                            ]
+                        "data": {
+                            "$ref": "#/definitions/create_data_info"
                         }
+                    },
+                    "required": [
+                        "action",
+                        "data"
+                    ]
+                },
+                {
+                    "properties": {
+                        "action": {
+                            "enum": [
+                                "modify"
+                            ]
+                        },
+                        "data": {
+                            "$ref": "#/definitions/modify_data_info"
+                        }
+                    },
+                    "required": [
+                        "action",
+                        "data"
+                    ]
+                },
+                {
+                    "properties": {
+                        "action": {
+                            "enum": [
+                                "find"
+                            ]
+                        },
+                        "data": {
+                            "$ref": "#/definitions/find_data_info"
+                        }
+                    },
+                    "required": [
+                        "action"
+                    ]
+                },
+                {
+                    "properties": {
+                        "action": {
+                            "enum": [
+                                "delete"
+                            ]
+                        },
+                        "data": {
+                            "$ref": "#/definitions/delete_data_info"
+                        }
+                    },
+                    "required": [
+                        "action"
+                    ]
+                },
+                {
+                    "properties": {
+                        "action": {
+                            "enum": [
+                                "include"
+                            ]
+                        },
+                        "data": {
+                            "$ref": "#/definitions/include_data_info"
+                        }
+                    },
+                    "required": [
+                        "action",
+                        "data"
                     ]
                 }
             ],
@@ -214,6 +194,9 @@
         "create_data_info": {
             "type": "object",
             "properties": {
+                "target" : {
+                    "$ref" : "#/definitions/target_node_or_path"
+                },
                 "count": {
                     "type": "string"
                 },
@@ -239,12 +222,16 @@
                 }
             },
             "required" : [
-                "node_type"
+                "node_type",
+                "target"
             ]
         },
         "modify_data_info": {
             "type": "object",
             "properties": {
+                "target" : {
+                    "$ref" : "#/definitions/target_node_or_path"
+                },
                 "start_index": {
                     "type": "string"
                 },
@@ -264,6 +251,11 @@
             },
             "allOf": [
                 {
+                    "required" : [
+                        "target"
+                    ]
+                },
+                {
                     "required": [
                         "attributes"
                     ]
@@ -280,6 +272,9 @@
         "find_data_info": {
             "type": "object",
             "properties": {
+                "target" : {
+                    "$ref" : "#/definitions/target_path"
+                },
                 "node_type": {
                     "type": "string"
                 },
@@ -315,12 +310,20 @@
                             "start_index"
                         ]
                     }
+                },
+                {
+                    "required" : [
+                        "target"
+                    ]
                 }
             ]
         },
         "delete_data_info": {
             "type": "object",
             "properties": {
+                "target" : {
+                    "$ref" : "#/definitions/target_node_or_path"
+                },
                 "start_index": {
                     "type": "string"
                 },
@@ -343,8 +346,22 @@
                             "node_value"
                         ]
                     }
+                },
+                {
+                    "required" : [
+                        "target"
+                    ]
                 }
             ]
+        },
+        "include_data_info": {
+            "type": "object",
+            "properties": {
+                "target" : {
+                    "$ref" : "#/definitions/target_file"
+                }
+            },
+            "required" : [ "target" ]
         },
         "attribute_value_mod": {
             "type": "object",
@@ -533,10 +550,10 @@
                     "description" : "Indicates if accumulating values in this variable is allowed or not."
 
                 },
-                "local" : {
+                "global" : {
                     "type" : "boolean",
                     "default" : false,
-                    "description" : "Indicates the variable is local to execution of the current template only"
+                    "description" : "Save the value as a global variable as opposed to a local value"
                 }
             },
             "required": [

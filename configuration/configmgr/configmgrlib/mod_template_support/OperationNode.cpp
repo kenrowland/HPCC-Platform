@@ -123,24 +123,46 @@ void OperationNode::getParentNodeIds(EnvironmentMgr *pEnvMgr, std::shared_ptr<Va
 }
 
 
-std::shared_ptr<Variable> OperationNode::createVariable(std::string inputName, const std::string &inputType,
-                                                    std::shared_ptr<Variables> pVariables, bool existingOk)
+std::shared_ptr<Variable> OperationNode::createVariable(std::string varName, const std::string &varType,
+                                                    std::shared_ptr<Variables> pVariables, bool existingOk, bool global)
 {
-    std::shared_ptr<Variable> pInput;
+    std::shared_ptr<Variable> pVariable;
 
-    pInput = pVariables->getVariable(inputName, false);
+    //
+    // If creating a local variable...
+    if (!global)
+    {
+        pVariable = pVariables->getVariable(varName, !global, false);
+        if (!pVariable)
+        {
+            pVariable = variableFactory(varType, varName);
+            pVariables->add(pVariable, false);
+        }
+        else if (!existingOk)
+        {
+            std::string msg = "Attempt to create local variable that already exists: " + varName;
+            throw TemplateExecutionException(msg);
+        }
+    }
 
-    if (!pInput)
+    //
+    // Otherwise creating a global variable
+    else
     {
-        pInput = variableFactory(inputType, inputName);
-        pVariables->add(pInput);
+        pVariable = pVariables->getGlobalVariable(varName, false);
+        if (!pVariable)
+        {
+            pVariable = variableFactory(varType, varName);
+            pVariables->add(pVariable, true);
+        }
+        else if (!existingOk)
+        {
+            std::string msg = "Attempt to create global variable that already exists: " + varName;
+            throw TemplateExecutionException(msg);
+        }
     }
-    else if (!existingOk)
-    {
-        std::string msg = "Attempt to create input value that already exists: " + inputName;
-        throw TemplateExecutionException(msg);
-    }
-    return pInput;
+
+    return pVariable;
 }
 
 
@@ -153,7 +175,7 @@ bool OperationNode::createAttributeSaveInputs(std::shared_ptr<Variables> pVariab
         // If this is a saved attribute value, make sure the input exists
         if (!attr.saveVariableName.empty())
         {
-            createVariable(attr.saveVariableName, "string", pVariables, attr.accumulateValuesOk);
+            createVariable(attr.saveVariableName, "string", pVariables, attr.accumulateValuesOk, attr.saveValueGlobal);
             rc = true;
         }
     }
@@ -217,8 +239,7 @@ void OperationNode::processNodeValue(std::shared_ptr<Variables> pVariables, cons
         // Need to save the value?
         if (!m_nodeValue.saveVariableName.empty())
         {
-            createVariable(m_nodeValue.saveVariableName, "string", pVariables, m_nodeValue.accumulateValuesOk);
-            std::shared_ptr<Variable> pVar = pVariables->getVariable(m_nodeValue.saveVariableName);
+            std::shared_ptr<Variable> pVar = createVariable(m_nodeValue.saveVariableName, "string", pVariables, m_nodeValue.accumulateValuesOk, m_nodeValue.saveValueGlobal);
             if (pEnvNode->isLocalValueSet())
             {
                 pVar->addValue(pEnvNode->getLocalValue());

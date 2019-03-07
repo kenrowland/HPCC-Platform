@@ -220,7 +220,7 @@ int main(int argc, char *argv[])
     }
 
     //
-    // If there is an environment, load it and apply
+    // If there is an environment, load it
     if (!envFile.empty())
     {
         if (!pEnvMgr->loadEnvironment(envFile))
@@ -228,33 +228,36 @@ int main(int argc, char *argv[])
             std::cout << "There was a problem loading the environment: " << std::endl << pEnvMgr->getLastEnvironmentMessage() << std::endl;
             return 1;
         }
-
-        try
-        {
-            pTemplate->execute();
-        }
-        catch (const TemplateExecutionException &te)
-        {
-            std::cout << te.what() << std::endl;
-            return 1;
-        }
-
-        //
-        // Write results
-        if (!envOutputFile.empty())
-        {
-            pEnvMgr->saveEnvironment(envOutputFile);
-            std::cout << "Results written to " << envOutputFile << std::endl;
-        }
-        else
-        {
-            std::cout << "Resuls not saved." << std::endl;
-        }
     }
     else
     {
-        std::cout << "No problems found in the modification template" << std::endl;
+        pEnvMgr->initializeEmptyEnvironment();
     }
+
+    //
+    // Execute
+    try
+    {
+        pTemplate->execute();
+    }
+    catch (const TemplateExecutionException &te)
+    {
+        std::cout << std::endl << te.what() << std::endl;
+        return 1;
+    }
+
+    //
+    // Write results
+    if (!envOutputFile.empty())
+    {
+        pEnvMgr->saveEnvironment(envOutputFile);
+        std::cout << "Results written to " << envOutputFile << std::endl;
+    }
+    else
+    {
+        std::cout << "Resuls not saved." << std::endl;
+    }
+
 
     std::cout << "Done" << std::endl;
     return 0;

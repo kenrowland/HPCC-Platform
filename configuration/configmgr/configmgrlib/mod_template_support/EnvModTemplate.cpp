@@ -25,6 +25,7 @@
 #include "OperationModifyNode.hpp"
 #include "OperationDeleteNode.hpp"
 #include "OperationIncludeTemplate.hpp"
+#include "Exceptions.hpp"
 #include <sstream>
 #include <fstream>
 #include "Utils.hpp"
@@ -58,11 +59,15 @@ EnvModTemplate::EnvModTemplate(EnvironmentMgr *pEnvMgr, const std::string &schem
 }
 
 
-EnvModTemplate::EnvModTemplate(const EnvModTemplate &modTemplate)
+EnvModTemplate::EnvModTemplate(const EnvModTemplate &modTemplate) :
+    m_pTemplate(nullptr)
 {
+    //
+    // Copy relevant members to avoid duplicate actions. Also, create a new variables
+    // object and init it with the global variables
     m_pSchema = modTemplate.m_pSchema;
     m_pEnvMgr = modTemplate.m_pEnvMgr;
-    m_pVariables = modTemplate.m_pVariables;
+    m_pVariables =  std::make_shared<Variables>(modTemplate.m_pVariables->getGlobalVariables());
 }
 
 
@@ -82,9 +87,9 @@ void EnvModTemplate::releaseTemplate()
 }
 
 
-
 void EnvModTemplate::loadTemplateFromFile(const std::string &fqTemplateFile)
 {
+    m_templateFile = fqTemplateFile;
     std::ifstream jsonFile(fqTemplateFile);
     rapidjson::IStreamWrapper jsonStream(jsonFile);
     loadTemplate(jsonStream);
@@ -93,6 +98,7 @@ void EnvModTemplate::loadTemplateFromFile(const std::string &fqTemplateFile)
 
 void EnvModTemplate::loadTemplateFromJson(const std::string &templateJson)
 {
+    m_templateFile = "JSON";
     std::stringstream json;
     json << templateJson;
     rapidjson::IStreamWrapper jsonStream(json);
@@ -144,10 +150,6 @@ void EnvModTemplate::loadTemplate(rapidjson::IStreamWrapper &stream)
 
 void EnvModTemplate::parseTemplate()
 {
-    //
-    // Process the defined template sections. If any errors are found, thrown an exception
-    m_pVariables->pushContext();  // push our local context
-
     try
     {
         //
@@ -186,6 +188,7 @@ void EnvModTemplate::parseVariable(const rapidjson::Value &varValue)
 {
     rapidjson::Value::ConstMemberIterator it;
     std::shared_ptr<Variable> pVariable;
+    bool isGlobal = false;
 
     //
     // input name, make sure not a duplicate
@@ -230,13 +233,13 @@ void EnvModTemplate::parseVariable(const rapidjson::Value &varValue)
 
     //
     // Local variable?
-    it = varValue.FindMember("local");
+    it = varValue.FindMember("global");
     if (it != varValue.MemberEnd())
     {
-        pVariable->m_isLocal = it->value.GetBool();
+        isGlobal = it->value.GetBool();
     }
 
-    m_pVariables->add(pVariable);
+    m_pVariables->add(pVariable, isGlobal);
 }
 
 
@@ -249,19 +252,19 @@ std::shared_ptr<Variable> EnvModTemplate::getVariable(const std::string &name, b
 std::vector<std::shared_ptr<Variable>> EnvModTemplate::getVariables(bool userInputOnly) const
 {
     std::vector<std::shared_ptr<Variable>> variables;
-    if (!userInputOnly)
-    {
-        variables.insert( variables.end(), m_pVariables->all().begin(), m_pVariables->all().end() );
-    }
-    else
-    {
-        auto allVars = m_pVariables->all();
-        for (auto &varIt: allVars)
-        {
-            if (varIt->m_userInput)
-                variables.emplace_back(varIt);
-        }
-    }
+//    if (!userInputOnly)
+//    {
+//        variables.insert( variables.end(), m_pVariables->all().begin(), m_pVariables->all().end() );
+//    }
+//    else
+//    {
+//        auto allVars = m_pVariables->all();
+//        for (auto &varIt: allVars)
+//        {
+//            if (varIt->m_userInput)
+//                variables.emplace_back(varIt);
+//        }
+//    }
 
     return variables;
 }
@@ -295,11 +298,11 @@ void EnvModTemplate::assignVariablesFromFile(const std::string &filepath)
          itr != inputJson.MemberEnd(); ++itr)
     {
         std::string inputName = itr->name.GetString();
-        auto pInput = m_pVariables->getVariable(inputName);
+        auto pVariable = m_pVariables->getVariable(inputName);
         auto valueArray = itr->value.GetArray();
         for (auto &val: valueArray)
         {
-            pInput->addValue(val.GetString());
+            pVariable->addValue(val.GetString());
         }
     }
 }
@@ -321,8 +324,16 @@ void EnvModTemplate::parseOperation(const rapidjson::Value &operation)
 
     if (action == "include")
     {
-        std::shared_ptr<OperationIncludeTemplate> pIncOpt = std::make_shared<OperationIncludeTemplate>();
-        m_operations.emplace_back(pIncOpt);
+        std::shared_ptr<OperationIncludeTemplate> pIncOp = std::make_shared<OperationIncludeTemplate>();
+        auto dataIt = operation.FindMember("data");
+        if (dataIt != operation.MemberEnd())
+        {
+            parseIncludeOperation(dataIt->value, pIncOp);
+        }
+
+        pIncOp->m_pEnvModTemplate = std::make_shared<EnvModTemplate>(*this);
+        pIncOp->m_pEnvModTemplate->loadTemplateFromFile(pIncOp->m_path);
+        m_operations.emplace_back(pIncOp);
     }
     else
     {
@@ -358,8 +369,7 @@ void EnvModTemplate::parseOperation(const rapidjson::Value &operation)
                 // Parse specific operation type values not handled by the common data object parser above
                 if (action == "create")
                 {
-                    std::shared_ptr<OperationCreateNode> pCreateOp = std::dynamic_pointer_cast<OperationCreateNode>(
-                            pOp);
+                    std::shared_ptr<OperationCreateNode> pCreateOp = std::dynamic_pointer_cast<OperationCreateNode>(pOp);
                     pCreateOp->m_nodeType = dataIt->value.FindMember("node_type")->value.GetString();
                 }
                 else if (action == "find")
@@ -390,8 +400,7 @@ void EnvModTemplate::parseOperationNodeCommonData(const rapidjson::Value &operat
     rapidjson::Value::ConstMemberIterator it;
     auto dataObj = operationData.GetObject();
 
-    //
-    // Get the count (optional, default is 1)
+
     it = dataObj.FindMember("target");
     if (it != dataObj.MemberEnd())
     {
@@ -426,10 +435,10 @@ void EnvModTemplate::parseOperationNodeCommonData(const rapidjson::Value &operat
             pOpNode->m_accumulateSaveNodeIdOk = it->value.GetBool();
         }
 
-        it = saveInfoIt->value.GetObject().FindMember("local");
+        it = saveInfoIt->value.GetObject().FindMember("global");
         if (it != saveInfoIt->value.MemberEnd())
         {
-            pOpNode->m_saveNodeIdAsLocalValue = it->value.GetBool();
+            pOpNode->m_saveNodeIdAsGlobalValue = it->value.GetBool();
         }
     }
 
@@ -520,10 +529,10 @@ void EnvModTemplate::parseAttribute(const rapidjson::Value &attributeValue, modA
         {
             pAttribute->accumulateValuesOk = attrValueIt->value.GetBool();
         }
-        attrValueIt = saveInfoIt->value.GetObject().FindMember("local");
+        attrValueIt = saveInfoIt->value.GetObject().FindMember("global");
         if (attrValueIt != saveInfoIt->value.MemberEnd())
         {
-            pAttribute->saveValueLocal = attrValueIt->value.GetBool();
+            pAttribute->saveValueGlobal = attrValueIt->value.GetBool();
         }
     }
 
@@ -577,6 +586,20 @@ void EnvModTemplate::parseTarget(const rapidjson::Value &targetValue, std::share
 }
 
 
+void EnvModTemplate::parseIncludeOperation(const rapidjson::Value &include, std::shared_ptr<OperationIncludeTemplate> pOpInc)
+{
+    auto includeObj = include.GetObject();
+    auto it = includeObj.FindMember("target");
+    if (it != includeObj.MemberEnd())
+    {
+        auto targetObj = it->value.GetObject();
+
+        auto targetIt = targetObj.FindMember("filepath");
+        pOpInc->m_path = targetIt->value.GetString();
+    }
+}
+
+
 void EnvModTemplate::execute()
 {
     try
@@ -587,7 +610,7 @@ void EnvModTemplate::execute()
     }
     catch (TemplateExecutionException &te)
     {
-        te.setStep("Variable preparation");
+        te.setContext("Variable preparation", m_templateFile);
         throw;
     }
 
@@ -602,8 +625,13 @@ void EnvModTemplate::execute()
         {
             //
             // Set the operation step number and rethrow so user can tell what step caused the problem
-            te.setStep("Operation step " + std::to_string(opNum));
+            te.setContext(std::to_string(opNum), m_templateFile);
             throw;
+        }
+        catch (const ParseException &pe)
+        {
+            std::string msg = pe.what();
+            throw TemplateExecutionException(msg, std::to_string(opNum), m_templateFile);
         }
         ++opNum;
     }

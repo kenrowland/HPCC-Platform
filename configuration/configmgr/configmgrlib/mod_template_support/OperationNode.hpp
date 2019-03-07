@@ -27,7 +27,7 @@
 
 struct modAttribute {
     modAttribute() : accumulateValuesOk(false), doNotSet(false),
-            errorIfNotFound(false), errorIfEmpty(false), saveValueLocal(false) {}
+            errorIfNotFound(false), errorIfEmpty(false), saveValueGlobal(false) {}
     ~modAttribute() = default;
     void addName(const std::string &_name) { names.emplace_back(_name); }
     const std::string &getName(std::size_t idx=0) { return names[idx]; }
@@ -37,7 +37,7 @@ struct modAttribute {
     std::string startIndex;
     std::string cookedValue;
     std::string saveVariableName;
-    bool saveValueLocal;
+    bool saveValueGlobal;
     bool doNotSet;
     bool accumulateValuesOk;
     bool errorIfNotFound;
@@ -62,8 +62,8 @@ class OperationNode : public Operation
 
         virtual void doExecute(EnvironmentMgr *pEnvMgr, std::shared_ptr<Variables> pVariables) = 0;
         void getParentNodeIds(EnvironmentMgr *pEnvMgr, std::shared_ptr<Variables> pVariables);
-        std::shared_ptr<Variable> createVariable(std::string inputName, const std::string &inputType,
-                                                 std::shared_ptr<Variables> pVariables, bool existingOk);
+        std::shared_ptr<Variable> createVariable(std::string varName, const std::string &varType,
+                                                 std::shared_ptr<Variables> pVariables, bool existingOk, bool global);
         bool createAttributeSaveInputs(std::shared_ptr<Variables> pVariables);
         void saveAttributeValues(std::shared_ptr<Variables> pVariables, const std::shared_ptr<EnvironmentNode> &pEnvNode);
         void processNodeValue(std::shared_ptr<Variables> pVariables, const std::shared_ptr<EnvironmentNode> &pEnvNode);
@@ -82,7 +82,7 @@ class OperationNode : public Operation
         bool m_throwOnEmpty = true;
         std::string m_saveNodeIdName;
         bool m_accumulateSaveNodeIdOk = false;
-        bool m_saveNodeIdAsLocalValue = false;
+        bool m_saveNodeIdAsGlobalValue = false;
 
 
     friend class EnvModTemplate;

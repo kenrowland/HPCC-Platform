@@ -45,11 +45,28 @@ std::shared_ptr<Variable> variableFactory(const std::string &type, const std::st
     }
     else
     {
-        throw TemplateException("Invalid input type '" + type + "'");
+        throw TemplateException("Invalid variable type '" + type + "'");
     }
     return pInput;
 }
 
+
+void Variable::setValue(const std::string &value)
+{
+    if (m_values.empty())
+    {
+        addValue(value);
+    }
+    else if (m_values.size() == 1)
+    {
+        m_values[0] = value;
+    }
+    else
+    {
+        std::string msg = "Attempt to set value of non-scalar variable '" + m_name + "'";
+        throw TemplateException(msg, false);
+    }
+}
 
 
 std::string Variable::getValue(size_t idx) const
@@ -58,7 +75,7 @@ std::string Variable::getValue(size_t idx) const
     // If no value assigned yet, throw an exception
     if (m_values.empty())
     {
-        std::string msg = "Attempt to get value of uninitialized input '" + m_name + "'";
+        std::string msg = "Attempt to get value of uninitialized variable '" + m_name + "'";
         throw TemplateException(msg, false);
     }
 

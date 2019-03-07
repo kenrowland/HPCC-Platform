@@ -194,7 +194,7 @@ void EnvironmentMgr::addPath(const std::shared_ptr<EnvironmentNode> pNode)
     auto retVal = m_nodeIds.insert({pNode->getId(), pNode });
     if (!retVal.second)
     {
-        throw (ParseException("Attempted to insert duplicate path name " + pNode->getId() + " for node "));
+        throw ParseException("Attempted to insert duplicate path name " + pNode->getId() + " for node ");
     }
 }
 
@@ -236,7 +236,8 @@ std::shared_ptr<EnvironmentNode> EnvironmentMgr::getNewEnvironmentNode(const std
 
 
 std::shared_ptr<EnvironmentNode> EnvironmentMgr::addNewEnvironmentNode(const std::string &parentNodeId, const std::string &inputItemType,
-                                                                       std::vector<NameValue> &initAttributes, Status &status, bool allowInvalid, bool forceCreate)
+                                                                       std::vector<NameValue> &initAttributes, Status &status, bool allowInvalid,
+                                                                       bool forceCreate, bool createRequiredChildren)
 {
     std::shared_ptr<EnvironmentNode> pNewNode;
     std::shared_ptr<EnvironmentNode> pParentNode = findEnvironmentNodeById(parentNodeId);
@@ -250,7 +251,7 @@ std::shared_ptr<EnvironmentNode> EnvironmentMgr::addNewEnvironmentNode(const std
         {
             // concatenate input attribute values with any predefined values.
             attributeValues.insert( attributeValues.end(), initAttributes.begin(), initAttributes.end() );
-            pNewNode = addNewEnvironmentNode(pParentNode, pNewCfgItem, attributeValues, status, allowInvalid, forceCreate);
+            pNewNode = addNewEnvironmentNode(pParentNode, pNewCfgItem, attributeValues, status, allowInvalid, forceCreate, createRequiredChildren);
             if (pNewNode == nullptr)
             {
                 status.addMsg(statusMsg::error, "Unable to create new node for itemType: " + inputItemType);
@@ -274,7 +275,8 @@ std::shared_ptr<EnvironmentNode> EnvironmentMgr::addNewEnvironmentNode(const std
 
 
 std::shared_ptr<EnvironmentNode> EnvironmentMgr::addNewEnvironmentNode(const std::shared_ptr<EnvironmentNode> &pParentNode, const std::shared_ptr<SchemaItem> &pCfgItem,
-                                                                       std::vector<NameValue> &initAttributes, Status &status, bool allowInvalid, bool forceCreate)
+                                                                       std::vector<NameValue> &initAttributes, Status &status, bool allowInvalid, bool forceCreate,
+                                                                       bool createRequiredChildren)
 {
     std::shared_ptr<EnvironmentNode> pNewEnvNode;
 
@@ -303,14 +305,17 @@ std::shared_ptr<EnvironmentNode> EnvironmentMgr::addNewEnvironmentNode(const std
 
     //
     // Look through the children and add any that are necessary
-    std::vector<std::shared_ptr<SchemaItem>> cfgItemChildren;
-    pCfgItem->getChildren(cfgItemChildren);
-    std::vector<NameValue> empty;
-    for (auto &pCfgChild: cfgItemChildren)
+    if (createRequiredChildren)
     {
-        for (unsigned i = 0; i<pCfgChild->getMinInstances(); ++i)
+        std::vector<std::shared_ptr<SchemaItem>> cfgItemChildren;
+        pCfgItem->getChildren(cfgItemChildren);
+        std::vector<NameValue> empty;
+        for (auto &pCfgChild: cfgItemChildren)
         {
-            addNewEnvironmentNode(pNewEnvNode, pCfgChild, empty, status);
+            for (unsigned i = 0; i < pCfgChild->getMinInstances(); ++i)
+            {
+                addNewEnvironmentNode(pNewEnvNode, pCfgChild, empty, status, allowInvalid, forceCreate, true);
+            }
         }
     }
 
@@ -378,7 +383,7 @@ void EnvironmentMgr::getPredefinedAttributeValues(const std::string &inputItemTy
             }
             else
             {
-                throw (ParseException("Invalid attribute initialization detected: " + initAttr));
+                throw ParseException("Invalid attribute initialization detected: " + initAttr);
             }
         }
     }
@@ -472,6 +477,19 @@ void EnvironmentMgr::assignNodeIds(const std::shared_ptr<EnvironmentNode> &pNode
 
 void EnvironmentMgr::fetchNodes(const std::string path, std::vector<std::shared_ptr<EnvironmentNode>> &nodes, const std::shared_ptr<EnvironmentNode> &pStartNode) const
 {
+    if (!m_pRootNode)
+    {
+        throw ParseException("No environment loaded, unable to fetch nodes");
+    }
     const std::shared_ptr<EnvironmentNode> pStart = (pStartNode != nullptr) ? pStartNode : m_pRootNode;
     pStart->fetchNodes(path, nodes);
+}
+
+
+bool EnvironmentMgr::initializeEmptyEnvironment()
+{
+    discardEnvironment();  // in case something is loaded
+    m_pRootNode = std::make_shared<EnvironmentNode>(m_pSchema, m_pSchema->getProperty("name"));
+    assignNodeIds(m_pRootNode);
+    return true;
 }

@@ -38,7 +38,7 @@
                     </xs:element>
                     <xs:element name="Instance" hpcc:itemType="hwinstance" maxOccurs="unbounded"
                                 hpcc:class="elementSet" hpcc:displayName="Instances"
-                                hpcc:requiredInstanceComponents="/Evnironment/Software/[#itemType='dafilesrv'],/Evnironment/Software/[#itemType='ftslave']">
+                                hpcc:requiredInstanceComponents="/Environment/Software/[#itemType='dafilesrv'],/Environment/Software/[#itemType='ftslave']">
                         <xs:complexType>
                             <xs:attributeGroup ref="computerNodeReference"/>
                             <xs:attribute name="directory" type="xs:string" hpcc:presetValue="c$\ecl" hpcc:hidden="true"/>

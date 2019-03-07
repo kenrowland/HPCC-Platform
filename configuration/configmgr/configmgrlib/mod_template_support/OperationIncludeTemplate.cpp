@@ -16,9 +16,11 @@
 ############################################################################## */
 
 #include "OperationIncludeTemplate.hpp"
+#include "EnvModTemplate.hpp"
 
 
 bool OperationIncludeTemplate::execute(EnvironmentMgr *pEnvMgr, std::shared_ptr<Variables> pVariables)
 {
+    m_pEnvModTemplate->execute();
     return true;
 }

@@ -39,11 +39,10 @@ class CFGMGRLIB_API Variable
         std::string getDescription() const { return m_description; }
         size_t getNumValues() const { return m_values.size(); }
         virtual void addValue(const std::string &value);
+        virtual void setValue(const std::string &value);
         virtual std::string getValue(size_t idx) const;
         bool isUserInput() const { return m_userInput; }
         const std::string &getPreparedValue() const { return m_preparedValue; }
-        bool isLocal() const { return m_isLocal; }
-        void setLocal(bool local) { m_isLocal = local; }
 
 
     protected:
@@ -53,7 +52,6 @@ class CFGMGRLIB_API Variable
         std::string m_description;
         std::string m_preparedValue;
         bool m_userInput = true;
-        bool m_isLocal = false;
         std::vector<std::string> m_values;
 
 

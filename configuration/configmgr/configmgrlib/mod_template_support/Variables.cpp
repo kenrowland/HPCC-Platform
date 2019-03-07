@@ -20,28 +20,38 @@
 #include "TemplateException.hpp"
 
 
-void Variables::add(const std::shared_ptr<Variable> pVariable)
+Variables::Variables(std::shared_ptr<Variables> pGlobalVars)
 {
+    m_pGlobalVariables = std::move(pGlobalVars);
+
     //
-    // If the variable has local context, alter the name accordingly
-    if (pVariable->isLocal())
-    {
-        pVariable->setName(getContext().append(pVariable->getName()));
-    }
-
-    for (auto &pVar: m_variables)
-    {
-        if (pVar->getName() == pVariable->getName())
-        {
-            throw TemplateException("Variable '" + pVariable->getName() + "' is a duplicate.", true);
-        }
-    }
-
-    m_variables.emplace_back(pVariable);
+    // Allocate special variables
+    std::shared_ptr<Variable> pIndex = variableFactory("string", "index");
+    add(pIndex, false);
 }
 
 
-std::shared_ptr<Variable> Variables::getVariable(const std::string &name, bool throwIfNotFound) const
+void Variables::add(const std::shared_ptr<Variable> pVariable, bool global)
+{
+    if (global && m_pGlobalVariables)
+    {
+        m_pGlobalVariables->add(pVariable, false);
+    }
+    else
+    {
+        for (auto &pVar: m_variables)
+        {
+            if (pVar->getName() == pVariable->getName())
+            {
+                throw TemplateException("Variable '" + pVariable->getName() + "' is a duplicate.", true);
+            }
+        }
+        m_variables.emplace_back(pVariable);
+    }
+}
+
+
+std::shared_ptr<Variable> Variables::getVariable(const std::string &name, bool localOnly, bool throwIfNotFound) const
 {
     std::shared_ptr<Variable> pRetVar;
     std::string varName;
@@ -54,15 +64,16 @@ std::shared_ptr<Variable> Variables::getVariable(const std::string &name, bool t
         std::size_t bracesEndPos = findClosingDelimiter(name, bracesStartPos,"{{", "}}");
         varName = name.substr(bracesStartPos + 2, bracesEndPos - bracesStartPos - 2);
     }
+    else
+    {
+        varName = name;
+    }
 
     //
-    // Search for the variable name. First, search for the local named variable, then a general variable that is not
-    // a local variable.
-    std::string localVarName = getContext() + varName;
-
+    // First search for a local variable (variable context matches the current context)
     for (auto &pVar: m_variables)
     {
-        if (pVar->getName() == localVarName)
+        if (pVar->getName() == varName)
         {
             pRetVar = pVar;
             break;
@@ -70,16 +81,11 @@ std::shared_ptr<Variable> Variables::getVariable(const std::string &name, bool t
     }
 
 
-    if (!pRetVar)
+    //
+    // If no match was found, see if there is a global version
+    if (!pRetVar && !localOnly && m_pGlobalVariables)
     {
-        for (auto &pVar: m_variables)
-        {
-            if (pVar->getName() == varName && !pVar->isLocal())
-            {
-                pRetVar = pVar;
-                break;
-            }
-        }
+        pRetVar = m_pGlobalVariables->getVariable(varName, false, false);
     }
 
     if (!pRetVar && throwIfNotFound)
@@ -90,21 +96,29 @@ std::shared_ptr<Variable> Variables::getVariable(const std::string &name, bool t
 }
 
 
+std::shared_ptr<Variable> Variables::getGlobalVariable(const std::string &name, bool throwIfNotFound) const
+{
+    if (m_pGlobalVariables)
+    {
+        return m_pGlobalVariables->getVariable(name, false, throwIfNotFound);
+    }
+    else
+    {
+        return getVariable(name, false, throwIfNotFound);
+    }
+}
+
+
 void Variables::prepare()
 {
-    std::string localContextPrefix = getContext() + "_";
     //
-    // Prepare all non-local variables and variables local to the current context
-
+    // Prepare all local values
     for (auto &pVar: m_variables)
     {
-        if (!pVar->isLocal() || pVar->getName().find(localContextPrefix) == 0)
+        std::string preparedValue = pVar->getPreparedValue();
+        if (!preparedValue.empty())
         {
-            std::string preparedValue = pVar->getPreparedValue();
-            if (!preparedValue.empty())
-            {
-                pVar->addValue(doValueSubstitution(preparedValue));
-            }
+            pVar->addValue(doValueSubstitution(preparedValue));
         }
     }
 }
@@ -151,11 +165,11 @@ std::string Variables::doValueSubstitution(const std::string &value) const
 
         if (sizePos != std::string::npos)
         {
-            result = std::to_string(getVariable(varName, true)->getNumValues());
+            result = std::to_string(getVariable(varName, false)->getNumValues());
         }
         else
         {
-            std::string substitueValue = doValueSubstitution(getVariable(varName, true)->getValue(index));
+            std::string substitueValue = doValueSubstitution(getVariable(varName, false)->getValue(index));
             std::string newResult = result.substr(0, bracesStartPos);
             newResult += substitueValue;
             newResult += result.substr(bracesEndPos + 2);
@@ -171,7 +185,6 @@ std::string Variables::doValueSubstitution(const std::string &value) const
 
     return evaluate(result);
 }
-
 
 
 std::size_t Variables::findClosingDelimiter(const std::string &input, std::size_t startPos, const std::string &openDelim, const std::string &closeDelim) const
@@ -253,26 +266,15 @@ std::string Variables::evaluate(const std::string &expr) const
 }
 
 
-void Variables::clear()
+void Variables::setInputIndex(size_t idx)
 {
-    m_variables.clear();
+    m_curIndex = idx;
+    auto pIndex = getVariable("index");
+    pIndex->setValue(std::to_string(m_curIndex));
 }
 
 
-void Variables::popContext()
+void Variables::clear()
 {
-    std::string contextPrefix = getContext() + "_";
-    auto varIt = m_variables.begin();
-    while (varIt != m_variables.end())
-    {
-        if ((*varIt)->getName().find(contextPrefix) == 0)
-        {
-            varIt = m_variables.erase(varIt);
-        }
-        else
-        {
-            ++varIt;
-        }
-    }
-    m_localPrefix.pop();
+    m_variables.clear();
 }
