@@ -23,11 +23,7 @@
 Variables::Variables(std::shared_ptr<Variables> pGlobalVars)
 {
     m_pGlobalVariables = std::move(pGlobalVars);
-
-    //
-    // Allocate special variables
-    std::shared_ptr<Variable> pIndex = variableFactory("string", "index");
-    add(pIndex, false);
+    initialize();
 }
 
 
@@ -239,17 +235,26 @@ std::string Variables::evaluate(const std::string &expr) const
     if (opPos != std::string::npos)
     {
         long op1, op2, value;
-        try {
+        try
+        {
             op1 = std::stol(expr.substr(0, opPos));
-        } catch (...) {
-            throw TemplateException("Non-numeric operand 1 found in expression '" + expr + "'", false);
+        }
+        catch (...)
+        {
+            return result;
+            //throw TemplateException("Non-numeric operand 1 found in expression '" + expr + "'", false);
         }
 
-        try {
+        try
+        {
             op2 = std::stol(expr.substr(opPos+1));
-        } catch (...) {
-            throw TemplateException("Non-numeric operand 2 found in expression '" + expr + "'", false);
         }
+        catch (...)
+        {
+            return result;
+            //throw TemplateException("Non-numeric operand 2 found in expression '" + expr + "'", false);
+        }
+
         if (expr[opPos] == '-')
             value = op1 - op2;
         else
@@ -274,7 +279,15 @@ void Variables::setInputIndex(size_t idx)
 }
 
 
-void Variables::clear()
+void Variables::initialize()
 {
+    //
+    // Clear everything out
     m_variables.clear();
+
+    //
+    // Create reserved variables
+    std::shared_ptr<Variable> pIndex = variableFactory("string", "index");
+    add(pIndex, false);
+
 }

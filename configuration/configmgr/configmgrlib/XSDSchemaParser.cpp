@@ -403,6 +403,25 @@ void XSDSchemaParser::parseElement(const pt::ptree &elemTree)
             {
                 std::shared_ptr<SchemaValue> pCfgValue = std::make_shared<SchemaValue>("");  // no name value since it's the element's value
                 pCfgValue->setType(pSimpleType);                      // will throw if type is not defined
+
+                //
+                // Any preset/forced values for the local value?
+                std::string preset = elemTree.get("<xmlattr>.hpcc:presetValue", "");  // This is the value used by code, preset, if no value provided (informational only)
+                std::string forcedConfigValue = elemTree.get("<xmlattr>.hpcc:forcedConfigValue", "");   // this value is written to the environment if non is provided
+                if (!preset.empty() && !forcedConfigValue.empty())
+                {
+                    throw(ParseException( "Element " + elementName + ": Only one of hpcc:presetValue or hpcc:forcedConfigValue may be specified for the local value"));
+                }
+                else if (!preset.empty())
+                {
+                    pCfgValue->setPresetValue(preset);
+                }
+                else
+                {
+                    pCfgValue->setForcedValue(forcedConfigValue);
+                }
+
+                // save the config value as the item's schema value
                 pNewSchemaItem->setItemSchemaValue(pCfgValue);
             }
             else

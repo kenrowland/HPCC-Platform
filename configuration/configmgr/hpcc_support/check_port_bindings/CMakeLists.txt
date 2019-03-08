@@ -35,6 +35,6 @@ INCLUDE_DIRECTORIES(
 
 ADD_DEFINITIONS( -D_USRDLL )
 HPCC_ADD_LIBRARY( cfghpcc_checkportbindings SHARED ${SRCS} )
-TARGET_LINK_LIBRARIES( cfghpcc_checkportbindings configmgr jlib )
+TARGET_LINK_LIBRARIES( cfghpcc_checkportbindings jlib )
 
 INSTALL ( TARGETS cfghpcc_checkportbindings RUNTIME DESTINATION ${EXEC_DIR} LIBRARY DESTINATION ${LIB_DIR} )

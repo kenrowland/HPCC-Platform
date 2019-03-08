@@ -83,7 +83,8 @@ bool EnvironmentMgr::loadSchema(const std::string &configPath, const std::string
             ForEach(*it)
             {
                 StringBuffer fname;
-                std::string filename = it->getName(fname).str();
+                std::string filename = LIB_DIR;
+                filename.append(PATHSEPSTR).append(it->getName(fname).str());
                 std::shared_ptr<EnvSupportLib> pLib = std::make_shared<EnvSupportLib>(filename, this);
                 if (pLib->isValid())
                 {

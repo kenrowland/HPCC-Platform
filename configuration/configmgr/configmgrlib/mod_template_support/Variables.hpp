@@ -39,11 +39,10 @@ class Variables : public std::enable_shared_from_this<Variables>
         void setInputIndex(size_t idx);
         std::string doValueSubstitution(const std::string &value) const;
         void prepare();
-        void clear();
+        void initialize();
 
 
     protected:
-
         std::string evaluate(const std::string &expr) const;
         std::size_t findClosingDelimiter(const std::string &input, std::size_t startPos, const std::string &openDelim, const std::string &closeDelim) const;
 

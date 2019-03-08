@@ -35,6 +35,6 @@ INCLUDE_DIRECTORIES(
 
 ADD_DEFINITIONS( -D_USRDLL )
 HPCC_ADD_LIBRARY( cfghpcc_addrequiredinstances SHARED ${SRCS} )
-TARGET_LINK_LIBRARIES( cfghpcc_addrequiredinstances configmgr jlib )
+TARGET_LINK_LIBRARIES( cfghpcc_addrequiredinstances jlib )
 
 INSTALL ( TARGETS cfghpcc_addrequiredinstances RUNTIME DESTINATION ${EXEC_DIR} LIBRARY DESTINATION ${LIB_DIR} )

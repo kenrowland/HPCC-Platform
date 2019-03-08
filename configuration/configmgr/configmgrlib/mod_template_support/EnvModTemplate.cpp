@@ -111,7 +111,7 @@ void EnvModTemplate::loadTemplate(rapidjson::IStreamWrapper &stream)
     //
     // Cleanup anything that may be laying around.
     releaseTemplate();
-    m_pVariables->clear();
+    m_pVariables->initialize();
 
     m_pTemplate = new rapidjson::Document();
 
