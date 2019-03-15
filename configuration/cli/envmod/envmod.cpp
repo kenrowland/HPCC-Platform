@@ -171,7 +171,7 @@ int main(int argc, char *argv[])
     // Create the modification template
     try
     {
-        pTemplate = new EnvModTemplate(pEnvMgr, modTemplateSchemaFile);
+        pTemplate = new EnvModTemplate(*pEnvMgr, modTemplateSchemaFile);
         pTemplate->loadTemplateFromFile(modTemplateFile);
     }
     catch (const TemplateException &te)
@@ -238,7 +238,7 @@ int main(int argc, char *argv[])
     // Execute
     try
     {
-        pTemplate->execute();
+        pTemplate->execute(true);
     }
     catch (const TemplateExecutionException &te)
     {

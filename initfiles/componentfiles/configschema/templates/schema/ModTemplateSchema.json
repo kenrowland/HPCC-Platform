@@ -198,16 +198,23 @@
                     "$ref" : "#/definitions/target_node_or_path"
                 },
                 "count": {
-                    "type": "string"
+                    "type": "string",
+                    "default" : "1",
+                    "description" : "Number of times to execute the create action"
                 },
                 "start_index": {
-                    "type": "string"
+                    "type": "string",
+                    "defalut" : "0",
+                    "description" : "Starting index for group variable value access"
                 },
                 "node_type": {
-                    "type": "string"
+                    "type": "string",
+                    "description" : "The type of node to create (defined by the schema). Required"
                 },
                 "save": {
-                    "$ref": "#/definitions/save_info"
+                    "$ref": "#/definitions/save_info",
+                    "default" : {},
+                    "description" : "Save info object for saving the created node IDs for use later"
                 },
                 "error_if_not_found": {
                     "type": "boolean",
@@ -216,6 +223,11 @@
                 },
                 "node_value" : {
                     "$ref" : "#/definitions/node_value_new"
+                },
+                "populate_children" : {
+                    "type" : "boolean",
+                    "default" : false,
+                    "description" : "Set to true to have all required children, as defined by the schema, auto populated"
                 },
                 "attributes": {
                     "$ref": "#/definitions/attribute_values_new"
@@ -359,6 +371,32 @@
             "properties": {
                 "target" : {
                     "$ref" : "#/definitions/target_file"
+                },
+                "template_parameters": {
+                    "type": "array",
+                    "minItems": 0,
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "name": {
+                                "type": "string",
+                                "description" : "Name of the variable to which the input is assigned. This value is available using {{name}} anywhere in the template",
+                                "pattern" : "^[A-Za-z0-9]*$"
+                            },
+                            "values": {
+                                "type": "array",
+                                "items" : {
+                                    "type" : "string"
+                                },
+                                "description" : "Values to assign to the variable"
+                            }
+                        },
+                        "required": [
+                            "name",
+                            "values"
+                        ]
+                    },
+                    "description" : "Array of parameter values to pass to the included template as variable values for use during execution."
                 }
             },
             "required" : [ "target" ]

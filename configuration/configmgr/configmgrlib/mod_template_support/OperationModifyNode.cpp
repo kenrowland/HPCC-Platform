@@ -18,10 +18,12 @@
 #include "OperationModifyNode.hpp"
 
 #include "OperationNode.hpp"
+#include "Status.hpp"
+#include "EnvironmentMgr.hpp"
 #include "TemplateExecutionException.hpp"
 
 
-void OperationModifyNode::doExecute(EnvironmentMgr *pEnvMgr, std::shared_ptr<Variables> pVariables)
+void OperationModifyNode::doExecute(EnvironmentMgr &envMgr, std::shared_ptr<Variables> pVariables)
 {
     std::shared_ptr<EnvironmentNode> pEnvNode;
 
@@ -34,7 +36,7 @@ void OperationModifyNode::doExecute(EnvironmentMgr *pEnvMgr, std::shared_ptr<Var
             Status status;
 
             std::string nodeId = pVariables->doValueSubstitution(parentNodeId);
-            pEnvNode = pEnvMgr->findEnvironmentNodeById(nodeId);
+            pEnvNode = envMgr.findEnvironmentNodeById(nodeId);
             if (pEnvNode)
             {
                 //

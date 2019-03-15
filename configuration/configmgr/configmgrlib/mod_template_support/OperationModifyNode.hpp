@@ -31,7 +31,7 @@ class OperationModifyNode : public OperationNode
 
     protected:
 
-        void doExecute(EnvironmentMgr *pEnvMgr, std::shared_ptr<Variables> pVariables) override;
+        void doExecute(EnvironmentMgr &envMgr, std::shared_ptr<Variables> pVariables) override;
 
 
     protected:

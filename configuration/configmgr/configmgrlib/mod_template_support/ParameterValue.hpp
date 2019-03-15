@@ -1,6 +1,6 @@
 /*##############################################################################
 
-    HPCC SYSTEMS software Copyright (C) 2018 HPCC Systems®.
+    HPCC SYSTEMS software Copyright (C) 2019 HPCC Systems®.
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -15,33 +15,16 @@
     limitations under the License.
 ############################################################################## */
 
-#ifndef HPCCSYSTEMS_PLATFORM_OPERATIONCREATENODE_HPP
-#define HPCCSYSTEMS_PLATFORM_OPERATIONCREATENODE_HPP
+#ifndef HPCCSYSTEMS_PLATFORM_PARAMETERVALUE_HPP
+#define HPCCSYSTEMS_PLATFORM_PARAMETERVALUE_HPP
 
-#include "OperationNode.hpp"
+#include <vector>
+#include <string>
 
-
-class OperationCreateNode : public OperationNode
+struct ParameterValue
 {
-    public:
-
-        OperationCreateNode() : m_populateChildren(false) {};
-        ~OperationCreateNode() override = default;
-
-
-    protected:
-
-        void doExecute(EnvironmentMgr &envMgr, std::shared_ptr<Variables> pVariables) override;
-
-
-    protected:
-
-        std::string m_nodeType;
-        bool m_populateChildren;
-
-
-    friend class EnvModTemplate;
+    std::string name;
+    std::vector<std::string> values;
 };
 
-
-#endif //HPCCSYSTEMS_PLATFORM_OPERATIONCREATENODE_HPP
+#endif //HPCCSYSTEMS_PLATFORM_PARAMETERVALUE_HPP

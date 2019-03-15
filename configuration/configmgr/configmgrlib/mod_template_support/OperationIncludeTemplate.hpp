@@ -20,7 +20,7 @@
 #define HPCCSYSTEMS_PLATFORM_OPERATIONINCLUDETEMPLATE_HPP
 
 #include "Operation.hpp"
-//#include "EnvModTemplate.hpp"
+#include "ParameterValue.hpp"
 
 class EnvModTemplate;
 
@@ -30,13 +30,15 @@ class OperationIncludeTemplate : public Operation
 
         OperationIncludeTemplate() = default;
         ~OperationIncludeTemplate() override = default;
-        bool execute(EnvironmentMgr *pEnvMgr, std::shared_ptr<Variables> pVariables) override;
+        bool execute(EnvironmentMgr &envMgr, std::shared_ptr<Variables> pVariables) override;
+        void addParameterValue(const ParameterValue &parmValue) { m_parameters.emplace_back(parmValue); }
 
 
     protected:
 
         std::shared_ptr<EnvModTemplate> m_pEnvModTemplate;
         std::string m_path;
+        std::vector<ParameterValue> m_parameters;
 
         friend class EnvModTemplate;
 };

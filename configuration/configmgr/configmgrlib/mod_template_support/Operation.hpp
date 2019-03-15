@@ -27,10 +27,23 @@ class Operation
 {
     public:
 
-        Operation() = default;
+        Operation() : m_count("1"), m_startIndex("0") {}
         virtual ~Operation() = default;
-        virtual bool execute(EnvironmentMgr *pEnvMgr, std::shared_ptr<Variables> pVariables) = 0;
+        virtual bool execute(EnvironmentMgr &envMgr, std::shared_ptr<Variables> pVariables) = 0;
 
+
+    protected:
+
+        void initializeForExecution(std::shared_ptr<Variables> pVariables);
+
+
+    protected:
+
+        std::string m_count;
+        std::string m_startIndex;
+
+        size_t m_executionCount;
+        size_t m_executionStartIndex;
 };
 
 

@@ -24,7 +24,7 @@
 #include "OperationNode.hpp"
 
 
-void OperationFindNode::doExecute(EnvironmentMgr *pEnvMgr, std::shared_ptr<Variables> pVariables)
+void OperationFindNode::doExecute(EnvironmentMgr &envMgr, std::shared_ptr<Variables> pVariables)
 {
     //
     // Any parent node IDs found?
@@ -46,7 +46,7 @@ void OperationFindNode::doExecute(EnvironmentMgr *pEnvMgr, std::shared_ptr<Varia
             for (auto &parentNodeId: m_parentNodeIds)
             {
                 std::string nodeId = pVariables->doValueSubstitution(parentNodeId);
-                auto pEnvNode = pEnvMgr->findEnvironmentNodeById(nodeId);
+                auto pEnvNode = envMgr.findEnvironmentNodeById(nodeId);
                 if (pSaveNodeIdVar)
                 {
                     pSaveNodeIdVar->addValue(nodeId);
@@ -79,14 +79,14 @@ void OperationFindNode::doExecute(EnvironmentMgr *pEnvMgr, std::shared_ptr<Varia
             {
                 m_nodeType = m_path.substr(lastSlashPos + 1);
                 m_path = m_path.substr(0, lastSlashPos);
-                getParentNodeIds(pEnvMgr, pVariables);  // reset these since the parent path has changed
+                getParentNodeIds(envMgr, pVariables);  // reset these since the parent path has changed
             }
             else
             {
                 throw TemplateExecutionException("Invalid path for find operation, unable to create node");
             }
         }
-        OperationCreateNode::doExecute(pEnvMgr, pVariables);
+        OperationCreateNode::doExecute(envMgr, pVariables);
     }
     else if (m_throwOnEmpty)
     {

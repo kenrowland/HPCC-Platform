@@ -42,6 +42,7 @@ SET(  SRCS
         mod_template_support/EnvModTemplate.cpp
         mod_template_support/Variable.cpp
         mod_template_support/TemplateException.cpp
+        mod_template_support/Operation.cpp
         mod_template_support/OperationNode.cpp
         mod_template_support/OperationCreateNode.cpp
         mod_template_support/OperationFindNode.cpp

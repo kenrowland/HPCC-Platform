@@ -17,6 +17,7 @@
 
 #include "OperationNode.hpp"
 #include "TemplateExecutionException.hpp"
+#include "EnvironmentMgr.hpp"
 #include "EnvironmentNode.hpp"
 #include "EnvironmentValue.hpp"
 
@@ -27,55 +28,30 @@ void OperationNode::addAttribute(modAttribute &newAttribute)
 }
 
 
-bool OperationNode::execute(EnvironmentMgr *pEnvMgr, std::shared_ptr<Variables> pVariables)
+bool OperationNode::execute(EnvironmentMgr &envMgr, std::shared_ptr<Variables> pVariables)
 {
     bool rc = true;
-    size_t count, startIndex;
 
-    pVariables->setInputIndex(0);
-
-    //
-    // Determine the count of iterations to do
-    std::string countStr = pVariables->doValueSubstitution(m_count);
-    try
-    {
-        count = std::stoul(countStr);
-    }
-    catch (...)
-    {
-        throw TemplateExecutionException("Non-numeric count found for count");
-    }
-
-    //
-    // Determine the starting index
-    std::string startIdxStr = pVariables->doValueSubstitution(m_startIndex);
-    try
-    {
-        startIndex = std::stoul(startIdxStr);
-    }
-    catch (...)
-    {
-        throw TemplateExecutionException("Non-numeric count found for start index");
-    }
+    initializeForExecution(pVariables);
 
     //
     // Select the nodes for execution
-    getParentNodeIds(pEnvMgr, pVariables);
+    getParentNodeIds(envMgr, pVariables);
 
     //
     // If count is > 1, then the number of selected nodes must be 1
-    if (count > 1 && m_parentNodeIds.size() != 1)
+    if (m_executionCount > 1 && m_parentNodeIds.size() != 1)
     {
         throw TemplateExecutionException("Operation execution count > 1 attempted when selected node count is not 1");
     }
 
     //
     // Now execute the operation count times
-    for (size_t idx=0; idx < count; ++idx)
+    for (size_t idx=0; idx < m_executionCount; ++idx)
     {
-        pVariables->setInputIndex(startIndex + idx);
+        pVariables->setIterationInfo(m_executionStartIndex + idx, idx);
         assignAttributeCookedValues(pVariables);
-        doExecute(pEnvMgr, pVariables);
+        doExecute(envMgr, pVariables);
     }
     return rc;
 }
@@ -92,8 +68,10 @@ void OperationNode::assignAttributeCookedValues(std::shared_ptr<Variables> pVari
 }
 
 
-void OperationNode::getParentNodeIds(EnvironmentMgr *pEnvMgr, std::shared_ptr<Variables> pVariables)
+void OperationNode::getParentNodeIds(EnvironmentMgr &envMgr, std::shared_ptr<Variables> pVariables)
 {
+    m_parentNodeIds.clear();  // should always recalculate the results
+
     //
     // Find the parent node(s). Either was input, or based on a path, which may match more than one node
     if (!m_parentNodeId.empty())
@@ -116,7 +94,7 @@ void OperationNode::getParentNodeIds(EnvironmentMgr *pEnvMgr, std::shared_ptr<Va
     {
         std::vector<std::shared_ptr<EnvironmentNode>> envNodes;
         std::string path = pVariables->doValueSubstitution(m_path);
-        pEnvMgr->fetchNodes(path, envNodes);
+        envMgr.fetchNodes(path, envNodes);
         for (auto &envNode: envNodes)
             m_parentNodeIds.emplace_back(envNode->getId());
     }
@@ -138,7 +116,7 @@ std::shared_ptr<Variable> OperationNode::createVariable(std::string varName, con
             pVariable = variableFactory(varType, varName);
             pVariables->add(pVariable, false);
         }
-        else if (!existingOk)
+        else if (!existingOk && pVariables->getCurIteration() == 0)
         {
             std::string msg = "Attempt to create local variable that already exists: " + varName;
             throw TemplateExecutionException(msg);
@@ -155,7 +133,7 @@ std::shared_ptr<Variable> OperationNode::createVariable(std::string varName, con
             pVariable = variableFactory(varType, varName);
             pVariables->add(pVariable, true);
         }
-        else if (!existingOk)
+        else if (!existingOk && pVariables->getCurIteration() == 0)
         {
             std::string msg = "Attempt to create global variable that already exists: " + varName;
             throw TemplateExecutionException(msg);
@@ -190,7 +168,7 @@ void OperationNode::saveAttributeValues(std::shared_ptr<Variables> pVariables, c
         if (!attr.saveVariableName.empty())
         {
             bool found=false, set=false;
-            std::shared_ptr<Variable> pInput = pVariables->getVariable(attr.saveVariableName);
+            std::shared_ptr<Variable> pInput = pVariables->getVariable(attr.saveVariableName, false);
             std::size_t numNames = attr.getNumNames();
             for (std::size_t idx=0; idx<numNames; ++idx)
             {

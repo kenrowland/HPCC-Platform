@@ -18,7 +18,6 @@
 #ifndef HPCCSYSTEMS_PLATFORM_ENVMODTEMPLATE_HPP
 #define HPCCSYSTEMS_PLATFORM_ENVMODTEMPLATE_HPP
 
-#include "EnvironmentMgr.hpp"
 #include "rapidjson/document.h"
 #include "rapidjson/schema.h"
 #include "rapidjson/istreamwrapper.h"
@@ -26,6 +25,7 @@
 #include <string>
 #include "Variable.hpp"
 #include "Variables.hpp"
+#include "ParameterValue.hpp"
 #include "OperationNode.hpp"
 #include "OperationFindNode.hpp"
 #include "OperationIncludeTemplate.hpp"
@@ -35,12 +35,13 @@
 #include "platform.h"
 #include "Cfgmgrlib.hpp"
 
+class EnvironmentMgr;
 
 class CFGMGRLIB_API EnvModTemplate
 {
     public:
 
-        EnvModTemplate(EnvironmentMgr *pEnvMgr, const std::string &schemaFile);
+        EnvModTemplate(EnvironmentMgr &pEnvMgr, const std::string &schemaFile);
         EnvModTemplate(const EnvModTemplate &modTemplate);
         ~EnvModTemplate();
 
@@ -50,7 +51,7 @@ class CFGMGRLIB_API EnvModTemplate
         std::shared_ptr<Variable> getVariable(const std::string &name, bool throwIfNotFound = true) const;
         std::vector<std::shared_ptr<Variable>> getVariables(bool userInputOnly = false) const;
         void assignVariablesFromFile(const std::string &filepath);
-        void execute();
+        void execute(bool isFirst, const std::vector<ParameterValue> &parameters = std::vector<ParameterValue>());
 
 
     protected:
@@ -72,7 +73,7 @@ class CFGMGRLIB_API EnvModTemplate
 
         std::shared_ptr<rapidjson::SchemaDocument> m_pSchema;
         rapidjson::Document *m_pTemplate;   // same as GenericDocument<UTF8<> >
-        EnvironmentMgr *m_pEnvMgr;
+        EnvironmentMgr &m_envMgr;
         std::shared_ptr<Variables> m_pVariables;
         std::vector<std::shared_ptr<Operation>> m_operations;
         std::string m_templateFile;

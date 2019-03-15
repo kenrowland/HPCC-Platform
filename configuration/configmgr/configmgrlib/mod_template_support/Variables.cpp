@@ -141,6 +141,7 @@ std::string Variables::doValueSubstitution(const std::string &value) const
         // If there is an index defined, evaluate it and update the index to be used for the final value
         std::size_t bracketStartPos = result.find('[');
         std::size_t sizePos = result.find(".size");
+        std::size_t bracketEndPos = std::string::npos;
 
         if (bracketStartPos != std::string::npos && sizePos != std::string::npos)
         {
@@ -149,9 +150,9 @@ std::string Variables::doValueSubstitution(const std::string &value) const
 
         if (bracketStartPos != std::string::npos)
         {
-            std::size_t bracketEndPos = findClosingDelimiter(result, bracketStartPos, "[", "]");  //  result.find(']');
+            bracketEndPos = findClosingDelimiter(result, bracketStartPos, "[", "]");  //  result.find(']');
             std::string indexStr = result.substr(bracketStartPos+1, bracketEndPos - bracketStartPos - 1);
-            varName = result.substr(bracesStartPos + 2, bracketStartPos - bracesStartPos - 2);
+            //varName = result.substr(bracesStartPos + 2, bracketStartPos - bracesStartPos - 2);
             try {
                 index = std::stoul(evaluate(doValueSubstitution(indexStr)));
             } catch (...) {
@@ -168,7 +169,7 @@ std::string Variables::doValueSubstitution(const std::string &value) const
             std::string substitueValue = doValueSubstitution(getVariable(varName, false)->getValue(index));
             std::string newResult = result.substr(0, bracesStartPos);
             newResult += substitueValue;
-            newResult += result.substr(bracesEndPos + 2);
+            newResult += result.substr((bracketEndPos != std::string::npos) ? (bracketEndPos + 1) : (bracesEndPos + 2) );
             result = newResult;
         }
 
@@ -271,11 +272,25 @@ std::string Variables::evaluate(const std::string &expr) const
 }
 
 
-void Variables::setInputIndex(size_t idx)
+void Variables::setIterationInfo(size_t idx, size_t iter)
 {
     m_curIndex = idx;
-    auto pIndex = getVariable("index");
+    m_iter = iter;
+    auto pIndex = getVariable("loop_index");
     pIndex->setValue(std::to_string(m_curIndex));
+
+    auto pIteration = getVariable("loop_iteration");
+    pIteration->setValue(std::to_string(iter));
+}
+
+
+void Variables::setIterationLimits(size_t start, size_t count)
+{
+    auto pStart = getVariable("loop_start");
+    pStart->setValue(std::to_string(start));
+
+    auto pCount = getVariable("loop_count");
+    pCount->setValue(std::to_string(count));
 }
 
 
@@ -287,7 +302,12 @@ void Variables::initialize()
 
     //
     // Create reserved variables
-    std::shared_ptr<Variable> pIndex = variableFactory("string", "index");
+    std::shared_ptr<Variable> pIndex = variableFactory("string", "loop_index");
     add(pIndex, false);
-
+    std::shared_ptr<Variable> pIteration = variableFactory("string", "loop_iteration");
+    add(pIteration, false);
+    std::shared_ptr<Variable> pStart = variableFactory("string", "loop_start");
+    add(pStart, false);
+    std::shared_ptr<Variable> pCount = variableFactory("string", "loop_count");
+    add(pCount, false);
 }

@@ -106,11 +106,23 @@ void XMLEnvironmentMgr::serializeTree(pt::ptree &envTree, const std::shared_ptr<
             envTree.put("<xmlattr>." + (*attrIt)->getName(), attrValue);
         }
     }
+
+    //
+    // Local node value (note the check for a forced value)
     std::shared_ptr<EnvironmentValue> pNodeValue = pEnvNode->getLocalEnvValue();
     if (pNodeValue)
     {
         envTree.put_value(pNodeValue->getValue());
     }
+    else if (pEnvNode->getSchemaItem()->isItemValueDefined())
+    {
+        auto pLocalSchemaValue = pEnvNode->getSchemaItem()->getItemSchemaValue();
+        if (pLocalSchemaValue->hasForcedValue())
+        {
+            envTree.put_value(pLocalSchemaValue->getForcedValue());
+        }
+    }
+
     std::vector<std::shared_ptr<EnvironmentNode>> children;
     pEnvNode->getChildren(children);
     for (auto childIt = children.begin(); childIt != children.end(); ++childIt)

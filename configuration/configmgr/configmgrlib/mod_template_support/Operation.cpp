@@ -16,3 +16,35 @@
 ############################################################################## */
 
 #include "Operation.hpp"
+#include "TemplateExecutionException.hpp"
+
+
+void Operation::initializeForExecution(std::shared_ptr<Variables> pVariables)
+{
+    //
+    // Determine the count of iterations to do
+    std::string countStr = pVariables->doValueSubstitution(m_count);
+    try
+    {
+        m_executionCount = std::stoul(countStr);
+    }
+    catch (...)
+    {
+        throw TemplateExecutionException("Non-numeric count found for count");
+    }
+
+
+    //
+    // Starting index
+    std::string startIdxStr = pVariables->doValueSubstitution(m_startIndex);
+    try
+    {
+        m_executionStartIndex = std::stoul(startIdxStr);
+    }
+    catch (...)
+    {
+        throw TemplateExecutionException("Non-numeric count found for start index");
+    }
+
+    pVariables->setIterationLimits(m_executionCount, m_executionCount);
+}

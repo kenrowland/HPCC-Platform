@@ -29,20 +29,21 @@
 #include <sstream>
 #include <fstream>
 #include "Utils.hpp"
+#include "EnvironmentMgr.hpp"
 
 //
 // Good online resource for validation of modification templates is https://www.jsonschemavalidator.net/
 // Load the schecma (ModTemplateSchema.json) in the left window and the modification template in the right.
 
-EnvModTemplate::EnvModTemplate(EnvironmentMgr *pEnvMgr, const std::string &schemaFile) :
-    m_pEnvMgr(pEnvMgr),
+EnvModTemplate::EnvModTemplate(EnvironmentMgr &envMgr, const std::string &schemaFile) :
+    m_envMgr(envMgr),
     m_pTemplate(nullptr),
     m_pSchema(nullptr)
 {
-    if (m_pEnvMgr == nullptr)
-    {
-        throw(TemplateException("Environment Modification Template requires a valid Environment Manager"));
-    }
+//    if (m_pEnvMgr == nullptr)
+//    {
+//        throw(TemplateException("Environment Modification Template requires a valid Environment Manager"));
+//    }
 
     m_pVariables = std::make_shared<Variables>();
 
@@ -60,13 +61,14 @@ EnvModTemplate::EnvModTemplate(EnvironmentMgr *pEnvMgr, const std::string &schem
 
 
 EnvModTemplate::EnvModTemplate(const EnvModTemplate &modTemplate) :
+    m_envMgr(modTemplate.m_envMgr),
     m_pTemplate(nullptr)
 {
     //
     // Copy relevant members to avoid duplicate actions. Also, create a new variables
     // object and init it with the global variables
     m_pSchema = modTemplate.m_pSchema;
-    m_pEnvMgr = modTemplate.m_pEnvMgr;
+//    m_pEnvMgr = modTemplate.m_pEnvMgr;
     m_pVariables =  std::make_shared<Variables>(modTemplate.m_pVariables->getGlobalVariables());
 }
 
@@ -130,7 +132,7 @@ void EnvModTemplate::loadTemplate(rapidjson::IStreamWrapper &stream)
         {
             // Input JSON is invalid according to the schema
             // Output diagnostic information
-            std::string msg = "Template failed validation, ";
+            std::string msg = "Template, " + m_templateFile + ", failed validation, ";
             rapidjson::StringBuffer sb;
             validator.GetInvalidSchemaPointer().StringifyUriFragment(sb);
             msg += " Invalid schema: " + std::string(sb.GetString()) + ", ";
@@ -371,6 +373,12 @@ void EnvModTemplate::parseOperation(const rapidjson::Value &operation)
                 {
                     std::shared_ptr<OperationCreateNode> pCreateOp = std::dynamic_pointer_cast<OperationCreateNode>(pOp);
                     pCreateOp->m_nodeType = dataIt->value.FindMember("node_type")->value.GetString();
+
+                    auto it = dataIt->value.FindMember("populate_children");
+                    if (it != dataIt->value.MemberEnd())
+                    {
+                        pCreateOp->m_populateChildren = it->value.GetBool();
+                    }
                 }
                 else if (action == "find")
                 {
@@ -523,7 +531,7 @@ void EnvModTemplate::parseAttribute(const rapidjson::Value &attributeValue, modA
     auto saveInfoIt = attributeData.FindMember("save");
     if (saveInfoIt != attributeData.MemberEnd())
     {
-        pAttribute->saveVariableName = saveInfoIt->value.GetObject().FindMember("save")->value.GetString();
+        pAttribute->saveVariableName = saveInfoIt->value.GetObject().FindMember("name")->value.GetString();
         attrValueIt = saveInfoIt->value.GetObject().FindMember("accumulate");
         if (attrValueIt != saveInfoIt->value.MemberEnd())
         {
@@ -597,11 +605,65 @@ void EnvModTemplate::parseIncludeOperation(const rapidjson::Value &include, std:
         auto targetIt = targetObj.FindMember("filepath");
         pOpInc->m_path = targetIt->value.GetString();
     }
+
+    it = includeObj.FindMember("template_parameters");
+    if (it != includeObj.MemberEnd())
+    {
+        for (auto &parmIt: it->value.GetArray())
+        {
+            ParameterValue parmValue;
+
+            auto parmObject = parmIt.GetObject();
+
+            parmValue.name = trim(parmObject.FindMember("name")->value.GetString());
+            auto valueIt = parmObject.FindMember("values");
+            for (auto &val: valueIt->value.GetArray())
+            {
+                parmValue.values.emplace_back(trim(val.GetString()));
+            }
+            pOpInc->addParameterValue(parmValue);
+        }
+    }
+
+    it = includeObj.FindMember("count");
+    if (it != includeObj.MemberEnd())
+    {
+        pOpInc->m_count = trim(it->value.GetString());
+    }
 }
 
 
-void EnvModTemplate::execute()
+void EnvModTemplate::execute(bool isFirst, const std::vector<ParameterValue> &parameters)
 {
+    //
+    // Add any parameter values to the local variables for this template
+    for (auto &parm: parameters)
+    {
+        std::shared_ptr<Variable> pParmVar;
+
+        //
+        // If the first time through, create the variable and add it. If one exists, an exception is thrown. Otherwise
+        // subsequent iterations will find the variable exists, so retrieve it and clear it for this iteration's values
+        if (isFirst)
+        {
+            pParmVar = variableFactory("string", parm.name);
+            m_pVariables->add(pParmVar, false);
+        }
+        else
+        {
+            // This should pass
+            pParmVar = m_pVariables->getVariable(parm.name, true, true);
+            pParmVar->clear();  // clear it since we are going to add this execution's values
+        }
+
+        //
+        // Now set the values.
+        for (auto &parmValue: parm.values)
+        {
+            pParmVar->addValue(parmValue);
+        }
+    }
+
     try
     {
         //
@@ -619,7 +681,7 @@ void EnvModTemplate::execute()
     {
         try
         {
-            pOp->execute(m_pEnvMgr, m_pVariables);
+            pOp->execute(m_envMgr, m_pVariables);
         }
         catch (TemplateExecutionException &te)
         {
@@ -631,6 +693,11 @@ void EnvModTemplate::execute()
         catch (const ParseException &pe)
         {
             std::string msg = pe.what();
+            throw TemplateExecutionException(msg, std::to_string(opNum), m_templateFile);
+        }
+        catch (const TemplateException &te)
+        {
+            std::string msg = te.what();
             throw TemplateExecutionException(msg, std::to_string(opNum), m_templateFile);
         }
         ++opNum;

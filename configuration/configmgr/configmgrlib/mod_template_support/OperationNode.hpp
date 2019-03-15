@@ -19,7 +19,7 @@
 #define HPCCSYSTEMS_PLATFORM_OPERATIONNODE_HPP
 
 #include "Variable.hpp"
-#include "EnvironmentMgr.hpp"
+//#include "EnvironmentMgr.hpp"
 #include "Operation.hpp"
 #include <string>
 #include <vector>
@@ -46,22 +46,23 @@ struct modAttribute {
 
 
 class EnvironmentMgr;
+class EnvironmentNode;
 
 class OperationNode : public Operation
 {
 
     public:
 
-        OperationNode() : m_count("1"), m_startIndex("0") {}
-        bool execute(EnvironmentMgr *pEnvMgr, std::shared_ptr<Variables> pVariables) override;
+        OperationNode() = default;
+        bool execute(EnvironmentMgr &envMgr, std::shared_ptr<Variables> pVariables) override;
         void addAttribute(modAttribute &newAttribute);
         void assignAttributeCookedValues(std::shared_ptr<Variables> pVariables);
 
 
     protected:
 
-        virtual void doExecute(EnvironmentMgr *pEnvMgr, std::shared_ptr<Variables> pVariables) = 0;
-        void getParentNodeIds(EnvironmentMgr *pEnvMgr, std::shared_ptr<Variables> pVariables);
+        virtual void doExecute(EnvironmentMgr &envMgr, std::shared_ptr<Variables> pVariables) = 0;
+        void getParentNodeIds(EnvironmentMgr &evMgr, std::shared_ptr<Variables> pVariables);
         std::shared_ptr<Variable> createVariable(std::string varName, const std::string &varType,
                                                  std::shared_ptr<Variables> pVariables, bool existingOk, bool global);
         bool createAttributeSaveInputs(std::shared_ptr<Variables> pVariables);
@@ -75,8 +76,6 @@ class OperationNode : public Operation
         std::string m_parentNodeId;
         std::vector<std::string> m_parentNodeIds;
         std::vector<modAttribute> m_attributes;
-        std::string m_count;
-        std::string m_startIndex;
         modAttribute m_nodeValue;
         bool m_nodeValueValid = false;
         bool m_throwOnEmpty = true;

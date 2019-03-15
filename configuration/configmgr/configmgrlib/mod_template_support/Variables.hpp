@@ -36,7 +36,10 @@ class Variables : public std::enable_shared_from_this<Variables>
         std::shared_ptr<Variable> getVariable(const std::string &name, bool localOnly = true, bool throwIfNotFound = true) const;
         std::shared_ptr<Variable> getGlobalVariable(const std::string &name, bool throwIfNotFound = true) const;
         std::shared_ptr<Variables> getGlobalVariables() { return (m_pGlobalVariables ? m_pGlobalVariables : shared_from_this()); }
-        void setInputIndex(size_t idx);
+        void setIterationInfo(size_t idx, size_t iter);
+        void setIterationLimits(size_t start, size_t count);
+        size_t getCurIndex() const { return m_curIndex; }
+        size_t getCurIteration() const { return m_iter; }
         std::string doValueSubstitution(const std::string &value) const;
         void prepare();
         void initialize();
@@ -52,6 +55,7 @@ class Variables : public std::enable_shared_from_this<Variables>
         std::vector<std::shared_ptr<Variable>> m_variables;
         std::shared_ptr<Variables> m_pGlobalVariables;
         size_t m_curIndex = 0;
+        size_t m_iter = 0;
 };
 
 

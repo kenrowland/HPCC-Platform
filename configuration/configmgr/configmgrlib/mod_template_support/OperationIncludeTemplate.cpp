@@ -17,10 +17,41 @@
 
 #include "OperationIncludeTemplate.hpp"
 #include "EnvModTemplate.hpp"
+#include "ParameterValue.hpp"
 
+class EnvironmentMgr;
 
-bool OperationIncludeTemplate::execute(EnvironmentMgr *pEnvMgr, std::shared_ptr<Variables> pVariables)
+bool OperationIncludeTemplate::execute(EnvironmentMgr &envMgr, std::shared_ptr<Variables> pVariables)
 {
-    m_pEnvModTemplate->execute();
+    initializeForExecution(pVariables);
+
+    //
+    // Now execute the operation count times
+    for (size_t idx=0; idx < m_executionCount; ++idx)
+    {
+        pVariables->setIterationInfo(m_executionStartIndex + idx, idx);
+
+        //
+        // Create a vector of prepared parameter values based on this execution of the template
+        std::vector<ParameterValue> preparedValues;
+
+        //
+        // Add any parameter values to the local variables for this template
+        for (auto &parm: m_parameters)
+        {
+            ParameterValue preparedValue;
+            preparedValue.name = parm.name;
+            for (auto &parmValue: parm.values)
+            {
+                preparedValue.values.emplace_back(pVariables->doValueSubstitution(parmValue));
+            }
+            preparedValues.emplace_back(preparedValue);
+        }
+
+        //
+        // Go execute it!
+        m_pEnvModTemplate->execute((idx==0), preparedValues);
+    }
+
     return true;
 }

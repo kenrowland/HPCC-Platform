@@ -4,7 +4,7 @@
 #include "EnvironmentMgr.hpp"
 #include "TemplateExecutionException.hpp"
 
-void OperationDeleteNode::doExecute(EnvironmentMgr *pEnvMgr, std::shared_ptr<Variables> pVariables)
+void OperationDeleteNode::doExecute(EnvironmentMgr &envMgr, std::shared_ptr<Variables> pVariables)
 {
     //
     // If any node IDs found, go delete them
@@ -13,7 +13,7 @@ void OperationDeleteNode::doExecute(EnvironmentMgr *pEnvMgr, std::shared_ptr<Var
         for (auto &parentNodeId: m_parentNodeIds)
         {
             std::string nodeId = pVariables->doValueSubstitution(parentNodeId);
-            pEnvMgr->removeEnvironmentNode(nodeId);
+            envMgr.removeEnvironmentNode(nodeId);
         }
     }
     else if (m_throwOnEmpty)
