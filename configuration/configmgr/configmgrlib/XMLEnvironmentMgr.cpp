@@ -15,6 +15,7 @@
     limitations under the License.
 ############################################################################## */
 
+#include "EnvironmentMgr.hpp"
 #include "XMLEnvironmentMgr.hpp"
 #include "XSDSchemaParser.hpp"
 #include "XMLEnvironmentLoader.hpp"

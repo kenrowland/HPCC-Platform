@@ -32,15 +32,17 @@ class CFGMGRLIB_API SchemaParser
 {
     public:
 
-        SchemaParser(std::shared_ptr<SchemaItem> &pSchema) : m_pSchemaItem(pSchema) { };
+        explicit SchemaParser(std::shared_ptr<SchemaItem> &pSchema) : m_pSchemaItem(pSchema) { };
         virtual ~SchemaParser() { };
-        virtual bool parse(const std::string &configPath, const std::string &masterConfigFile,  const std::map<std::string, std::string> &cfgParms);
+        //virtual bool parse(const std::string &configPath, const std::string &masterConfigFile,  const std::map<std::string, std::string> &cfgParms);
+        virtual bool parse(const std::string &masterConfigFile, const std::vector<std::string> &configPaths, const std::map<std::string, std::string> &cfgParms);
         const std::string getLastMessage() const { return m_message;  }
 
 
     protected:
 
-        virtual bool doParse(const std::string &configPath, const std::string &masterConfigFile,  const std::map<std::string, std::string> &cfgParms) = 0;
+        virtual bool loadSchema(const std::string &masterConfigFile, const std::vector<std::string> &configPaths, const std::map<std::string, std::string> &cfgParms) = 0;
+        //virtual bool loadSchema(const std::string &configPath, const std::string &masterConfigFile, const std::map<std::string, std::string> &cfgParms) = 0;
         SchemaParser() { };
 
 

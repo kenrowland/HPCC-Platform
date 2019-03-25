@@ -26,7 +26,9 @@
 
 namespace pt = boost::property_tree;
 
-class XMLEnvironmentMgr :   public EnvironmentMgr
+//class EnvironmentMgr;
+
+class XMLEnvironmentMgr : public EnvironmentMgr
 {
     public:
 

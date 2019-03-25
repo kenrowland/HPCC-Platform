@@ -19,7 +19,7 @@
         xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" attributeFormDefault="unqualified"
         xmlns:hpcc="someuri">
     <xs:include schemaLocation="types.xsd"/>
-    <hpcc:insert hpcc:schemaPath="/Environment/Software">
+    <hpcc:insert hpcc:schemaPath="/Environment/Software" hpcc:schemaType="hpcc_environment">
         <xs:element name="LDAPServerProcess" hpcc:class="component" hpcc:category="LDAP Process" hpcc:itemType="ldapserver"
                     hpcc:displayName="Active Directory LDAP process" hpcc:docid="ldapSrv" maxOccurs="unbounded">
             <xs:complexType>

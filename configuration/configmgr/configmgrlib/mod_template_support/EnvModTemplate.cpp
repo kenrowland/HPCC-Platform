@@ -35,17 +35,16 @@
 // Good online resource for validation of modification templates is https://www.jsonschemavalidator.net/
 // Load the schecma (ModTemplateSchema.json) in the left window and the modification template in the right.
 
-EnvModTemplate::EnvModTemplate(EnvironmentMgr &envMgr, const std::string &schemaFile) :
-    m_envMgr(envMgr),
+
+//
+// Constructor for a new top level root template.
+EnvModTemplate::EnvModTemplate(std::shared_ptr<EnvironmentMgr> pEnvMgr, const std::string &schemaFile) :
     m_pTemplate(nullptr),
     m_pSchema(nullptr)
 {
-//    if (m_pEnvMgr == nullptr)
-//    {
-//        throw(TemplateException("Environment Modification Template requires a valid Environment Manager"));
-//    }
-
     m_pVariables = std::make_shared<Variables>();
+    m_pEnvironments = std::make_shared<Environments>();
+    m_pEnvironments->add(pEnvMgr, "");  // add the default environment manager
 
     //
     // Load and compile the schema document
@@ -60,16 +59,17 @@ EnvModTemplate::EnvModTemplate(EnvironmentMgr &envMgr, const std::string &schema
 }
 
 
+//
+// Constructor for a child template of the input template reference
 EnvModTemplate::EnvModTemplate(const EnvModTemplate &modTemplate) :
-    m_envMgr(modTemplate.m_envMgr),
     m_pTemplate(nullptr)
 {
     //
     // Copy relevant members to avoid duplicate actions. Also, create a new variables
     // object and init it with the global variables
     m_pSchema = modTemplate.m_pSchema;
-//    m_pEnvMgr = modTemplate.m_pEnvMgr;
     m_pVariables =  std::make_shared<Variables>(modTemplate.m_pVariables->getGlobalVariables());
+    m_pEnvironments = modTemplate.m_pEnvironments;
 }
 
 
@@ -155,6 +155,11 @@ void EnvModTemplate::parseTemplate()
     try
     {
         //
+        // Parse common stuff from the template
+        parseCommon();
+
+
+        //
         // Inputs
         if (m_pTemplate->HasMember("variables"))
         {
@@ -174,6 +179,19 @@ void EnvModTemplate::parseTemplate()
     {
         throw TemplateException("An exception has occured while parsing the input template", false);
     }
+}
+
+
+void EnvModTemplate::parseCommon()
+{
+    //
+    // Overrides the default environment for the template. Environment is retrieved at runtime
+    auto it = m_pTemplate->FindMember("environment");
+    if (it != m_pTemplate->MemberEnd())
+    {
+        m_environmentName = trim(it->value.GetString());
+    }
+
 }
 
 
@@ -630,6 +648,14 @@ void EnvModTemplate::parseIncludeOperation(const rapidjson::Value &include, std:
     {
         pOpInc->m_count = trim(it->value.GetString());
     }
+
+    // Is an envriomment specified?
+    it = includeObj.FindMember("environment");
+    if (it != includeObj.MemberEnd())
+    {
+        pOpInc->m_environmentName = trim(it->value.GetString());
+    }
+
 }
 
 
@@ -681,7 +707,7 @@ void EnvModTemplate::execute(bool isFirst, const std::vector<ParameterValue> &pa
     {
         try
         {
-            pOp->execute(m_envMgr, m_pVariables);
+            pOp->execute(m_pEnvironments, m_environmentName, m_pVariables);
         }
         catch (TemplateExecutionException &te)
         {

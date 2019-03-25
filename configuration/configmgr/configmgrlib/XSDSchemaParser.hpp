@@ -43,7 +43,9 @@ class XSDSchemaParser : public SchemaParser
     protected:
 
         XSDSchemaParser() { };
-        virtual bool doParse(const std::string &configPath, const std::string &masterConfigFile,  const std::map<std::string, std::string> &cfgParms) override;
+        virtual bool loadSchema(const std::string &masterConfigFile, const std::vector<std::string> &configPaths, const std::map<std::string, std::string> &cfgParms);
+//        virtual bool loadSchema(const std::string &configPath, const std::string &masterConfigFile,
+//                                const std::map<std::string, std::string> &cfgParms) override;
         void parseXSD(const pt::ptree &tree);
         void parseXSD(const std::string &fullyQualifiedPath);
         std::string getXSDAttributeValue(const pt::ptree &tree, const std::string &attriName, bool throwIfNotPresent=true, const std::string &defaultVal = (std::string(""))) const;
@@ -64,6 +66,11 @@ class XSDSchemaParser : public SchemaParser
         void parseIntegerTypeLimits(const pt::ptree &restrictTree, std::shared_ptr<SchemaTypeIntegerLimits> &pIntegerLimits);
         void parseStringTypeLimits(const pt::ptree &restrictTree, std::shared_ptr<SchemaTypeStringLimits> &pStringLimits);
         void parseAllowedValue(const pt::ptree &allowedValueTree, SchemaTypeLimits *pTypeLimits);
+
+
+    private:
+
+        void initializeTypes();
 
 
     protected:

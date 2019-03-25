@@ -48,6 +48,7 @@ SET(  SRCS
         mod_template_support/OperationFindNode.cpp
         mod_template_support/OperationModifyNode.cpp
         mod_template_support/Variables.cpp
+        mod_template_support/Environments.cpp
         mod_template_support/IPAddressRangeVariable.cpp
         mod_template_support/IPAddressVariable.cpp
         mod_template_support/HostNameVariable.cpp

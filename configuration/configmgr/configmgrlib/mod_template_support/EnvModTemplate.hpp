@@ -25,6 +25,7 @@
 #include <string>
 #include "Variable.hpp"
 #include "Variables.hpp"
+#include "Environments.hpp"
 #include "ParameterValue.hpp"
 #include "OperationNode.hpp"
 #include "OperationFindNode.hpp"
@@ -32,6 +33,7 @@
 #include <map>
 #include <vector>
 #include <memory>
+#include <map>
 #include "platform.h"
 #include "Cfgmgrlib.hpp"
 
@@ -41,7 +43,7 @@ class CFGMGRLIB_API EnvModTemplate
 {
     public:
 
-        EnvModTemplate(EnvironmentMgr &pEnvMgr, const std::string &schemaFile);
+        EnvModTemplate(std::shared_ptr<EnvironmentMgr> pEnvMgr, const std::string &schemaFile);
         EnvModTemplate(const EnvModTemplate &modTemplate);
         ~EnvModTemplate();
 
@@ -52,6 +54,7 @@ class CFGMGRLIB_API EnvModTemplate
         std::vector<std::shared_ptr<Variable>> getVariables(bool userInputOnly = false) const;
         void assignVariablesFromFile(const std::string &filepath);
         void execute(bool isFirst, const std::vector<ParameterValue> &parameters = std::vector<ParameterValue>());
+        void setTargetEnvironment(const std::string &name) { if (m_environmentName.empty()) m_environmentName = name; }
 
 
     protected:
@@ -59,6 +62,7 @@ class CFGMGRLIB_API EnvModTemplate
         void releaseTemplate();
         void loadTemplate(rapidjson::IStreamWrapper &stream);
         void parseTemplate();
+        void parseCommon();
         void parseVariables(const rapidjson::Value &variables);
         void parseVariable(const rapidjson::Value &varValue);
         void parseOperations(const rapidjson::Value &operations);
@@ -73,10 +77,11 @@ class CFGMGRLIB_API EnvModTemplate
 
         std::shared_ptr<rapidjson::SchemaDocument> m_pSchema;
         rapidjson::Document *m_pTemplate;   // same as GenericDocument<UTF8<> >
-        EnvironmentMgr &m_envMgr;
         std::shared_ptr<Variables> m_pVariables;
+        std::shared_ptr<Environments> m_pEnvironments;
         std::vector<std::shared_ptr<Operation>> m_operations;
         std::string m_templateFile;
+        std::string m_environmentName;
 };
 
 

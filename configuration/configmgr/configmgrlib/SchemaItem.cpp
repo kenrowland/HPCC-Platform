@@ -470,9 +470,10 @@ void SchemaItem::doFetchSchemaValues(ConfigPath &configPath, std::vector<std::sh
 
 std::shared_ptr<SchemaItem> SchemaItem::getSchemaRoot()
 {
-    if (!m_pParent.expired())
+    auto pParent = m_pParent.lock();
+    if (pParent)
     {
-        return m_pParent.lock()->getSchemaRoot();
+        return pParent->getSchemaRoot();
     }
 
     std::shared_ptr<SchemaItem> ptr = shared_from_this();

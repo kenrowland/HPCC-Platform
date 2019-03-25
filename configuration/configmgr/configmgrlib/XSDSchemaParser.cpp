@@ -31,81 +31,52 @@
 
 namespace pt = boost::property_tree;
 
-bool XSDSchemaParser::doParse(const std::string &configPath, const std::string &masterConfigFile,  const std::map<std::string, std::string> &cfgParms)
+bool XSDSchemaParser::loadSchema(const std::string &masterConfigFile, const std::vector<std::string> &configPaths, const std::map<std::string, std::string> &cfgParms)
 {
     bool rc = true;
+    initializeTypes();
 
-    //
-    // Add some default types to the config. Note changing values for limits
-    std::shared_ptr<SchemaTypeStringLimits> pStringLimits;
-    std::shared_ptr<SchemaTypeIntegerLimits> pIntLimits;
-
-    std::shared_ptr<SchemaType> pType = std::make_shared<SchemaType>("xs:string");
-    pType->setBaseType("string");
-    pStringLimits = std::make_shared<SchemaTypeStringLimits>();
-    pType->setLimits(pStringLimits);
-    m_pSchemaItem->addSchemaValueType(pType);
-
-    pType = std::make_shared<SchemaType>("xs:token");
-    pType->setBaseType("string");
-    pStringLimits = std::make_shared<SchemaTypeStringLimits>();
-    pType->setLimits(pStringLimits);
-    m_pSchemaItem->addSchemaValueType(pType);
-
-    pType = std::make_shared<SchemaType>("xs:boolean");
-    pType->setBaseType("boolean");
-    std::shared_ptr<SchemaTypeLimits> pBoolLimits = std::make_shared<SchemaTypeStringLimits>();
-    pBoolLimits->addAllowedValue("true");
-    pBoolLimits->addAllowedValue("false");
-    pType->setLimits(pBoolLimits);
-    m_pSchemaItem->addSchemaValueType(pType);
-
-    pType = std::make_shared<SchemaType>("xs:integer");
-    pType->setBaseType("integer");
-    pIntLimits = std::make_shared<SchemaTypeIntegerLimits>();
-    pType->setLimits(pIntLimits);
-    m_pSchemaItem->addSchemaValueType(pType);
-
-    pType = std::make_shared<SchemaType>("xs:nonNegativeInteger");
-    pType->setBaseType("integer");
-    pIntLimits = std::make_shared<SchemaTypeIntegerLimits>();
-    pIntLimits->setMinInclusive(0);
-    pType->setLimits(pIntLimits);
-    m_pSchemaItem->addSchemaValueType(pType);
-
-    pType = std::make_shared<SchemaType>("xs:positiveInteger");
-    pType->setBaseType("integer");
-    pIntLimits = std::make_shared<SchemaTypeIntegerLimits>();
-    pIntLimits->setMinInclusive(1);
-    pType->setLimits(pIntLimits);
-    m_pSchemaItem->addSchemaValueType(pType);
-
-    pType = std::make_shared<SchemaType>("xs:unsignedInt");
-    pType->setBaseType("integer");
-    pIntLimits = std::make_shared<SchemaTypeIntegerLimits>();
-    pIntLimits->setMinInclusive(0);
-    pType->setLimits(pIntLimits);
-    m_pSchemaItem->addSchemaValueType(pType);
 
     //
     // Parse the master XSD
-    m_basePath = configPath;
+    m_basePath = configPaths[0];
     m_masterXSDFilename = masterConfigFile;
     parseXSD(m_basePath + m_masterXSDFilename);
 
-    //
-    // Parse the rest of the XSDs in the config path skipping the master
-    processXSDFiles(m_basePath, m_masterXSDFilename);
-
-    //
-    // Now plugins
-    for (auto &pluginPath: m_pluginPaths)
+    for (auto const &configPath: configPaths)
     {
-        processXSDFiles(pluginPath, "");
+        processXSDFiles(configPath, m_masterXSDFilename);
     }
-
     return rc;
 }
+
+
+//bool XSDSchemaParser::loadSchema(const std::string &configPath, const std::string &masterConfigFile,
+//                                 const std::map<std::string, std::string> &cfgParms)
+//{
+//    bool rc = true;
+//    initializeTypes();
+//
+//
+//    //
+//    // Parse the master XSD
+//    m_basePath = configPath;
+//    m_masterXSDFilename = masterConfigFile;
+//    parseXSD(m_basePath + m_masterXSDFilename);
+//
+//    //
+//    // Parse the rest of the XSDs in the config path skipping the master
+//    processXSDFiles(m_basePath, m_masterXSDFilename);
+//
+//    //
+//    // Now plugins
+//    for (auto &pluginPath: m_pluginPaths)
+//    {
+//        processXSDFiles(pluginPath, "");
+//    }
+//
+//    return rc;
+//}
 
 
 void XSDSchemaParser::parseXSD(const std::string &fullyQualifiedPath)
@@ -133,7 +104,7 @@ void XSDSchemaParser::parseXSD(const std::string &fullyQualifiedPath)
     catch (ParseException &pe)
     {
         pe.addFilename(fullyQualifiedPath);
-        throw(pe);
+        throw;
     }
 }
 
@@ -328,6 +299,7 @@ void XSDSchemaParser::parseElement(const pt::ptree &elemTree)
     // Get schema attribute necessary to figure out what to do
     std::string elementName = elemTree.get("<xmlattr>.name", "");
     std::string itemType = elemTree.get("<xmlattr>.hpcc:itemType", "");
+    std::string schemaType = elemTree.get("<xmlattr>.hpcc:schemaType", "");
 
     //
     // Get child tree for use below
@@ -375,6 +347,7 @@ void XSDSchemaParser::parseElement(const pt::ptree &elemTree)
     {
         m_pSchemaItem->setProperty("name", elementName);
         m_pSchemaItem->setProperty("itemType", itemType);
+        m_pSchemaItem->setProperty("schemaType", schemaType);
         parseXSD(childTree);
     }
     else
@@ -451,12 +424,36 @@ void XSDSchemaParser::processSchemaInsert(const pt::ptree &elemTree)
     // Make sure path is present and well formed
     if (path.empty() || path[0] != '/' || path.back() == '/')
     {
-        std::string msg = "Insert schema path is missing, empty or not welformed";
+        std::string msg = "Insert schema path is missing, empty or not well formed";
         throw(ParseException(msg));
     }
 
-    std::string itemType = elemTree.get("<xmlattr>.hpcc:itemType", "");
+    //
+    // Get the schema type. If present, then it must match the schema type property of the schema root element. If it
+    // doesn't, then ignore this schema file
+    std::string envSchemaType = m_pSchemaItem->getSchemaRoot()->getProperty("schemaType");
+    bool match = true;
+    if (!envSchemaType.empty())
+    {
+        std::vector<std::string> schemaTypes = splitString(elemTree.get("<xmlattr>.hpcc:schemaType", ""), ",");
+        if (!schemaTypes.empty())
+        {
+            match = false;
+            for (auto schemaIt = schemaTypes.begin(); !match && schemaIt != schemaTypes.end(); ++schemaIt)
+            {
+                match = *schemaIt == envSchemaType;
+            }
+        }
+    }
 
+    if (!match)
+    {
+        return;
+    }
+
+    //
+    // Find locations in the current schema and insert this schema there
+    std::string itemType = elemTree.get("<xmlattr>.hpcc:itemType", "");
     std::vector<std::shared_ptr<SchemaItem>> insertChildren;
     std::vector<std::string> pathParts = splitString(path, "/");
     std::shared_ptr<SchemaItem> pInsertItem = m_pSchemaItem->getSchemaRoot();
@@ -686,12 +683,12 @@ void XSDSchemaParser::processXSDFiles(const std::string &path, const std::string
                     // qualified name and parse it.
                     std::string ext = filename.substr(dotPos + 1);
                     std::transform(ext.begin(), ext.end(), ext.begin(), tolower);
-                    if (ext == "xsd" && m_pSchemaItem->addUniqueName(filename))
+                    std::string fullyQualifiedFilePath = path;
+                    if (std::string(1, fullyQualifiedFilePath.back()) != PATHSEPSTR)
+                        fullyQualifiedFilePath += PATHSEPSTR;
+                    fullyQualifiedFilePath += filename;
+                    if (ext == "xsd" && m_pSchemaItem->addUniqueName(fullyQualifiedFilePath))
                     {
-                        std::string fullyQualifiedFilePath = path;
-                        if (std::string(1, fullyQualifiedFilePath.back()) != PATHSEPSTR)
-                            fullyQualifiedFilePath += PATHSEPSTR;
-                        fullyQualifiedFilePath += filename;
                         parseXSD(fullyQualifiedFilePath);
                     }
                 }
@@ -961,4 +958,60 @@ std::shared_ptr<SchemaValue> XSDSchemaParser::getSchemaValue(const pt::ptree &at
     }
 
     return pCfgValue;
+}
+
+
+void XSDSchemaParser::initializeTypes()
+{
+    //
+    // Add some default types to the config. Note changing values for limits
+    std::shared_ptr<SchemaTypeStringLimits> pStringLimits;
+    std::shared_ptr<SchemaTypeIntegerLimits> pIntLimits;
+
+    std::shared_ptr<SchemaType> pType = std::make_shared<SchemaType>("xs:string");
+    pType->setBaseType("string");
+    pStringLimits = std::make_shared<SchemaTypeStringLimits>();
+    pType->setLimits(pStringLimits);
+    m_pSchemaItem->addSchemaValueType(pType);
+
+    pType = std::make_shared<SchemaType>("xs:token");
+    pType->setBaseType("string");
+    pStringLimits = std::make_shared<SchemaTypeStringLimits>();
+    pType->setLimits(pStringLimits);
+    m_pSchemaItem->addSchemaValueType(pType);
+
+    pType = std::make_shared<SchemaType>("xs:boolean");
+    pType->setBaseType("boolean");
+    std::shared_ptr<SchemaTypeLimits> pBoolLimits = std::make_shared<SchemaTypeStringLimits>();
+    pBoolLimits->addAllowedValue("true");
+    pBoolLimits->addAllowedValue("false");
+    pType->setLimits(pBoolLimits);
+    m_pSchemaItem->addSchemaValueType(pType);
+
+    pType = std::make_shared<SchemaType>("xs:integer");
+    pType->setBaseType("integer");
+    pIntLimits = std::make_shared<SchemaTypeIntegerLimits>();
+    pType->setLimits(pIntLimits);
+    m_pSchemaItem->addSchemaValueType(pType);
+
+    pType = std::make_shared<SchemaType>("xs:nonNegativeInteger");
+    pType->setBaseType("integer");
+    pIntLimits = std::make_shared<SchemaTypeIntegerLimits>();
+    pIntLimits->setMinInclusive(0);
+    pType->setLimits(pIntLimits);
+    m_pSchemaItem->addSchemaValueType(pType);
+
+    pType = std::make_shared<SchemaType>("xs:positiveInteger");
+    pType->setBaseType("integer");
+    pIntLimits = std::make_shared<SchemaTypeIntegerLimits>();
+    pIntLimits->setMinInclusive(1);
+    pType->setLimits(pIntLimits);
+    m_pSchemaItem->addSchemaValueType(pType);
+
+    pType = std::make_shared<SchemaType>("xs:unsignedInt");
+    pType->setBaseType("integer");
+    pIntLimits = std::make_shared<SchemaTypeIntegerLimits>();
+    pIntLimits->setMinInclusive(0);
+    pType->setLimits(pIntLimits);
+    m_pSchemaItem->addSchemaValueType(pType);
 }

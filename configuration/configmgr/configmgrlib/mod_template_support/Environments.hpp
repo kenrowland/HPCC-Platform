@@ -15,33 +15,31 @@
     limitations under the License.
 ############################################################################## */
 
-#ifndef HPCCSYSTEMS_PLATFORM_OPERATIONCREATENODE_HPP
-#define HPCCSYSTEMS_PLATFORM_OPERATIONCREATENODE_HPP
+#ifndef HPCCSYSTEMS_PLATFORM_ENVIRONMENTS_HPP
+#define HPCCSYSTEMS_PLATFORM_ENVIRONMENTS_HPP
 
-#include "OperationNode.hpp"
+#include <string>
+#include <map>
+#include <memory>
+#include <vector>
+#include "EnvironmentMgr.hpp"
 
+class Environments {
 
-class OperationCreateNode : public OperationNode
-{
     public:
 
-        OperationCreateNode() : m_populateChildren(false) {};
-        ~OperationCreateNode() override = default;
+        Environments() = default;
+        ~Environments();
+        void add(const std::string &masterFile, const std::vector<std::string> &paths, const std::string &envFile, const std::string &name);
+        void add(const std::shared_ptr<EnvironmentMgr> pEnvMgr, const std::string name);
+        std::shared_ptr<EnvironmentMgr> get(const std::string &name) const;
+        void release(const std::string &name);
 
 
-    protected:
+    private:
 
-        void doExecute(std::shared_ptr<EnvironmentMgr> pEnvMgr, std::shared_ptr<Variables> pVariables) override;
-
-
-    protected:
-
-        std::string m_nodeType;
-        bool m_populateChildren;
-
-
-    friend class EnvModTemplate;
+        std::map<std::string, std::shared_ptr<EnvironmentMgr>> m_environments;
 };
 
 
-#endif //HPCCSYSTEMS_PLATFORM_OPERATIONCREATENODE_HPP
+#endif //HPCCSYSTEMS_PLATFORM_ENVIRONMENTS_HPP

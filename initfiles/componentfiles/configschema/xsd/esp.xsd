@@ -20,7 +20,7 @@
         xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" attributeFormDefault="unqualified"
         xmlns:hpcc="someuri">
     <xs:include schemaLocation="types.xsd"/>
-    <hpcc:insert hpcc:schemaPath="/Environment/Software">
+    <hpcc:insert hpcc:schemaPath="/Environment/Software" hpcc:schemaType="hpcc_environment">
         <xs:element name="EspProcess" hpcc:class="component" hpcc:category="ESP Process" hpcc:itemType="esp"
                     hpcc:displayName="ESP Process" hpcc:docid="ESP.t6" maxOccurs="unbounded">
             <xs:complexType>

@@ -19,7 +19,7 @@
         xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" attributeFormDefault="unqualified"
         xmlns:hpcc="someuri">
     <xs:include schemaLocation="types.xsd"/>
-    <hpcc:insert hpcc:schemaPath="/Environment/EnvSettings">
+    <hpcc:insert hpcc:schemaPath="/Environment/EnvSettings" hpcc:schemaType="hpcc_environment">
         <xs:element name="additionalPlugins" hpcc:displayName="Additional Plugins" type="xs:string" hpcc:forcedConfigValue="python2" hpcc:class="setting"/>
         <xs:element name="allow_pgcache_flush" hpcc:displayName="Allow PG Cache Flush" type="xs:boolean" hpcc:forcedConfigValue="true" hpcc:class="setting"/>
         <xs:element name="blockname" hpcc:displayName="HPCC" type="xs:boolean" hpcc:forcedConfigValue="HPCCSystems" hpcc:class="setting"/>

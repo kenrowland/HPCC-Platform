@@ -22,6 +22,7 @@
 #include "Utils.hpp"
 #include "jfile.hpp"
 #include "build-config.h"
+#include <memory>
 
 #ifndef WIN32
 #include <dlfcn.h>
@@ -29,12 +30,12 @@
 
 std::atomic_int EnvironmentMgr::m_key(1);
 
-EnvironmentMgr *getEnvironmentMgrInstance(const EnvironmentType envType)
+std::shared_ptr<EnvironmentMgr> getEnvironmentMgrInstance(const EnvironmentType envType)
 {
-    EnvironmentMgr *pEnvMgr = nullptr;
+    std::shared_ptr<EnvironmentMgr> pEnvMgr;
     if (envType == XML)
     {
-        pEnvMgr = new XMLEnvironmentMgr();
+        pEnvMgr = std::make_shared<EnvironmentMgr>(XMLEnvironmentMgr());
     }
     return pEnvMgr;
 }
@@ -47,12 +48,13 @@ EnvironmentMgr::EnvironmentMgr() :
 }
 
 
-bool EnvironmentMgr::loadSchema(const std::string &configPath, const std::string &masterConfigFile, const std::map<std::string, std::string> &cfgParms)
+bool EnvironmentMgr::loadSchema(const std::string &masterConfigFile, const std::vector<std::string> &configPaths,
+                                const std::map<std::string, std::string> &cfgParms)
 {
     bool rc = false;
     if (createParser())
     {
-        rc = m_pSchemaParser->parse(configPath, masterConfigFile, cfgParms);
+        rc = m_pSchemaParser->parse(masterConfigFile, configPaths, cfgParms);
         if (rc)
         {
             try {
@@ -95,6 +97,58 @@ bool EnvironmentMgr::loadSchema(const std::string &configPath, const std::string
     }
     return rc;
 }
+
+
+
+
+//bool EnvironmentMgr::loadSchema(const std::string &configPath, const std::string &masterConfigFile, const std::map<std::string, std::string> &cfgParms)
+//{
+//    bool rc = false;
+//    if (createParser())
+//    {
+//        rc = m_pSchemaParser->parse(configPath, masterConfigFile, cfgParms);
+//        if (rc)
+//        {
+//            try {
+//                // unique attribure value sets are global across a schema. Allocate one here and pass it in
+//                // for use in building the necessary references and dependencies across the schema, then pass
+//                // it to the post processing for finalization. Once references and dependencies are built, the
+//                // attribute value sets are no longer needed.
+//                std::map<std::string, std::vector<std::shared_ptr<SchemaValue>>> uniqueAttributeValueSets;
+//                m_pSchema->processDefinedUniqueAttributeValueSets(uniqueAttributeValueSets);  // This must be done first
+//                m_pSchema->postProcessConfig(uniqueAttributeValueSets);
+//            }
+//            catch (ParseException &pe)
+//            {
+//                m_message = pe.what();
+//                rc = false;
+//            }
+//        }
+//
+//        //
+//        // Load support libs based on the schema type which is read from the itemType property of the schema root node.
+//        std::string envType = m_pSchema->getItemType();
+//        std::string libPath = LIB_DIR;
+//        std::string libMask = "libcfg" + envType + "_*";
+//        Owned<IFile> pDir = createIFile(libPath.c_str());
+//        if (pDir->exists())
+//        {
+//            Owned<IDirectoryIterator> it = pDir->directoryFiles(libMask.c_str(), false, false);
+//            ForEach(*it)
+//            {
+//                StringBuffer fname;
+//                std::string filename = LIB_DIR;
+//                filename.append(PATHSEPSTR).append(it->getName(fname).str());
+//                std::shared_ptr<EnvSupportLib> pLib = std::make_shared<EnvSupportLib>(filename, this);
+//                if (pLib->isValid())
+//                {
+//                    m_supportLibs.push_back(pLib);
+//                }
+//            }
+//        }
+//    }
+//    return rc;
+//}
 
 
 std::string EnvironmentMgr::getLastSchemaMessage() const

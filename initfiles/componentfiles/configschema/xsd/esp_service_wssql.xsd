@@ -19,7 +19,7 @@
         xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" attributeFormDefault="unqualified"
         xmlns:hpcc="someuri">
     <xs:include schemaLocation="types.xsd"/>
-    <hpcc:insert hpcc:schemaPath="/Environment/Software">
+    <hpcc:insert hpcc:schemaPath="/Environment/Software" hpcc:schemaType="hpcc_environment"sssss>
         <xs:element name="EspService" hpcc:displayName="WsSQL Service" hpcc:itemType="ws_sql" minOccurs="0"
                     maxOccurs="unbounded" hpcc:class="component">
             <xs:complexType>

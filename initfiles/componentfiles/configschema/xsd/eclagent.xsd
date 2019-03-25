@@ -19,7 +19,7 @@
         xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" attributeFormDefault="unqualified"
         xmlns:hpcc="someuri">
     <xs:include schemaLocation="types.xsd"/>
-    <hpcc:insert hpcc:schemaPath="/Environment/Software">
+    <hpcc:insert hpcc:schemaPath="/Environment/Software" hpcc:schemaType="hpcc_environment">
         <xs:element name="EclAgentProcess" hpcc:class="component" hpcc:itemType="eclagent"
                     hpcc:displayName="ECL Agent Process" maxOccurs="unbounded" hpcc:docid="EA.t1">
             <xs:complexType>

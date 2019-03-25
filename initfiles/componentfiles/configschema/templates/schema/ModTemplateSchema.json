@@ -19,6 +19,9 @@
             ],
             "description" : "Type of template. Mainly used for filtering templates."
         },
+        "environment" : {
+            "$ref": "#/definitions/environment"
+        },
         "variables": {
             "type": "array",
             "minItems": 0,
@@ -706,6 +709,56 @@
                 }
             },
             "required" : [ "filepath" ]
+        },
+        "environment" : {
+            "type" : "object",
+            "properties" : {
+                "name" : {
+                    "type" : "string",
+                    "description" : "Either references an existing environment or names a new one described by other values in this object"
+                },
+                "schema_path": {
+                    "type": "array",
+                    "items" : {
+                        "type" : "string"
+                    },
+                    "description" : "Array of paths from which schema files are loaded. First entry MUST be the primary path where the master schema file is located"
+                },
+                "master_schema_file" : {
+                    "type" : "string",
+                    "description" : "Name of master schema file"
+                },
+                "environment_file" : {
+                    "type" : "string",
+                    "description" : "If given, this environment is loaded"
+                }
+            },
+            "oneOf" : [
+                {
+                    "allOf" : [
+                        {
+                            "required" : [ "name" ]
+                        },
+                        {
+                            "not" : {
+                                "required" : [ "schema_path" ]
+                            }
+                        },
+                        {
+                            "not" : {
+                                "required" : [ "master_schema_file" ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "allOf" : [
+                        {
+                            "required" : [ "name", "schema_path", "master_schema_file" ]
+                        }
+                    ]
+                }
+            ]
         }
     }
 }

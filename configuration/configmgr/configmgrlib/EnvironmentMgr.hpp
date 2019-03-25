@@ -31,17 +31,11 @@
 #include "platform.h"
 #include "EnvSupportLib.hpp"
 #include "Cfgmgrlib.hpp"
-
-class EnvironmentMgr;
-
-enum EnvironmentType
-{
-    UNDEFINED,
-    XML
-};
+#include "EnvironmentTypes.hpp"
 
 
-CFGMGRLIB_API EnvironmentMgr *getEnvironmentMgrInstance(const EnvironmentType envType);
+//CFGMGRLIB_API EnvironmentMgr *getEnvironmentMgrInstance(const EnvironmentType envType);
+CFGMGRLIB_API std::shared_ptr<EnvironmentMgr> getEnvironmentMgrInstance(const EnvironmentType envType);
 
 class CFGMGRLIB_API EnvironmentMgr
 {
@@ -49,7 +43,8 @@ class CFGMGRLIB_API EnvironmentMgr
 
         EnvironmentMgr();
         virtual ~EnvironmentMgr() {}
-        bool loadSchema(const std::string &configPath, const std::string &masterConfigFile, const std::map<std::string, std::string> &cfgParms = std::map<std::string, std::string>());
+        //bool loadSchema(const std::string &configPath, const std::string &masterConfigFile, const std::map<std::string, std::string> &cfgParms = std::map<std::string, std::string>());
+        bool loadSchema(const std::string &masterConfigFile, const std::vector<std::string> &configPaths, const std::map<std::string, std::string> &cfgParms = std::map<std::string, std::string>());
         std::string getLastSchemaMessage() const;
         std::string getLastEnvironmentMessage() const { return m_message;  }
         bool loadEnvironment(const std::string &qualifiedFilename);
@@ -79,9 +74,9 @@ class CFGMGRLIB_API EnvironmentMgr
     protected:
 
         void addPath(const std::shared_ptr<EnvironmentNode> pNode);
-        virtual bool createParser() = 0;
-        virtual std::vector<std::shared_ptr<EnvironmentNode>> doLoadEnvironment(std::istream &in, const std::shared_ptr<SchemaItem> &pSchemaItem, const std::string itemType = std::string("")) = 0;
-        virtual bool save(std::ostream &out) = 0;
+        virtual bool createParser() { return false; }
+        virtual std::vector<std::shared_ptr<EnvironmentNode>> doLoadEnvironment(std::istream &in, const std::shared_ptr<SchemaItem> &pSchemaItem, const std::string itemType = std::string("")) { return std::vector<std::shared_ptr<EnvironmentNode>>(); }
+        virtual bool save(std::ostream &out) { return false; }
         void assignNodeIds(const std::shared_ptr<EnvironmentNode> &pNode);
         void insertExtraEnvironmentData(std::shared_ptr<EnvironmentNode> pNode);
         std::shared_ptr<SchemaItem> findInsertableItem(const std::shared_ptr<EnvironmentNode> &pNode, const std::string &itemType) const;

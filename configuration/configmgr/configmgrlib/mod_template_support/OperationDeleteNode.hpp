@@ -30,7 +30,7 @@ class OperationDeleteNode :public OperationNode
 
     protected:
 
-        void doExecute(EnvironmentMgr &envMgr, std::shared_ptr<Variables> pVariables) override;
+        void doExecute(std::shared_ptr<EnvironmentMgr> pEnvMgr, std::shared_ptr<Variables> pVariables) override;
 
     friend class EnvModTemplate;
 };

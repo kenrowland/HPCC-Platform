@@ -3,7 +3,7 @@
         xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" attributeFormDefault="unqualified"
         xmlns:hpcc="someuri">
     <xs:include schemaLocation="types.xsd"/>
-    <hpcc:insert hpcc:schemaPath="/Environment/Software">
+    <hpcc:insert hpcc:schemaPath="/Environment/Software" hpcc:schemaType="hpcc_environment">
         <xs:element name="EspService" hpcc:class="component" hpcc:category="ESP Service" hpcc:itemType="espsmc"
                     hpcc:displayName="ESP SMC" minOccurs="0" maxOccurs="unbounded" hpcc:docid="SMC-T01">
             <xs:complexType>

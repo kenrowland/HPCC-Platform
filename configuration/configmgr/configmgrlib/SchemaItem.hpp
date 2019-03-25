@@ -32,7 +32,6 @@
 #include "Cfgmgrlib.hpp"
 
 class EnvironmentNode;
-class EnvironmentMgr;
 
 
 class CFGMGRLIB_API SchemaItem : public std::enable_shared_from_this<SchemaItem>

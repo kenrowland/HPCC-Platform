@@ -19,7 +19,7 @@
         xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" attributeFormDefault="unqualified"
         xmlns:hpcc="someuri">
     <xs:include schemaLocation="types.xsd"/>
-    <hpcc:insert hpcc:schemaPath="/Environment/Software">
+    <hpcc:insert hpcc:schemaPath="/Environment/Software" hpcc:schemaType="hpcc_environment">
         <xs:element name="RoxieCluster" hpcc:displayName="Roxie Cluster" hpcc:itemType="roxie" minOccurs="0"
                     maxOccurs="unbounded" hpcc:class="component" hpcc:category="Roxie">
             <xs:complexType>
@@ -482,8 +482,10 @@
                          Also, they are currently collected under the Ports tab in current config mgr -->
                     <xs:element name="RoxieFarmProcess" hpcc:displayName="Roxie Ports" maxOccurs="unbounded" hpcc:class="elementSet">
                         <xs:complexType>
-                            <xs:attribute name="port" hpcc:displayName="Port" type="xs:nonNegativeInteger"
-                                          use="required" hpcc:presetValue="9876"
+                            <xs:attribute name="name" hpcc:displayName="Farm Process Name" type="xs:string" hpcc:uniqueKey="roxie_farmprocess"
+                                          hpcc:autoGenerateType="prefix#" hpcc:autoGenerateValue="farm"
+                                          hpcc:tooltip="Name of the farm process"/>
+                            <xs:attribute name="port" hpcc:displayName="Port" type="xs:nonNegativeInteger" hpcc:presetValue="9876"
                                           hpcc:tooltip="the network port on which the Roxie servers accept connections"/>
                             <xs:attribute name="numThreads" hpcc:displayName="Number of Threads"
                                           type="xs:nonNegativeInteger" hpcc:presetValue="30"
@@ -579,7 +581,7 @@
                                           <!--hpcc:autoGenerateValue="ACL"/>-->
                         <!--</xs:complexType>-->
                     <!--</xs:element>-->
-                    <xs:element name="PreferredCluster" hpcc:displayName="Preferred Clusters" maxOccurs="unbounded">
+                    <xs:element name="PreferredCluster" hpcc:displayName="Preferred Clusters" minOccurs="0" maxOccurs="unbounded">
                         <xs:complexType>
                             <xs:attribute name="name" type="xs:string" use="required" hpcc:autoGenerateType="prefix_"
                                           hpcc:autoGenerateValue="PreferredCluster"
@@ -589,7 +591,7 @@
                                           hpcc:tooltip="Priority (negative to disable)"/>
                         </xs:complexType>
                     </xs:element>
-                    <xs:element name="UserMetric" hpcc:displayName="User Metrics" maxOccurs="unbounded">
+                    <xs:element name="UserMetric" hpcc:displayName="User Metrics" minOccurs="0" maxOccurs="unbounded">
                         <xs:complexType>
                             <xs:attribute name="name" type="xs:string" use="required" hpcc:autoGenerateType="prefix_"
                                           hpcc:autoGenerateValue="UserMetric"
@@ -607,7 +609,7 @@
                               hpcc:uniqueKey="roxiecluster_name" hpcc:tooltip="Name for this process"/>
                 <xs:attribute name="description" type="xs:string" hpcc:displayName="Description"
                               hpcc:presetValue="Roxie cluster" hpcc:tooltip="Description for this process"/>
-                <xs:attribute name="daliServers" type="xs:string" hpcc:displayName="Dali Server"
+                <xs:attribute name="daliServers" type="xs:string" hpcc:displayName="Dali Server" hpcc:sourceKey="daliprocess_name"
                               hpcc:tooltip="Specifies the dali server to which this roxie is attached"/>
                 <xs:attribute name="lockDali" type="xs:boolean" hpcc:displayName="Lock Dali" hpcc:presetValue="false"
                               hpcc:tooltip="If set, Roxie will use cached info from dali only, and will not connect to dali or refresh the cache"/>

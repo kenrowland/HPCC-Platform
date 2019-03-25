@@ -19,7 +19,7 @@
         xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" attributeFormDefault="unqualified"
         xmlns:hpcc="someuri">
     <xs:include schemaLocation="types.xsd"/>
-    <hpcc:insert hpcc:schemaPath="/Environment/Software">
+    <hpcc:insert hpcc:schemaPath="/Environment/Software" hpcc:schemaType="hpcc_environment">
         <xs:element name="CassandraLoggingAgent" hpcc:displayName="Cassandra Logging Agent"
                     hpcc:itemType="cassandraloggingagent" hpcc:category="Logging Agent"
                     maxOccurs="unbounded" hpcc:class="component">

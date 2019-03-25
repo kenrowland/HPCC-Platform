@@ -20,17 +20,12 @@
 #include "Utils.hpp"
 
 
-bool SchemaParser::parse(const std::string &configPath, const std::string &masterConfigFile, const std::map<std::string, std::string> &cfgParms)
+bool SchemaParser::parse(const std::string &masterConfigFile, const std::vector<std::string> &configPaths, const std::map<std::string, std::string> &cfgParms)
 {
     bool rc = true;
     try
     {
-        auto pluginPathsIt = cfgParms.find("plugin_paths");
-        if (pluginPathsIt != cfgParms.end())
-        {
-            m_pluginPaths = splitString(pluginPathsIt->second, ",");
-        }
-        doParse(configPath, masterConfigFile, cfgParms);
+        loadSchema(masterConfigFile, configPaths, cfgParms);
     }
     catch (const ParseException &pe)
     {
@@ -39,3 +34,24 @@ bool SchemaParser::parse(const std::string &configPath, const std::string &maste
     }
     return rc;
 }
+
+
+//bool SchemaParser::parse(const std::string &configPath, const std::string &masterConfigFile, const std::map<std::string, std::string> &cfgParms)
+//{
+//    bool rc = true;
+//    try
+//    {
+//        auto pluginPathsIt = cfgParms.find("plugin_paths");
+//        if (pluginPathsIt != cfgParms.end())
+//        {
+//            m_pluginPaths = splitString(pluginPathsIt->second, ",");
+//        }
+//        loadSchema(configPath, masterConfigFile, cfgParms);
+//    }
+//    catch (const ParseException &pe)
+//    {
+//        m_message = "The following error was detected while parsing the configuration: " + static_cast<std::string>(pe.what());
+//        rc = false;
+//    }
+//    return rc;
+//}

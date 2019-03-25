@@ -24,7 +24,7 @@
 #include "Status.hpp"
 
 
-void OperationCreateNode::doExecute(EnvironmentMgr &envMgr, std::shared_ptr<Variables> pVariables)
+void OperationCreateNode::doExecute(std::shared_ptr<EnvironmentMgr> pEnvMgr, std::shared_ptr<Variables> pVariables)
 {
     std::shared_ptr<EnvironmentNode> pNewEnvNode;
 
@@ -54,7 +54,7 @@ void OperationCreateNode::doExecute(EnvironmentMgr &envMgr, std::shared_ptr<Vari
             //
             // Get a new node for insertion (this does not insert the node, but rather returns an orphaned node that
             // can be inserted)
-            pNewEnvNode = envMgr.getNewEnvironmentNode(parentNodeId, m_nodeType, status);
+            pNewEnvNode = pEnvMgr->getNewEnvironmentNode(parentNodeId, m_nodeType, status);
             if (pNewEnvNode)
             {
                 //
@@ -71,7 +71,7 @@ void OperationCreateNode::doExecute(EnvironmentMgr &envMgr, std::shared_ptr<Vari
 
                 //
                 // Add the new node to the environment
-                pNewEnvNode = envMgr.addNewEnvironmentNode(parentNodeId, m_nodeType, attrValues, status, true, true, m_populateChildren);
+                pNewEnvNode = pEnvMgr->addNewEnvironmentNode(parentNodeId, m_nodeType, attrValues, status, true, true, m_populateChildren);
                 if (pNewEnvNode)
                 {
                     // construct a status for just this new node's ID so we can see if there is an error

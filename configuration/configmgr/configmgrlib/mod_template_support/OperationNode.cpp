@@ -28,15 +28,17 @@ void OperationNode::addAttribute(modAttribute &newAttribute)
 }
 
 
-bool OperationNode::execute(EnvironmentMgr &envMgr, std::shared_ptr<Variables> pVariables)
+bool OperationNode::execute(std::shared_ptr<Environments> pEnvironments, const std::string &environmentName, std::shared_ptr<Variables> pVariables)
 {
     bool rc = true;
 
+    std::shared_ptr<EnvironmentMgr> pEnvMgr = pEnvironments->get(environmentName);
     initializeForExecution(pVariables);
+
 
     //
     // Select the nodes for execution
-    getParentNodeIds(envMgr, pVariables);
+    getParentNodeIds(pEnvMgr, pVariables);
 
     //
     // If count is > 1, then the number of selected nodes must be 1
@@ -51,7 +53,7 @@ bool OperationNode::execute(EnvironmentMgr &envMgr, std::shared_ptr<Variables> p
     {
         pVariables->setIterationInfo(m_executionStartIndex + idx, idx);
         assignAttributeCookedValues(pVariables);
-        doExecute(envMgr, pVariables);
+        doExecute(pEnvMgr, pVariables);
     }
     return rc;
 }
@@ -68,7 +70,7 @@ void OperationNode::assignAttributeCookedValues(std::shared_ptr<Variables> pVari
 }
 
 
-void OperationNode::getParentNodeIds(EnvironmentMgr &envMgr, std::shared_ptr<Variables> pVariables)
+void OperationNode::getParentNodeIds(std::shared_ptr<EnvironmentMgr> pEnvMgr, std::shared_ptr<Variables> pVariables)
 {
     m_parentNodeIds.clear();  // should always recalculate the results
 
@@ -94,7 +96,7 @@ void OperationNode::getParentNodeIds(EnvironmentMgr &envMgr, std::shared_ptr<Var
     {
         std::vector<std::shared_ptr<EnvironmentNode>> envNodes;
         std::string path = pVariables->doValueSubstitution(m_path);
-        envMgr.fetchNodes(path, envNodes);
+        pEnvMgr->fetchNodes(path, envNodes);
         for (auto &envNode: envNodes)
             m_parentNodeIds.emplace_back(envNode->getId());
     }

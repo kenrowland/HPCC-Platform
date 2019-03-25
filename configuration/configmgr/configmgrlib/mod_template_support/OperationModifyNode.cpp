@@ -23,7 +23,7 @@
 #include "TemplateExecutionException.hpp"
 
 
-void OperationModifyNode::doExecute(EnvironmentMgr &envMgr, std::shared_ptr<Variables> pVariables)
+void OperationModifyNode::doExecute(std::shared_ptr<EnvironmentMgr> pEnvMgr, std::shared_ptr<Variables> pVariables)
 {
     std::shared_ptr<EnvironmentNode> pEnvNode;
 
@@ -36,7 +36,7 @@ void OperationModifyNode::doExecute(EnvironmentMgr &envMgr, std::shared_ptr<Vari
             Status status;
 
             std::string nodeId = pVariables->doValueSubstitution(parentNodeId);
-            pEnvNode = envMgr.findEnvironmentNodeById(nodeId);
+            pEnvNode = pEnvMgr->findEnvironmentNodeById(nodeId);
             if (pEnvNode)
             {
                 //

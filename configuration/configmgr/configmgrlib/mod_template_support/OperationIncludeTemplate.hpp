@@ -30,7 +30,7 @@ class OperationIncludeTemplate : public Operation
 
         OperationIncludeTemplate() = default;
         ~OperationIncludeTemplate() override = default;
-        bool execute(EnvironmentMgr &envMgr, std::shared_ptr<Variables> pVariables) override;
+        bool execute(std::shared_ptr<Environments> pEnvironments, const std::string &environmentName, std::shared_ptr<Variables> pVariables) override;
         void addParameterValue(const ParameterValue &parmValue) { m_parameters.emplace_back(parmValue); }
 
 
@@ -39,6 +39,7 @@ class OperationIncludeTemplate : public Operation
         std::shared_ptr<EnvModTemplate> m_pEnvModTemplate;
         std::string m_path;
         std::vector<ParameterValue> m_parameters;
+        std::string m_environmentName;
 
         friend class EnvModTemplate;
 };

@@ -19,6 +19,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <memory>
 #include "build-config.h"
 #include "platform.h"
 #include <exception>
@@ -62,7 +63,7 @@ struct InputDef {
 std::vector<InputDef> userInputs;
 bool listInputs = false;
 
-EnvironmentMgr *pEnvMgr = nullptr;
+std::shared_ptr<EnvironmentMgr> pEnvMgr;
 EnvModTemplate *pTemplate = nullptr;
 
 class CliException : public std::exception
@@ -148,14 +149,12 @@ int main(int argc, char *argv[])
 
         // note that these are hardcoded for HPCC at this time, but could be made into options
         std::map<std::string, std::string> cfgParms;
-        cfgParms["buildset"] = "buildset.xml";  // Not used right now, and probably never will be
-        cfgParms["support_libs"] = "libcfgsupport_addrequiredinstances";
         std::string pluginsPath = configSchemaPluginsDir;
 
-        if (!pEnvMgr->loadSchema(configSchemaDir, masterSchemaFile, cfgParms))
-        {
-            throw CliException(pEnvMgr->getLastSchemaMessage());
-        }
+//        if (!pEnvMgr->loadSchema(configSchemaDir, masterSchemaFile, cfgParms))
+//        {
+//            throw CliException(pEnvMgr->getLastSchemaMessage());
+//        }
     }
     catch (const ParseException &pe)
     {
@@ -171,7 +170,7 @@ int main(int argc, char *argv[])
     // Create the modification template
     try
     {
-        pTemplate = new EnvModTemplate(*pEnvMgr, modTemplateSchemaFile);
+        pTemplate = new EnvModTemplate(pEnvMgr, modTemplateSchemaFile);
         pTemplate->loadTemplateFromFile(modTemplateFile);
     }
     catch (const TemplateException &te)
