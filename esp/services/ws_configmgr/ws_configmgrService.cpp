@@ -345,7 +345,7 @@ bool Cws_configMgrEx::onGetNode(IEspContext &context, IEspGetNodeRequest &req, I
     ConfigMgrSession *pSession = getConfigSession(sessionId, true);
     Status status;
 
-    EnvironmentMgr *pEnvMgr = pSession->m_pEnvMgr;
+    std::shared_ptr<EnvironmentMgr> pEnvMgr = pSession->m_pEnvMgr;
     std::shared_ptr<EnvironmentNode> pNode = pEnvMgr->findEnvironmentNodeById(id);
     if (pNode == nullptr)
     {

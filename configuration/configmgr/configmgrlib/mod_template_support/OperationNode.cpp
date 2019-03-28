@@ -28,11 +28,12 @@ void OperationNode::addAttribute(modAttribute &newAttribute)
 }
 
 
-bool OperationNode::execute(std::shared_ptr<Environments> pEnvironments, const std::string &environmentName, std::shared_ptr<Variables> pVariables)
+bool OperationNode::execute(std::shared_ptr<Environments> pEnvironments, std::shared_ptr<EnvironmentMgr> pEnvMgr, std::shared_ptr<Variables> pVariables)
 {
     bool rc = true;
 
-    std::shared_ptr<EnvironmentMgr> pEnvMgr = pEnvironments->get(environmentName);
+    //
+    // Get the environment, based on name, for the operation.
     initializeForExecution(pVariables);
 
 
@@ -53,7 +54,7 @@ bool OperationNode::execute(std::shared_ptr<Environments> pEnvironments, const s
     {
         pVariables->setIterationInfo(m_executionStartIndex + idx, idx);
         assignAttributeCookedValues(pVariables);
-        doExecute(pEnvMgr, pVariables);
+        doExecute(pEnvironments, pEnvMgr, pVariables);
     }
     return rc;
 }

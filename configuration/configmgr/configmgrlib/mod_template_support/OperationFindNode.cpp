@@ -24,7 +24,7 @@
 #include "OperationNode.hpp"
 
 
-void OperationFindNode::doExecute(std::shared_ptr<EnvironmentMgr> pEnvMgr, std::shared_ptr<Variables> pVariables)
+void OperationFindNode::doExecute(std::shared_ptr<Environments> pEnvironments, std::shared_ptr<EnvironmentMgr> pEnvMgr, std::shared_ptr<Variables> pVariables)
 {
     //
     // Any parent node IDs found?
@@ -86,7 +86,7 @@ void OperationFindNode::doExecute(std::shared_ptr<EnvironmentMgr> pEnvMgr, std::
                 throw TemplateExecutionException("Invalid path for find operation, unable to create node");
             }
         }
-        OperationCreateNode::doExecute(pEnvMgr, pVariables);
+        OperationCreateNode::doExecute(pEnvironments, pEnvMgr, pVariables);
     }
     else if (m_throwOnEmpty)
     {

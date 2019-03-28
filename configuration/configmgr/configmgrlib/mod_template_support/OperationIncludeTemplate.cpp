@@ -23,24 +23,8 @@
 // input env name is that which is being used by the current template. Use it if no name is set
 
 
-bool OperationIncludeTemplate::execute(std::shared_ptr<Environments> pEnvironments, const std::string &environmentName, std::shared_ptr<Variables> pVariables)
+bool OperationIncludeTemplate::execute(std::shared_ptr<Environments> pEnvironments, std::shared_ptr<EnvironmentMgr> pEnvMgr, std::shared_ptr<Variables> pVariables)
 {
-    //
-    // Set the environment name for the template about to execute. If no name has been set for the template in the
-    // operation object (defined in the currently executing template), then use the input name. Note that the input
-    // name may be the empty string which is the defaut, in which case it is essentially a noop. If there is a defined
-    // override environment name defined in this operation object, then set it as the environment target fot execution
-    // of the template. Note that in all cases, the template about to execute may have it's own defined environment
-    // that overriees any attempt here to set it.
-    if (m_environmentName.empty())
-    {
-        m_pEnvModTemplate->setTargetEnvironment(environmentName);
-    }
-    else
-    {
-        m_pEnvModTemplate->setTargetEnvironment(m_environmentName);
-    }
-
     initializeForExecution(pVariables);
 
     //

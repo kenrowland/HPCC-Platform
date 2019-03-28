@@ -30,7 +30,7 @@ class OperationIncludeTemplate : public Operation
 
         OperationIncludeTemplate() = default;
         ~OperationIncludeTemplate() override = default;
-        bool execute(std::shared_ptr<Environments> pEnvironments, const std::string &environmentName, std::shared_ptr<Variables> pVariables) override;
+        bool execute(std::shared_ptr<Environments> pEnvironments, std::shared_ptr<EnvironmentMgr> pEnvMgr, std::shared_ptr<Variables> pVariables) override;
         void addParameterValue(const ParameterValue &parmValue) { m_parameters.emplace_back(parmValue); }
 
 

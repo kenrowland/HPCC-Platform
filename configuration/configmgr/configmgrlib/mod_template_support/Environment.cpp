@@ -15,31 +15,41 @@
     limitations under the License.
 ############################################################################## */
 
-#ifndef HPCCSYSTEMS_PLATFORM_ENVIRONMENTS_HPP
-#define HPCCSYSTEMS_PLATFORM_ENVIRONMENTS_HPP
-
-#include <string>
-#include <map>
-#include <memory>
-#include <vector>
 #include "Environment.hpp"
 
-class Environments {
 
-    public:
+Environment::Environment(const std::string &masterCfgFile, const std::vector<std::string> configPaths) :
+    m_masterCfgSchemaFile(masterCfgFile),
+    m_configPaths(configPaths)
+{
 
-        Environments() = default;
-        ~Environments();
-        //void add(const std::string &masterFile, const std::vector<std::string> &paths, const std::string &envFile, const std::string &name);
-        void add(std::shared_ptr<Environment> pEnv, const std::string &name);
-        std::shared_ptr<Environment> get(const std::string &name) const;
-        void release(const std::string &name);
+}
 
 
-    private:
+Environment::Environment(std::shared_ptr<EnvironmentMgr> pEnvMgr) :
+    m_pEnvMgr(pEnvMgr)
+{
+}
 
-        std::map<std::string, std::shared_ptr<Environment>> m_environments;
-};
+
+void Environment::initialize()
+{
+    EnvironmentType envType = XML;
+    m_pEnvMgr = getEnvironmentMgrInstance(envType);
+    m_pEnvMgr->loadSchema(m_masterCfgSchemaFile, m_configPaths);
+
+    if (!m_inputEnvironment.empty())
+    {
+        m_pEnvMgr->loadEnvironment(m_inputEnvironment);
+    }
+}
 
 
-#endif //HPCCSYSTEMS_PLATFORM_ENVIRONMENTS_HPP
+void Environment::saveEnvironment()
+{
+    if (!m_outputEnvironment.empty())
+    {
+        m_pEnvMgr->saveEnvironment(m_outputEnvironment);
+    }
+
+}

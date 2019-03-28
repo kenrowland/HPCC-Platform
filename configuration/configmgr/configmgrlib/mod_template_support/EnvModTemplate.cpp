@@ -40,11 +40,14 @@
 // Constructor for a new top level root template.
 EnvModTemplate::EnvModTemplate(std::shared_ptr<EnvironmentMgr> pEnvMgr, const std::string &schemaFile) :
     m_pTemplate(nullptr),
-    m_pSchema(nullptr)
+    m_pSchema(nullptr),
+    m_useForLocalEnvironment(false)
 {
     m_pVariables = std::make_shared<Variables>();
     m_pEnvironments = std::make_shared<Environments>();
-    m_pEnvironments->add(pEnvMgr, "");  // add the default environment manager
+
+    std::shared_ptr<Environment> pEnv = std::make_shared<Environment>(pEnvMgr);
+    m_pEnvironments->add(pEnv, "");  // add the default environment manager
 
     //
     // Load and compile the schema document
@@ -62,7 +65,8 @@ EnvModTemplate::EnvModTemplate(std::shared_ptr<EnvironmentMgr> pEnvMgr, const st
 //
 // Constructor for a child template of the input template reference
 EnvModTemplate::EnvModTemplate(const EnvModTemplate &modTemplate) :
-    m_pTemplate(nullptr)
+    m_pTemplate(nullptr),
+    m_useForLocalEnvironment(false)
 {
     //
     // Copy relevant members to avoid duplicate actions. Also, create a new variables
@@ -166,6 +170,16 @@ void EnvModTemplate::parseTemplate()
             const rapidjson::Value &variables = (*m_pTemplate)["variables"];
             parseVariables(variables);
         }
+
+        //
+        // Environment for the template
+        if (m_pTemplate->HasMember("environment"))
+        {
+            const rapidjson::Value &environmentData = (*m_pTemplate)["variables"];
+            parseEnvironment(environmentData);
+        }
+
+
 
         //
         // Operations (a required section)
@@ -576,6 +590,63 @@ void EnvModTemplate::parseAttribute(const rapidjson::Value &attributeValue, modA
 }
 
 
+void EnvModTemplate::parseEnvironment(const rapidjson::Value &environmentValue)
+{
+    auto targetData = environmentValue.GetObject();
+
+    //
+    // name is required at a minimum. Note that is may be a variable.
+    auto valueIt = targetData.FindMember("name");
+    m_environmentName = valueIt->value.GetString();
+
+    //
+    // If a master schema file is specified, then schema paths are also required. In this case
+    // an environment is being defined for use as opposed to just referencing one that may exist by name
+    valueIt = targetData.FindMember("master_schema_filename");
+    if (valueIt != targetData.MemberEnd())
+    {
+        std::string masterSchemaFile = valueIt->value.GetString();
+
+        valueIt = targetData.FindMember("schema_paths");
+        std::vector<std::string> paths;
+        for (auto &val: valueIt->value.GetArray())
+        {
+            paths.emplace_back(val.GetString());
+        }
+
+        //
+        // Make a new Environment object and save it for this template. Note, the environment is
+        // instantiated at runtime when the template is executed. Also, the name may be a variable value.
+        m_pEnv = std::make_shared<Environment>(masterSchemaFile, paths);
+
+        //
+        // These remaining values are only valid when an environment is being defined
+        valueIt = targetData.FindMember("load_environment");
+        if (valueIt != targetData.MemberEnd())
+        {
+            m_pEnv->setLoadEnvironment(valueIt->value.GetString());
+        }
+
+        valueIt = targetData.FindMember("write_environment");
+        if (valueIt != targetData.MemberEnd())
+        {
+            m_pEnv->setOutputEnvironment(valueIt->value.GetString());
+        }
+
+        valueIt = targetData.FindMember("set_as_target");
+        if (valueIt != targetData.MemberEnd())
+        {
+            m_useForLocalEnvironment = valueIt->value.GetBool();
+        }
+    }
+
+    //
+    // Add additional
+
+
+}
+
+
 void EnvModTemplate::parseTarget(const rapidjson::Value &targetValue, std::shared_ptr<OperationNode> pOp)
 {
     auto targetData = targetValue.GetObject();
@@ -702,12 +773,51 @@ void EnvModTemplate::execute(bool isFirst, const std::vector<ParameterValue> &pa
         throw;
     }
 
+
+    // todo get environment for the template to make sure there is one
+
+    std::shared_ptr<EnvironmentMgr> pTemplateEnvMgr;
+
+    try
+    {
+        // substitute the environment name (this may simply be "", the default)
+        std::string envName = m_pVariables->doValueSubstitution(m_environmentName);
+
+        //
+        // If there is an environment defined for the template, create it
+        if (m_pEnv)
+        {
+            m_pEnv->initialize();
+            m_pEnvironments->add(m_pEnv, envName);
+            if (m_useForLocalEnvironment)
+            {
+                pTemplateEnvMgr = m_pEnvironments->get(envName)->m_pEnvMgr;
+            }
+        }
+        else
+        {
+            //
+            // envName holds the name, regardless, of the default environment for the template
+            pTemplateEnvMgr = m_pEnvironments->get(envName)->m_pEnvMgr;
+        }
+    }
+    catch (TemplateExecutionException &te)
+    {
+        std::string msg = "Unable to create, initialize, or find environment ";
+        msg.append(m_environmentName).append(" error = ").append(te.what());
+        throw TemplateExecutionException(msg, "setup", m_templateFile);
+    }
+
+
+
+    //
+    // Execute each operation...
     unsigned opNum = 1;
     for (auto &pOp: m_operations)
     {
         try
         {
-            pOp->execute(m_pEnvironments, m_environmentName, m_pVariables);
+            pOp->execute(m_pEnvironments, pTemplateEnvMgr, m_pVariables);
         }
         catch (TemplateExecutionException &te)
         {

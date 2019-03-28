@@ -44,17 +44,13 @@ struct ConfigMgrSession {
     bool            locked;              // true if locked
     bool            modified;            // true if session has modified loaded environment
     bool            externallyModified;  // true if another session modified the environment
-    EnvironmentMgr  *m_pEnvMgr;          // ptr to active environment manager for session
+    std::shared_ptr<EnvironmentMgr>  m_pEnvMgr;          // ptr to active environment manager for session
 
 
     ConfigMgrSession() : locked(false), modified(false), m_pEnvMgr(nullptr), configType(UNDEFINED) { }
     ~ConfigMgrSession()
     {
-        if (m_pEnvMgr != nullptr)
-        {
-            delete m_pEnvMgr;
-            m_pEnvMgr = nullptr;
-        }
+
     }
 
 
@@ -64,7 +60,9 @@ struct ConfigMgrSession {
         m_pEnvMgr = getEnvironmentMgrInstance(configType);
         if (m_pEnvMgr)
         {
-            if (!m_pEnvMgr->loadSchema(schemaPath, masterConfigFile, cfgParms))
+            std::vector<std::string> paths;
+            paths.emplace_back(schemaPath);
+            if (!m_pEnvMgr->loadSchema(masterConfigFile, paths, cfgParms))
             {
                 rc = false;
                 lastMsg = "Unable to load configuration schema, error = " + m_pEnvMgr->getLastSchemaMessage();

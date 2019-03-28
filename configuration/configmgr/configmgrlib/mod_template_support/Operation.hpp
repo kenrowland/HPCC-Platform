@@ -30,7 +30,7 @@ class Operation
 
         Operation() : m_count("1"), m_startIndex("0"), m_executionCount(0), m_executionStartIndex(0) {}
         virtual ~Operation() = default;
-        virtual bool execute(std::shared_ptr<Environments> pEnvironments, const std::string &environmentName, std::shared_ptr<Variables> pVariables) = 0;
+        virtual bool execute(std::shared_ptr<Environments> pEnvironments, std::shared_ptr<EnvironmentMgr> pEnvMgr, std::shared_ptr<Variables> pVariables) = 0;
 
 
     protected:

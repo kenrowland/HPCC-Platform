@@ -57,7 +57,7 @@ bool verbose = false;
 bool validateHiddenNodes = false;
 
 
-EnvironmentMgr *pEnvMgr = nullptr;
+std::shared_ptr<EnvironmentMgr> pEnvMgr;
 
 class CliException : public std::exception
 {
@@ -134,7 +134,9 @@ int main(int argc, char *argv[])
         cfgParms["buildset"] = "buildset.xml";  // Not used right now, and probably never will be
         std::string pluginsPath = configSchemaPluginsDir;
 
-        if (!pEnvMgr->loadSchema(configSchemaDir, masterSchemaFile, cfgParms))
+        std::vector<std::string> paths;
+        paths.emplace_back(configSchemaDir);
+        if (!pEnvMgr->loadSchema(masterSchemaFile, paths, cfgParms))
         {
             throw CliException(pEnvMgr->getLastSchemaMessage());
         }

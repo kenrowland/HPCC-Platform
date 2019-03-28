@@ -53,14 +53,14 @@ class OperationNode : public Operation
     public:
 
         OperationNode() = default;
-        bool execute(std::shared_ptr<Environments> pEnvironments, const std::string &environmentName, std::shared_ptr<Variables> pVariables) override;
+        bool execute(std::shared_ptr<Environments> pEnvironments, std::shared_ptr<EnvironmentMgr> pEnvMgr, std::shared_ptr<Variables> pVariables) override;
         void addAttribute(modAttribute &newAttribute);
         void assignAttributeCookedValues(std::shared_ptr<Variables> pVariables);
 
 
     protected:
 
-        virtual void doExecute(std::shared_ptr<EnvironmentMgr> pEnvMgr, std::shared_ptr<Variables> pVariables) = 0;
+        virtual void doExecute(std::shared_ptr<Environments> pEnvironments, std::shared_ptr<EnvironmentMgr> pEnvMgr, std::shared_ptr<Variables> pVariables) = 0;
         void getParentNodeIds(std::shared_ptr<EnvironmentMgr> pEnvMgr, std::shared_ptr<Variables> pVariables);
         std::shared_ptr<Variable> createVariable(std::string varName, const std::string &varType,
                                                  std::shared_ptr<Variables> pVariables, bool existingOk, bool global);

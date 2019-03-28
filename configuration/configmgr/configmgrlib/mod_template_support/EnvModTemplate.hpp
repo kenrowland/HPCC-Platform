@@ -26,6 +26,7 @@
 #include "Variable.hpp"
 #include "Variables.hpp"
 #include "Environments.hpp"
+#include "Environment.hpp"
 #include "ParameterValue.hpp"
 #include "OperationNode.hpp"
 #include "OperationFindNode.hpp"
@@ -70,6 +71,7 @@ class CFGMGRLIB_API EnvModTemplate
         void parseOperationNodeCommonData(const rapidjson::Value &operationData, std::shared_ptr<OperationNode> pOpNode);
         void parseAttribute(const rapidjson::Value &attributeData, modAttribute *pAttribute);
         void parseTarget(const rapidjson::Value &targetData, std::shared_ptr<OperationNode> pOp);
+        void parseEnvironment(const rapidjson::Value &environmentValue);
         void parseIncludeOperation(const rapidjson::Value &include, std::shared_ptr<OperationIncludeTemplate> pOpInc);
 
 
@@ -82,6 +84,8 @@ class CFGMGRLIB_API EnvModTemplate
         std::vector<std::shared_ptr<Operation>> m_operations;
         std::string m_templateFile;
         std::string m_environmentName;
+        std::shared_ptr<Environment> m_pEnv;   // present if an environment is defined by this template
+        bool m_useForLocalEnvironment;
 };
 
 

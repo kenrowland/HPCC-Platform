@@ -23,7 +23,7 @@
 #include "TemplateExecutionException.hpp"
 
 
-void OperationModifyNode::doExecute(std::shared_ptr<EnvironmentMgr> pEnvMgr, std::shared_ptr<Variables> pVariables)
+void OperationModifyNode::doExecute(std::shared_ptr<Environments> pEnvironments, std::shared_ptr<EnvironmentMgr> pEnvMgr, std::shared_ptr<Variables> pVariables)
 {
     std::shared_ptr<EnvironmentNode> pEnvNode;
 

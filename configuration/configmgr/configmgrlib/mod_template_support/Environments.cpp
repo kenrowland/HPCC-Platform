@@ -1,6 +1,6 @@
 /*##############################################################################
 
-    HPCC SYSTEMS software Copyright (C) 2018 HPCC Systems®.
+    HPCC SYSTEMS software Copyright (C) 2019 HPCC Systems®.
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -25,22 +25,22 @@ Environments::~Environments()
 }
 
 
-void Environments::add(const std::string &masterFile, const std::vector<std::string> &paths, const std::string &envFile, const std::string &name)
-{
-    EnvironmentType envType = XML;
-    std::shared_ptr<EnvironmentMgr> pEnvMgr = getEnvironmentMgrInstance(envType);
-    pEnvMgr->loadSchema(masterFile, paths);
-    if (!envFile.empty())
-    {
-        pEnvMgr->loadEnvironment(envFile);
-    }
-    add(pEnvMgr, name);
-}
+//void Environments::add(const std::string &masterFile, const std::vector<std::string> &paths, const std::string &envFile, const std::string &name)
+//{
+//    EnvironmentType envType = XML;
+//    std::shared_ptr<EnvironmentMgr> pEnvMgr = getEnvironmentMgrInstance(envType);
+//    pEnvMgr->loadSchema(masterFile, paths);
+//    if (!envFile.empty())
+//    {
+//        pEnvMgr->loadEnvironment(envFile);
+//    }
+//    add(pEnvMgr, name);
+//}
 
 
-void Environments::add(const std::shared_ptr<EnvironmentMgr> pEnvMgr, const std::string name)
+void Environments::add(const std::shared_ptr<Environment> pEnv, const std::string &name)
 {
-    auto rc = m_environments.insert({name, pEnvMgr});
+    auto rc = m_environments.insert({name, pEnv});
     if (!rc.second)
     {
         std::string msg = "Envronment " + name + "already defined";
@@ -49,7 +49,7 @@ void Environments::add(const std::shared_ptr<EnvironmentMgr> pEnvMgr, const std:
 }
 
 
-std::shared_ptr<EnvironmentMgr> Environments::get(const std::string &name) const
+std::shared_ptr<Environment> Environments::get(const std::string &name) const
 {
     auto it = m_environments.find(name);
     if (it == m_environments.end())

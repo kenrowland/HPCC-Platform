@@ -20,7 +20,7 @@
             "description" : "Type of template. Mainly used for filtering templates."
         },
         "environment" : {
-            "$ref": "#/definitions/environment"
+            "$ref": "#/definitions/environment_def"
         },
         "variables": {
             "type": "array",
@@ -710,27 +710,41 @@
             },
             "required" : [ "filepath" ]
         },
-        "environment" : {
+        "environment_def" : {
             "type" : "object",
             "properties" : {
                 "name" : {
                     "type" : "string",
+                    "pattern" : "^[A-Za-z0-9]*$",
                     "description" : "Either references an existing environment or names a new one described by other values in this object"
                 },
-                "schema_path": {
+                "schema_paths": {
                     "type": "array",
                     "items" : {
-                        "type" : "string"
+                        "type" : "string",
+                        "pattern" : "^[A-Za-z0-9]+(?: +[A-Za-z0-9]+)*$"
                     },
                     "description" : "Array of paths from which schema files are loaded. First entry MUST be the primary path where the master schema file is located"
                 },
-                "master_schema_file" : {
+                "master_schema_filename" : {
                     "type" : "string",
+                    "pattern" : "^[A-Za-z0-9]+(?: +[A-Za-z0-9]+)*$",
                     "description" : "Name of master schema file"
                 },
-                "environment_file" : {
+                "load_environment" : {
                     "type" : "string",
                     "description" : "If given, this environment is loaded"
+                },
+                "write_environment" : {
+                    "type" : "string",
+                    "pattern" : "^[A-Za-z0-9]+(?: +[A-Za-z0-9]+)*$",
+                    "description" : "Filepath to where environment is serialized after template execution (leave empty or missing for no output)",
+                    "default" : ""
+                },
+                "set_as_target" : {
+                    "type" : "boolean",
+                    "description" : "Set to true if this environment is the default for the template (may not want this...)",
+                    "default" : false
                 }
             },
             "oneOf" : [
@@ -747,6 +761,16 @@
                         {
                             "not" : {
                                 "required" : [ "master_schema_file" ]
+                            }
+                        },
+                        {
+                            "not" : {
+                                "required" : [ "load_environment" ]
+                            }
+                        },
+                        {
+                            "not" : {
+                                "required" : [ "write_environment" ]
                             }
                         }
                     ]
