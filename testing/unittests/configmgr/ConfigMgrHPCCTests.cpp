@@ -57,7 +57,9 @@ class ConfigMgrHPCCTests : public CppUnit::TestFixture
             {
                 m_pEnvMgr = getEnvironmentMgrInstance(EnvironmentType::XML);
                 std::map<std::string, std::string> cfgParms;
-                rc = m_pEnvMgr->loadSchema(CFG2_CONFIG_DIR, CFG2_MASTER_CONFIG_FILE, cfgParms);
+                std::vector<std::string> paths;
+                paths.emplace_back(CFG2_CONFIG_DIR);
+                rc = m_pEnvMgr->loadSchema(CFG2_MASTER_CONFIG_FILE, paths, cfgParms);
                 CPPUNIT_ASSERT_MESSAGE("Unable to load configuration schema, error = " + m_pEnvMgr->getLastSchemaMessage(), rc);
             }
 
@@ -122,7 +124,7 @@ class ConfigMgrHPCCTests : public CppUnit::TestFixture
 
     private:
 
-        EnvironmentMgr  *m_pEnvMgr = nullptr;
+        std::shared_ptr<EnvironmentMgr> m_pEnvMgr = nullptr;
         std::string m_templateDir = INSTALL_DIR PATHSEPSTR "testing/configmgr/templates/";
         std::string CFG2_MASTER_CONFIG_FILE = "environment.xsd";
         std::string CFG2_CONFIG_DIR = COMPONENTFILES_DIR  PATHSEPSTR "configschema" PATHSEPSTR "xsd" PATHSEPSTR;

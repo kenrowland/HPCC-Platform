@@ -44,7 +44,7 @@ class CFGMGRLIB_API EnvModTemplate
 {
     public:
 
-        EnvModTemplate(std::shared_ptr<EnvironmentMgr> pEnvMgr, const std::string &schemaFile);
+        EnvModTemplate(std::shared_ptr<Environment> pEnv, const std::string &schemaFile);
         EnvModTemplate(const EnvModTemplate &modTemplate);
         ~EnvModTemplate();
 
@@ -54,7 +54,7 @@ class CFGMGRLIB_API EnvModTemplate
         std::shared_ptr<Variable> getVariable(const std::string &name, bool throwIfNotFound = true) const;
         std::vector<std::shared_ptr<Variable>> getVariables(bool userInputOnly = false) const;
         void assignVariablesFromFile(const std::string &filepath);
-        void execute(bool isFirst, const std::vector<ParameterValue> &parameters = std::vector<ParameterValue>());
+        void execute(bool isFirst=true, const std::vector<ParameterValue> &parameters = std::vector<ParameterValue>());
         void setTargetEnvironment(const std::string &name) { if (m_environmentName.empty()) m_environmentName = name; }
 
 
@@ -85,7 +85,8 @@ class CFGMGRLIB_API EnvModTemplate
         std::string m_templateFile;
         std::string m_environmentName;
         std::shared_ptr<Environment> m_pEnv;   // present if an environment is defined by this template
-        bool m_useForLocalEnvironment;
+        bool m_useLocalEnvironmentForTemplate;
+        bool m_isRoot;
 };
 
 

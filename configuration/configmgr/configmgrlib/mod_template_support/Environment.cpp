@@ -45,11 +45,10 @@ void Environment::initialize()
 }
 
 
-void Environment::saveEnvironment()
+void Environment::save()
 {
     if (!m_outputEnvironment.empty())
     {
         m_pEnvMgr->saveEnvironment(m_outputEnvironment);
     }
-
 }

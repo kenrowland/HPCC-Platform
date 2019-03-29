@@ -38,13 +38,13 @@ Environments::~Environments()
 //}
 
 
-void Environments::add(const std::shared_ptr<Environment> pEnv, const std::string &name)
+void Environments::add(std::shared_ptr<Environment> &pEnv, const std::string &name)
 {
     auto rc = m_environments.insert({name, pEnv});
     if (!rc.second)
     {
         std::string msg = "Envronment " + name + "already defined";
-        throw(TemplateExecutionException(msg));
+        throw (TemplateExecutionException(msg));
     }
 }
 
@@ -70,4 +70,16 @@ void Environments::release(const std::string &name)
         throw(TemplateExecutionException(msg));
     }
     m_environments.erase(it);
+}
+
+
+void Environments::save() const
+{
+    for (auto const &env: m_environments)
+    {
+        if (env.second->isSave())
+        {
+            env.second->save();
+        }
+    }
 }

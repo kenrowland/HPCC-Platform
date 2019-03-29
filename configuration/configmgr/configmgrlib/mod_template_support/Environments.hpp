@@ -31,8 +31,9 @@ class Environments {
         Environments() = default;
         ~Environments();
         //void add(const std::string &masterFile, const std::vector<std::string> &paths, const std::string &envFile, const std::string &name);
-        void add(std::shared_ptr<Environment> pEnv, const std::string &name);
+        void add(std::shared_ptr<Environment> &pEnv, const std::string &name);
         std::shared_ptr<Environment> get(const std::string &name) const;
+        void save() const;
         void release(const std::string &name);
 
 

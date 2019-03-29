@@ -68,7 +68,9 @@ class ConfigMgr2ValidateXSDs : public CppUnit::TestFixture
             // Load all the XSDs to ensure they parse correctly
             printf("\n  Loading XSDs");
             std::map<std::string, std::string> cfgParms;
-            rc = m_pEnvMgr->loadSchema(CFG2_CONFIG_DIR, CFG2_MASTER_CONFIG_FILE, cfgParms);
+            std::vector<std::string> paths;
+            paths.emplace_back(CFG2_CONFIG_DIR);
+            rc = m_pEnvMgr->loadSchema(CFG2_MASTER_CONFIG_FILE, paths, cfgParms);
             CPPUNIT_ASSERT_MESSAGE("Unable to load configuration schema, error = " + m_pEnvMgr->getLastSchemaMessage(), rc);
 
             //
@@ -79,7 +81,7 @@ class ConfigMgr2ValidateXSDs : public CppUnit::TestFixture
 
     private:
 
-        EnvironmentMgr  *m_pEnvMgr;
+        std::shared_ptr<EnvironmentMgr> m_pEnvMgr;
 };
 
 

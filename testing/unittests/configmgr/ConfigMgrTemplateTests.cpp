@@ -103,7 +103,9 @@ class ConfigMgrTemplateTests : public CppUnit::TestFixture
             // Load the schema
             printf("\n  Loading schema (%s...", schemaFilename.c_str());
             std::map<std::string, std::string> cfgParms;
-            rc = m_pEnvMgr->loadSchema(schemaXSDDir, schemaFilename, cfgParms);
+            std::vector<std::string> paths;
+            paths.emplace_back(schemaXSDDir);
+            rc = m_pEnvMgr->loadSchema(schemaFilename, paths, cfgParms);
             CPPUNIT_ASSERT_MESSAGE("Unable to load configuration schema, error = " + m_pEnvMgr->getLastSchemaMessage(), rc);
             printf("complete.");
         }
@@ -116,7 +118,8 @@ class ConfigMgrTemplateTests : public CppUnit::TestFixture
             std::string templateSchema = INSTALL_DIR PATHSEPSTR "componentfiles/configschema/templates/schema/ModTemplateSchema.json";
             if (m_pTemplate != nullptr)
                 delete m_pTemplate;
-            m_pTemplate = new EnvModTemplate(m_pEnvMgr, templateSchema);
+            std::shared_ptr<Environment> pEnv = std::make_shared<Environment>(m_pEnvMgr);
+            m_pTemplate = new EnvModTemplate(pEnv, templateSchema);
             if (!templateFilename.empty())
             {
                 templateInfo ti(templateFilename, false, "Loading...");
@@ -198,7 +201,8 @@ class ConfigMgrTemplateTests : public CppUnit::TestFixture
             // Simple template create
             printf("\n  Instantiating a template...");
             std::string templateSchema = INSTALL_DIR PATHSEPSTR "componentfiles/configschema/templates/schema/ModTemplateSchema.json";
-            auto *pTemplate = new EnvModTemplate(m_pEnvMgr, templateSchema);
+            std::shared_ptr<Environment> pEnv = std::make_shared<Environment>(m_pEnvMgr);
+            auto *pTemplate = new EnvModTemplate(pEnv, templateSchema);
             printf("complete.");
 
             //
@@ -545,7 +549,7 @@ class ConfigMgrTemplateTests : public CppUnit::TestFixture
 
     private:
 
-        EnvironmentMgr  *m_pEnvMgr;
+        std::shared_ptr<EnvironmentMgr> m_pEnvMgr;
         std::string m_templateDir = INSTALL_DIR PATHSEPSTR "testing/configmgr/templates/";
         EnvModTemplate *m_pTemplate;
 };

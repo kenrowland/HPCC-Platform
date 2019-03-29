@@ -38,15 +38,15 @@
 
 //
 // Constructor for a new top level root template.
-EnvModTemplate::EnvModTemplate(std::shared_ptr<EnvironmentMgr> pEnvMgr, const std::string &schemaFile) :
+EnvModTemplate::EnvModTemplate(std::shared_ptr<Environment> pEnv, const std::string &schemaFile) :
     m_pTemplate(nullptr),
     m_pSchema(nullptr),
-    m_useForLocalEnvironment(false)
+    m_useLocalEnvironmentForTemplate(false),
+    m_isRoot(true)
 {
     m_pVariables = std::make_shared<Variables>();
     m_pEnvironments = std::make_shared<Environments>();
 
-    std::shared_ptr<Environment> pEnv = std::make_shared<Environment>(pEnvMgr);
     m_pEnvironments->add(pEnv, "");  // add the default environment manager
 
     //
@@ -66,7 +66,8 @@ EnvModTemplate::EnvModTemplate(std::shared_ptr<EnvironmentMgr> pEnvMgr, const st
 // Constructor for a child template of the input template reference
 EnvModTemplate::EnvModTemplate(const EnvModTemplate &modTemplate) :
     m_pTemplate(nullptr),
-    m_useForLocalEnvironment(false)
+    m_useLocalEnvironmentForTemplate(false),
+    m_isRoot(false)
 {
     //
     // Copy relevant members to avoid duplicate actions. Also, create a new variables
@@ -624,19 +625,19 @@ void EnvModTemplate::parseEnvironment(const rapidjson::Value &environmentValue)
         valueIt = targetData.FindMember("load_environment");
         if (valueIt != targetData.MemberEnd())
         {
-            m_pEnv->setLoadEnvironment(valueIt->value.GetString());
+            m_pEnv->setLoadName(valueIt->value.GetString());
         }
 
         valueIt = targetData.FindMember("write_environment");
         if (valueIt != targetData.MemberEnd())
         {
-            m_pEnv->setOutputEnvironment(valueIt->value.GetString());
+            m_pEnv->setOutputName(valueIt->value.GetString());
         }
 
         valueIt = targetData.FindMember("set_as_target");
         if (valueIt != targetData.MemberEnd())
         {
-            m_useForLocalEnvironment = valueIt->value.GetBool();
+            m_useLocalEnvironmentForTemplate = valueIt->value.GetBool();
         }
     }
 
@@ -789,7 +790,7 @@ void EnvModTemplate::execute(bool isFirst, const std::vector<ParameterValue> &pa
         {
             m_pEnv->initialize();
             m_pEnvironments->add(m_pEnv, envName);
-            if (m_useForLocalEnvironment)
+            if (m_useLocalEnvironmentForTemplate)
             {
                 pTemplateEnvMgr = m_pEnvironments->get(envName)->m_pEnvMgr;
             }
@@ -837,5 +838,12 @@ void EnvModTemplate::execute(bool isFirst, const std::vector<ParameterValue> &pa
             throw TemplateExecutionException(msg, std::to_string(opNum), m_templateFile);
         }
         ++opNum;
+    }
+
+    //
+    // If this is a root teamplate, save envrionments
+    if (m_isRoot)
+    {
+        m_pEnvironments->save();
     }
 }

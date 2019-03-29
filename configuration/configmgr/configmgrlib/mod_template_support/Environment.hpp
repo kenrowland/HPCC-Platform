@@ -28,13 +28,13 @@ class Environment {
     public:
 
         Environment(const std::string &masterCfgFile, std::vector<std::string> configPaths);
-        Environment(std::shared_ptr<EnvironmentMgr> pEnvMgr);
+        explicit Environment(std::shared_ptr<EnvironmentMgr> pEnvMgr);
         ~Environment() = default;
         void initialize();
         bool isSave() const { return !m_outputEnvironment.empty(); }
-        void saveEnvironment();
-        void setOutputEnvironment(const std::string &outputName) { m_outputEnvironment = outputName; }
-        void setLoadEnvironment(const std::string &inputName) { m_inputEnvironment = inputName; }
+        void save();
+        void setOutputName(const std::string &outputName) { m_outputEnvironment = outputName; }
+        void setLoadName(const std::string &inputName) { m_inputEnvironment = inputName; }
 
 
     public:

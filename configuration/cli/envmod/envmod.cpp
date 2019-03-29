@@ -29,6 +29,7 @@
 #include "Exceptions.hpp"
 #include "mod_template_support/EnvModTemplate.hpp"
 #include "mod_template_support/TemplateExecutionException.hpp"
+#include "mod_template_support/Environment.hpp"
 #include "jutil.hpp"
 
 //
@@ -170,7 +171,13 @@ int main(int argc, char *argv[])
     // Create the modification template
     try
     {
-        pTemplate = new EnvModTemplate(pEnvMgr, modTemplateSchemaFile);
+        std::shared_ptr<Environment> pEnv = std::make_shared<Environment>(pEnvMgr);
+        pEnv->setLoadName(envFile);
+        if (!envOutputFile.empty())
+        {
+            pEnv->setOutputName(envOutputFile);
+        }
+        pTemplate = new EnvModTemplate(pEnv, modTemplateSchemaFile);
         pTemplate->loadTemplateFromFile(modTemplateFile);
     }
     catch (const TemplateException &te)
