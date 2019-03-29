@@ -66,22 +66,22 @@ class CFGMGRLIB_API EnvironmentMgr
         void validate(Status &status, bool includeHiddenNodes=false) const;
         std::string getRootNodeId() const;
         static std::string getUniqueKey();
-        void fetchNodes(const std::string path, std::vector<std::shared_ptr<EnvironmentNode>> &nodes, const std::shared_ptr<EnvironmentNode> &pStartNode = nullptr) const;
+        void fetchNodes(std::string path, std::vector<std::shared_ptr<EnvironmentNode>> &nodes, const std::shared_ptr<EnvironmentNode> &pStartNode = nullptr) const;
         bool isSchemaLoaded() const { return static_cast<bool>(m_pSchema); }
         bool isEnvironmentLoaded() const { return static_cast<bool>(m_pRootNode); }
 
 
     protected:
 
-        void addPath(const std::shared_ptr<EnvironmentNode> pNode);
+        void addPath(std::shared_ptr<EnvironmentNode> pNode);
         virtual bool createParser() { return false; }
-        virtual std::vector<std::shared_ptr<EnvironmentNode>> doLoadEnvironment(std::istream &in, const std::shared_ptr<SchemaItem> &pSchemaItem, const std::string itemType = std::string("")) { return std::vector<std::shared_ptr<EnvironmentNode>>(); }
+        virtual std::vector<std::shared_ptr<EnvironmentNode>> doLoadEnvironment(std::istream &in, const std::shared_ptr<SchemaItem> &pSchemaItem, const std::string &itemType) { return std::vector<std::shared_ptr<EnvironmentNode>>(); }
         virtual bool save(std::ostream &out) { return false; }
         void assignNodeIds(const std::shared_ptr<EnvironmentNode> &pNode);
         void insertExtraEnvironmentData(std::shared_ptr<EnvironmentNode> pNode);
         std::shared_ptr<SchemaItem> findInsertableItem(const std::shared_ptr<EnvironmentNode> &pNode, const std::string &itemType) const;
-        void getPredefinedAttributeValues(const std::string &inputItemType, std::string &itemType,
-                                          std::vector<NameValue> &initAttributes) const;
+        void getPredefinedAttributeValues(const std::string &inputItemType, std::string &itemType, std::vector<NameValue> &initAttributes) const;
+        void createInitNodes(const std::shared_ptr<EnvironmentNode> &pParentNode, const std::shared_ptr<SchemaItem> &pSchemaitem);
 
 
     protected:

@@ -21,7 +21,7 @@
         xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" attributeFormDefault="unqualified"
         xmlns:hpcc="someuri">
     <xs:include schemaLocation="types.xsd"/>
-    <hpcc:insert hpcc:schemaPath="/Environment/Software" hpcc:schemaType="hpcc_environment">
+    <hpcc:insert hpcc:schemaPath="/Environment/Software" hpcc:schemaLayoutType="hpcc_environment">
         <xs:element name="SingleUserSecMgr" hpcc:class="component" hpcc:category="Security Manager"
                     hpcc:itemType="secmgr_singleuser" hpcc:displayName="Single User">
             <xs:complexType>

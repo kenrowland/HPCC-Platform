@@ -21,7 +21,7 @@
         xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" attributeFormDefault="unqualified"
         xmlns:hpcc="someuri">
     <xs:include schemaLocation="types.xsd"/>
-    <hpcc:insert hpcc:schemaPath="/Environment/Software" hpcc:schemaType="hpcc_environment">
+    <hpcc:insert hpcc:schemaPath="/Environment/Software" hpcc:schemaLayoutType="hpcc_environment">
         <xs:element name="DaliServerProcess" hpcc:class="component" hpcc:category="Dali Server" hpcc:itemType="dali"
                     hpcc:displayName="Dali Server" hpcc:docid="da.t1" minOccurs="1" maxOccurs="1">
             <xs:complexType>

@@ -30,7 +30,7 @@ bool XMLEnvironmentMgr::createParser()
 }
 
 
-std::vector<std::shared_ptr<EnvironmentNode>> XMLEnvironmentMgr::doLoadEnvironment(std::istream &in, const std::shared_ptr<SchemaItem> &pSchemaItem, const std::string itemType)
+std::vector<std::shared_ptr<EnvironmentNode>> XMLEnvironmentMgr::doLoadEnvironment(std::istream &in, const std::shared_ptr<SchemaItem> &pSchemaItem, const std::string &itemType)
 {
     std::vector<std::shared_ptr<EnvironmentNode>> envNodes;
     try

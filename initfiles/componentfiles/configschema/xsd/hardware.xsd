@@ -3,7 +3,7 @@
         xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" attributeFormDefault="unqualified"
         xmlns:hpcc="someuri">
     <xs:include schemaLocation="types.xsd"/>
-    <hpcc:insert hpcc:schemaPath="/Environment/Hardware" hpcc:schemaType="hpcc_environment">
+    <hpcc:insert hpcc:schemaPath="/Environment/Hardware" hpcc:schemaLayoutType="hpcc_environment">
         <xs:element name="ComputerType" maxOccurs="unbounded" hpcc:displayName="Defined computer types"
                     hpcc:class="elementSet">
             <xs:complexType>

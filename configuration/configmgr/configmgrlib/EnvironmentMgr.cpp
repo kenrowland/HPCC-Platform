@@ -175,7 +175,7 @@ bool EnvironmentMgr::loadEnvironment(const std::string &qualifiedFilename)
         {
             try
             {
-                std::vector<std::shared_ptr<EnvironmentNode>> rootNodes = doLoadEnvironment(in, m_pSchema);  // root
+                std::vector<std::shared_ptr<EnvironmentNode>> rootNodes = doLoadEnvironment(in, m_pSchema, "");  // root
                 if (rootNodes.size() == 1)
                 {
                     m_pRootNode = rootNodes[0];
@@ -451,7 +451,7 @@ void EnvironmentMgr::insertExtraEnvironmentData(std::shared_ptr<EnvironmentNode>
     if (!insertData.empty())
     {
         std::istringstream extraData(insertData);
-        std::vector<std::shared_ptr<EnvironmentNode>> extraNodes = doLoadEnvironment(extraData, pParentNode->getSchemaItem());  // not root
+        std::vector<std::shared_ptr<EnvironmentNode>> extraNodes = doLoadEnvironment(extraData, pParentNode->getSchemaItem(), "");  // not root
         for (auto &&envNode : extraNodes)
         {
             assignNodeIds(envNode);
@@ -545,6 +545,23 @@ bool EnvironmentMgr::initializeEmptyEnvironment()
 {
     discardEnvironment();  // in case something is loaded
     m_pRootNode = std::make_shared<EnvironmentNode>(m_pSchema, m_pSchema->getProperty("name"));
+    createInitNodes(m_pRootNode, m_pSchema);
     assignNodeIds(m_pRootNode);
     return true;
+}
+
+
+void EnvironmentMgr::createInitNodes(const std::shared_ptr<EnvironmentNode> &pParentNode, const std::shared_ptr<SchemaItem> &pSchemaitem)
+{
+    std::vector<std::shared_ptr<SchemaItem>> children;
+    pSchemaitem->getChildren(children);
+    for (auto const &child: children)
+    {
+        if (child->getProperty("createOnInit", "") == "true")
+        {
+            std::shared_ptr<EnvironmentNode> pChildEnvNode = std::make_shared<EnvironmentNode>(child, child->getProperty("name"));
+            pParentNode->addChild(pChildEnvNode);
+            createInitNodes(pChildEnvNode, child);
+        }
+    }
 }

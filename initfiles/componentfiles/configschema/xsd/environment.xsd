@@ -20,13 +20,13 @@
     xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" attributeFormDefault="unqualified"
     xmlns:hpcc="something hpcc.xsd">
     <xs:include schemaLocation="types.xsd"/>
-    <xs:element name="Environment" hpcc:category="root" hpcc:class="category" hpcc:itemType="hpcc" hpcc:schemaType="hpcc_environment">
+    <xs:element name="Environment" hpcc:category="root" hpcc:class="category" hpcc:itemType="hpcc" hpcc:schemaLayoutType="hpcc_environment">
         <xs:complexType>
             <xs:sequence>
-                <xs:element name="EnvSettings" hpcc:class="category" hpcc:displayName="System Settings" hpcc:hidden="true"/>
-                <xs:element name="Hardware" hpcc:class="category" hpcc:displayName="Hardware"/>
-                <xs:element name="Programs" hpcc:class="category" hpcc:displayName="Programs" hpcc:hidden="true"/>
-                <xs:element name="Software" hpcc:class="category" hpcc:displayName="Software">
+                <xs:element name="EnvSettings" hpcc:class="category" hpcc:displayName="System Settings" hpcc:hidden="true" hpcc:createOnInit="true"/>
+                <xs:element name="Hardware" hpcc:class="category" hpcc:displayName="Hardware" hpcc:createOnInit="true"/>
+                <xs:element name="Programs" hpcc:class="category" hpcc:displayName="Programs" hpcc:hidden="true" hpcc:createOnInit="true"/>
+                <xs:element name="Software" hpcc:class="category" hpcc:displayName="Software" hpcc:createOnInit="true">
                 </xs:element>
             </xs:sequence>
         </xs:complexType>

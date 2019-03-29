@@ -19,7 +19,7 @@
         xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" attributeFormDefault="unqualified"
         xmlns:hpcc="someuri">
     <xs:include schemaLocation="types.xsd"/>
-    <hpcc:insert hpcc:schemaPath="/Environment/Software" hpcc:schemaType="hpcc_environment">
+    <hpcc:insert hpcc:schemaPath="/Environment/Software" hpcc:schemaLayoutType="hpcc_environment">
         <!-- is a directories section required in an environment? -->
         <xs:element name="Directories" hpcc:displayName="Directories" hpcc:itemType="directories" hpcc:class="component">
             <xs:complexType>

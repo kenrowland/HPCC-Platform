@@ -40,7 +40,7 @@ class XMLEnvironmentMgr : public EnvironmentMgr
     protected:
 
         bool createParser() override;
-        std::vector<std::shared_ptr<EnvironmentNode>> doLoadEnvironment(std::istream &in, const std::shared_ptr<SchemaItem> &pSchemaItem, const std::string itemType = std::string("")) override;
+        std::vector<std::shared_ptr<EnvironmentNode>> doLoadEnvironment(std::istream &in, const std::shared_ptr<SchemaItem> &pSchemaItem, const std::string &itemType) override;
         bool save(std::ostream &out) override;
         void serializeTree(pt::ptree &envTree, const std::shared_ptr<EnvironmentNode> &pEnvNode) const;
 

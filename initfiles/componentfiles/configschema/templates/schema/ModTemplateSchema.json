@@ -733,7 +733,11 @@
                 },
                 "load_environment" : {
                     "type" : "string",
-                    "description" : "If given, this environment is loaded"
+                    "description" : "If given, this environment is loaded (not allowed with initialize_empty_environment)"
+                },
+                "initialize_empty_environment" : {
+                    "type" : "boolean",
+                    "description" : "True to create an empty environment (not allowed with load_environment)"
                 },
                 "write_environment" : {
                     "type" : "string",
@@ -743,7 +747,7 @@
                 },
                 "set_as_target" : {
                     "type" : "boolean",
-                    "description" : "Set to true if this environment is the default for the template (may not want this...)",
+                    "description" : "Set to true if this environment is the default for the template",
                     "default" : false
                 }
             },
@@ -760,12 +764,17 @@
                         },
                         {
                             "not" : {
-                                "required" : [ "master_schema_file" ]
+                                "required" : [ "master_schema_filename" ]
                             }
                         },
                         {
                             "not" : {
                                 "required" : [ "load_environment" ]
+                            }
+                        },
+                        {
+                            "not" : {
+                                "required" : [ "initialize_empty_environment" ]
                             }
                         },
                         {
@@ -778,7 +787,47 @@
                 {
                     "allOf" : [
                         {
-                            "required" : [ "name", "schema_path", "master_schema_file" ]
+                            "required" : [ "name", "schema_path", "master_schema_filename"]
+                        },
+                        {
+                            "not" : {
+                                "required" : [ "load_environment" ]
+                            }
+                        },
+                        {
+                            "not" : {
+                                "required" : [ "initialize_empty_environment" ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "allOf" : [
+                        {
+                            "required" : [ "name", "schema_path", "master_schema_filename"]
+                        },
+                        {
+                            "required" : [ "load_environment" ]
+                        },
+                        {
+                            "not" : {
+                                "required" : [ "initialize_empty_environment" ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "allOf" : [
+                        {
+                            "required" : [ "name", "schema_path", "master_schema_filename"]
+                        },
+                        {
+                            "required" : [ "initialize_empty_environment" ]
+                        },
+                        {
+                            "not" : {
+                                "required" : [ "load_environment" ]
+                            }
                         }
                     ]
                 }

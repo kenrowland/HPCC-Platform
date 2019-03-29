@@ -299,7 +299,6 @@ void XSDSchemaParser::parseElement(const pt::ptree &elemTree)
     // Get schema attribute necessary to figure out what to do
     std::string elementName = elemTree.get("<xmlattr>.name", "");
     std::string itemType = elemTree.get("<xmlattr>.hpcc:itemType", "");
-    std::string schemaType = elemTree.get("<xmlattr>.hpcc:schemaType", "");
 
     //
     // Get child tree for use below
@@ -329,6 +328,7 @@ void XSDSchemaParser::parseElement(const pt::ptree &elemTree)
     std::string tooltip = elemTree.get("<xmlattr>.hpcc:tooltip", "");
     std::string insertLimitType = elemTree.get("<xmlattr>.hpcc:insertLimitType", "");
     std::string insertLimitData = elemTree.get("<xmlattr>.hpcc:insertLimitData", "");
+    std::string createOnInit = elemTree.get("<xmlattr>.hpcc:createOnInit", "");
     unsigned minOccurs = elemTree.get<unsigned>("<xmlattr>.minOccurs", 1);
     std::string maxOccursStr = elemTree.get("<xmlattr>.maxOccurs", "1");
     unsigned maxOccurs;
@@ -345,9 +345,11 @@ void XSDSchemaParser::parseElement(const pt::ptree &elemTree)
 
     if (category == "root")
     {
+        std::string schemaLayoutType = elemTree.get("<xmlattr>.hpcc:schemaLayoutType", "");
         m_pSchemaItem->setProperty("name", elementName);
         m_pSchemaItem->setProperty("itemType", itemType);
-        m_pSchemaItem->setProperty("schemaType", schemaType);
+        m_pSchemaItem->setProperty("schemaLayoutType", schemaLayoutType);
+        m_pSchemaItem->setProperty("createOnInit", "true");
         parseXSD(childTree);
     }
     else
@@ -360,6 +362,7 @@ void XSDSchemaParser::parseElement(const pt::ptree &elemTree)
         if (!tooltip.empty()) pNewSchemaItem->setProperty("tooltip", tooltip);
         if (!insertLimitType.empty()) pNewSchemaItem->setProperty("insertLimitType", insertLimitType);
         if (!insertLimitData.empty()) pNewSchemaItem->setProperty("insertLimitData", insertLimitData);
+        if (!createOnInit.empty()) pNewSchemaItem->setProperty("createOnInit", createOnInit);
         pNewSchemaItem->setProperty("itemType", itemType);
         pNewSchemaItem->setProperty("category", category.empty() ? displayName : category );
         pNewSchemaItem->setMinInstances(minOccurs);
@@ -431,11 +434,11 @@ void XSDSchemaParser::processSchemaInsert(const pt::ptree &elemTree)
     //
     // Get the schema type. If present, then it must match the schema type property of the schema root element. If it
     // doesn't, then ignore this schema file
-    std::string envSchemaType = m_pSchemaItem->getSchemaRoot()->getProperty("schemaType");
+    std::string envSchemaType = m_pSchemaItem->getSchemaRoot()->getProperty("schemaLayoutType");
     bool match = true;
     if (!envSchemaType.empty())
     {
-        std::vector<std::string> schemaTypes = splitString(elemTree.get("<xmlattr>.hpcc:schemaType", ""), ",");
+        std::vector<std::string> schemaTypes = splitString(elemTree.get("<xmlattr>.hpcc:schemaLayoutType", ""), ",");
         if (!schemaTypes.empty())
         {
             match = false;
