@@ -22,9 +22,10 @@
 #include "TemplateExecutionException.hpp"
 #include "Status.hpp"
 #include "OperationNode.hpp"
+#include "Operation.hpp"
 
 
-void OperationFindNode::doExecute(std::shared_ptr<Environments> pEnvironments, std::shared_ptr<EnvironmentMgr> pEnvMgr, std::shared_ptr<Variables> pVariables)
+void OperationFindNode::doExecute(std::shared_ptr<EnvironmentMgr> pEnvMgr, std::shared_ptr<Variables> pVariables)
 {
     //
     // Any parent node IDs found?
@@ -79,14 +80,14 @@ void OperationFindNode::doExecute(std::shared_ptr<Environments> pEnvironments, s
             {
                 m_nodeType = m_path.substr(lastSlashPos + 1);
                 m_path = m_path.substr(0, lastSlashPos);
-                getParentNodeIds(pEnvMgr, pVariables);  // reset these since the parent path has changed
+                m_parentNodeIds = getNodeIds(pEnvMgr, pVariables, m_parentNodeId, m_path);  // reset these since the parent path has changed
             }
             else
             {
                 throw TemplateExecutionException("Invalid path for find operation, unable to create node");
             }
         }
-        OperationCreateNode::doExecute(pEnvironments, pEnvMgr, pVariables);
+        OperationCreateNode::doExecute(pEnvMgr, pVariables);
     }
     else if (m_throwOnEmpty)
     {

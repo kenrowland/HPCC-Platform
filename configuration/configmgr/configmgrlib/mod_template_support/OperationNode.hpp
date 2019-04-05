@@ -55,24 +55,29 @@ class OperationNode : public Operation
         OperationNode() = default;
         bool execute(std::shared_ptr<Environments> pEnvironments, std::shared_ptr<EnvironmentMgr> pEnvMgr, std::shared_ptr<Variables> pVariables) override;
         void addAttribute(modAttribute &newAttribute);
-        void assignAttributeCookedValues(std::shared_ptr<Variables> pVariables);
+        void assignAttributeCookedValues(const std::shared_ptr<Variables> &pVariables);
 
 
     protected:
 
-        virtual void doExecute(std::shared_ptr<Environments> pEnvironments, std::shared_ptr<EnvironmentMgr> pEnvMgr, std::shared_ptr<Variables> pVariables) = 0;
-        void getParentNodeIds(std::shared_ptr<EnvironmentMgr> pEnvMgr, std::shared_ptr<Variables> pVariables);
+        virtual void doExecute(std::shared_ptr<EnvironmentMgr> pEnvMgr, std::shared_ptr<Variables> pVariables) = 0;
+
         std::shared_ptr<Variable> createVariable(std::string varName, const std::string &varType,
                                                  std::shared_ptr<Variables> pVariables, bool existingOk, bool global);
         bool createAttributeSaveInputs(std::shared_ptr<Variables> pVariables);
         void saveAttributeValues(std::shared_ptr<Variables> pVariables, const std::shared_ptr<EnvironmentNode> &pEnvNode);
-        void processNodeValue(std::shared_ptr<Variables> pVariables, const std::shared_ptr<EnvironmentNode> &pEnvNode);
+        void processNodeValue(const std::shared_ptr<Variables> &pVariables,
+                              const std::shared_ptr<EnvironmentNode> &pEnvNode);
+        void initializeForExecution(const std::shared_ptr<Environments> &pEnvironments,
+                                    std::shared_ptr<EnvironmentMgr> pEnvMgr,
+                                    const std::shared_ptr<Variables> &pVariables);
 
 
     protected:
 
         std::string m_path;
         std::string m_parentNodeId;
+        std::string m_environmentName;
         std::vector<std::string> m_parentNodeIds;
         std::vector<modAttribute> m_attributes;
         modAttribute m_nodeValue;
@@ -81,6 +86,7 @@ class OperationNode : public Operation
         std::string m_saveNodeIdName;
         bool m_accumulateSaveNodeIdOk = false;
         bool m_saveNodeIdAsGlobalValue = false;
+        std::shared_ptr<EnvironmentMgr> m_pOpEnvMgr;   // the environment mgr to use for operation execution
 
 
     friend class EnvModTemplate;

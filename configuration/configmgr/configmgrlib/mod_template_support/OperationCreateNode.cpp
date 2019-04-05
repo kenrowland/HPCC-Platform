@@ -24,7 +24,7 @@
 #include "Status.hpp"
 
 
-void OperationCreateNode::doExecute(std::shared_ptr<Environments> pEnvironments, std::shared_ptr<EnvironmentMgr> pEnvMgr, std::shared_ptr<Variables> pVariables)
+void OperationCreateNode::doExecute(std::shared_ptr<EnvironmentMgr> pEnvMgr, std::shared_ptr<Variables> pVariables)
 {
     std::shared_ptr<EnvironmentNode> pNewEnvNode;
 

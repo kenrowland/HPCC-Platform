@@ -20,7 +20,8 @@
 
 Environment::Environment(const std::string &masterCfgFile, const std::vector<std::string> configPaths) :
     m_masterCfgSchemaFile(masterCfgFile),
-    m_configPaths(configPaths)
+    m_configPaths(configPaths),
+    m_initializeEmpty(false)
 {
 
 }
@@ -34,21 +35,33 @@ Environment::Environment(std::shared_ptr<EnvironmentMgr> pEnvMgr) :
 
 void Environment::initialize()
 {
-    EnvironmentType envType = XML;
-    m_pEnvMgr = getEnvironmentMgrInstance(envType);
-    m_pEnvMgr->loadSchema(m_masterCfgSchemaFile, m_configPaths);
-
-    if (!m_inputEnvironment.empty())
+    if (!m_pEnvMgr)
     {
-        m_pEnvMgr->loadEnvironment(m_inputEnvironment);
+        EnvironmentType envType = XML;
+        m_pEnvMgr = getEnvironmentMgrInstance(envType);
+        m_pEnvMgr->loadSchema(m_masterCfgSchemaFile, m_configPaths);
+
+        //
+        // Load an environment ?
+        if (!m_inputEnvironment.empty())
+        {
+            m_pEnvMgr->loadEnvironment(m_inputEnvironment);
+        }
+
+        //
+        // Or, init an empty one ?
+        else if (m_initializeEmpty)
+        {
+            m_pEnvMgr->initializeEmptyEnvironment();
+        }
     }
 }
 
 
-void Environment::save()
+void Environment::save(const std::shared_ptr<Variables> &pVariables)
 {
     if (!m_outputEnvironment.empty())
     {
-        m_pEnvMgr->saveEnvironment(m_outputEnvironment);
+        m_pEnvMgr->saveEnvironment(pVariables->doValueSubstitution(m_outputEnvironment));
     }
 }

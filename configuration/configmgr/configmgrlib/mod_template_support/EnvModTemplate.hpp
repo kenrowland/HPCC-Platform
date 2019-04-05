@@ -31,6 +31,7 @@
 #include "OperationNode.hpp"
 #include "OperationFindNode.hpp"
 #include "OperationIncludeTemplate.hpp"
+#include "OperationCopy.hpp"
 #include <map>
 #include <vector>
 #include <memory>
@@ -63,11 +64,11 @@ class CFGMGRLIB_API EnvModTemplate
         void releaseTemplate();
         void loadTemplate(rapidjson::IStreamWrapper &stream);
         void parseTemplate();
-        void parseCommon();
         void parseVariables(const rapidjson::Value &variables);
         void parseVariable(const rapidjson::Value &varValue);
         void parseOperations(const rapidjson::Value &operations);
         void parseOperation(const rapidjson::Value &operation);
+        void parseCopyOperation(const rapidjson::Value &operation, std::shared_ptr<OperationCopy> pCopyOp);
         void parseOperationNodeCommonData(const rapidjson::Value &operationData, std::shared_ptr<OperationNode> pOpNode);
         void parseAttribute(const rapidjson::Value &attributeData, modAttribute *pAttribute);
         void parseTarget(const rapidjson::Value &targetData, std::shared_ptr<OperationNode> pOp);

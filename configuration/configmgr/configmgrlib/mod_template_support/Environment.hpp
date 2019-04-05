@@ -21,6 +21,7 @@
 #include <memory>
 #include <vector>
 #include "EnvironmentMgr.hpp"
+#include "Variables.hpp"
 
 
 class Environment {
@@ -32,9 +33,10 @@ class Environment {
         ~Environment() = default;
         void initialize();
         bool isSave() const { return !m_outputEnvironment.empty(); }
-        void save();
+        void save(const std::shared_ptr<Variables> &pVariables);
         void setOutputName(const std::string &outputName) { m_outputEnvironment = outputName; }
         void setLoadName(const std::string &inputName) { m_inputEnvironment = inputName; }
+        void setInitializeEmpty(bool init) { m_initializeEmpty = init; }
 
 
     public:
@@ -43,6 +45,7 @@ class Environment {
         std::shared_ptr<EnvironmentMgr> m_pEnvMgr;
         std::string m_masterCfgSchemaFile;
         std::vector<std::string> m_configPaths;
+        bool m_initializeEmpty;
         std::string m_inputEnvironment;
         std::string m_outputEnvironment;
 };

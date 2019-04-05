@@ -31,7 +31,7 @@
                     "name": {
                         "type": "string",
                         "description" : "Name of the variable to which the input is assigned. This value is available using {{name}} anywhere in the template",
-                        "pattern" : "^[A-Za-z0-9]*$"
+                        "pattern" : "^[A-Za-z0-9_]*$"
                     },
                     "type": {
                         "type": "string",
@@ -107,7 +107,8 @@
                         "modify",
                         "find",
                         "delete",
-                        "include"
+                        "include",
+                        "copy"
                     ],
                     "description" : "Action to perform"
                 }
@@ -190,6 +191,22 @@
                         "action",
                         "data"
                     ]
+                },
+                {
+                    "properties": {
+                        "action": {
+                            "enum": [
+                                "copy"
+                            ]
+                        },
+                        "data": {
+                            "$ref": "#/definitions/copy_data_info"
+                        }
+                    },
+                    "required": [
+                        "action",
+                        "data"
+                    ]
                 }
             ],
             "description" : "Definition of the operation to perform"
@@ -208,10 +225,11 @@
                 "start_index": {
                     "type": "string",
                     "defalut" : "0",
-                    "description" : "Starting index for group variable value access"
+                    "description" : "Starting index for group variable value access (only applies to variable access)"
                 },
                 "node_type": {
                     "type": "string",
+                    "pattern" : "^[A-Za-z0-9_]*$",
                     "description" : "The type of node to create (defined by the schema). Required"
                 },
                 "save": {
@@ -266,20 +284,14 @@
             },
             "allOf": [
                 {
-                    "required" : [
-                        "target"
-                    ]
+                    "required" : [ "target" ]
                 },
                 {
-                    "required": [
-                        "attributes"
-                    ]
+                    "required": [ "attributes" ]
                 },
                 {
                     "not" : {
-                        "required" : [
-                            "count"
-                        ]
+                        "required" : [ "count" ]
                     }
                 }
             ]
@@ -314,22 +326,16 @@
             "allOf" : [
                 {
                     "not" : {
-                        "required" : [
-                            "count"
-                        ]
+                        "required" : [ "count" ]
                     }
                 },
                 {
                     "not" : {
-                        "required" : [
-                            "start_index"
-                        ]
+                        "required" : [ "start_index" ]
                     }
                 },
                 {
-                    "required" : [
-                        "target"
-                    ]
+                    "required" : [ "target" ]
                 }
             ]
         },
@@ -350,30 +356,26 @@
             "allOf" : [
                 {
                     "not" : {
-                        "required" : [
-                            "count"
-                        ]
+                        "required" : [ "count" ]
                     }
                 },
                 {
                     "not" : {
-                        "required" : [
-                            "node_value"
-                        ]
+                        "required" : [ "node_value" ]
                     }
                 },
                 {
-                    "required" : [
-                        "target"
-                    ]
+                    "required" : [ "target" ]
                 }
             ]
         },
         "include_data_info": {
             "type": "object",
             "properties": {
-                "target" : {
-                    "$ref" : "#/definitions/target_file"
+                "template_file" : {
+                    "type" : "string",
+                    "pattern" : "^[A-Za-z0-9_\\-\\/\\\\{}]+(?: +[A-Za-z0-9\\/\\\\{}]+)*$",
+                    "description" : "The full path to the template file, with potential variable substitutions"
                 },
                 "template_parameters": {
                     "type": "array",
@@ -384,7 +386,7 @@
                             "name": {
                                 "type": "string",
                                 "description" : "Name of the variable to which the input is assigned. This value is available using {{name}} anywhere in the template",
-                                "pattern" : "^[A-Za-z0-9]*$"
+                                "pattern" : "^[A-Za-z0-9_]*$"
                             },
                             "values": {
                                 "type": "array",
@@ -394,15 +396,74 @@
                                 "description" : "Values to assign to the variable"
                             }
                         },
-                        "required": [
-                            "name",
-                            "values"
-                        ]
+                        "required": [ "name", "values" ]
                     },
                     "description" : "Array of parameter values to pass to the included template as variable values for use during execution."
                 }
             },
-            "required" : [ "target" ]
+            "required" : [ "template_file" ]
+        },
+        "copy_data_info" : {
+            "type" : "object",
+            "properties" : {
+                "target" : {
+                    "$ref" : "#/definitions/target_path"
+                },
+                "save": {
+                    "$ref": "#/definitions/save_info"
+                },
+                "error_if_not_found" : {
+                    "type" : "boolean",
+                    "default" : false,
+                    "description" : "Throw an error if no nodes are selected for copy"
+                },
+                "include_children" : {
+                    "type" : "boolean",
+                    "default" : false,
+                    "description" : "True to copy all children of this source to the destination (attributes included)"
+                },
+                "destination" : {
+                    "ref" : "#/definitions/copy_destination_info"
+                }
+            },
+            "required" : [ "source", "destination" ]
+        },
+        "copy_destination_info" : {
+            "type" : "object",
+            "properties" : {
+                "target" : {
+                    "$ref" : "#/definitions/target_node_or_path"
+                },
+                "save": {
+                    "$ref": "#/definitions/save_info"
+                },
+                "node_type": {
+                    "type": "string",
+                    "pattern" : "^[A-Za-z0-9_]*$",
+                    "description" : "The type of node to create (defined by the schema). Required"
+                },
+                "copy_attributes" : {
+                    "type" : "object",
+                    "properties" : {
+                        "select" : {
+                            "type" : "string",
+                            "enum" : [ "all", "list", "exclude" ],
+                            "default" : "all",
+                            "description" : "Indicates which attributes to copy, all is all of them, list is only those listed, exclude to exclude the listed ones"
+                        },
+                        "attributes": {
+                            "type": "array",
+                            "items" : {
+                                "type" : "string"
+                            },
+                            "description" : "Attribute names if type is list or exclude"
+                        },
+                        "save_attributes": {
+                            "ref" : "#/definitions/attribute_save_refs"
+                        }
+                    }
+                }
+            }
         },
         "attribute_value_mod": {
             "type": "object",
@@ -424,25 +485,18 @@
             },
             "allOf" : [
                 {
-                    "required": [
-                        "name",
-                        "value"
-                    ]
+                    "required": [ "name", "value" ]
                 },
                 {
                     "allOf" : [
                         {
                             "not" : {
-                                "required" : [
-                                    "first_of"
-                                ]
+                                "required" : [ "first_of" ]
                             }
                         },
                         {
                             "not" : {
-                                "required" : [
-                                    "error_if_empty"
-                                ]
+                                "required" : [ "error_if_empty" ]
                             }
                         }
                     ]
@@ -473,32 +527,23 @@
             },
             "allOf" : [
                 {
-                    "required": [
-                        "name",
-                        "value"
-                    ]
+                    "required": [ "name", "value" ]
                 },
                 {
                     "allOf" : [
                         {
                             "not" : {
-                                "required" : [
-                                    "error_if_not_found"
-                                ]
+                                "required" : [ "error_if_not_found" ]
                             }
                         },
                         {
                             "not" : {
-                                "required" : [
-                                    "error_if_empty"
-                                ]
+                                "required" : [ "error_if_empty" ]
                             }
                         },
                         {
                             "not" : {
-                                "required" : [
-                                    "first_of"
-                                ]
+                                "required" : [ "first_of" ]
                             }
                         }
                     ]
@@ -530,7 +575,7 @@
                 "error_if_not_found" : {
                     "type" : "boolean",
                     "default" : false,
-                    "description" : "Used for actions that are looking for the presence of the attribute"
+                    "description" : "Throw exception if the attribute is not found"
                 },
                 "error_if_empty" : {
                     "type" : "boolean",
@@ -542,14 +587,10 @@
                 {
                     "oneOf" : [
                         {
-                            "required" : [
-                                "name"
-                            ]
+                            "required" : [ "name" ]
                         },
                         {
-                            "required" : [
-                                "first_of"
-                            ]
+                            "required" : [ "first_of" ]
                         }
                     ]
                 },
@@ -557,16 +598,12 @@
                     "allOf" : [
                         {
                             "not" : {
-                                "required" : [
-                                    "do_not_set"
-                                ]
+                                "required" : [ "do_not_set" ]
                             }
                         },
                         {
                             "not" : {
-                                "required" : [
-                                    "value"
-                                ]
+                                "required" : [ "value" ]
                             }
                         }
                     ]
@@ -579,11 +616,30 @@
                 "$ref": "#/definitions/attribute_ref"
             }
         },
+        "attribute_save_ref" : {
+            "type" : "object",
+            "properties" : {
+                "name" : {
+                    "type" : "string"
+                },
+                "save" : {
+                    "$ref" : "#/definitions/save_info"
+                }
+            },
+            "required" : [ "name", "save" ]
+        },
+        "attribute_save_refs" : {
+            "type": "array",
+            "items": {
+                "$ref": "#/definitions/attribute_save_ref"
+            }
+        },
         "save_info" : {
             "type": "object",
             "properties": {
                 "name": {
-                    "type": "string"
+                    "type": "string",
+                    "pattern" : "^[A-Za-z0-9_]*$"
                 },
                 "accumulate": {
                     "type": "boolean",
@@ -653,7 +709,13 @@
                 },
                 "nodeid" : {
                     "type" : "string",
+                    "pattern" : "^[A-Za-z0-9_{}]*$",
                     "description" : "Node id of the target"
+                },
+                "environment" : {
+                    "type" : "string",
+                    "pattern" : "^[A-Za-z0-9_{}]*$",
+                    "description" : "Name of environment to target (a single override only)"
                 }
             },
             "oneOf" : [
@@ -688,6 +750,11 @@
             "properties" : {
                 "path" : {
                     "type" : "string"
+                },
+                "environment" : {
+                    "type" : "string",
+                    "pattern" : "^[A-Za-z0-9_{}]*$",
+                    "description" : "Name of environment to target (a single override only)"
                 }
             },
             "required" : [ "path" ]
@@ -696,52 +763,49 @@
             "type" : "object",
             "properties" : {
                 "nodeid" : {
-                    "type" : "string"
+                    "type" : "string",
+                    "pattern" : "^[A-Za-z0-9_{}]*$"
+                },
+                "environment" : {
+                    "type" : "string",
+                    "pattern" : "^[A-Za-z0-9_{}]*$",
+                    "description" : "Name of environment to target (a single override only)"
                 }
             },
             "required" : [ "nodeid" ]
-        },
-        "target_file" : {
-            "type" : "object",
-            "properties" : {
-                "filepath" : {
-                    "type" : "string"
-                }
-            },
-            "required" : [ "filepath" ]
         },
         "environment_def" : {
             "type" : "object",
             "properties" : {
                 "name" : {
                     "type" : "string",
-                    "pattern" : "^[A-Za-z0-9]*$",
+                    "pattern" : "^[A-Za-z0-9_]*$",
                     "description" : "Either references an existing environment or names a new one described by other values in this object"
                 },
                 "schema_paths": {
                     "type": "array",
                     "items" : {
                         "type" : "string",
-                        "pattern" : "^[A-Za-z0-9]+(?: +[A-Za-z0-9]+)*$"
+                        "pattern" : "^[A-Za-z0-9_\\-\\/\\\\]+(?: +[A-Za-z0-9\\/\\\\]+)*$"
                     },
                     "description" : "Array of paths from which schema files are loaded. First entry MUST be the primary path where the master schema file is located"
                 },
                 "master_schema_filename" : {
                     "type" : "string",
-                    "pattern" : "^[A-Za-z0-9]+(?: +[A-Za-z0-9]+)*$",
+                    "pattern" : "^[A-Za-z0-9_\\-]+(?: +[A-Za-z0-9_\\-]+)*$",
                     "description" : "Name of master schema file"
                 },
-                "load_environment" : {
+                "load" : {
                     "type" : "string",
-                    "description" : "If given, this environment is loaded (not allowed with initialize_empty_environment)"
+                    "description" : "If given, this environment is loaded (not allowed with initialize)"
                 },
-                "initialize_empty_environment" : {
+                "initialize" : {
                     "type" : "boolean",
                     "description" : "True to create an empty environment (not allowed with load_environment)"
                 },
-                "write_environment" : {
+                "write" : {
                     "type" : "string",
-                    "pattern" : "^[A-Za-z0-9]+(?: +[A-Za-z0-9]+)*$",
+                    "pattern" : "^[A-Za-z0-9_\\-\\/\\\\{}]+(?: +[A-Za-z0-9_\\-\\/\\\\{}]+)*$",
                     "description" : "Filepath to where environment is serialized after template execution (leave empty or missing for no output)",
                     "default" : ""
                 },

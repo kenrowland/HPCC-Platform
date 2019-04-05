@@ -4,7 +4,7 @@
 #include "EnvironmentMgr.hpp"
 #include "TemplateExecutionException.hpp"
 
-void OperationDeleteNode::doExecute(std::shared_ptr<Environments> pEnvironments, std::shared_ptr<EnvironmentMgr> pEnvMgr, std::shared_ptr<Variables> pVariables)
+void OperationDeleteNode::doExecute(std::shared_ptr<EnvironmentMgr> pEnvMgr, std::shared_ptr<Variables> pVariables)
 {
     //
     // If any node IDs found, go delete them

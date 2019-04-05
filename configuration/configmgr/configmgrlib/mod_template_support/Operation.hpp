@@ -18,6 +18,8 @@
 #ifndef HPCCSYSTEMS_PLATFORM_OPERATION_HPP
 #define HPCCSYSTEMS_PLATFORM_OPERATION_HPP
 
+#include <string>
+#include <vector>
 #include "Variable.hpp"
 #include "Variables.hpp"
 #include "Environments.hpp"
@@ -35,14 +37,16 @@ class Operation
 
     protected:
 
-        void initializeForExecution(std::shared_ptr<Variables> pVariables);
+        void initializeForExecution(const std::shared_ptr<Variables> &pVariables);
 
+
+        std::vector<std::string> getNodeIds(const std::shared_ptr<EnvironmentMgr> &pEnvMgr, const std::shared_ptr<Variables> &pVariables,
+                                            const std::string &nodeId, const std::string &path);
 
     protected:
 
         std::string m_count;
         std::string m_startIndex;
-
         size_t m_executionCount;
         size_t m_executionStartIndex;
 };

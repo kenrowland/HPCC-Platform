@@ -1,6 +1,6 @@
 /*##############################################################################
 
-    HPCC SYSTEMS software Copyright (C) 2018 HPCC Systems®.
+    HPCC SYSTEMS software Copyright (C) 2019 HPCC Systems®.
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@
 #include "EnvironmentMgr.hpp"
 #include "EnvironmentNode.hpp"
 #include "EnvironmentValue.hpp"
+#include "Operation.hpp"
 
 
 void OperationNode::addAttribute(modAttribute &newAttribute)
@@ -33,13 +34,12 @@ bool OperationNode::execute(std::shared_ptr<Environments> pEnvironments, std::sh
     bool rc = true;
 
     //
-    // Get the environment, based on name, for the operation.
-    initializeForExecution(pVariables);
-
+    // Get ready to execute the operation
+    initializeForExecution(pEnvironments, pEnvMgr, pVariables);
 
     //
     // Select the nodes for execution
-    getParentNodeIds(pEnvMgr, pVariables);
+    m_parentNodeIds = getNodeIds(m_pOpEnvMgr, pVariables, m_parentNodeId, m_path);
 
     //
     // If count is > 1, then the number of selected nodes must be 1
@@ -54,52 +54,19 @@ bool OperationNode::execute(std::shared_ptr<Environments> pEnvironments, std::sh
     {
         pVariables->setIterationInfo(m_executionStartIndex + idx, idx);
         assignAttributeCookedValues(pVariables);
-        doExecute(pEnvironments, pEnvMgr, pVariables);
+        doExecute(m_pOpEnvMgr, pVariables);
     }
     return rc;
 }
 
 
-void OperationNode::assignAttributeCookedValues(std::shared_ptr<Variables> pVariables)
+void OperationNode::assignAttributeCookedValues(const std::shared_ptr<Variables> &pVariables)
 {
     //
     // go through the ones defined by the operation and set each (by name)
     for (auto &attr: m_attributes)
     {
         attr.cookedValue = pVariables->doValueSubstitution(attr.value);
-    }
-}
-
-
-void OperationNode::getParentNodeIds(std::shared_ptr<EnvironmentMgr> pEnvMgr, std::shared_ptr<Variables> pVariables)
-{
-    m_parentNodeIds.clear();  // should always recalculate the results
-
-    //
-    // Find the parent node(s). Either was input, or based on a path, which may match more than one node
-    if (!m_parentNodeId.empty())
-    {
-        std::shared_ptr<Variable> pInput = pVariables->getVariable(m_parentNodeId);
-        if (pInput)
-        {
-            std::size_t numIds = pInput->getNumValues();
-            for (std::size_t idx = 0; idx < numIds; ++idx)
-            {
-                m_parentNodeIds.emplace_back(pVariables->doValueSubstitution(pInput->getValue(idx)));
-            }
-        }
-        else
-        {
-            m_parentNodeIds.emplace_back(pVariables->doValueSubstitution(m_parentNodeId));
-        }
-    }
-    else
-    {
-        std::vector<std::shared_ptr<EnvironmentNode>> envNodes;
-        std::string path = pVariables->doValueSubstitution(m_path);
-        pEnvMgr->fetchNodes(path, envNodes);
-        for (auto &envNode: envNodes)
-            m_parentNodeIds.emplace_back(envNode->getId());
     }
 }
 
@@ -203,7 +170,7 @@ void OperationNode::saveAttributeValues(std::shared_ptr<Variables> pVariables, c
 }
 
 
-void OperationNode::processNodeValue(std::shared_ptr<Variables> pVariables, const std::shared_ptr<EnvironmentNode> &pEnvNode)
+void OperationNode::processNodeValue(const std::shared_ptr<Variables> &pVariables, const std::shared_ptr<EnvironmentNode> &pEnvNode)
 {
     if (m_nodeValueValid)
     {
@@ -230,5 +197,20 @@ void OperationNode::processNodeValue(std::shared_ptr<Variables> pVariables, cons
                 throw TemplateExecutionException("No value found for attribute starting with name=" + m_nodeValue.getName());
             }
         }
+    }
+}
+
+
+void OperationNode::initializeForExecution(const std::shared_ptr<Environments> &pEnvironments, std::shared_ptr<EnvironmentMgr> pEnvMgr,
+                                           const std::shared_ptr<Variables> &pVariables)
+{
+    Operation::initializeForExecution(pVariables);
+
+    //
+    // If there is an override for the environment used by the node, get it (it may be a variable)
+    m_pOpEnvMgr = std::move(pEnvMgr);
+    if (!m_environmentName.empty())
+    {
+        m_pOpEnvMgr = pEnvironments->get(pVariables->doValueSubstitution(m_environmentName))->m_pEnvMgr;
     }
 }

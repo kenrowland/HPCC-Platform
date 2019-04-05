@@ -26,12 +26,11 @@ class OperationCreateNode : public OperationNode
     public:
 
         OperationCreateNode() : m_populateChildren(false) {};
-        ~OperationCreateNode() override = default;
 
 
     protected:
 
-        void doExecute(std::shared_ptr<Environments> pEnvironments, std::shared_ptr<EnvironmentMgr> pEnvMgr, std::shared_ptr<Variables> pVariables) override;
+        void doExecute(std::shared_ptr<EnvironmentMgr> pEnvMgr, std::shared_ptr<Variables> pVariables) override;
 
 
     protected:

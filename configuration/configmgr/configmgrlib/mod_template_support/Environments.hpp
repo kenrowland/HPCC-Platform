@@ -23,6 +23,7 @@
 #include <memory>
 #include <vector>
 #include "Environment.hpp"
+#include "Variables.hpp"
 
 class Environments {
 
@@ -30,10 +31,9 @@ class Environments {
 
         Environments() = default;
         ~Environments();
-        //void add(const std::string &masterFile, const std::vector<std::string> &paths, const std::string &envFile, const std::string &name);
         void add(std::shared_ptr<Environment> &pEnv, const std::string &name);
         std::shared_ptr<Environment> get(const std::string &name) const;
-        void save() const;
+        void save(const std::shared_ptr<Variables> &pVariables) const;
         void release(const std::string &name);
 
 

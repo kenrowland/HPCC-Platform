@@ -73,13 +73,13 @@ void Environments::release(const std::string &name)
 }
 
 
-void Environments::save() const
+void Environments::save(const std::shared_ptr<Variables> &pVariables) const
 {
     for (auto const &env: m_environments)
     {
         if (env.second->isSave())
         {
-            env.second->save();
+            env.second->save(pVariables);
         }
     }
 }
