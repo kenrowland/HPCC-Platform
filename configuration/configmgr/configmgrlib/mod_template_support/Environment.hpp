@@ -28,7 +28,7 @@ class Environment {
 
     public:
 
-        Environment(const std::string &masterCfgFile, std::vector<std::string> configPaths);
+        Environment(const std::string &masterCfgFile, const std::vector<std::string> &configPaths);
         explicit Environment(std::shared_ptr<EnvironmentMgr> pEnvMgr);
         ~Environment() = default;
         void initialize();
@@ -40,7 +40,6 @@ class Environment {
 
 
     public:
-
 
         std::shared_ptr<EnvironmentMgr> m_pEnvMgr;
         std::string m_masterCfgSchemaFile;

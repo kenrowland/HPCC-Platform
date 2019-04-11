@@ -62,7 +62,7 @@ class CFGMGRLIB_API EnvironmentMgr
         bool removeEnvironmentNode(const std::string &nodeId);
         virtual bool serialize(std::ostream &out, const std::shared_ptr<EnvironmentNode> &pStartNode);
         bool saveEnvironment(const std::string &qualifiedFilename);
-        void discardEnvironment() { m_pRootNode = nullptr; m_nodeIds.clear();}
+        void discardEnvironment() { } //if (m_pRootNode) m_pRootNode = nullptr; if (!m_nodeIds.empty()) m_nodeIds.clear();}
         void validate(Status &status, bool includeHiddenNodes=false) const;
         std::string getRootNodeId() const;
         static std::string getUniqueKey();

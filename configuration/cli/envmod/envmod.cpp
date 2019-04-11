@@ -50,12 +50,16 @@ std::vector<std::string> splitString(const std::string &input, const std::string
 // Default configuration directories
 EnvironmentType envType = XML;
 std::string masterSchemaFile = "environment.xsd";
-std::string configSchemaDir = "";
-std::string configSchemaRelativeDir = COMPONENTFILES_DIR PATHSEPSTR "configschema" PATHSEPSTR "xsd" PATHSEPSTR;
+//std::string configSchemaDir = "";
+std::string configSchemaRelativetDir = ".." PATHSEPSTR "componentfiles"  PATHSEPSTR "configschema" PATHSEPSTR "xsd" PATHSEPSTR;
+std::string configSchemaDefaultDir;
 std::string modTemplateFile;
 std::string modTemplateSchemaFile = COMPONENTFILES_DIR PATHSEPSTR "configschema" PATHSEPSTR "templates" PATHSEPSTR "schema" PATHSEPSTR "ModTemplateSchema.json";
-std::string configSchemaPluginsDir = "";
-std::string envFile, envOutputFile;
+//std::string configSchemaPluginsDir = "";
+
+std::vector<std::string> configDirs;
+
+std::string inputEnvFile, envOutputFile;
 struct InputDef {
     std::string inputName;
     std::string inputValue;
@@ -91,12 +95,13 @@ void usage()
     std::cout << "envmod <options> envfile" << std::endl;
     std::cout << std::endl;
     std::cout << "  Configuration Options:" << std::endl;
-    std::cout << "    -d --schema-dir <path>            : path to schema files. default (" << configSchemaDir << ")" << std::endl;
-    std::cout << "    -p --schema-plugins-dir <path>    : path to plugin files, default (" << configSchemaPluginsDir << ")" << std::endl;
+    std::cout << "    -d --schema-dir <path>            : path to schema files (>1 allowed). default (" << configSchemaRelativetDir << ")" << std::endl;
     std::cout << "    -m --master-config <filename>     : name of master schema file, default (" << masterSchemaFile << ")" << std::endl;
+    std::cout << "    -s --template-schema <fullpath>   : path to template schema file (" << modTemplateSchemaFile << ")" << std::endl;
     std::cout << std::endl;
     std::cout << "  Execution Options:" << std::endl;
     std::cout << "    -t --template <filepath>          : filepath to modification template - required" << std::endl;
+    //std::cout << "    -n --new                          : Create a new empty environment (default if -e --env not specified" << std::endl;
     std::cout << "    -e --env <fullpath>               : Optional filepath to environment file to modify" << std::endl;
     std::cout << "                                          Omit to validate the modification template" << std::endl;
     std::cout << "       --inputs                       : List the template inputs. If this option is specified, the template" << std::endl;
@@ -118,9 +123,9 @@ void usage()
 int main(int argc, char *argv[])
 {
     //
-    // Build the default directory for the schema files
+    // Build the default directory for the schema files, in case none supplied
     std::string processPath(queryCurrentProcessPath());
-    configSchemaDir = processPath.substr(0, processPath.find_last_of(PATHSEPSTR)) + PATHSEPSTR + configSchemaRelativeDir;
+    configSchemaDefaultDir = processPath.substr(0, processPath.find_last_of(PATHSEPSTR)) + PATHSEPSTR + configSchemaRelativetDir;
 
     if (argc == 1)
     {
@@ -135,35 +140,19 @@ int main(int argc, char *argv[])
         return 1;   // get out now
     }
 
+    //
+    // If no config dirs specified, build the default
+    if (configDirs.empty())
+    {
+        configDirs.emplace_back(configSchemaDefaultDir);
+    }
+
+    //
+    // Validate all the inputs
     if (!validate())
     {
         usage();
         return 1;
-    }
-
-    //
-    // Create an environment manager reference and load the schema
-    try
-    {
-        pEnvMgr = getEnvironmentMgrInstance(envType);
-        std::cout << "Loading schema defined by " << masterSchemaFile << "...";
-
-        // note that these are hardcoded for HPCC at this time, but could be made into options
-        std::map<std::string, std::string> cfgParms;
-        std::string pluginsPath = configSchemaPluginsDir;
-
-//        if (!pEnvMgr->loadSchema(configSchemaDir, masterSchemaFile, cfgParms))
-//        {
-//            throw CliException(pEnvMgr->getLastSchemaMessage());
-//        }
-    }
-    catch (const ParseException &pe)
-    {
-        std::cout << "There was a problem creating the environment manager instance: " << pe.what() << std::endl;
-    }
-    catch(const CliException &e)
-    {
-        std::cout << "There was a problem loading the schema: " << e.what() << std::endl;
     }
 
 
@@ -171,12 +160,34 @@ int main(int argc, char *argv[])
     // Create the modification template
     try
     {
-        std::shared_ptr<Environment> pEnv = std::make_shared<Environment>(pEnvMgr);
-        pEnv->setLoadName(envFile);
-        if (!envOutputFile.empty())
+        std::shared_ptr<Environment> pEnv;
+        //
+        // Create the environment for the template (if specified)
+        if (!masterSchemaFile.empty())
         {
-            pEnv->setOutputName(envOutputFile);
+            pEnv = std::make_shared<Environment>(pEnvMgr);
+            if (!inputEnvFile.empty())
+            {
+                pEnv->setLoadName(inputEnvFile);
+            }
+            else
+            {
+                pEnv->setInitializeEmpty(true);
+            }
+
+            if (!envOutputFile.empty())
+            {
+                pEnv->setOutputName(envOutputFile);
+            }
+
+            pEnv->m_masterCfgSchemaFile = masterSchemaFile;
+
+            for (auto &path: configDirs)
+            {
+                pEnv->m_configPaths.emplace_back(path);
+            }
         }
+
         pTemplate = new EnvModTemplate(pEnv, modTemplateSchemaFile);
         pTemplate->loadTemplateFromFile(modTemplateFile);
     }
@@ -185,6 +196,7 @@ int main(int argc, char *argv[])
         std::cout << "There was a problem loading the modification template: " << te.what() << std::endl;
         return 1;
     }
+
 
     //
     // If list inputs was given, list them and get out
@@ -226,21 +238,6 @@ int main(int argc, char *argv[])
     }
 
     //
-    // If there is an environment, load it
-    if (!envFile.empty())
-    {
-        if (!pEnvMgr->loadEnvironment(envFile))
-        {
-            std::cout << "There was a problem loading the environment: " << std::endl << pEnvMgr->getLastEnvironmentMessage() << std::endl;
-            return 1;
-        }
-    }
-    else
-    {
-        pEnvMgr->initializeEmptyEnvironment();
-    }
-
-    //
     // Execute
     try
     {
@@ -254,15 +251,15 @@ int main(int argc, char *argv[])
 
     //
     // Write results
-    if (!envOutputFile.empty())
-    {
-        pEnvMgr->saveEnvironment(envOutputFile);
-        std::cout << "Results written to " << envOutputFile << std::endl;
-    }
-    else
-    {
-        std::cout << "Resuls not saved." << std::endl;
-    }
+//    if (!envOutputFile.empty())
+//    {
+//        pEnvMgr->saveEnvironment(envOutputFile);
+//        std::cout << "Results written to " << envOutputFile << std::endl;
+//    }
+//    else
+//    {
+//        std::cout << "Resuls not saved." << std::endl;
+//    }
 
 
     std::cout << "Done" << std::endl;
@@ -285,12 +282,8 @@ bool processOptions(int argc, char *argv[])
 
             if (optName == "-d" || optName == "--schema-dir")
             {
-                configSchemaDir = getNextArg(argc, argv, idx++) += PATHSEPSTR;
-            }
-
-            else if (optName == "-p" || optName == "--schema-plugins-dir")
-            {
-                configSchemaPluginsDir = getNextArg(argc, argv, idx++) += PATHSEPSTR;
+                std::string schemaDir = getNextArg(argc, argv, idx++) += PATHSEPSTR;
+                configDirs.emplace_back(schemaDir);
             }
 
             else if (optName == "-m" || optName == "--master-config")
@@ -304,12 +297,16 @@ bool processOptions(int argc, char *argv[])
             }
             else if (optName == "-e" || optName == "--env")
             {
-                envFile = getNextArg(argc, argv, idx++);
+                inputEnvFile = getNextArg(argc, argv, idx++);
+            }
+            else if (optName == "-s" || optName == "--template-schema")
+            {
+                modTemplateSchemaFile = getNextArg(argc, argv, idx++);
             }
             else if (optName == "-o" || optName == "--output")
             {
                 // this is the default if no filename given
-                envOutputFile = envFile;
+                envOutputFile = inputEnvFile;
                 if (idx < argc)
                 {
                     envOutputFile = getNextArg(argc, argv, idx++);
@@ -349,20 +346,16 @@ bool processOptions(int argc, char *argv[])
 
 bool validate()
 {
-
-    if (!dirExists(configSchemaDir))
+    for (auto const &dir: configDirs)
     {
-        std::cout << "Schema directory " << configSchemaDir << " does not exist" << std::endl;
-        return false;
+        if (!dirExists(dir))
+        {
+            std::cout << "Schema directory " << dir << " does not exist" << std::endl;
+            return false;
+        }
     }
 
-    if (!dirExists(configSchemaPluginsDir))
-    {
-        std::cout << "Schema plugins directory " << configSchemaPluginsDir << " does not exist" << std::endl;
-        return false;
-    }
-
-    if (!fileExists(configSchemaDir + masterSchemaFile))
+    if (!fileExists(configDirs[0] + masterSchemaFile))
     {
         std::cout << "The master config file " << masterSchemaFile << " does not exist" << std::endl;
         return false;
@@ -374,15 +367,20 @@ bool validate()
         return false;
     }
 
-    if (!envFile.empty())
+    if (!fileExists(modTemplateSchemaFile))
     {
-        if (!fileExists(envFile))
+        std::cout << "The modification template schema file " << modTemplateSchemaFile << " does not exist" << std::endl;
+        return false;
+    }
+
+    if (!inputEnvFile.empty())
+    {
+        if (!fileExists(inputEnvFile))
         {
-            std::cout << "The environment file " << envFile << " does not exist" << std::endl;
+            std::cout << "The environment file " << inputEnvFile << " does not exist" << std::endl;
             return false;
         }
     }
-
     return true;
 }
 

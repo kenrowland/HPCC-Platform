@@ -183,7 +183,15 @@ void EnvironmentValue::initialize()
         else if (type == "configProperty")
         {
             const std::string &propertyName = m_pSchemaValue->getAutoGenerateValue();
-            std::string value = m_pMyEnvNode.lock()->getSchemaItem()->getProperty(propertyName);
+            std::string value;
+            if (propertyName == "itemnType")
+            {
+                value = m_pMyEnvNode.lock()->getSchemaItem()->getItemType();
+            }
+            else
+            {
+                value = m_pMyEnvNode.lock()->getSchemaItem()->getProperty(propertyName);
+            }
             setValue(value, nullptr);
         }
 

@@ -63,7 +63,7 @@ std::vector<std::string> Operation::getNodeIds(const std::shared_ptr<Environment
     // If the parent node ID is valid, then it is either a variable name or an actual ID (the latter unlikely).
     if (!nodeId.empty())
     {
-        std::shared_ptr<Variable> pInput = pVariables->getVariable(nodeId);
+        std::shared_ptr<Variable> pInput = pVariables->getVariable(nodeId, false, false);
         if (pInput)
         {
             std::size_t numIds = pInput->getNumValues();

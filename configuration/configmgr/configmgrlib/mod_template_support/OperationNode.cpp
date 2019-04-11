@@ -29,13 +29,13 @@ void OperationNode::addAttribute(modAttribute &newAttribute)
 }
 
 
-bool OperationNode::execute(std::shared_ptr<Environments> pEnvironments, std::shared_ptr<EnvironmentMgr> pEnvMgr, std::shared_ptr<Variables> pVariables)
+bool OperationNode::execute(std::shared_ptr<Environments> pEnvironments, std::shared_ptr<Environment> pEnv, std::shared_ptr<Variables> pVariables)
 {
     bool rc = true;
 
     //
     // Get ready to execute the operation
-    initializeForExecution(pEnvironments, pEnvMgr, pVariables);
+    initializeForExecution(pEnvironments, pEnv, pVariables);
 
     //
     // Select the nodes for execution
@@ -114,7 +114,7 @@ std::shared_ptr<Variable> OperationNode::createVariable(std::string varName, con
 }
 
 
-bool OperationNode::createAttributeSaveInputs(std::shared_ptr<Variables> pVariables)
+bool OperationNode::createAttributeSaveInputs(const std::shared_ptr<Variables> &pVariables)
 {
     bool rc = false;
     for (auto &attr: m_attributes)
@@ -131,7 +131,7 @@ bool OperationNode::createAttributeSaveInputs(std::shared_ptr<Variables> pVariab
 }
 
 
-void OperationNode::saveAttributeValues(std::shared_ptr<Variables> pVariables, const std::shared_ptr<EnvironmentNode> &pEnvNode)
+void OperationNode::saveAttributeValues(const std::shared_ptr<Variables> &pVariables, const std::shared_ptr<EnvironmentNode> &pEnvNode)
 {
     for (auto &attr: m_attributes)
     {
@@ -201,14 +201,14 @@ void OperationNode::processNodeValue(const std::shared_ptr<Variables> &pVariable
 }
 
 
-void OperationNode::initializeForExecution(const std::shared_ptr<Environments> &pEnvironments, std::shared_ptr<EnvironmentMgr> pEnvMgr,
+void OperationNode::initializeForExecution(const std::shared_ptr<Environments> &pEnvironments, std::shared_ptr<Environment> pEnv,
                                            const std::shared_ptr<Variables> &pVariables)
 {
     Operation::initializeForExecution(pVariables);
 
     //
     // If there is an override for the environment used by the node, get it (it may be a variable)
-    m_pOpEnvMgr = std::move(pEnvMgr);
+    m_pOpEnvMgr = pEnv->m_pEnvMgr;
     if (!m_environmentName.empty())
     {
         m_pOpEnvMgr = pEnvironments->get(pVariables->doValueSubstitution(m_environmentName))->m_pEnvMgr;

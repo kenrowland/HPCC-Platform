@@ -34,7 +34,7 @@ void OperationCreateNode::doExecute(std::shared_ptr<EnvironmentMgr> pEnvMgr, std
     std::shared_ptr<Variable> pSaveNodeIdInput;
     if (!m_saveNodeIdName.empty())
     {
-        pSaveNodeIdInput = createVariable(m_saveNodeIdName, "string", pVariables, m_accumulateSaveNodeIdOk, m_saveNodeIdAsGlobalValue);
+        pSaveNodeIdInput = createVariable(pVariables->doValueSubstitution(m_saveNodeIdName), "string", pVariables, m_accumulateSaveNodeIdOk, m_saveNodeIdAsGlobalValue);
     }
 
     //

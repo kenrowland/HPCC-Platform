@@ -53,7 +53,7 @@ class OperationNode : public Operation
     public:
 
         OperationNode() = default;
-        bool execute(std::shared_ptr<Environments> pEnvironments, std::shared_ptr<EnvironmentMgr> pEnvMgr, std::shared_ptr<Variables> pVariables) override;
+        bool execute(std::shared_ptr<Environments> pEnvironments, std::shared_ptr<Environment> pEnv, std::shared_ptr<Variables> pVariables) override;
         void addAttribute(modAttribute &newAttribute);
         void assignAttributeCookedValues(const std::shared_ptr<Variables> &pVariables);
 
@@ -64,12 +64,13 @@ class OperationNode : public Operation
 
         std::shared_ptr<Variable> createVariable(std::string varName, const std::string &varType,
                                                  std::shared_ptr<Variables> pVariables, bool existingOk, bool global);
-        bool createAttributeSaveInputs(std::shared_ptr<Variables> pVariables);
-        void saveAttributeValues(std::shared_ptr<Variables> pVariables, const std::shared_ptr<EnvironmentNode> &pEnvNode);
+        bool createAttributeSaveInputs(const std::shared_ptr<Variables> &pVariables);
+        void saveAttributeValues(const std::shared_ptr<Variables> &pVariables,
+                                 const std::shared_ptr<EnvironmentNode> &pEnvNode);
         void processNodeValue(const std::shared_ptr<Variables> &pVariables,
                               const std::shared_ptr<EnvironmentNode> &pEnvNode);
         void initializeForExecution(const std::shared_ptr<Environments> &pEnvironments,
-                                    std::shared_ptr<EnvironmentMgr> pEnvMgr,
+                                    std::shared_ptr<Environment> pEnv,
                                     const std::shared_ptr<Variables> &pVariables);
 
 

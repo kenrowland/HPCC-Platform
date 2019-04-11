@@ -69,7 +69,7 @@ void Variable::setValue(const std::string &value)
 }
 
 
-std::string Variable::getValue(size_t idx) const
+std::string Variable::getValue(size_t idx, int subIndex) const
 {
     //
     // If no value assigned yet, throw an exception

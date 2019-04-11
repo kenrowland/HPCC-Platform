@@ -37,7 +37,7 @@
 
 //
 // Constructor for a new top level root template.
-EnvModTemplate::EnvModTemplate(std::shared_ptr<Environment> pEnv, const std::string &schemaFile) :
+EnvModTemplate::EnvModTemplate(std::shared_ptr<Environment> &pEnv, const std::string &templateJsonSchemaFile) :
     m_pTemplate(nullptr),
     m_pSchema(nullptr),
     m_useLocalEnvironmentForTemplate(false),
@@ -45,12 +45,11 @@ EnvModTemplate::EnvModTemplate(std::shared_ptr<Environment> pEnv, const std::str
 {
     m_pVariables = std::make_shared<Variables>();
     m_pEnvironments = std::make_shared<Environments>();
-
-    m_pEnvironments->add(pEnv, "");  // add the default environment manager
+    m_pDefaultEnv = pEnv;
 
     //
     // Load and compile the schema document
-    std::ifstream jsonFile(schemaFile);
+    std::ifstream jsonFile(templateJsonSchemaFile);
     rapidjson::IStreamWrapper jsonStream(jsonFile);
     rapidjson::Document sd;
     if (sd.ParseStream(jsonStream).HasParseError())
@@ -74,6 +73,7 @@ EnvModTemplate::EnvModTemplate(const EnvModTemplate &modTemplate) :
     m_pSchema = modTemplate.m_pSchema;
     m_pVariables =  std::make_shared<Variables>(modTemplate.m_pVariables->getGlobalVariables());
     m_pEnvironments = modTemplate.m_pEnvironments;
+    m_pDefaultEnv = modTemplate.m_pDefaultEnv;   // propagate the default environment
 }
 
 
@@ -98,7 +98,20 @@ void EnvModTemplate::loadTemplateFromFile(const std::string &fqTemplateFile)
     m_templateFile = fqTemplateFile;
     std::ifstream jsonFile(fqTemplateFile);
     rapidjson::IStreamWrapper jsonStream(jsonFile);
-    loadTemplate(jsonStream);
+    try
+    {
+        loadTemplate(jsonStream);
+    }
+    catch (TemplateException &te)
+    {
+        throw;
+    }
+    catch (...)
+    {
+        std::string msg = "There was an problem processing the json in template file " + m_templateFile;
+        throw TemplateException(msg, true);
+    }
+    // todo need to catch here to detect file not found
 }
 
 
@@ -170,7 +183,7 @@ void EnvModTemplate::parseTemplate()
         // Environment for the template
         if (m_pTemplate->HasMember("environment"))
         {
-            const rapidjson::Value &environmentData = (*m_pTemplate)["variables"];
+            const rapidjson::Value &environmentData = (*m_pTemplate)["environment"];
             parseEnvironment(environmentData);
         }
 
@@ -180,11 +193,11 @@ void EnvModTemplate::parseTemplate()
     }
     catch (TemplateException &te)
     {
-        throw;  // just rethrow
+        throw;
     }
     catch (...)
     {
-        throw TemplateException("An exception has occured while parsing the input template", false);
+        throw TemplateException("An unknown exception has occured while parsing the input template", false);
     }
 }
 
@@ -203,12 +216,38 @@ void EnvModTemplate::parseVariable(const rapidjson::Value &varValue)
     rapidjson::Value::ConstMemberIterator it;
     std::shared_ptr<Variable> pVariable;
     bool isGlobal = false;
+    bool overwriteOk = false;
+    bool alreadyAdded = false;
 
     //
     // input name, make sure not a duplicate
     std::string varName(varValue.FindMember("name")->value.GetString());
     std::string type(varValue.FindMember("type")->value.GetString());
-    pVariable = variableFactory(type, varName);
+
+
+    //
+    // Get pointer to variable based on whether we are overwiting and if the variable already exists. If not, create one
+    it = varValue.FindMember("overwrite_ok");
+    if (it != varValue.MemberEnd())
+    {
+        overwriteOk = it->value.GetBool();
+    }
+
+    if (overwriteOk)
+    {
+        pVariable = m_pVariables->getVariable(varName, false, false);
+        if (pVariable)
+        {
+            pVariable->clear();
+            alreadyAdded = true;
+        }
+    }
+
+    if (!pVariable)
+    {
+        pVariable = variableFactory(type, varName);
+    }
+
 
     //
     // Get and set the rest of the input values
@@ -229,7 +268,16 @@ void EnvModTemplate::parseVariable(const rapidjson::Value &varValue)
     {
         for (auto &val: it->value.GetArray())
         {
-            pVariable->addValue(trim(val.GetString()));
+            std::string varVal = val.GetString();
+            try
+            {
+                pVariable->addValue(m_pVariables->doValueSubstitution(varVal));
+            }
+            catch (TemplateException &te)
+            {
+                std::string msg = "Error assigning value " + varVal + " to variable " + pVariable->getName() + " in template " + m_templateFile;
+                throw TemplateException(msg, false);
+            }
         }
     }
 
@@ -252,8 +300,15 @@ void EnvModTemplate::parseVariable(const rapidjson::Value &varValue)
     {
         isGlobal = it->value.GetBool();
     }
+    else
+    {
+        isGlobal = m_isRoot;
+    }
 
-    m_pVariables->add(pVariable, isGlobal);
+    if (!alreadyAdded)
+    {
+        m_pVariables->add(pVariable, isGlobal);
+    }
 }
 
 
@@ -316,7 +371,7 @@ void EnvModTemplate::assignVariablesFromFile(const std::string &filepath)
         auto valueArray = itr->value.GetArray();
         for (auto &val: valueArray)
         {
-            pVariable->addValue(val.GetString());
+            pVariable->addValue(m_pVariables->doValueSubstitution(val.GetString()));
         }
     }
 }
@@ -345,8 +400,14 @@ void EnvModTemplate::parseOperation(const rapidjson::Value &operation)
             parseIncludeOperation(dataIt->value, pIncOp);
         }
 
-        pIncOp->m_pEnvModTemplate = std::make_shared<EnvModTemplate>(*this);
-        pIncOp->m_pEnvModTemplate->loadTemplateFromFile(pIncOp->m_path);
+        //
+        // for each path in the vector, create a modification template and add it to the include operation's list
+        for (auto const &path: pIncOp->m_paths)
+        {
+            auto pEnvModTemplate = std::make_shared<EnvModTemplate>(*this);
+            pEnvModTemplate->loadTemplateFromFile(path);
+            pIncOp->m_envModTemplates.emplace_back(pEnvModTemplate);
+        }
         m_operations.emplace_back(pIncOp);
     }
     else if (action == "copy")
@@ -622,7 +683,7 @@ void EnvModTemplate::parseEnvironment(const rapidjson::Value &environmentValue)
         valueIt = targetData.FindMember("initialize");
         if (valueIt != targetData.MemberEnd())
         {
-            m_pEnv->setLoadName(valueIt->value.GetString());
+            m_pEnv->setInitializeEmpty(valueIt->value.GetBool());
         }
 
         //
@@ -690,7 +751,18 @@ void EnvModTemplate::parseIncludeOperation(const rapidjson::Value &include, std:
     auto it = includeObj.FindMember("template_file");
     if (it != includeObj.MemberEnd())
     {
-        pOpInc->m_path = trim(it->value.GetString());
+        pOpInc->m_paths.emplace_back(it->value.GetString());
+    }
+    else
+    {
+        it = includeObj.FindMember("template_files");
+        if (it != includeObj.MemberEnd())
+        {
+            for (auto &pathIt: it->value.GetArray())
+            {
+                pOpInc->m_paths.emplace_back(pathIt.GetString());
+            }
+        }
     }
 
     it = includeObj.FindMember("template_parameters");
@@ -832,6 +904,36 @@ void EnvModTemplate::parseCopyOperation(const rapidjson::Value &data, std::share
 
 void EnvModTemplate::execute(bool isFirst, const std::vector<ParameterValue> &parameters)
 {
+    std::shared_ptr<Environment> pTemplateEnv;
+    //
+    // Set the environment to use. If default is set, then it was passed in and overrides any environment specified in
+    // the template. If no default environment was set, use what was defined by the template. If no environment defined
+    // by the template, then raise an excpetion
+    if (m_pDefaultEnv)
+    {
+        pTemplateEnv = m_pDefaultEnv;
+    }
+    else if (m_pEnv && m_useLocalEnvironmentForTemplate)
+    {
+        pTemplateEnv = m_pEnv;
+    }
+    else
+    {
+        throw TemplateExecutionException("Unable to determine environment for template", "setup", m_templateFile);
+    }
+
+    //
+    // Initialize the environment
+    try
+    {
+        pTemplateEnv->initialize();  // note that this may already have been done and will be a noop.
+    }
+    catch (TemplateExecutionException &te)
+    {
+        te.setContext("Variable preparation", m_templateFile);
+        throw;
+    }
+
     //
     // Add any parameter values to the local variables for this template
     for (auto &parm: parameters)
@@ -874,33 +976,15 @@ void EnvModTemplate::execute(bool isFirst, const std::vector<ParameterValue> &pa
     }
 
 
-    //
-    // Set the default environment for the template.
-    std::shared_ptr<EnvironmentMgr> pTemplateEnvMgr;
-
     try
     {
-        // substitute the environment name (which may be "", the default)
-        std::string envName = m_pVariables->doValueSubstitution(m_environmentName);
-
         //
-        // If there is an environment defined for the template, initialize it and and save it
-        if (m_pEnv)
+        // If there is an environment defined for the template, and it's not the default, initialize it and make
+        // it available by name for use elsewhere
+        if (m_pEnv && !m_useLocalEnvironmentForTemplate)
         {
             m_pEnv->initialize();
-            m_pEnvironments->add(m_pEnv, envName);
-        }
-
-        //
-        // If using the locally defined environment for the template, retrieve it and set it, otherwise,
-        // just use the default ("")
-        if (m_useLocalEnvironmentForTemplate)
-        {
-            pTemplateEnvMgr = m_pEnvironments->get(envName)->m_pEnvMgr;
-        }
-        else
-        {
-            pTemplateEnvMgr = m_pEnvironments->get("")->m_pEnvMgr;
+            m_pEnvironments->add(m_pEnv, m_pVariables->doValueSubstitution(m_environmentName));
         }
     }
     catch (TemplateExecutionException &te)
@@ -910,7 +994,6 @@ void EnvModTemplate::execute(bool isFirst, const std::vector<ParameterValue> &pa
         throw TemplateExecutionException(msg, "setup", m_templateFile);
     }
 
-
     //
     // Execute each operation...
     unsigned opNum = 1;
@@ -918,7 +1001,7 @@ void EnvModTemplate::execute(bool isFirst, const std::vector<ParameterValue> &pa
     {
         try
         {
-            pOp->execute(m_pEnvironments, pTemplateEnvMgr, m_pVariables);
+            pOp->execute(m_pEnvironments, pTemplateEnv, m_pVariables);
         }
         catch (TemplateExecutionException &te)
         {
@@ -941,9 +1024,13 @@ void EnvModTemplate::execute(bool isFirst, const std::vector<ParameterValue> &pa
     }
 
     //
-    // If this is a root teamplate, save envrionments
+    // If this is a root teamplate, save environments
     if (m_isRoot)
     {
         m_pEnvironments->save(m_pVariables);
+        if (m_pDefaultEnv)
+        {
+            m_pDefaultEnv->save(m_pVariables);
+        }
     }
 }

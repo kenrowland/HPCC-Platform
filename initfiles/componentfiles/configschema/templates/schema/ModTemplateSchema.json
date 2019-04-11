@@ -71,6 +71,10 @@
                         "type" : "boolean",
                         "default" : false,
                         "description" : "Save the value as a global variable as opposed to a local value"
+                    },
+                    "overwrite_ok" : {
+                        "type" : "boolean",
+                        "description" : "OK if variable exists, just overwrite the current value of the existing variable (really only global)"
                     }
                 },
                 "required": [
@@ -373,9 +377,13 @@
             "type": "object",
             "properties": {
                 "template_file" : {
-                    "type" : "string",
-                    "pattern" : "^[A-Za-z0-9_\\-\\/\\\\{}]+(?: +[A-Za-z0-9\\/\\\\{}]+)*$",
-                    "description" : "The full path to the template file, with potential variable substitutions"
+                    "$ref" : "#/definitions/filepath_def"
+                },
+                "template_files" : {
+                    "type" : "array",
+                    "items" : {
+                        "$ref" : "#/definitions/filepath_def"
+                    }
                 },
                 "template_parameters": {
                     "type": "array",
@@ -401,7 +409,23 @@
                     "description" : "Array of parameter values to pass to the included template as variable values for use during execution."
                 }
             },
-            "required" : [ "template_file" ]
+            "oneOf" : [
+                {
+                    "required" : [ "template_file" ]
+                },
+                {
+                    "allOf" : [
+                        {
+                            "required" : [ "template_files" ]
+                        },
+                        {
+                            "not" : {
+                                "required" : [ "template_parameters" ]
+                            }
+                        }
+                    ]
+                }
+            ]
         },
         "copy_data_info" : {
             "type" : "object",
@@ -786,13 +810,13 @@
                     "type": "array",
                     "items" : {
                         "type" : "string",
-                        "pattern" : "^[A-Za-z0-9_\\-\\/\\\\]+(?: +[A-Za-z0-9\\/\\\\]+)*$"
+                        "pattern" : "^[A-Za-z0-9~_\\-\\/\\\\]+(?: +[A-Za-z0-9~_\\/\\\\]+)*$"
                     },
                     "description" : "Array of paths from which schema files are loaded. First entry MUST be the primary path where the master schema file is located"
                 },
                 "master_schema_filename" : {
                     "type" : "string",
-                    "pattern" : "^[A-Za-z0-9_\\-]+(?: +[A-Za-z0-9_\\-]+)*$",
+                    "pattern" : "^[A-Za-z0-9~_.\\-]+(?: +[A-Za-z0-9~_.\\-]+)*$",
                     "description" : "Name of master schema file"
                 },
                 "load" : {
@@ -805,7 +829,7 @@
                 },
                 "write" : {
                     "type" : "string",
-                    "pattern" : "^[A-Za-z0-9_\\-\\/\\\\{}]+(?: +[A-Za-z0-9_\\-\\/\\\\{}]+)*$",
+                    "pattern" : "^[A-Za-z0-9~_.\\-\\/\\\\{}]+(?: +[A-Za-z0-9~_.\\-\\/\\\\{}]+)*$",
                     "description" : "Filepath to where environment is serialized after template execution (leave empty or missing for no output)",
                     "default" : ""
                 },
@@ -823,7 +847,7 @@
                         },
                         {
                             "not" : {
-                                "required" : [ "schema_path" ]
+                                "required" : [ "schema_paths" ]
                             }
                         },
                         {
@@ -851,7 +875,7 @@
                 {
                     "allOf" : [
                         {
-                            "required" : [ "name", "schema_path", "master_schema_filename"]
+                            "required" : [ "name", "schema_paths", "master_schema_filename"]
                         },
                         {
                             "not" : {
@@ -868,7 +892,7 @@
                 {
                     "allOf" : [
                         {
-                            "required" : [ "name", "schema_path", "master_schema_filename"]
+                            "required" : [ "name", "schema_paths", "master_schema_filename"]
                         },
                         {
                             "required" : [ "load_environment" ]
@@ -883,7 +907,7 @@
                 {
                     "allOf" : [
                         {
-                            "required" : [ "name", "schema_path", "master_schema_filename"]
+                            "required" : [ "name", "schema_paths", "master_schema_filename"]
                         },
                         {
                             "required" : [ "initialize_empty_environment" ]
@@ -896,6 +920,11 @@
                     ]
                 }
             ]
+        },
+        "filepath_def" : {
+            "type" : "string",
+            "pattern" : "^[A-Za-z0-9~_.\\-\\/\\\\{}]+(?: +[A-Za-z0-9~_.\\/\\\\{}]+)*$",
+            "description" : "The full path to the template file, with potential variable substitutions"
         }
     }
 }

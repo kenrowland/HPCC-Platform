@@ -17,6 +17,7 @@
 
 #include "IPAddressVariable.hpp"
 #include "TemplateException.hpp"
+#include "TemplateExecutionException.hpp"
 #include "Utils.hpp"
 
 void IPAddressVariable::addValue(const std::string &value) {
@@ -35,7 +36,7 @@ void IPAddressVariable::addValue(const std::string &value) {
             try
             {
                 int num = std::stoi(addressParts[i]);
-                if (num <= 0 || num > 255)
+                if (num < 0 || num > 255)
                 {
                     isValid = false;
                 }
@@ -57,4 +58,23 @@ void IPAddressVariable::addValue(const std::string &value) {
     }
 
     m_values.emplace_back(ipAddr);
+}
+
+
+std::string IPAddressVariable::getValue(size_t idx, int subIndex) const
+{
+    std::string value =  Variable::getValue(idx, subIndex);
+    if (subIndex != -1)
+    {
+        if (subIndex >= 1 && subIndex <= 4)
+        {
+            std::vector<std::string> octects = splitString(value, ".");
+            value = octects[subIndex - 1];
+        }
+        else
+        {
+            throw TemplateExecutionException("Attempt to retrieve invalid octet from IP address");
+        }
+    }
+    return value;
 }

@@ -41,7 +41,7 @@ class CFGMGRLIB_API Variable
         virtual void addValue(const std::string &value);
         virtual void setValue(const std::string &value);
         void clear() { m_values.clear(); }
-        virtual std::string getValue(size_t idx) const;
+        virtual std::string getValue(size_t idx, int subIndex = -1) const;
         bool isUserInput() const { return m_userInput; }
         const std::string &getPreparedValue() const { return m_preparedValue; }
 

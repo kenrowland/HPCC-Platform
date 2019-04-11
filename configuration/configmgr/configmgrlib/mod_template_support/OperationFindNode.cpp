@@ -37,7 +37,7 @@ void OperationFindNode::doExecute(std::shared_ptr<EnvironmentMgr> pEnvMgr, std::
         std::shared_ptr<Variable> pSaveNodeIdVar;
         if (!m_saveNodeIdName.empty())
         {
-            pSaveNodeIdVar = createVariable(m_saveNodeIdName, "string", pVariables, m_accumulateSaveNodeIdOk, m_saveNodeIdAsGlobalValue);
+            pSaveNodeIdVar = createVariable(pVariables->doValueSubstitution(m_saveNodeIdName), "string", pVariables, m_accumulateSaveNodeIdOk, m_saveNodeIdAsGlobalValue);
         }
 
         //
@@ -48,21 +48,24 @@ void OperationFindNode::doExecute(std::shared_ptr<EnvironmentMgr> pEnvMgr, std::
             {
                 std::string nodeId = pVariables->doValueSubstitution(parentNodeId);
                 auto pEnvNode = pEnvMgr->findEnvironmentNodeById(nodeId);
-                if (pSaveNodeIdVar)
+                if (pEnvNode)
                 {
-                    pSaveNodeIdVar->addValue(nodeId);
-                }
+                    if (pSaveNodeIdVar)
+                    {
+                        pSaveNodeIdVar->addValue(nodeId);
+                    }
 
-                //
-                // Attributes should only be present if values were to be saved
-                if (!m_attributes.empty())
-                {
-                    saveAttributeValues(pVariables, pEnvNode);
-                }
+                    //
+                    // Attributes should only be present if values were to be saved
+                    if (!m_attributes.empty())
+                    {
+                        saveAttributeValues(pVariables, pEnvNode);
+                    }
 
-                //
-                // Process node value
-                processNodeValue(pVariables, pEnvNode);
+                    //
+                    // Process node value
+                    processNodeValue(pVariables, pEnvNode);
+                }
             }
         }
     }

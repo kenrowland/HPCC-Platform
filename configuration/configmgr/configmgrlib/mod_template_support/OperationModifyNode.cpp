@@ -28,9 +28,20 @@ void OperationModifyNode::doExecute(std::shared_ptr<EnvironmentMgr> pEnvMgr, std
     std::shared_ptr<EnvironmentNode> pEnvNode;
 
     //
-    // Execute for each parent node
+    // If there are nodes...
     if (!m_parentNodeIds.empty())
     {
+        //
+        // The main reason to use a find nodes action is to either save the IDs of the matching nodes and/or attribute
+        // values from the matching nodes
+        std::shared_ptr<Variable> pSaveNodeIdVar;
+        if (!m_saveNodeIdName.empty())
+        {
+            pSaveNodeIdVar = createVariable(pVariables->doValueSubstitution(m_saveNodeIdName), "string", pVariables, m_accumulateSaveNodeIdOk, m_saveNodeIdAsGlobalValue);
+        }
+
+        //
+        // Process each node
         for (auto &parentNodeId: m_parentNodeIds)
         {
             Status status;
@@ -39,6 +50,11 @@ void OperationModifyNode::doExecute(std::shared_ptr<EnvironmentMgr> pEnvMgr, std
             pEnvNode = pEnvMgr->findEnvironmentNodeById(nodeId);
             if (pEnvNode)
             {
+                if (pSaveNodeIdVar)
+                {
+                    pSaveNodeIdVar->addValue(nodeId);
+                }
+
                 //
                 // Set the indicated attribute values
                 std::vector<NameValue> attrValues;

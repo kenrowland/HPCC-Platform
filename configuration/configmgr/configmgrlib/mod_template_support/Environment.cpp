@@ -16,9 +16,11 @@
 ############################################################################## */
 
 #include "Environment.hpp"
+#include "Exceptions.hpp"
+#include "TemplateExecutionException.hpp"
 
 
-Environment::Environment(const std::string &masterCfgFile, const std::vector<std::string> configPaths) :
+Environment::Environment(const std::string &masterCfgFile, const std::vector<std::string> &configPaths) :
     m_masterCfgSchemaFile(masterCfgFile),
     m_configPaths(configPaths),
     m_initializeEmpty(false)
@@ -28,7 +30,8 @@ Environment::Environment(const std::string &masterCfgFile, const std::vector<std
 
 
 Environment::Environment(std::shared_ptr<EnvironmentMgr> pEnvMgr) :
-    m_pEnvMgr(pEnvMgr)
+    m_pEnvMgr(pEnvMgr),
+    m_initializeEmpty(false)
 {
 }
 
@@ -37,22 +40,30 @@ void Environment::initialize()
 {
     if (!m_pEnvMgr)
     {
-        EnvironmentType envType = XML;
-        m_pEnvMgr = getEnvironmentMgrInstance(envType);
-        m_pEnvMgr->loadSchema(m_masterCfgSchemaFile, m_configPaths);
-
-        //
-        // Load an environment ?
-        if (!m_inputEnvironment.empty())
+        try
         {
-            m_pEnvMgr->loadEnvironment(m_inputEnvironment);
+            EnvironmentType envType = XML;
+            m_pEnvMgr = getEnvironmentMgrInstance(envType);
+            m_pEnvMgr->loadSchema(m_masterCfgSchemaFile, m_configPaths);
+
+            //
+            // Load an environment ?
+            if (!m_inputEnvironment.empty())
+            {
+                m_pEnvMgr->loadEnvironment(m_inputEnvironment);
+            }
+
+                //
+                // Or, init an empty one ?
+            else if (m_initializeEmpty)
+            {
+                m_pEnvMgr->initializeEmptyEnvironment();
+            }
         }
-
-        //
-        // Or, init an empty one ?
-        else if (m_initializeEmpty)
+        catch (const ParseException &pe)
         {
-            m_pEnvMgr->initializeEmptyEnvironment();
+            std::string reason = "There was a problem creating the environment: " + std::string(pe.what());
+            throw TemplateExecutionException(reason);
         }
     }
 }

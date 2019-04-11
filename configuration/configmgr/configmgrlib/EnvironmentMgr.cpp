@@ -35,7 +35,7 @@ std::shared_ptr<EnvironmentMgr> getEnvironmentMgrInstance(const EnvironmentType 
     std::shared_ptr<EnvironmentMgr> pEnvMgr;
     if (envType == XML)
     {
-        pEnvMgr = std::make_shared<EnvironmentMgr>(XMLEnvironmentMgr());
+        pEnvMgr = std::make_shared<XMLEnvironmentMgr>(XMLEnvironmentMgr());
     }
     return pEnvMgr;
 }

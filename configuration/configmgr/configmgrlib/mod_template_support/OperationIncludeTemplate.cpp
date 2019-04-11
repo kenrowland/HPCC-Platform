@@ -23,7 +23,7 @@
 // input env name is that which is being used by the current template. Use it if no name is set
 
 
-bool OperationIncludeTemplate::execute(std::shared_ptr<Environments> pEnvironments, std::shared_ptr<EnvironmentMgr> pEnvMgr, std::shared_ptr<Variables> pVariables)
+bool OperationIncludeTemplate::execute(std::shared_ptr<Environments> pEnvironments, std::shared_ptr<Environment> pEnv, std::shared_ptr<Variables> pVariables)
 {
     initializeForExecution(pVariables);
 
@@ -51,8 +51,15 @@ bool OperationIncludeTemplate::execute(std::shared_ptr<Environments> pEnvironmen
         }
 
         //
-        // Go execute it!
-        m_pEnvModTemplate->execute((idx==0), preparedValues);
+        // Note, pEnv is not used here. When the template was instantiated, the default environment was passed from the
+        // parent environment. That's the way templates work.
+
+        //
+        // Go execute it each template
+        for (auto &pEnvModTemplate: m_envModTemplates)
+        {
+            pEnvModTemplate->execute((idx == 0), preparedValues);
+        }
     }
 
     return true;

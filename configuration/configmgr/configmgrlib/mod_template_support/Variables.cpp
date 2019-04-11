@@ -127,6 +127,7 @@ std::string Variables::doValueSubstitution(const std::string &value) const
     // Or {{name}}.size which will return the size of the variable name (number of entries)
     std::string varName, result = value;
     std::size_t index;
+    int subIndex = -1;
 
     std::size_t bracesStartPos = result.find("{{");
     bool done = bracesStartPos == std::string::npos;
@@ -134,6 +135,7 @@ std::string Variables::doValueSubstitution(const std::string &value) const
     while (!done)
     {
         index = m_curIndex;
+
         std::size_t bracesEndPos = findClosingDelimiter(result, bracesStartPos,"{{", "}}");
         varName = result.substr(bracesStartPos + 2, bracesEndPos - bracesStartPos - 2);
 
@@ -148,25 +150,42 @@ std::string Variables::doValueSubstitution(const std::string &value) const
             throw TemplateException("Both [] and .size may not appear in a variable");
         }
 
-        if (bracketStartPos != std::string::npos)
+        if (bracketStartPos == bracesEndPos + 2)
         {
             bracketEndPos = findClosingDelimiter(result, bracketStartPos, "[", "]");  //  result.find(']');
+            //
+            // Index can take form with a . for a subIndex
+            std::string subIndexStr = "-1";
             std::string indexStr = result.substr(bracketStartPos+1, bracketEndPos - bracketStartPos - 1);
+            std::size_t dotPos = indexStr.find('.');
+            if (dotPos != std::string::npos)
+            {
+                subIndexStr = indexStr.substr(dotPos+1);
+                indexStr = indexStr.substr(0, dotPos);
+            }
             //varName = result.substr(bracesStartPos + 2, bracketStartPos - bracesStartPos - 2);
-            try {
+            try
+            {
                 index = std::stoul(evaluate(doValueSubstitution(indexStr)));
-            } catch (...) {
+                subIndex = std::stoul(evaluate(doValueSubstitution(subIndexStr)));
+            }
+            catch (...)
+            {
                 throw TemplateException("Non-numeric count found for index value", false);
             }
         }
 
-        if (sizePos != std::string::npos)
+        if (sizePos == bracesEndPos + 2) // != std::string::npos)
         {
-            result = std::to_string(getVariable(varName, false)->getNumValues());
+            std::string substitueValue = std::to_string(getVariable(varName, false, true)->getNumValues());
+            std::string newResult = result.substr(0, bracesStartPos);
+            newResult += substitueValue;
+            newResult += result.substr(sizePos + 5);
+            result = newResult;  //std::to_string(getVariable(varName, false)->getNumValues());
         }
         else
         {
-            std::string substitueValue = doValueSubstitution(getVariable(varName, false)->getValue(index));
+            std::string substitueValue = doValueSubstitution(getVariable(varName, false)->getValue(index, subIndex));
             std::string newResult = result.substr(0, bracesStartPos);
             newResult += substitueValue;
             newResult += result.substr((bracketEndPos != std::string::npos) ? (bracketEndPos + 1) : (bracesEndPos + 2) );
@@ -228,12 +247,13 @@ std::size_t Variables::findClosingDelimiter(const std::string &input, std::size_
 
 std::string Variables::evaluate(const std::string &expr) const
 {
-    std::size_t opPos;
+    std::size_t opPos, dotPos;
     std::string result = expr;
 
     opPos = expr.find_first_of("+-");
+    dotPos = expr.find_first_of('.');  // eliminates any attempt to evaluate an IP address range
 
-    if (opPos != std::string::npos)
+    if (opPos != std::string::npos && dotPos == std::string::npos)
     {
         long op1, op2, value;
         try

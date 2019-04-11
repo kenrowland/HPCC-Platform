@@ -28,6 +28,8 @@ class IPAddressVariable : public Variable
         ~IPAddressVariable() override = default;
         void addValue(const std::string &value) override;
 
+        std::string getValue(size_t idx, int subIndex) const override;
+
 };
 
 

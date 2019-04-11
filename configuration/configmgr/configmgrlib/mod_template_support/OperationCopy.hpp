@@ -47,7 +47,7 @@ class OperationCopy : public OperationNode
     public:
 
         OperationCopy() : m_copyAttributeType("all"), m_includeChildren(false) {}
-        bool execute(std::shared_ptr<Environments> pEnvironments, std::shared_ptr<EnvironmentMgr> pEnvMgr, std::shared_ptr<Variables> pVariables) override ;
+        bool execute(std::shared_ptr<Environments> pEnvironments, std::shared_ptr<Environment> pEnv, std::shared_ptr<Variables> pVariables) override ;
 
 
     protected:
@@ -55,14 +55,10 @@ class OperationCopy : public OperationNode
         void addCopyAttribute(std::string attrStr);
         void addSaveAttributeValue(const std::string &attrName, const std::string &varName, bool global, bool accuulateOk);
         void saveAttributeValues(const std::shared_ptr<EnvironmentNode> &pEnvNode);
-        void getAttributeValues(const std::shared_ptr<EnvironmentNode> &pSourceNode, std::vector<NameValue> &initAttributes);
-        void doNodeCopy(const std::string &sourceNodId, const std::string &destParentNodeId);
+        void getAttributeValues(const std::shared_ptr<EnvironmentNode> &pSourceNode, std::vector<NameValue> &initAttributes, const std::string &copyMpde);
+        void doNodeCopy(const std::string &sourceNodId, const std::string &destParentNodeId, bool isChildNode);
+        void doNodeCopy(const std::shared_ptr<EnvironmentNode> &pSourceEnvNode, const std::string &destParentNodeId, bool isChildNode);
         void doExecute(std::shared_ptr<EnvironmentMgr> pEnvMgr, std::shared_ptr<Variables> pVariables) override {}
-
-
-    private:
-
-        void createAttributeSaveVariables(const std::shared_ptr<Variables> &pVariables);
 
 
     protected:
@@ -76,7 +72,7 @@ class OperationCopy : public OperationNode
         bool m_includeChildren;
         std::vector<CopyAttributeInfo_t> m_copyAttributes;
         std::shared_ptr<EnvironmentMgr> m_pSourceEnv;
-        std::shared_ptr<EnvironmentMgr> m_pDestEnv;
+        std::shared_ptr<EnvironmentMgr> m_pDestEnvMgr;
         std::map<std::string, SaveAttributeInfo_t> m_saveAttributes;
 
     friend class EnvModTemplate;

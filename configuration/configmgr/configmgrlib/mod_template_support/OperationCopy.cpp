@@ -23,18 +23,18 @@
 #include <algorithm>
 
 
-bool OperationCopy::execute(std::shared_ptr<Environments> pEnvironments, std::shared_ptr<EnvironmentMgr> pEnvMgr, std::shared_ptr<Variables> pVariables)
+bool OperationCopy::execute(std::shared_ptr<Environments> pEnvironments, std::shared_ptr<Environment> pEnv, std::shared_ptr<Variables> pVariables)
 {
     //
     // Init for execution
-    initializeForExecution(pEnvironments, pEnvMgr, pVariables);
+    initializeForExecution(pEnvironments, pEnv, pVariables);
 
     //
     // Setup destination environment
-    m_pDestEnv = pEnvMgr;
+    m_pDestEnvMgr = pEnv->m_pEnvMgr;
     if (!m_destEnvironmentName.empty())
     {
-        m_pDestEnv = pEnvironments->get(pVariables->doValueSubstitution(m_destEnvironmentName))->m_pEnvMgr;
+        m_pDestEnvMgr = pEnvironments->get(pVariables->doValueSubstitution(m_destEnvironmentName))->m_pEnvMgr;
     }
 
     //
@@ -42,7 +42,7 @@ bool OperationCopy::execute(std::shared_ptr<Environments> pEnvironments, std::sh
     std::shared_ptr<Variable> pSaveNodeIdInput;
     if (!m_saveNodeIdName.empty())
     {
-        pSaveNodeIdInput = createVariable(m_saveNodeIdName, "string", pVariables, m_accumulateSaveNodeIdOk, m_saveNodeIdAsGlobalValue);
+        pSaveNodeIdInput = createVariable(pVariables->doValueSubstitution(m_saveNodeIdName), "string", pVariables, m_accumulateSaveNodeIdOk, m_saveNodeIdAsGlobalValue);
     }
 
     //
@@ -56,7 +56,7 @@ bool OperationCopy::execute(std::shared_ptr<Environments> pEnvironments, std::sh
 
     //
     // Get the destination nodeId. Only one is allowed
-    auto destNodeIds = getNodeIds(m_pDestEnv, pVariables, m_destParentNodeId, m_destPath);
+    auto destNodeIds = getNodeIds(m_pDestEnvMgr, pVariables, m_destParentNodeId, m_destPath);
     if (destNodeIds.empty())
     {
         throw TemplateExecutionException("Unable to find the destination parent node");
@@ -69,39 +69,70 @@ bool OperationCopy::execute(std::shared_ptr<Environments> pEnvironments, std::sh
 
     //
     // Create variables for saving attribute values
-    createAttributeSaveVariables(pVariables);
+    for (auto &attr: m_saveAttributes)
+    {
+        createVariable(attr.first, "string", pVariables, attr.second.accumulateOk, attr.second.global);
+        // todo make this name/save info a separate class and encapsulate in the OperationNode modAttribute class
+    }
 
     //
     // Copy the nodes
     for (auto const &sourceNodeId: m_parentNodeIds)
     {
+        //
+        // If indicated, save the node ID
         if (pSaveNodeIdInput)
         {
             pSaveNodeIdInput->addValue(sourceNodeId);
         }
-        doNodeCopy(sourceNodeId, destNodeId);
+        doNodeCopy(sourceNodeId, destNodeId, false);
     }
 
     return true;
 }
 
 
-void OperationCopy::doNodeCopy(const std::string &sourceNodId, const std::string &destParentNodeId)
+void OperationCopy::doNodeCopy(const std::string &sourceNodId, const std::string &destParentNodeId, bool isChildNode)
 {
+
     Status status;
     std::shared_ptr<EnvironmentNode> pSourceEnvNode = m_pSourceEnv->findEnvironmentNodeById(sourceNodId);
-    std::string newNodeType = (!m_destNodeType.empty()) ? m_destNodeType : pSourceEnvNode->getSchemaItem()->getItemType();
-    std::shared_ptr<EnvironmentNode> pNewEnvNode = m_pDestEnv->getNewEnvironmentNode(destParentNodeId, newNodeType, status);
-
-    std::vector<NameValue> copyAttributeValues;
-    getAttributeValues(pSourceEnvNode, copyAttributeValues);
-
-    m_pDestEnv->addNewEnvironmentNode(destParentNodeId, newNodeType, copyAttributeValues, status, true, true, false);
+    doNodeCopy(pSourceEnvNode, destParentNodeId, isChildNode);
 }
 
 
-// a copy children
+void OperationCopy::doNodeCopy(const std::shared_ptr<EnvironmentNode> &pSourceEnvNode, const std::string &destParentNodeId, bool isChildNode)
+{
+    Status status;
+    std::string newNodeType = (!isChildNode && !m_destNodeType.empty()) ? m_destNodeType : pSourceEnvNode->getSchemaItem()->getItemType();
+    std::shared_ptr<EnvironmentNode> pNewEnvNode = m_pDestEnvMgr->getNewEnvironmentNode(destParentNodeId, newNodeType, status);
 
+    //
+    // Build the attribute values for initializing the new node (if indicated). An empty vector is required otherwise
+    std::vector<NameValue> copyAttributeValues;
+    getAttributeValues(pSourceEnvNode, copyAttributeValues, isChildNode ? "all" : m_copyAttributeType);
+
+    auto pNewDestEnvNode = m_pDestEnvMgr->addNewEnvironmentNode(destParentNodeId, newNodeType, copyAttributeValues, status, true, true, false);
+
+    //
+    // If not a child node, save attribute values (if needed)
+    if (!isChildNode)
+    {
+        saveAttributeValues(pSourceEnvNode);
+    }
+
+    //
+    // Copy children if indicated.
+    if (m_includeChildren)
+    {
+        std::vector<std::shared_ptr<EnvironmentNode>> childEnvNodes;
+        pSourceEnvNode->getChildren(childEnvNodes);
+        for (auto const &pChildEnvNode: childEnvNodes)
+        {
+            doNodeCopy(pChildEnvNode, pNewDestEnvNode->getId(), true);
+        }
+    }
+}
 
 
 void OperationCopy::addCopyAttribute(std::string attrStr)
@@ -148,15 +179,6 @@ void OperationCopy::addSaveAttributeValue(const std::string &attrName, const std
 }
 
 
-void OperationCopy::createAttributeSaveVariables(const std::shared_ptr<Variables> &pVariables)
-{
-    for (auto const &it: m_saveAttributes)
-    {
-        createVariable(it.second.varName, "string", pVariables, it.second.accumulateOk, it.second.global);
-    }
-}
-
-
 void OperationCopy::saveAttributeValues(const std::shared_ptr<EnvironmentNode> &pEnvNode)
 {
     for (auto const &it: m_saveAttributes)
@@ -167,10 +189,11 @@ void OperationCopy::saveAttributeValues(const std::shared_ptr<EnvironmentNode> &
 }
 
 
-void OperationCopy::getAttributeValues(const std::shared_ptr<EnvironmentNode> &pSourceNode, std::vector<NameValue> &initAttributes)
+void OperationCopy::getAttributeValues(const std::shared_ptr<EnvironmentNode> &pSourceNode, std::vector<NameValue> &initAttributes,
+        const std::string &copyMpde)
 {
     std::vector<std::shared_ptr<EnvironmentValue>> attrEnvValues;
-    if (m_copyAttributeType == "all")
+    if (copyMpde == "all")
     {
         pSourceNode->getAttributes(attrEnvValues);
         for (auto const &attrEnvValue: attrEnvValues)
@@ -178,7 +201,7 @@ void OperationCopy::getAttributeValues(const std::shared_ptr<EnvironmentNode> &p
             initAttributes.emplace_back(NameValue(attrEnvValue->getName(), attrEnvValue->getValue()));
         }
     }
-    else if (m_copyAttributeType == "except")
+    else if (copyMpde == "except")
     {
         pSourceNode->getAttributes(attrEnvValues);
         for (auto const &attrEnvValue: attrEnvValues)
@@ -190,7 +213,7 @@ void OperationCopy::getAttributeValues(const std::shared_ptr<EnvironmentNode> &p
             }
         }
     }
-    else if (m_copyAttributeType == "list")
+    else if (copyMpde == "list")
     {
         for (auto const &copyAttrInfo: m_copyAttributes)
         {

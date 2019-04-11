@@ -17,6 +17,7 @@
 
 #include "IPAddressRangeVariable.hpp"
 #include "TemplateException.hpp"
+#include "TemplateExecutionException.hpp"
 #include "Utils.hpp"
 
 void IPAddressRangeVariable::addValue(const std::string &range)
@@ -46,7 +47,7 @@ void IPAddressRangeVariable::addValue(const std::string &range)
                 try
                 {
                     int num = std::stoi(addressParts[i]);
-                    if (num <= 0 || num > 255)
+                    if (num < 0 || num > 255)
                     {
                         isValid = false;
                     }
@@ -76,7 +77,7 @@ void IPAddressRangeVariable::addValue(const std::string &range)
                     {
                         start = std::stoi(rangeParts[0]);
                         int num = std::stoi(rangeParts[1]);
-                        if (start <= 0 || start > 255 || num <=0 || (num+start) > 255)
+                        if (start < 0 || start > 255 || num < 0 || (num+start) > 255)
                         {
                             isValid = false;
                         }
@@ -103,7 +104,7 @@ void IPAddressRangeVariable::addValue(const std::string &range)
                         {
                             start = std::stoi(rangeParts[0]);
                             stop = std::stoi(rangeParts[1]);
-                            if (start <= 0 || start > 255 || stop <= 0 || stop > 255)
+                            if (start < 0 || start > 255 || stop < 0 || stop > 255)
                             {
                                 isValid = false;
                             }
@@ -130,7 +131,7 @@ void IPAddressRangeVariable::addValue(const std::string &range)
                     try
                     {
                         int num = std::stoi(addressParts[3]);
-                        if (num <= 0 || num > 255)
+                        if (num < 0 || num > 255)
                         {
                             isValid = false;
                         }
@@ -156,4 +157,24 @@ void IPAddressRangeVariable::addValue(const std::string &range)
             throw TemplateException("Invalid IP address range (" + range + ") specified", false);
         }
     }
+}
+
+
+std::string IPAddressRangeVariable::getValue(size_t idx, int subIndex) const
+{
+    std::string value = Variable::getValue(idx, subIndex);
+
+    if (subIndex != -1)
+    {
+        if (subIndex >= 1 && subIndex <= 4)
+        {
+            std::vector<std::string> octects = splitString(value, ".");
+            value = octects[subIndex - 1];
+        }
+        else
+        {
+            throw TemplateExecutionException("Attempt to retrieve invalid octet from IP address");
+        }
+    }
+    return value;
 }
