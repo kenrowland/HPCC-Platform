@@ -24,7 +24,11 @@
                     hpcc:displayName="Active Directory LDAP process" hpcc:docid="ldapSrv" maxOccurs="unbounded">
             <xs:complexType>
                 <xs:sequence>
-                    <xs:element name="Instance" hpcc:itemType="hwinstance" minOccurs="1" maxOccurs="unbounded" hpcc:class="elementSet"/>
+                    <xs:element name="Instance" hpcc:itemType="hwinstance" minOccurs="1" maxOccurs="unbounded" hpcc:class="elementSet">
+                        <xs:complexType>
+                            <xs:attribute name="name" type="xs:string" hpcc:autoGenerateType="prefix#" hpcc:autoGenerateValue="s"/>
+                        </xs:complexType>
+                    </xs:element>
                     <xs:element name="Notes" type="usernotes" hpcc:displayName="Notes"/>
                 </xs:sequence>
                 <xs:attributeGroup ref="buildInfo"/>

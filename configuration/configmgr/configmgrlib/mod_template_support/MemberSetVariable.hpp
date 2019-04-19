@@ -1,6 +1,6 @@
 /*##############################################################################
 
-    HPCC SYSTEMS software Copyright (C) 2018 HPCC Systems®.
+    HPCC SYSTEMS software Copyright (C) 2019 HPCC Systems®.
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -15,19 +15,32 @@
     limitations under the License.
 ############################################################################## */
 
-#ifndef HPCCSYSTEMS_PLATFORM_IPRANGE_HPP
-#define HPCCSYSTEMS_PLATFORM_IPRANGE_HPP
+#ifndef HPCCSYSTEMS_PLATFORM_MEMBERSETVARIABLE_HPP
+#define HPCCSYSTEMS_PLATFORM_MEMBERSETVARIABLE_HPP
 
-#include "IPAddressVariable.hpp"
+#include "Variable.hpp"
 #include <string>
+#include <vector>
+#include <map>
 
-class IPAddressRangeVariable : public IPAddressVariable
+class MemberSetVariable : public Variable
 {
     public:
-        explicit IPAddressRangeVariable(const std::string &name) : IPAddressVariable(name) {}
-        ~IPAddressRangeVariable() override = default;
+
+        explicit MemberSetVariable(const std::string &name) : Variable(name) {}
+        ~MemberSetVariable() override = default;
         void addValue(const std::string &value) override;
+        void addMemberName(const std::string &memberName);
+        void addMemberValue(const std::string &value, const std::string &memberName);
+        std::string getValue(size_t idx, const std::string &member) const override;
+        size_t getNumValues() const override;
+
+
+    protected:
+
+        std::map<std::string, std::vector<std::string>> m_memberValues;
+
 };
 
 
-#endif //HPCCSYSTEMS_PLATFORM_IPRANGE_HPP
+#endif //HPCCSYSTEMS_PLATFORM_MEMBERSETVARIABLE_HPP

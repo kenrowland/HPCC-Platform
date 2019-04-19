@@ -341,9 +341,9 @@ std::shared_ptr<EnvironmentNode> EnvironmentMgr::addNewEnvironmentNode(const std
     pNewEnvNode->setId(EnvironmentMgr::getUniqueKey());
 
     addPath(pNewEnvNode);
+    pParentNode->addChild(pNewEnvNode);
     pNewEnvNode->initialize();
     pNewEnvNode->setAttributeValues(initAttributes, status, allowInvalid, forceCreate);
-    pParentNode->addChild(pNewEnvNode);
 
     //
     // Send a create event now that it's been added to the environment
@@ -353,7 +353,7 @@ std::shared_ptr<EnvironmentNode> EnvironmentMgr::addNewEnvironmentNode(const std
     // Call any registered support libs with the event
     for (auto &libIt: m_supportLibs)
     {
-        libIt->processEvent("create", m_pSchema, pNewEnvNode, status);
+        libIt->processEvent("create", pCfgItem, pNewEnvNode, status);
     }
 
     insertExtraEnvironmentData(m_pRootNode);
@@ -445,7 +445,19 @@ void EnvironmentMgr::getPredefinedAttributeValues(const std::string &inputItemTy
 }
 
 
-void EnvironmentMgr::insertExtraEnvironmentData(std::shared_ptr<EnvironmentNode> pParentNode)
+void EnvironmentMgr::insertRawEnvironmentData(const std::shared_ptr<EnvironmentNode> &pInsertEnvNode, const std::string &itemType, const std::string &rawData)
+{
+    std::istringstream extraData(rawData);
+    std::vector<std::shared_ptr<EnvironmentNode>> extraNodes = doLoadEnvironment(extraData, pInsertEnvNode->getSchemaItem(), itemType);  // not root
+    for (auto &&envNode : extraNodes)
+    {
+        assignNodeIds(envNode);
+        pInsertEnvNode->addChild(envNode);  // link extra node data to the newly created node
+    }
+}
+
+
+void EnvironmentMgr::insertExtraEnvironmentData(const std::shared_ptr<EnvironmentNode> &pParentNode)
 {
     std::string insertData = pParentNode->getEnvironmentInsertData();
     if (!insertData.empty())
@@ -560,6 +572,7 @@ void EnvironmentMgr::createInitNodes(const std::shared_ptr<EnvironmentNode> &pPa
         if (child->getProperty("createOnInit", "") == "true")
         {
             std::shared_ptr<EnvironmentNode> pChildEnvNode = std::make_shared<EnvironmentNode>(child, child->getProperty("name"));
+            pChildEnvNode->setParent(pParentNode);
             pParentNode->addChild(pChildEnvNode);
             createInitNodes(pChildEnvNode, child);
         }

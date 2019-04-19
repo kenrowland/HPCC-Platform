@@ -41,7 +41,8 @@
                                 hpcc:requiredInstanceComponents="/Environment/Software/[#itemType='dafilesrv'],/Environment/Software/[#itemType='ftslave']">
                         <xs:complexType>
                             <xs:attributeGroup ref="computerNodeReference"/>
-                            <xs:attribute name="directory" type="xs:string" hpcc:presetValue="c$\ecl" hpcc:hidden="true"/>
+                            <xs:attribute name="directory" type="xs:string" hpcc:forcedConfigValue="${RUNTIME_DIR}/eclccserver" hpcc:hidden="true"/>
+                            <xs:attribute name="name" type="xs:string" hpcc:autoGenerateType="prefix#" hpcc:autoGenerateValue="s"/>
                         </xs:complexType>
                     </xs:element>
                     <xs:element name="Notes" type="usernotes" hpcc:displayName="Notes" maxOccurs="unbounded"/>

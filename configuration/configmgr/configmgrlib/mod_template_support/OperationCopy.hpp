@@ -38,6 +38,7 @@ struct SaveAttributeInfo_t {
     std::string varName;         // variable name to which the attribute value is saved
     bool global;                 // the variable is to be a global variable
     bool accumulateOk;           // OK to accumulate values from multiple steps (means the variable may already exist)
+    bool clear;                  // clear before use
     std::shared_ptr<Variable> pVar;  // variable where value(s) stored
 };
 
@@ -53,7 +54,7 @@ class OperationCopy : public OperationNode
     protected:
 
         void addCopyAttribute(std::string attrStr);
-        void addSaveAttributeValue(const std::string &attrName, const std::string &varName, bool global, bool accuulateOk);
+        void addSaveAttributeValue(const std::string &attrName, const std::string &varName, bool global, bool accuulateOk, bool clear);
         void saveAttributeValues(const std::shared_ptr<EnvironmentNode> &pEnvNode);
         void getAttributeValues(const std::shared_ptr<EnvironmentNode> &pSourceNode, std::vector<NameValue> &initAttributes, const std::string &copyMpde);
         void doNodeCopy(const std::string &sourceNodId, const std::string &destParentNodeId, bool isChildNode);
@@ -71,7 +72,6 @@ class OperationCopy : public OperationNode
 
         bool m_includeChildren;
         std::vector<CopyAttributeInfo_t> m_copyAttributes;
-        std::shared_ptr<EnvironmentMgr> m_pSourceEnv;
         std::shared_ptr<EnvironmentMgr> m_pDestEnvMgr;
         std::map<std::string, SaveAttributeInfo_t> m_saveAttributes;
 

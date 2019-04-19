@@ -97,6 +97,8 @@ class CFGMGRLIB_API SchemaValue
         unsigned getOrdinal() const { return m_ordinal; }
         void setNoOutput(bool noOutput) { bitMask.m_noOutput = noOutput; }
         bool isNoOutput() const { return bitMask.m_noOutput; }
+        void setIgnoreOnAutoInsert(bool ignore) { bitMask.m_ignoreOnAutoInsert = ignore; }
+        bool isIgnoreOnAutoInsert() const { return bitMask.m_ignoreOnAutoInsert; }
 
 
     protected:
@@ -130,6 +132,7 @@ class CFGMGRLIB_API SchemaValue
             unsigned m_isUnique  : 1;
             unsigned m_isDefined : 1;
             unsigned m_noOutput  : 1;
+            unsigned m_ignoreOnAutoInsert : 1;   // If value being auto inserted by event, ignore the source value
         } bitMask;
 
         // DON'T FORGET IF DATA ADDED, IT MAY MAY TO BE COPIED IN THE COPY CONSTRUCTOR!!

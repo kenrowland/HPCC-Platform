@@ -25,8 +25,8 @@
 
 
 struct modAttribute {
-    modAttribute() : accumulateValuesOk(false), doNotSet(false),
-            errorIfNotFound(false), errorIfEmpty(false), saveValueGlobal(false) {}
+    modAttribute() : accumulateValuesOk(false), doNotSet(false), optional(false),
+            errorIfNotFound(false), errorIfEmpty(false), saveValueGlobal(false), clear(false) {}
     ~modAttribute() = default;
     void addName(const std::string &_name) { names.emplace_back(_name); }
     const std::string &getName(std::size_t idx=0) { return names[idx]; }
@@ -39,8 +39,10 @@ struct modAttribute {
     bool saveValueGlobal;
     bool doNotSet;
     bool accumulateValuesOk;
+    bool clear;
     bool errorIfNotFound;
     bool errorIfEmpty;
+    bool optional;
 };
 
 
@@ -62,16 +64,13 @@ class OperationNode : public Operation
 
         virtual void doExecute(std::shared_ptr<EnvironmentMgr> pEnvMgr, std::shared_ptr<Variables> pVariables) = 0;
 
-        std::shared_ptr<Variable> createVariable(std::string varName, const std::string &varType,
-                                                 std::shared_ptr<Variables> pVariables, bool existingOk, bool global);
+        std::shared_ptr<Variable> createVariable(std::string varName, const std::string &varType, std::shared_ptr<Variables> pVariables,
+                bool accumulateOk, bool global, bool clear);
         bool createAttributeSaveInputs(const std::shared_ptr<Variables> &pVariables);
-        void saveAttributeValues(const std::shared_ptr<Variables> &pVariables,
-                                 const std::shared_ptr<EnvironmentNode> &pEnvNode);
-        void processNodeValue(const std::shared_ptr<Variables> &pVariables,
-                              const std::shared_ptr<EnvironmentNode> &pEnvNode);
-        void initializeForExecution(const std::shared_ptr<Environments> &pEnvironments,
-                                    std::shared_ptr<Environment> pEnv,
-                                    const std::shared_ptr<Variables> &pVariables);
+        void saveAttributeValues(const std::shared_ptr<Variables> &pVariables, const std::shared_ptr<EnvironmentNode> &pEnvNode);
+        void processNodeValue(const std::shared_ptr<Variables> &pVariables, const std::shared_ptr<EnvironmentNode> &pEnvNode);
+        void initializeForExecution(const std::shared_ptr<Environments> &pEnvironments, std::shared_ptr<Environment> pEnv,
+                const std::shared_ptr<Variables> &pVariables);
 
 
     protected:
@@ -87,6 +86,7 @@ class OperationNode : public Operation
         std::string m_saveNodeIdName;
         bool m_accumulateSaveNodeIdOk = false;
         bool m_saveNodeIdAsGlobalValue = false;
+        bool m_saveNodeIdClear = false;
         std::shared_ptr<EnvironmentMgr> m_pOpEnvMgr;   // the environment mgr to use for operation execution
 
 

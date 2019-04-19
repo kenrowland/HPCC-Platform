@@ -28,9 +28,12 @@
                     <xs:element name="Instance" hpcc:itemType="hwinstance" minOccurs="0" maxOccurs="unbounded" hpcc:class="elementSet">
                         <xs:complexType>
                             <xs:attributeGroup ref="computerNodeReference"/>
-                            <xs:attribute name="directory" type="absolutePath" hpcc:hidden="true"/>
+                            <xs:attribute name="directory" type="absolutePath" hpcc:forcedConfigValue="${RUNTIME_DIR}/ftslave" hpcc:hidden="true"
+                                          hpcc:ignoreSourceOnAutoInsert="true"/>
                             <xs:attribute name="program" type="xs:string" hpcc:displayName="Program" use="required"
                                           hpcc:presetValue="${INSTALL_DIR}/bin/ftslave" hpcc:tooltip=""/>
+                            <xs:attribute name="name" type="xs:string" hpcc:autoGenerateType="prefix#" hpcc:autoGenerateValue="s"
+                                          hpcc:ignoreSourceOnAutoInsert="true"/>
                         </xs:complexType>
                     </xs:element>
                     <xs:element name="Notes" type="usernotes" hpcc:displayName="Notes" minOccurs="0" maxOccurs="unbounded"/>

@@ -51,7 +51,7 @@ void  AddRequiredInstancesSupport::processEvent(const std::string &event, const 
                     for (auto &targetNode: targetNodes)
                     {
                         std::string nodeName = pEventNode->getAttribute("computer")->getValue();
-                        std::string existingPath = "Instance/[@computer='" + nodeName + "']";
+                        std::string existingPath = "Instance[@computer='" + nodeName + "']";
                         std::vector<std::shared_ptr<EnvironmentNode>> instanceNodes;
                         targetNode->fetchNodes(existingPath, instanceNodes);
                         if (instanceNodes.empty())
@@ -83,17 +83,21 @@ void AddRequiredInstancesSupport::addInstance(const std::shared_ptr<EnvironmentN
     pTargetNode->getSchemaItem()->getChildren(children, "Instance");
     if (!children.empty())
     {
-        std::vector<std::shared_ptr<SchemaValue>> attributes;
-        children[0]->getAttributes(attributes);
-        for (auto &daInstAttr: attributes)
+        std::vector<std::shared_ptr<SchemaValue>> schemaValueAttributes;
+        children[0]->getAttributes(schemaValueAttributes);
+        for (auto &pSchemaValueAttribute: schemaValueAttributes)
         {
-            std::shared_ptr<EnvironmentValue> pEventAttr = pEventNode->getAttribute(daInstAttr->getName());
-            if (pEventAttr)
+            if (!pSchemaValueAttribute->isIgnoreOnAutoInsert())
             {
-                std::string eventAttrValue = pEventAttr->getValue();
-                if (!eventAttrValue.empty())
+                std::shared_ptr<EnvironmentValue> pEventAttr = pEventNode->getAttribute(
+                        pSchemaValueAttribute->getName());
+                if (pEventAttr)
                 {
-                    initAttributeValues.emplace_back(NameValue(daInstAttr->getName(), eventAttrValue));
+                    std::string eventAttrValue = pEventAttr->getValue();
+                    if (!eventAttrValue.empty())
+                    {
+                        initAttributeValues.emplace_back(NameValue(pSchemaValueAttribute->getName(), eventAttrValue));
+                    }
                 }
             }
         }

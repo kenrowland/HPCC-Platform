@@ -17,6 +17,7 @@
 
 #include "OperationNode.hpp"
 #include "TemplateExecutionException.hpp"
+#include "TemplateException.hpp"
 #include "EnvironmentMgr.hpp"
 #include "EnvironmentNode.hpp"
 #include "EnvironmentValue.hpp"
@@ -66,15 +67,27 @@ void OperationNode::assignAttributeCookedValues(const std::shared_ptr<Variables>
     // go through the ones defined by the operation and set each (by name)
     for (auto &attr: m_attributes)
     {
-        attr.cookedValue = pVariables->doValueSubstitution(attr.value);
+        try
+        {
+            attr.cookedValue = pVariables->doValueSubstitution(attr.value);
+        }
+        catch (TemplateException &te)
+        {
+            if (!attr.optional)
+            {
+                throw;
+            }
+            attr.cookedValue.clear();  // empty string
+        }
     }
 }
 
 
 std::shared_ptr<Variable> OperationNode::createVariable(std::string varName, const std::string &varType,
-                                                    std::shared_ptr<Variables> pVariables, bool existingOk, bool global)
+                                                    std::shared_ptr<Variables> pVariables, bool accumulateOk, bool global, bool clear)
 {
     std::shared_ptr<Variable> pVariable;
+    bool existingOk = accumulateOk | clear;
 
     //
     // If creating a local variable...
@@ -110,6 +123,11 @@ std::shared_ptr<Variable> OperationNode::createVariable(std::string varName, con
         }
     }
 
+    if (clear)
+    {
+        pVariable->clear();
+    }
+
     return pVariable;
 }
 
@@ -123,7 +141,7 @@ bool OperationNode::createAttributeSaveInputs(const std::shared_ptr<Variables> &
         // If this is a saved attribute value, make sure the input exists
         if (!attr.saveVariableName.empty())
         {
-            createVariable(attr.saveVariableName, "string", pVariables, attr.accumulateValuesOk, attr.saveValueGlobal);
+            createVariable(attr.saveVariableName, "string", pVariables, attr.accumulateValuesOk, attr.saveValueGlobal, attr.clear);
             rc = true;
         }
     }
@@ -187,7 +205,8 @@ void OperationNode::processNodeValue(const std::shared_ptr<Variables> &pVariable
         // Need to save the value?
         if (!m_nodeValue.saveVariableName.empty())
         {
-            std::shared_ptr<Variable> pVar = createVariable(m_nodeValue.saveVariableName, "string", pVariables, m_nodeValue.accumulateValuesOk, m_nodeValue.saveValueGlobal);
+            std::shared_ptr<Variable> pVar = createVariable(m_nodeValue.saveVariableName, "string", pVariables, m_nodeValue.accumulateValuesOk,
+                    m_nodeValue.saveValueGlobal, m_nodeValue.clear);
             if (pEnvNode->isLocalValueSet())
             {
                 pVar->addValue(pEnvNode->getLocalValue());

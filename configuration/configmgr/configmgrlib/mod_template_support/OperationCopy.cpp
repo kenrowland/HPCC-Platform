@@ -31,7 +31,7 @@ bool OperationCopy::execute(std::shared_ptr<Environments> pEnvironments, std::sh
 
     //
     // Setup destination environment
-    m_pDestEnvMgr = pEnv->m_pEnvMgr;
+    m_pDestEnvMgr = m_pOpEnvMgr;
     if (!m_destEnvironmentName.empty())
     {
         m_pDestEnvMgr = pEnvironments->get(pVariables->doValueSubstitution(m_destEnvironmentName))->m_pEnvMgr;
@@ -42,13 +42,13 @@ bool OperationCopy::execute(std::shared_ptr<Environments> pEnvironments, std::sh
     std::shared_ptr<Variable> pSaveNodeIdInput;
     if (!m_saveNodeIdName.empty())
     {
-        pSaveNodeIdInput = createVariable(pVariables->doValueSubstitution(m_saveNodeIdName), "string", pVariables, m_accumulateSaveNodeIdOk, m_saveNodeIdAsGlobalValue);
+        pSaveNodeIdInput = createVariable(pVariables->doValueSubstitution(m_saveNodeIdName), "string", pVariables, m_accumulateSaveNodeIdOk, m_saveNodeIdAsGlobalValue, m_saveNodeIdClear);
     }
 
     //
     // Get parent node Ids for copy source
     // question as to whether >1 nodes to copy should be supported (I think yes right now)
-    m_parentNodeIds = getNodeIds(m_pSourceEnv, pVariables, m_parentNodeId, m_path);
+    m_parentNodeIds = getNodeIds(m_pOpEnvMgr, pVariables, m_parentNodeId, m_path);
     if (m_parentNodeIds.empty() && m_throwOnEmpty)
     {
         throw TemplateExecutionException("No nodes selected for copy");
@@ -71,7 +71,7 @@ bool OperationCopy::execute(std::shared_ptr<Environments> pEnvironments, std::sh
     // Create variables for saving attribute values
     for (auto &attr: m_saveAttributes)
     {
-        createVariable(attr.first, "string", pVariables, attr.second.accumulateOk, attr.second.global);
+        createVariable(attr.first, "string", pVariables, attr.second.accumulateOk, attr.second.global, attr.second.clear);
         // todo make this name/save info a separate class and encapsulate in the OperationNode modAttribute class
     }
 
@@ -96,7 +96,7 @@ void OperationCopy::doNodeCopy(const std::string &sourceNodId, const std::string
 {
 
     Status status;
-    std::shared_ptr<EnvironmentNode> pSourceEnvNode = m_pSourceEnv->findEnvironmentNodeById(sourceNodId);
+    std::shared_ptr<EnvironmentNode> pSourceEnvNode = m_pOpEnvMgr->findEnvironmentNodeById(sourceNodId);
     doNodeCopy(pSourceEnvNode, destParentNodeId, isChildNode);
 }
 
@@ -163,13 +163,14 @@ void OperationCopy::addCopyAttribute(std::string attrStr)
 }
 
 
-void OperationCopy::addSaveAttributeValue(const std::string &attrName, const std::string &varName, bool global, bool accuulateOk)
+void OperationCopy::addSaveAttributeValue(const std::string &attrName, const std::string &varName, bool global, bool accuulateOk, bool clear)
 {
     SaveAttributeInfo_t saveInfo;
     saveInfo.attributeName = attrName;
     saveInfo.varName = varName;
     saveInfo.global = global;
     saveInfo.accumulateOk = accuulateOk;
+    saveInfo.clear = clear;
     auto insertRc = m_saveAttributes.insert({attrName, saveInfo});
     if (!insertRc.second)
     {

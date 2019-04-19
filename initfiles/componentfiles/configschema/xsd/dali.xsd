@@ -127,9 +127,10 @@
                                 hpcc:requiredInstanceComponents="/Environment/Software/[#itemType='dafilesrv'],/Environment/Software/[#itemType='ftslave']">
                         <xs:complexType>
                             <xs:attributeGroup ref="computerNodeReference"/>
-                            <xs:attribute name="directory" type="absolutePath" hpcc:hidden="true"/>
+                            <xs:attribute name="directory" type="absolutePath" hpcc:forcedConfigValue="${RUNTIME_DIR}/dali" hpcc:hidden="true"/>
                             <xs:attribute name="port" type="xs:string" hpcc:presetValue="7070" hpcc:displayName="Port"
                                           hpcc:tooltip="Control port"/>
+                            <xs:attribute name="name" type="xs:string" hpcc:autoGenerateType="prefix#" hpcc:autoGenerateValue="s"/>
                         </xs:complexType>
                     </xs:element>
                     <xs:element name="Notes" type="usernotes" hpcc:displayName="Notes" minOccurs="0" maxOccurs="unbounded"/>

@@ -25,7 +25,7 @@
             <xs:complexType>
                 <xs:sequence>
                     <xs:element name="SSH" hpcc:displayName="SSH Options" hpcc:tooltip="Options for using SSH remote execution"
-                                minOccurs="1" maxOccurs="1" hpcc:docid="DF.t2">
+                                minOccurs="1" maxOccurs="1" hpcc:itemType="ssh" hpcc:docid="DF.t2">
                         <xs:complexType>
                             <xs:attribute name="SSHidentityfile" hpcc:displayName="Identity File" type="xs:string"
                                           hpcc:presetValue="$HOME/.ssh/id_rsa" hpcc:tooltip="location of identity file (private key) on Thor master"/>
@@ -44,7 +44,8 @@
                                 hpcc:requiredInstanceComponents="/Environment/Software/[#itemType='dafilesrv'],/Environment/Software/[#itemType='ftslave']">
                         <xs:complexType>
                             <xs:attributeGroup ref="computerNodeReference"/>
-                            <xs:attribute name="directory" type="absolutePath" hpcc:hidden="true"/>
+                            <xs:attribute name="directory" type="xs:string" hpcc:forcedConfigValue="${RUNTIME_DIR}/dfuserver" hpcc:hidden="true"/>
+                            <xs:attribute name="name" type="xs:string" hpcc:autoGenerateType="prefix#" hpcc:autoGenerateValue="s"/>
                         </xs:complexType>
                     </xs:element>
 

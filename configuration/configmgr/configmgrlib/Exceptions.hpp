@@ -60,7 +60,14 @@ class ParseException : public std::exception
 
         std::string m_reason;
         std::vector<std::string> m_filenames;
+};
 
+
+class ParseInsertLocationNotFound : public ParseException
+{
+    public:
+
+        ParseInsertLocationNotFound() = default;
 };
 
 #endif

@@ -24,6 +24,8 @@
 #include "OperationModifyNode.hpp"
 #include "OperationDeleteNode.hpp"
 #include "OperationIncludeTemplate.hpp"
+#include "OperationInsertRaw.hpp"
+#include "MemberSetVariable.hpp"
 #include "Exceptions.hpp"
 #include <sstream>
 #include <fstream>
@@ -41,7 +43,8 @@ EnvModTemplate::EnvModTemplate(std::shared_ptr<Environment> &pEnv, const std::st
     m_pTemplate(nullptr),
     m_pSchema(nullptr),
     m_useLocalEnvironmentForTemplate(false),
-    m_isRoot(true)
+    m_isRoot(true),
+    m_ignoreEmptyTemplate(false)
 {
     m_pVariables = std::make_shared<Variables>();
     m_pEnvironments = std::make_shared<Environments>();
@@ -54,7 +57,7 @@ EnvModTemplate::EnvModTemplate(std::shared_ptr<Environment> &pEnv, const std::st
     rapidjson::Document sd;
     if (sd.ParseStream(jsonStream).HasParseError())
     {
-        throw(TemplateException(&sd));
+        throw(TemplateException(&sd, m_templateFile));
     }
     m_pSchema = std::make_shared<rapidjson::SchemaDocument>(sd); // Compile a Document to SchemaDocument
 }
@@ -65,7 +68,8 @@ EnvModTemplate::EnvModTemplate(std::shared_ptr<Environment> &pEnv, const std::st
 EnvModTemplate::EnvModTemplate(const EnvModTemplate &modTemplate) :
     m_pTemplate(nullptr),
     m_useLocalEnvironmentForTemplate(false),
-    m_isRoot(false)
+    m_isRoot(false),
+    m_ignoreEmptyTemplate(false)
 {
     //
     // Copy relevant members to avoid duplicate actions. Also, create a new variables
@@ -136,10 +140,16 @@ void EnvModTemplate::loadTemplate(rapidjson::IStreamWrapper &stream)
 
     //
     // Parse and make sure it's valid JSON
-    m_pTemplate->ParseStream(stream);
+    rapidjson::ParseResult pr = m_pTemplate->ParseStream(stream);
     if (m_pTemplate->HasParseError())
     {
-        throw(TemplateException(m_pTemplate));
+        //
+        // Ignore empty (probably no template file found) if indicated
+        if (m_ignoreEmptyTemplate && pr.Code() == rapidjson::kParseErrorDocumentEmpty)
+        {
+            return;
+        }
+        throw(TemplateException(m_pTemplate, m_templateFile));
     }
 
     if (m_pSchema != nullptr)
@@ -224,7 +234,6 @@ void EnvModTemplate::parseVariable(const rapidjson::Value &varValue)
     std::string varName(varValue.FindMember("name")->value.GetString());
     std::string type(varValue.FindMember("type")->value.GetString());
 
-
     //
     // Get pointer to variable based on whether we are overwiting and if the variable already exists. If not, create one
     it = varValue.FindMember("overwrite_ok");
@@ -279,6 +288,51 @@ void EnvModTemplate::parseVariable(const rapidjson::Value &varValue)
                 throw TemplateException(msg, false);
             }
         }
+    }
+    else
+    {
+        it = varValue.FindMember("members");
+        if (it != varValue.MemberEnd())
+        {
+            std::shared_ptr<MemberSetVariable> pMemVar = std::dynamic_pointer_cast<MemberSetVariable>(pVariable);
+            if (pMemVar)
+            {
+                auto memberObj = it->value.GetObject();
+                std::vector<std::string> memberNames;
+
+                //
+                // Get names
+                auto namesArray = memberObj.FindMember("names")->value.GetArray();  // required by schema
+                for (auto &memberNameIt: namesArray)
+                {
+                    memberNames.emplace_back(memberNameIt.GetString());
+                    pMemVar->addMemberName(memberNames.back());
+                }
+
+                //
+                // Values
+                it = memberObj.FindMember("values");
+                if (it != memberObj.MemberEnd())
+                {
+                    auto valueSetsArray = it->value.GetArray();
+                    for (auto &valueSetIt: valueSetsArray)
+                    {
+                        unsigned idx = 0;
+                        auto values = valueSetIt.GetArray();
+                        for (auto &value: values)
+                        {
+                            pMemVar->addMemberValue(value.GetString(), memberNames[idx++]);
+                        }
+                    }
+                }
+            }
+            else
+            {
+                std::string msg = "Variable '" + varName + "' not allowed to use 'members' key in template file " + m_templateFile;
+                throw TemplateException(msg, false);
+            }
+        }
+
     }
 
     it = varValue.FindMember("prepared_value");
@@ -358,7 +412,7 @@ void EnvModTemplate::assignVariablesFromFile(const std::string &filepath)
     inputJson.ParseStream(jsonStream);
     if (inputJson.HasParseError())
     {
-        throw(TemplateException(&inputJson));
+        throw(TemplateException(&inputJson, filepath));
     }
 
     //
@@ -405,6 +459,7 @@ void EnvModTemplate::parseOperation(const rapidjson::Value &operation)
         for (auto const &path: pIncOp->m_paths)
         {
             auto pEnvModTemplate = std::make_shared<EnvModTemplate>(*this);
+            pEnvModTemplate->m_ignoreEmptyTemplate = !pIncOp->m_errorIfNotFound;
             pEnvModTemplate->loadTemplateFromFile(path);
             pIncOp->m_envModTemplates.emplace_back(pEnvModTemplate);
         }
@@ -418,6 +473,7 @@ void EnvModTemplate::parseOperation(const rapidjson::Value &operation)
         {
             parseCopyOperation(dataIt->value, pCopyOp);
         }
+        m_operations.emplace_back(pCopyOp);
     }
     else
     {
@@ -438,6 +494,10 @@ void EnvModTemplate::parseOperation(const rapidjson::Value &operation)
         else if (action == "delete")
         {
             pOp = std::make_shared<OperationDeleteNode>();
+        }
+        else if (action == "insert_raw")
+        {
+            pOp = std::make_shared<OperationInsertRaw>();
         }
 
 
@@ -477,6 +537,17 @@ void EnvModTemplate::parseOperation(const rapidjson::Value &operation)
                     {
                         pFindOp->m_nodeType = dataIt->value.FindMember("node_type")->value.GetString();
                     }
+                }
+                else if (action == "insert_raw")
+                {
+                    std::shared_ptr<OperationInsertRaw> pOpInsert = std::dynamic_pointer_cast<OperationInsertRaw>(pOp);
+                    auto it = dataIt->value.FindMember("raw_data");
+                    if (it != dataIt->value.MemberEnd())
+                    {
+                        pOpInsert->m_rawData = it->value.GetString();
+                    }
+
+                    pOpInsert->m_nodeType = dataIt->value.FindMember("node_type")->value.GetString();
                 }
             }
             m_operations.emplace_back(pOp);
@@ -518,18 +589,7 @@ void EnvModTemplate::parseOperationNodeCommonData(const rapidjson::Value &operat
     rapidjson::Value::ConstMemberIterator saveInfoIt = dataObj.FindMember("save");
     if (saveInfoIt != dataObj.MemberEnd())
     {
-        pOpNode->m_saveNodeIdName = saveInfoIt->value.GetObject().FindMember("name")->value.GetString();
-        it = saveInfoIt->value.GetObject().FindMember("accumulate");
-        if (it != saveInfoIt->value.MemberEnd())
-        {
-            pOpNode->m_accumulateSaveNodeIdOk = it->value.GetBool();
-        }
-
-        it = saveInfoIt->value.GetObject().FindMember("global");
-        if (it != saveInfoIt->value.MemberEnd())
-        {
-            pOpNode->m_saveNodeIdAsGlobalValue = it->value.GetBool();
-        }
+        parseSaveInfo(saveInfoIt->value, pOpNode->m_saveNodeIdName, pOpNode->m_accumulateSaveNodeIdOk, pOpNode->m_saveNodeIdAsGlobalValue, pOpNode->m_saveNodeIdClear);
     }
 
     //
@@ -613,17 +673,7 @@ void EnvModTemplate::parseAttribute(const rapidjson::Value &attributeValue, modA
     auto saveInfoIt = attributeData.FindMember("save");
     if (saveInfoIt != attributeData.MemberEnd())
     {
-        pAttribute->saveVariableName = saveInfoIt->value.GetObject().FindMember("name")->value.GetString();
-        attrValueIt = saveInfoIt->value.GetObject().FindMember("accumulate");
-        if (attrValueIt != saveInfoIt->value.MemberEnd())
-        {
-            pAttribute->accumulateValuesOk = attrValueIt->value.GetBool();
-        }
-        attrValueIt = saveInfoIt->value.GetObject().FindMember("global");
-        if (attrValueIt != saveInfoIt->value.MemberEnd())
-        {
-            pAttribute->saveValueGlobal = attrValueIt->value.GetBool();
-        }
+        parseSaveInfo(saveInfoIt->value, pAttribute->saveVariableName, pAttribute->accumulateValuesOk, pAttribute->saveValueGlobal, pAttribute->clear);
     }
 
     attrValueIt = attributeData.FindMember("error_if_not_found");
@@ -636,6 +686,12 @@ void EnvModTemplate::parseAttribute(const rapidjson::Value &attributeValue, modA
     if (attrValueIt != attributeData.MemberEnd())
     {
         pAttribute->errorIfEmpty = attrValueIt->value.GetBool();
+    }
+
+    attrValueIt = attributeData.FindMember("optional");
+    if (attrValueIt != attributeData.MemberEnd())
+    {
+        pAttribute->optional = attrValueIt->value.GetBool();
     }
 }
 
@@ -797,6 +853,12 @@ void EnvModTemplate::parseIncludeOperation(const rapidjson::Value &include, std:
         pOpInc->m_environmentName = trim(it->value.GetString());
     }
 
+    it = includeObj.FindMember("error_if_not_found");
+    if (it != includeObj.MemberEnd())
+    {
+        pOpInc->m_errorIfNotFound = it->value.GetBool();
+    }
+
 }
 
 
@@ -872,22 +934,12 @@ void EnvModTemplate::parseCopyOperation(const rapidjson::Value &data, std::share
         for (auto &attr: valueIt->value.GetArray())
         {
             attrName = attr.FindMember("name")->value.GetString();
-            auto saveInfoObj = attr.FindMember("save")->value.GetObject();
-            std::string varName = saveInfoObj.FindMember("name")->value.GetString();
+            std::string varName;
             bool accumulateOk = false;
             bool global = false;
-
-            auto it = saveInfoObj.FindMember("accumulate");
-            if (it != saveInfoObj.MemberEnd())
-            {
-                accumulateOk = it->value.GetBool();
-            }
-            it = saveInfoObj.FindMember("global");
-            if (it != saveInfoObj.MemberEnd())
-            {
-                global = it->value.GetBool();
-            }
-            pCopyOp->addSaveAttributeValue(attrName, varName, global, accumulateOk);
+            bool clear = false;
+            parseSaveInfo(attr.FindMember("save")->value, varName, accumulateOk, global, clear);
+            pCopyOp->addSaveAttributeValue(attrName, varName, global, accumulateOk, clear);
         }
     }
 
@@ -902,135 +954,169 @@ void EnvModTemplate::parseCopyOperation(const rapidjson::Value &data, std::share
 }
 
 
+void EnvModTemplate::parseSaveInfo(const rapidjson::Value &saveInfo, std::string &varName, bool &accumulateOk, bool &global, bool &clear)
+{
+    auto saveInfoObj = saveInfo.GetObject();
+
+    varName = saveInfoObj.FindMember("name")->value.GetString();
+
+    // default values
+    accumulateOk = false;
+    global = false;
+    clear = false;
+
+    auto it = saveInfoObj.FindMember("accumulate");
+    if (it != saveInfoObj.MemberEnd())
+    {
+        accumulateOk = it->value.GetBool();
+    }
+
+    it = saveInfoObj.FindMember("global");
+    if (it != saveInfoObj.MemberEnd())
+    {
+        global = it->value.GetBool();
+    }
+
+    it = saveInfoObj.FindMember("clear_first");
+    if (it != saveInfoObj.MemberEnd())
+    {
+        clear = it->value.GetBool();
+    }
+}
+
+
 void EnvModTemplate::execute(bool isFirst, const std::vector<ParameterValue> &parameters)
 {
-    std::shared_ptr<Environment> pTemplateEnv;
-    //
-    // Set the environment to use. If default is set, then it was passed in and overrides any environment specified in
-    // the template. If no default environment was set, use what was defined by the template. If no environment defined
-    // by the template, then raise an excpetion
-    if (m_pDefaultEnv)
+    if (!m_operations.empty())
     {
-        pTemplateEnv = m_pDefaultEnv;
-    }
-    else if (m_pEnv && m_useLocalEnvironmentForTemplate)
-    {
-        pTemplateEnv = m_pEnv;
-    }
-    else
-    {
-        throw TemplateExecutionException("Unable to determine environment for template", "setup", m_templateFile);
-    }
-
-    //
-    // Initialize the environment
-    try
-    {
-        pTemplateEnv->initialize();  // note that this may already have been done and will be a noop.
-    }
-    catch (TemplateExecutionException &te)
-    {
-        te.setContext("Variable preparation", m_templateFile);
-        throw;
-    }
-
-    //
-    // Add any parameter values to the local variables for this template
-    for (auto &parm: parameters)
-    {
-        std::shared_ptr<Variable> pParmVar;
-
+        std::shared_ptr<Environment> pTemplateEnv;
         //
-        // If the first time through, create the variable and add it. If one exists, an exception is thrown. Otherwise
-        // subsequent iterations will find the variable exists, so retrieve it and clear it for this iteration's values
-        if (isFirst)
+        // Set the environment to use. If default is set, then it was passed in and overrides any environment specified in
+        // the template. If no default environment was set, use what was defined by the template. If no environment defined
+        // by the template, then raise an excpetion
+        if (m_pDefaultEnv)
         {
-            pParmVar = variableFactory("string", parm.name);
-            m_pVariables->add(pParmVar, false);
+            pTemplateEnv = m_pDefaultEnv;
+        }
+        else if (m_pEnv && m_useLocalEnvironmentForTemplate)
+        {
+            pTemplateEnv = m_pEnv;
         }
         else
         {
-            // This should pass
-            pParmVar = m_pVariables->getVariable(parm.name, true, true);
-            pParmVar->clear();  // clear it since we are going to add this execution's values
+            throw TemplateExecutionException("Unable to determine environment for template", "setup", m_templateFile);
         }
 
         //
-        // Now set the values.
-        for (auto &parmValue: parm.values)
-        {
-            pParmVar->addValue(parmValue);
-        }
-    }
-
-    try
-    {
-        //
-        // Do final prep on inputs. This may set values for inputs that are dependent on previously set inputs
-        m_pVariables->prepare();
-    }
-    catch (TemplateExecutionException &te)
-    {
-        te.setContext("Variable preparation", m_templateFile);
-        throw;
-    }
-
-
-    try
-    {
-        //
-        // If there is an environment defined for the template, and it's not the default, initialize it and make
-        // it available by name for use elsewhere
-        if (m_pEnv && !m_useLocalEnvironmentForTemplate)
-        {
-            m_pEnv->initialize();
-            m_pEnvironments->add(m_pEnv, m_pVariables->doValueSubstitution(m_environmentName));
-        }
-    }
-    catch (TemplateExecutionException &te)
-    {
-        std::string msg = "Unable to create, initialize, or find environment ";
-        msg.append(m_environmentName).append(" error = ").append(te.what());
-        throw TemplateExecutionException(msg, "setup", m_templateFile);
-    }
-
-    //
-    // Execute each operation...
-    unsigned opNum = 1;
-    for (auto &pOp: m_operations)
-    {
+        // Initialize the environment
         try
         {
-            pOp->execute(m_pEnvironments, pTemplateEnv, m_pVariables);
+            pTemplateEnv->initialize();  // note that this may already have been done and will be a noop.
         }
         catch (TemplateExecutionException &te)
         {
-            //
-            // Set the operation step number and rethrow so user can tell what step caused the problem
-            te.setContext(std::to_string(opNum), m_templateFile);
+            te.setContext("Variable preparation", m_templateFile);
             throw;
         }
-        catch (const ParseException &pe)
-        {
-            std::string msg = pe.what();
-            throw TemplateExecutionException(msg, std::to_string(opNum), m_templateFile);
-        }
-        catch (const TemplateException &te)
-        {
-            std::string msg = te.what();
-            throw TemplateExecutionException(msg, std::to_string(opNum), m_templateFile);
-        }
-        ++opNum;
-    }
 
-    //
-    // If this is a root teamplate, save environments
-    if (m_isRoot)
-    {
-        m_pEnvironments->save(m_pVariables);
-        if (m_pDefaultEnv)
+        //
+        // Add any parameter values to the local variables for this template
+        for (auto &parm: parameters)
         {
-            m_pDefaultEnv->save(m_pVariables);
+            std::shared_ptr<Variable> pParmVar;
+
+            //
+            // If the first time through, create the variable and add it. If one exists, an exception is thrown. Otherwise
+            // subsequent iterations will find the variable exists, so retrieve it and clear it for this iteration's values
+            if (isFirst)
+            {
+                pParmVar = variableFactory("string", parm.name);
+                m_pVariables->add(pParmVar, false);
+            }
+            else
+            {
+                // This should pass
+                pParmVar = m_pVariables->getVariable(parm.name, true, true);
+                pParmVar->clear();  // clear it since we are going to add this execution's values
+            }
+
+            //
+            // Now set the values.
+            for (auto &parmValue: parm.values)
+            {
+                pParmVar->addValue(parmValue);
+            }
+        }
+
+        try
+        {
+            //
+            // Do final prep on inputs. This may set values for inputs that are dependent on previously set inputs
+            m_pVariables->prepare();
+        }
+        catch (TemplateExecutionException &te)
+        {
+            te.setContext("Variable preparation", m_templateFile);
+            throw;
+        }
+
+
+        try
+        {
+            //
+            // If there is an environment defined for the template, and it's not the default, initialize it and make
+            // it available by name for use elsewhere
+            if (m_pEnv && !m_useLocalEnvironmentForTemplate)
+            {
+                m_pEnv->initialize();
+                m_pEnvironments->add(m_pEnv, m_pVariables->doValueSubstitution(m_environmentName));
+            }
+        }
+        catch (TemplateExecutionException &te)
+        {
+            std::string msg = "Unable to create, initialize, or find environment ";
+            msg.append(m_environmentName).append(" error = ").append(te.what());
+            throw TemplateExecutionException(msg, "setup", m_templateFile);
+        }
+
+        //
+        // Execute each operation...
+        unsigned opNum = 1;
+        for (auto &pOp: m_operations)
+        {
+            try
+            {
+                pOp->execute(m_pEnvironments, pTemplateEnv, m_pVariables);
+            }
+            catch (TemplateExecutionException &te)
+            {
+                //
+                // Set the operation step number and rethrow so user can tell what step caused the problem
+                te.setContext(std::to_string(opNum), m_templateFile);
+                throw;
+            }
+            catch (const ParseException &pe)
+            {
+                std::string msg = pe.what();
+                throw TemplateExecutionException(msg, std::to_string(opNum), m_templateFile);
+            }
+            catch (const TemplateException &te)
+            {
+                std::string msg = te.what();
+                throw TemplateExecutionException(msg, std::to_string(opNum), m_templateFile);
+            }
+            ++opNum;
+        }
+
+        //
+        // If this is a root teamplate, save environments
+        if (m_isRoot)
+        {
+            m_pEnvironments->save(m_pVariables);
+            if (m_pDefaultEnv)
+            {
+                m_pDefaultEnv->save(m_pVariables);
+            }
         }
     }
 }

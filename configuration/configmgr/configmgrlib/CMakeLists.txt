@@ -54,8 +54,10 @@ SET(  SRCS
         mod_template_support/IPAddressRangeVariable.cpp
         mod_template_support/IPAddressVariable.cpp
         mod_template_support/HostNameVariable.cpp
+        mod_template_support/MemberSetVariable.cpp
         mod_template_support/OperationDeleteNode.cpp
         mod_template_support/OperationIncludeTemplate.cpp
+        mod_template_support/OperationInsertRaw.cpp
 )
 
 INCLUDE_DIRECTORIES(

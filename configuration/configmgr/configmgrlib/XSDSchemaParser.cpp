@@ -1,7 +1,7 @@
+
 /*##############################################################################
 
     HPCC SYSTEMS software Copyright (C) 2017 HPCC Systems®.
-
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
     You may obtain a copy of the License at
@@ -51,32 +51,119 @@ bool XSDSchemaParser::loadSchema(const std::string &masterConfigFile, const std:
 }
 
 
-//bool XSDSchemaParser::loadSchema(const std::string &configPath, const std::string &masterConfigFile,
-//                                 const std::map<std::string, std::string> &cfgParms)
-//{
-//    bool rc = true;
-//    initializeTypes();
-//
-//
-//    //
-//    // Parse the master XSD
-//    m_basePath = configPath;
-//    m_masterXSDFilename = masterConfigFile;
-//    parseXSD(m_basePath + m_masterXSDFilename);
-//
-//    //
-//    // Parse the rest of the XSDs in the config path skipping the master
-//    processXSDFiles(m_basePath, m_masterXSDFilename);
-//
-//    //
-//    // Now plugins
-//    for (auto &pluginPath: m_pluginPaths)
+void XSDSchemaParser::processXSDFiles(const std::string &path, const std::string &ignore)
+{
+    std::vector<std::string> xsdFiles, delayedXsdFiles;
+
+    //
+    // Create vector of XSD files found in the directory
+    Owned<IFile> pDir = createIFile(path.c_str());
+    if (pDir->exists())
+    {
+        Owned<IDirectoryIterator> it = pDir->directoryFiles(nullptr, false, false);
+        ForEach(*it)
+        {
+            StringBuffer fname;
+            std::string filename = it->getName(fname).str();
+
+            if (filename != ignore)
+            {
+                std::size_t dotPos = filename.find_last_of('.');
+                if (dotPos != std::string::npos)
+                {
+                    //
+                    // If the file has an XSD extension and not previously processed, build the fully
+                    // qualified name and parse it.
+                    std::string ext = filename.substr(dotPos + 1);
+                    std::transform(ext.begin(), ext.end(), ext.begin(), tolower);
+                    std::string fullyQualifiedFilePath = path;
+                    if (std::string(1, fullyQualifiedFilePath.back()) != PATHSEPSTR)
+                        fullyQualifiedFilePath += PATHSEPSTR;
+                    fullyQualifiedFilePath += filename;
+                    if (ext == "xsd")
+                    {
+                        xsdFiles.emplace_back(fullyQualifiedFilePath);
+                    }
+                }
+            }
+        }
+    }
+
+    //
+    // Now process the XSD files.
+    bool done = false;
+    while (!done)
+    {
+        size_t numToProcess = xsdFiles.size();
+        bool xsdDelayed = false;
+
+        auto it = xsdFiles.begin();
+        while (it != xsdFiles.end())
+        {
+            try
+            {
+                if (m_pSchemaItem->addUniqueName(*it))
+                {
+                    parseXSD(*it);
+                }
+                it = xsdFiles.erase(it);  // erase from vector if no exception thrown
+            }
+            catch (ParseInsertLocationNotFound &pe)
+            {
+                //
+                // Unable to insert, add to vector of delayed
+                xsdDelayed = true;
+                ++it;
+            }
+            catch (ParseException &e)
+            {
+                auto msg = e.what();
+                int i = 4;
+            }
+
+        }
+
+        done = xsdFiles.empty();
+        if (!done)
+        {
+            if (numToProcess == xsdFiles.size())
+            {
+                throw ParseException("Unable to fully process XSD files, missing insert points");
+            }
+        }
+    }
+
+//    if (pDir->exists())
 //    {
-//        processXSDFiles(pluginPath, "");
-//    }
+//        Owned<IDirectoryIterator> it = pDir->directoryFiles(nullptr, false, false);
+//        ForEach(*it)
+//        {
+//            StringBuffer fname;
+//            std::string filename = it->getName(fname).str();
 //
-//    return rc;
-//}
+//            if (filename != ignore)
+//            {
+//                std::size_t dotPos = filename.find_last_of('.');
+//                if (dotPos != std::string::npos)
+//                {
+//                    //
+//                    // If the file has an XSD extension and not previously processed, build the fully
+//                    // qualified name and parse it.
+//                    std::string ext = filename.substr(dotPos + 1);
+//                    std::transform(ext.begin(), ext.end(), ext.begin(), tolower);
+//                    std::string fullyQualifiedFilePath = path;
+//                    if (std::string(1, fullyQualifiedFilePath.back()) != PATHSEPSTR)
+//                        fullyQualifiedFilePath += PATHSEPSTR;
+//                    fullyQualifiedFilePath += filename;
+//                    if (ext == "xsd" && m_pSchemaItem->addUniqueName(fullyQualifiedFilePath))
+//                    {
+//                        parseXSD(fullyQualifiedFilePath);
+//                    }
+//                }
+//            }
+//        }
+//    }
+}
 
 
 void XSDSchemaParser::parseXSD(const std::string &fullyQualifiedPath)
@@ -119,9 +206,17 @@ void XSDSchemaParser::parseXSD(const pt::ptree &keys)
         if (elemType == "xs:include")
         {
             std::string schemaFile = getXSDAttributeValue(it->second, "<xmlattr>.schemaLocation");
-            if (m_pSchemaItem->addUniqueName(schemaFile))
+            if (m_pSchemaItem->addUniqueName(m_basePath + schemaFile))
             {
-                parseXSD(m_basePath + schemaFile);
+                try
+                {
+                    parseXSD(m_basePath + schemaFile);
+                }
+                catch (ParseInsertLocationNotFound &pe)
+                {
+                    std::string msg = "Unable to find insert location in included file: " + m_basePath + schemaFile;
+                    throw(ParseException(msg));
+                }
             }
         }
         else if (elemType == "xs:simpleType")
@@ -471,8 +566,9 @@ void XSDSchemaParser::processSchemaInsert(const pt::ptree &elemTree)
             pInsertItem->getChildren(insertChildren, pathParts[i+1], isLast ? itemType : "");
             if (insertChildren.empty())
             {
-                std::string msg = "Unable to find insert location, path not found: " + path;
-                throw(ParseException(msg));
+                //std::string msg = "Unable to find insert location, path not found: " + path;
+                //throw(ParseException(msg));
+                throw ParseInsertLocationNotFound();
             }
 
             if (!isLast)
@@ -665,42 +761,6 @@ void XSDSchemaParser::parseAppInfo(const pt::ptree &elemTree)
 }
 
 
-void XSDSchemaParser::processXSDFiles(const std::string &path, const std::string &ignore)
-{
-    Owned<IFile> pDir = createIFile(path.c_str());
-    if (pDir->exists())
-    {
-        Owned<IDirectoryIterator> it = pDir->directoryFiles(nullptr, false, false);
-        ForEach(*it)
-        {
-            StringBuffer fname;
-            std::string filename = it->getName(fname).str();
-
-            if (filename != ignore)
-            {
-                std::size_t dotPos = filename.find_last_of('.');
-                if (dotPos != std::string::npos)
-                {
-                    //
-                    // If the file has an XSD extension and not previously processed, build the fully
-                    // qualified name and parse it.
-                    std::string ext = filename.substr(dotPos + 1);
-                    std::transform(ext.begin(), ext.end(), ext.begin(), tolower);
-                    std::string fullyQualifiedFilePath = path;
-                    if (std::string(1, fullyQualifiedFilePath.back()) != PATHSEPSTR)
-                        fullyQualifiedFilePath += PATHSEPSTR;
-                    fullyQualifiedFilePath += filename;
-                    if (ext == "xsd" && m_pSchemaItem->addUniqueName(fullyQualifiedFilePath))
-                    {
-                        parseXSD(fullyQualifiedFilePath);
-                    }
-                }
-            }
-        }
-    }
-}
-
-
 std::shared_ptr<SchemaType> XSDSchemaParser::getType(const pt::ptree &typeTree, bool nameRequired)
 {
     std::string typeName = getXSDAttributeValue(typeTree, "<xmlattr>.name", nameRequired, "");
@@ -864,6 +924,7 @@ std::shared_ptr<SchemaValue> XSDSchemaParser::getSchemaValue(const pt::ptree &at
     pCfgValue->setRequired(attr.get("<xmlattr>.use", "optional") == "required");
     pCfgValue->setTooltip(attr.get("<xmlattr>.hpcc:tooltip", ""));
     pCfgValue->setReadOnly(attr.get("<xmlattr>.hpcc:readOnly", "false") == "true");
+    pCfgValue->setIgnoreOnAutoInsert(attr.get("<xmlattr>.hpcc:ignoreSourceOnAutoInsert", "false") == "true");
     pCfgValue->setDeprecated(attr.get("<xmlattr>.hpcc:deprecated", "false") == "true");
     pCfgValue->setNoOutput(attr.get("<xmlattr>.hpcc:noOutput", "false") == "true");
     pCfgValue->setMirrorFromPath(attr.get("<xmlattr>.hpcc:mirrorFrom", ""));

@@ -27,7 +27,7 @@ class TemplateException : public std::exception
 {
     public:
 
-        explicit TemplateException(const rapidjson::Document *pDocument);
+        explicit TemplateException(const rapidjson::Document *pDocument, const std::string &templateFilename);
         explicit TemplateException(const std::string &reason, bool badTemplate = false) : m_reason(reason), m_invalidTemplate(badTemplate) { };
         TemplateException() = default;
 

@@ -31,17 +31,19 @@ class CFGMGRLIB_API Variable
 {
     public:
 
-        explicit Variable(const std::string &name) : m_name(name) {}
+        explicit Variable(const std::string &name) : m_name(name), m_userInput(false) {}
         virtual ~Variable() = default;
         std::string getName() const { return m_name; }
         void setName(std::string name) { m_name = name; }
         std::string getUserPrompt() const { return m_userPrompt; }
         std::string getDescription() const { return m_description; }
-        size_t getNumValues() const { return m_values.size(); }
+
+        virtual size_t getNumValues() const { return m_values.size(); }
         virtual void addValue(const std::string &value);
         virtual void setValue(const std::string &value);
         void clear() { m_values.clear(); }
-        virtual std::string getValue(size_t idx, int subIndex = -1) const;
+        virtual std::string getValue(size_t idx) const { return getValue(idx, ""); }
+        virtual std::string getValue(size_t idx, const std::string &member) const;
         bool isUserInput() const { return m_userInput; }
         const std::string &getPreparedValue() const { return m_preparedValue; }
 

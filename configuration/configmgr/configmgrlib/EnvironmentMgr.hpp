@@ -59,6 +59,7 @@ class CFGMGRLIB_API EnvironmentMgr
         std::shared_ptr<EnvironmentNode> addNewEnvironmentNode(const std::shared_ptr<EnvironmentNode> &pParentNode, const std::shared_ptr<SchemaItem> &pNewCfgItem,
                 std::vector<NameValue> &initAttributes, Status &status, bool allowInvalid=false, bool forceCreate=false,
                 bool createRequiredChildren = true);
+        void insertRawEnvironmentData(const std::shared_ptr<EnvironmentNode> &pParentEnvNode, const std::string &itemType, const std::string &rawData);
         bool removeEnvironmentNode(const std::string &nodeId);
         virtual bool serialize(std::ostream &out, const std::shared_ptr<EnvironmentNode> &pStartNode);
         bool saveEnvironment(const std::string &qualifiedFilename);
@@ -78,7 +79,7 @@ class CFGMGRLIB_API EnvironmentMgr
         virtual std::vector<std::shared_ptr<EnvironmentNode>> doLoadEnvironment(std::istream &in, const std::shared_ptr<SchemaItem> &pSchemaItem, const std::string &itemType) { return std::vector<std::shared_ptr<EnvironmentNode>>(); }
         virtual bool save(std::ostream &out) { return false; }
         void assignNodeIds(const std::shared_ptr<EnvironmentNode> &pNode);
-        void insertExtraEnvironmentData(std::shared_ptr<EnvironmentNode> pNode);
+        void insertExtraEnvironmentData(const std::shared_ptr<EnvironmentNode> &pParentNode);
         std::shared_ptr<SchemaItem> findInsertableItem(const std::shared_ptr<EnvironmentNode> &pNode, const std::string &itemType) const;
         void getPredefinedAttributeValues(const std::string &inputItemType, std::string &itemType, std::vector<NameValue> &initAttributes) const;
         void createInitNodes(const std::shared_ptr<EnvironmentNode> &pParentNode, const std::shared_ptr<SchemaItem> &pSchemaitem);

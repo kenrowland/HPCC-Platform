@@ -17,8 +17,8 @@
 
 #include "TemplateException.hpp"
 
-TemplateException::TemplateException(const rapidjson::Document *pDocument)
+TemplateException::TemplateException(const rapidjson::Document *pDocument, const std::string &templateFilename)
 {
-    m_reason = "There was an error parsing the JSON, offset: " + std::to_string(pDocument->GetErrorOffset()) +
+    m_reason = "There was an error parsing the JSON in template file '" + templateFilename + "' at offset: " + std::to_string(pDocument->GetErrorOffset()) +
             ", error = " + rapidjson::GetParseError_En(pDocument->GetParseError());
 }

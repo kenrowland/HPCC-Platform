@@ -166,10 +166,10 @@ void EnvironmentNode::setAttributeValue(const std::string &attrName, const std::
         {
             pEnvValue->setValue(value, &status, allowInvalid);
         }
-        else
-        {
-            m_attributes.erase(it);
-        }
+//        else
+//        {
+//            m_attributes.erase(it);
+//        }
     }
     else
     {

@@ -74,6 +74,7 @@ class CFGMGRLIB_API EnvModTemplate
         void parseTarget(const rapidjson::Value &targetData, std::shared_ptr<OperationNode> pOp);
         void parseEnvironment(const rapidjson::Value &environmentValue);
         void parseIncludeOperation(const rapidjson::Value &include, std::shared_ptr<OperationIncludeTemplate> pOpInc);
+        void parseSaveInfo(const rapidjson::Value &saveInfo, std::string &varName, bool &accumulateOk, bool &global, bool &clear);
 
 
     protected:
@@ -89,6 +90,7 @@ class CFGMGRLIB_API EnvModTemplate
         std::shared_ptr<Environment> m_pEnv;   // present if an environment is defined by this template
         bool m_useLocalEnvironmentForTemplate;
         bool m_isRoot;
+        bool m_ignoreEmptyTemplate;
 };
 
 

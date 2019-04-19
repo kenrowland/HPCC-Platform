@@ -37,7 +37,7 @@ void OperationFindNode::doExecute(std::shared_ptr<EnvironmentMgr> pEnvMgr, std::
         std::shared_ptr<Variable> pSaveNodeIdVar;
         if (!m_saveNodeIdName.empty())
         {
-            pSaveNodeIdVar = createVariable(pVariables->doValueSubstitution(m_saveNodeIdName), "string", pVariables, m_accumulateSaveNodeIdOk, m_saveNodeIdAsGlobalValue);
+            pSaveNodeIdVar = createVariable(pVariables->doValueSubstitution(m_saveNodeIdName), "string", pVariables, m_accumulateSaveNodeIdOk, m_saveNodeIdAsGlobalValue, m_saveNodeIdClear);
         }
 
         //

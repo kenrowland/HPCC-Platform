@@ -33,6 +33,7 @@ SchemaValue::SchemaValue(const std::string &name, bool isDefined) :
     bitMask.m_isUnique = 0;
     bitMask.m_isDefined = isDefined;
     bitMask.m_noOutput = 0;
+    bitMask.m_ignoreOnAutoInsert = 0;
     m_ordinal = 0;
 }
 

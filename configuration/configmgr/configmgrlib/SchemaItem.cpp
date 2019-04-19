@@ -654,7 +654,7 @@ void SchemaItem::processEvent(const std::string &eventType, const std::shared_pt
 
 void SchemaItem::setRequiredInstanceComponents(const std::string list)
 {
-    m_requiredInstanceComponents = splitString(list, "|");
+    m_requiredInstanceComponents = splitString(list, ",");
 }
 
 

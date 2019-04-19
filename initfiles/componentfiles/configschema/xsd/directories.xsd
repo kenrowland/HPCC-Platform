@@ -25,7 +25,7 @@
             <xs:complexType>
                 <xs:sequence>
                     <xs:element name="Category" hpcc:displayName="Common" maxOccurs="unbounded" type="directorycategory"
-                                hpcc:class="elementSet">  <!-- may want a different class so that directories are dislayed differently by UI -->
+                                hpcc:itemType="directory" hpcc:class="elementSet">  <!-- may want a different class so that directories are dislayed differently by UI -->
                         <xs:complexType>
                             <xs:sequence>
                                 <xs:element name="Override" hpcc:displayName="Override" minOccurs="0" maxOccurs="unbounded"

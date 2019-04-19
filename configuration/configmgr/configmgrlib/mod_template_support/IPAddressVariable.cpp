@@ -61,19 +61,29 @@ void IPAddressVariable::addValue(const std::string &value) {
 }
 
 
-std::string IPAddressVariable::getValue(size_t idx, int subIndex) const
+std::string IPAddressVariable::getValue(size_t idx, const std::string &member) const
 {
-    std::string value =  Variable::getValue(idx, subIndex);
-    if (subIndex != -1)
+    std::string value =  Variable::getValue(idx, "");   // get the base value
+
+    if (!member.empty())
     {
-        if (subIndex >= 1 && subIndex <= 4)
+        int octet = 0;
+        try
         {
-            std::vector<std::string> octects = splitString(value, ".");
-            value = octects[subIndex - 1];
+            octet = std::stol(member);
+            if (octet >= 1 && octet <= 4)
+            {
+                std::vector<std::string> octects = splitString(value, ".");
+                value = octects[octet - 1];
+            }
+            else
+            {
+                throw TemplateExecutionException("Attempt to retrieve invalid octet: " + member + "from IP address: " + m_name);
+            }
         }
-        else
+        catch (...)
         {
-            throw TemplateExecutionException("Attempt to retrieve invalid octet from IP address");
+            throw TemplateExecutionException("Attempt to retrieve invalid octet: " + member + "from IP address: " + m_name);
         }
     }
     return value;

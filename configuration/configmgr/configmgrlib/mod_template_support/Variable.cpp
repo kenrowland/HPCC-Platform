@@ -20,34 +20,39 @@
 #include "IPAddressRangeVariable.hpp"
 #include "IPAddressVariable.hpp"
 #include "HostNameVariable.hpp"
+#include "MemberSetVariable.hpp"
 #include <memory>
 
 // todo add more types that correspond to XSD types so that modification template inputs can be validated earlier
 
 std::shared_ptr<Variable> variableFactory(const std::string &type, const std::string &name)
 {
-    std::shared_ptr<Variable> pInput;
+    std::shared_ptr<Variable> pVariable;
     if (type == "string")
     {
-        pInput = std::make_shared<Variable>(name);
+        pVariable = std::make_shared<Variable>(name);
     }
     else if (type == "iprange")
     {
-        pInput = std::make_shared<IPAddressRangeVariable>(name);
+        pVariable = std::make_shared<IPAddressRangeVariable>(name);
     }
     else if (type == "ipaddress")
     {
-        pInput = std::make_shared<IPAddressVariable>(name);
+        pVariable = std::make_shared<IPAddressVariable>(name);
     }
     else if (type == "hostname")
     {
-        pInput = std::make_shared<HostNameVariable>(name);
+        pVariable = std::make_shared<HostNameVariable>(name);
+    }
+    else if (type == "member_set")
+    {
+        pVariable = std::make_shared<MemberSetVariable>(name);
     }
     else
     {
         throw TemplateException("Invalid variable type '" + type + "'");
     }
-    return pInput;
+    return pVariable;
 }
 
 
@@ -69,8 +74,16 @@ void Variable::setValue(const std::string &value)
 }
 
 
-std::string Variable::getValue(size_t idx, int subIndex) const
+std::string Variable::getValue(size_t idx, const std::string &member) const
 {
+    //
+    // If member is set, throw an error since base variable does not support members
+    if (!member.empty())
+    {
+        std::string msg = "Attempt to get value of '" + m_name + "." + member +", member does not exist";
+        throw TemplateException(msg, false);
+    }
+
     //
     // If no value assigned yet, throw an exception
     if (m_values.empty())

@@ -120,77 +120,154 @@ void Variables::prepare()
 }
 
 
+//std::string Variables::doValueSubstitution(const std::string &value) const
+//{
+//    //
+//    // A value has the form {{name}}[{{index}}] where name and index can be simple strings and the index is optional
+//    // Or {{name}}.size which will return the size of the variable name (number of entries)
+//    std::string varName, result = value;
+//    std::size_t index;
+//    int subIndex = -1;
+//
+//    std::size_t bracesStartPos = result.find("{{");
+//    bool done = bracesStartPos == std::string::npos;
+//
+//    while (!done)
+//    {
+//        index = m_curIndex;
+//
+//        std::size_t bracesEndPos = findClosingDelimiter(result, bracesStartPos,"{{", "}}");
+//        varName = result.substr(bracesStartPos + 2, bracesEndPos - bracesStartPos - 2);
+//
+//        //
+//        // If there is an index defined, evaluate it and update the index to be used for the final value
+//        std::size_t bracketStartPos = result.find('[');
+//        std::size_t sizePos = result.find(".size");
+//        std::size_t bracketEndPos = std::string::npos;
+//
+//        if (bracketStartPos != std::string::npos && sizePos != std::string::npos)
+//        {
+//            throw TemplateException("Both [] and .size may not appear in a variable");
+//        }
+//
+//        if (bracketStartPos == bracesEndPos + 2)
+//        {
+//            bracketEndPos = findClosingDelimiter(result, bracketStartPos, "[", "]");  //  result.find(']');
+//            //
+//            // Index can take form with a . for a subIndex
+//            std::string subIndexStr = "-1";
+//            std::string indexStr = result.substr(bracketStartPos+1, bracketEndPos - bracketStartPos - 1);
+//            std::size_t dotPos = indexStr.find('.');
+//            if (dotPos != std::string::npos)
+//            {
+//                subIndexStr = indexStr.substr(dotPos+1);
+//                indexStr = indexStr.substr(0, dotPos);
+//            }
+//            //varName = result.substr(bracesStartPos + 2, bracketStartPos - bracesStartPos - 2);
+//            try
+//            {
+//                index = std::stoul(evaluate(doValueSubstitution(indexStr)));
+//                subIndex = std::stoul(evaluate(doValueSubstitution(subIndexStr)));
+//            }
+//            catch (...)
+//            {
+//                throw TemplateException("Non-numeric count found for index value", false);
+//            }
+//        }
+//
+//        if (sizePos == bracesEndPos + 2) // != std::string::npos)
+//        {
+//            std::string substitueValue = std::to_string(getVariable(varName, false, true)->getNumValues());
+//            std::string newResult = result.substr(0, bracesStartPos);
+//            newResult += substitueValue;
+//            newResult += result.substr(sizePos + 5);
+//            result = newResult;  //std::to_string(getVariable(varName, false)->getNumValues());
+//        }
+//        else
+//        {
+//            std::string substitueValue = doValueSubstitution(getVariable(varName, false)->getValue(index, subIndex));
+//            std::string newResult = result.substr(0, bracesStartPos);
+//            newResult += substitueValue;
+//            newResult += result.substr((bracketEndPos != std::string::npos) ? (bracketEndPos + 1) : (bracesEndPos + 2) );
+//            result = newResult;
+//        }
+//
+//        bracesStartPos = result.find("{{");
+//        done = bracesStartPos == std::string::npos;
+//    }
+//
+//    //
+//    // This should NOT have a [] in it
+//
+//    return evaluate(result);
+//}
+
+
 std::string Variables::doValueSubstitution(const std::string &value) const
 {
     //
-    // A value has the form {{name}}[{{index}}] where name and index can be simple strings and the index is optional
-    // Or {{name}}.size which will return the size of the variable name (number of entries)
-    std::string varName, result = value;
+    // A value is either a immediate value, or a variable reference.
+    // A variable reference has the form (where varName itself can be a variable reference)
+    //   {{varName}} - value of the variable based on the current execution index
+    //   {{varName.member}} - value of "member" of variable
+    //   {{varName.size}} - the number of values stored in the variable varName
+    //   {{varName[index]}} - the value at the specified index of the variable varName
+    //   {{varName[index].member}} - the value of "member" at the specified index
+
+    std::string varRef, result = value;
     std::size_t index;
-    int subIndex = -1;
 
     std::size_t bracesStartPos = result.find("{{");
     bool done = bracesStartPos == std::string::npos;
 
     while (!done)
     {
-        index = m_curIndex;
-
-        std::size_t bracesEndPos = findClosingDelimiter(result, bracesStartPos,"{{", "}}");
-        varName = result.substr(bracesStartPos + 2, bracesEndPos - bracesStartPos - 2);
+        index = m_curIndex;  // always start with this value
+        bool isSize = false;
+        std::string varNameStr, varName;
+        std::string indexStr;
+        std::string memberStr, memberName;
 
         //
-        // If there is an index defined, evaluate it and update the index to be used for the final value
-        std::size_t bracketStartPos = result.find('[');
-        std::size_t sizePos = result.find(".size");
-        std::size_t bracketEndPos = std::string::npos;
+        // Isolate the variable reference
+        std::size_t bracesEndPos = findClosingDelimiter(result, bracesStartPos,"{{", "}}");
+        varRef = result.substr(bracesStartPos + 2, bracesEndPos - bracesStartPos - 2);
+        getVaribaleNameComponents(varRef, varNameStr, isSize, indexStr, memberStr);
 
-        if (bracketStartPos != std::string::npos && sizePos != std::string::npos)
+        //
+        // Do value substitutions on each component of the variable reference
+        varName = doValueSubstitution(varNameStr);  // in case the variable name is actually a variable
+        if (!indexStr.empty())
         {
-            throw TemplateException("Both [] and .size may not appear in a variable");
-        }
-
-        if (bracketStartPos == bracesEndPos + 2)
-        {
-            bracketEndPos = findClosingDelimiter(result, bracketStartPos, "[", "]");  //  result.find(']');
-            //
-            // Index can take form with a . for a subIndex
-            std::string subIndexStr = "-1";
-            std::string indexStr = result.substr(bracketStartPos+1, bracketEndPos - bracketStartPos - 1);
-            std::size_t dotPos = indexStr.find('.');
-            if (dotPos != std::string::npos)
-            {
-                subIndexStr = indexStr.substr(dotPos+1);
-                indexStr = indexStr.substr(0, dotPos);
-            }
-            //varName = result.substr(bracesStartPos + 2, bracketStartPos - bracesStartPos - 2);
             try
             {
                 index = std::stoul(evaluate(doValueSubstitution(indexStr)));
-                subIndex = std::stoul(evaluate(doValueSubstitution(subIndexStr)));
             }
             catch (...)
             {
-                throw TemplateException("Non-numeric count found for index value", false);
+                std::string msg = "Non-numeric count found for index (";
+                msg.append(indexStr).append(") value in variable ").append(varRef);
+                throw TemplateException(msg, false);
             }
         }
+        memberName = doValueSubstitution(memberStr);
 
-        if (sizePos == bracesEndPos + 2) // != std::string::npos)
+        //
+        // Do the substitution
+        std::string substitueValue;
+        if (isSize)
         {
-            std::string substitueValue = std::to_string(getVariable(varName, false, true)->getNumValues());
-            std::string newResult = result.substr(0, bracesStartPos);
-            newResult += substitueValue;
-            newResult += result.substr(sizePos + 5);
-            result = newResult;  //std::to_string(getVariable(varName, false)->getNumValues());
+            substitueValue = std::to_string(getVariable(varName, false, true)->getNumValues());
         }
         else
         {
-            std::string substitueValue = doValueSubstitution(getVariable(varName, false)->getValue(index, subIndex));
-            std::string newResult = result.substr(0, bracesStartPos);
-            newResult += substitueValue;
-            newResult += result.substr((bracketEndPos != std::string::npos) ? (bracketEndPos + 1) : (bracesEndPos + 2) );
-            result = newResult;
+            substitueValue = doValueSubstitution(getVariable(varName, false, true)->getValue(index, memberName));
         }
+
+        std::string newResult = result.substr(0, bracesStartPos);
+        newResult += substitueValue;
+        newResult += result.substr(bracesEndPos + 2);
+        result = newResult;  //std::to_string(getVariable(varName, false)->getNumValues());
 
         bracesStartPos = result.find("{{");
         done = bracesStartPos == std::string::npos;
@@ -239,7 +316,8 @@ std::size_t Variables::findClosingDelimiter(const std::string &input, std::size_
                }
            }
         }
-    } while (depth > 0);
+    }
+    while (depth > 0);
 
     return closePos;
 }
@@ -330,4 +408,64 @@ void Variables::initialize()
     add(pStart, false);
     std::shared_ptr<Variable> pCount = variableFactory("string", "loop_count");
     add(pCount, false);
+}
+
+
+void Variables::getVaribaleNameComponents(const std::string &varRef, std::string &varName, bool &isSize, std::string &index, std::string &member) const
+{
+    //
+    // The following forms are supported (note the {{ and }} have already been removed)
+    //   {{varName}} - value of the variable based on the current execution index
+    //   {{varName.member}} - value of "member" of variable
+    //   {{varName.size}} - the number of values stored in the variable varName
+    //   {{varName[index]}} - the value at the specified index of the variable varName
+    //   {{varName[index].member}} - the value of "member" at the specified index
+
+    varName = varRef;   // in case nothing to really do
+    member = "";        // assume no member
+
+    std::size_t bracketPos, sizePos, memberPos;
+
+    sizePos = varRef.find(".size");
+    bracketPos = varRef.find('[');
+
+    //
+    // Double check it's a valid reference
+    if (sizePos != std::string::npos && bracketPos != std::string::npos)
+    {
+        throw TemplateException("Both [] and .size may not appear in a variable");
+    }
+
+    //
+    // If asking for size....
+    if (sizePos != std::string::npos)
+    {
+        varName = varRef.substr(0, sizePos);
+        isSize = true;
+    }
+    else
+    {
+        //
+        // An indexed value ?
+        if (bracketPos != std::string::npos)
+        {
+            std::size_t endBracketPos = findClosingDelimiter(varRef, bracketPos, "[", "]");
+            varName = varRef.substr(0, bracketPos);
+            index = varRef.substr(bracketPos + 1, endBracketPos - bracketPos - 1);
+            memberPos = varRef.find('.', endBracketPos);
+        }
+        else
+        {
+            memberPos = varRef.find('.');
+        }
+
+        if (memberPos != std::string::npos)
+        {
+            member = varRef.substr(memberPos + 1);
+            if (bracketPos == std::string::npos)
+            {
+                varName = varRef.substr(0, memberPos);
+            }
+        }
+    }
 }

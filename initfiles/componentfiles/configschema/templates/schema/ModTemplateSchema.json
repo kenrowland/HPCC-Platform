@@ -39,7 +39,8 @@
                             "string",
                             "iprange",
                             "ipaddress",
-                            "hostname"
+                            "hostname",
+                            "member_set"
                         ],
                         "description" : "The variable type."
                     },
@@ -58,10 +59,30 @@
                         },
                         "description" : "Pre-assigned values"
                     },
+                    "members" : {
+                        "type" : "object",
+                        "properties" : {
+                            "names" : {
+                                "type" : "array",
+                                "items" : {
+                                    "type" : "string"
+                                }
+                            },
+                            "values" : {
+                                "type" : "array",
+                                "items" : {
+                                    "type" : "array",
+                                    "items" : {
+                                        "type" : "string"
+                                    }
+                                }
+                            }
+                        }
+                    },
                     "user_input": {
                         "type": "boolean",
-                        "description" : "Set to true if user must input this value(s) (defaults to true)",
-                        "default" : true
+                        "description" : "Set to true if user is required to provide a value for the variable in order to execute the template",
+                        "default" : false
                     },
                     "prepared_value": {
                         "type": "string",
@@ -74,12 +95,80 @@
                     },
                     "overwrite_ok" : {
                         "type" : "boolean",
-                        "description" : "OK if variable exists, just overwrite the current value of the existing variable (really only global)"
+                        "description" : "OK if variable exists, just overwrite the current value of the existing variable (use to override early defined variable values)"
                     }
                 },
-                "required": [
-                    "name",
-                    "type"
+                "allOf" : [
+                    {
+                        "required" : [ "name", "type" ]
+                    },
+                    {
+                        "oneOf" : [
+                            {
+                                "allOf" : [
+                                    {
+                                        "properties" : {
+                                            "type" : {
+                                                "enum" : [
+                                                    "member_set"
+                                                ]
+                                            }
+                                        },
+                                        "not" : {
+                                            "required" : [
+                                                "values"
+                                            ]
+                                        }
+                                    },
+                                    {
+                                        "properties" : {
+                                            "type" : {
+                                                "enum" : [
+                                                    "member_set"
+                                                ]
+                                            }
+                                        },
+                                        "not" : {
+                                            "required" : [
+                                                "prepared_value"
+                                            ]
+                                        }
+                                    },
+                                    {
+                                        "properties" : {
+                                            "type" : {
+                                                "enum" : [
+                                                    "member_set"
+                                                ]
+                                            }
+                                        },
+                                        "not" : {
+                                            "required" : [
+                                                "user_input"
+                                            ]
+                                        }
+                                    }
+                                ]
+                            },
+                            {
+                                "properties" : {
+                                    "type" : {
+                                        "enum" : [
+                                            "string",
+                                            "ipaddress",
+                                            "iprange",
+                                            "hostname"
+                                        ]
+                                    }
+                                },
+                                "not" : {
+                                    "required" : [
+                                        "members"
+                                    ]
+                                }
+                            }
+                        ]
+                    }
                 ]
             },
             "description" : "Array of variables for template execution. Some may require user input."
@@ -112,7 +201,8 @@
                         "find",
                         "delete",
                         "include",
-                        "copy"
+                        "copy",
+                        "insert_raw"
                     ],
                     "description" : "Action to perform"
                 }
@@ -205,6 +295,22 @@
                         },
                         "data": {
                             "$ref": "#/definitions/copy_data_info"
+                        }
+                    },
+                    "required": [
+                        "action",
+                        "data"
+                    ]
+                },
+                {
+                    "properties": {
+                        "action": {
+                            "enum": [
+                                "insert_raw"
+                            ]
+                        },
+                        "data": {
+                            "$ref": "#/definitions/insert_data_info"
                         }
                     },
                     "required": [
@@ -376,14 +482,16 @@
         "include_data_info": {
             "type": "object",
             "properties": {
-                "template_file" : {
-                    "$ref" : "#/definitions/filepath_def"
-                },
                 "template_files" : {
                     "type" : "array",
                     "items" : {
                         "$ref" : "#/definitions/filepath_def"
                     }
+                },
+                "error_if_not_found" : {
+                    "type" : "boolean",
+                    "default" : true,
+                    "description" : "Generate an error and halt execution if template file not found, skip operation otherwise"
                 },
                 "template_parameters": {
                     "type": "array",
@@ -409,29 +517,23 @@
                     "description" : "Array of parameter values to pass to the included template as variable values for use during execution."
                 }
             },
-            "oneOf" : [
+            "allOf" : [
                 {
-                    "required" : [ "template_file" ]
+                    "required" : [ "template_files" ]
                 },
                 {
-                    "allOf" : [
-                        {
-                            "required" : [ "template_files" ]
-                        },
-                        {
-                            "not" : {
-                                "required" : [ "template_parameters" ]
-                            }
-                        }
-                    ]
+                    "not" : {
+                        "required" : [ "target" ]
+                    }
                 }
             ]
+
         },
         "copy_data_info" : {
             "type" : "object",
             "properties" : {
                 "target" : {
-                    "$ref" : "#/definitions/target_path"
+                    "$ref" : "#/definitions/target_node_or_path"
                 },
                 "save": {
                     "$ref": "#/definitions/save_info"
@@ -450,7 +552,7 @@
                     "ref" : "#/definitions/copy_destination_info"
                 }
             },
-            "required" : [ "source", "destination" ]
+            "required" : [ "target", "destination" ]
         },
         "copy_destination_info" : {
             "type" : "object",
@@ -488,6 +590,27 @@
                     }
                 }
             }
+        },
+        "insert_data_info" : {
+            "type" : "object",
+            "properties" : {
+                "target" : {
+                    "$ref" : "#/definitions/target_node_or_path"
+                },
+                "error_if_not_found" : {
+                    "type" : "boolean",
+                    "default" : false,
+                    "description" : "Throw an error if no nodes are selected for copy"
+                },
+                "node_type" : {
+                    "type" : "string",
+                    "description" : "Node type of the root of the raw data that is being inserted"
+                },
+                "raw_data" : {
+                    "type" : "string"
+                }
+            },
+            "required" : [ "target", "node_type", "raw_data" ]
         },
         "attribute_value_mod": {
             "type": "object",
@@ -533,20 +656,25 @@
                 "$ref": "#/definitions/attribute_value_mod"
             }
         },
-        "attribute_value_new": {
-            "type": "object",
-            "properties": {
-                "name": {
+        "attribute_value_new" : {
+            "type" : "object",
+            "properties" : {
+                "name" : {
+                    "type" : "string"
+                },
+                "value" : {
                     "type": "string"
                 },
-                "value": {
-                    "type": "string"
-                },
-                "save": {
+                "save" : {
                     "$ref": "#/definitions/save_info"
                 },
-                "do_not_set": {
+                "do_not_set" : {
                     "type": "boolean"
+                },
+                "optional" : {
+                    "type" : "boolean",
+                    "description" : "If true the value is not written if there is no value",
+                    "default" : false
                 }
             },
             "allOf" : [
@@ -668,8 +796,13 @@
                 "accumulate": {
                     "type": "boolean",
                     "default" : false,
-                    "description" : "Indicates if accumulating values in this variable is allowed or not."
+                    "description" : "Indicates if accumulating values in this variable is allowed or not. If true, variable may exist already"
 
+                },
+                "clear_first" : {
+                    "type" : "boolean",
+                    "default" : false,
+                    "description" : "If true, all variable values are deleted prior to use. Implies that the variable may already exist."
                 },
                 "global" : {
                     "type" : "boolean",

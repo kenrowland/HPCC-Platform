@@ -34,7 +34,8 @@ void OperationCreateNode::doExecute(std::shared_ptr<EnvironmentMgr> pEnvMgr, std
     std::shared_ptr<Variable> pSaveNodeIdInput;
     if (!m_saveNodeIdName.empty())
     {
-        pSaveNodeIdInput = createVariable(pVariables->doValueSubstitution(m_saveNodeIdName), "string", pVariables, m_accumulateSaveNodeIdOk, m_saveNodeIdAsGlobalValue);
+        pSaveNodeIdInput = createVariable(pVariables->doValueSubstitution(m_saveNodeIdName), "string", pVariables,
+                m_accumulateSaveNodeIdOk, m_saveNodeIdAsGlobalValue, m_saveNodeIdClear);
     }
 
     //
@@ -49,8 +50,6 @@ void OperationCreateNode::doExecute(std::shared_ptr<EnvironmentMgr> pEnvMgr, std
         {
             Status status;
 
-            std::string nodeId = pVariables->doValueSubstitution(parentNodeId);
-
             //
             // Get a new node for insertion (this does not insert the node, but rather returns an orphaned node that
             // can be inserted)
@@ -63,7 +62,7 @@ void OperationCreateNode::doExecute(std::shared_ptr<EnvironmentMgr> pEnvMgr, std
                 std::vector<NameValue> attrValues;
                 for (auto &attr: m_attributes)
                 {
-                    if (!attr.doNotSet)
+                    if (!attr.doNotSet && (!attr.cookedValue.empty() || !attr.optional))
                     {
                         attrValues.emplace_back(NameValue(attr.getName(), attr.cookedValue));
                     }

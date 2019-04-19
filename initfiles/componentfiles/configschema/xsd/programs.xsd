@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+#    HPCC SYSTEMS software Copyright (C) 2012 HPCC Systems®.
+#
+#    Licensed under the Apache License, Version 2.0 (the "License");
+#    you may not use this file except in compliance with the License.
+#    You may obtain a copy of the License at
+#
+#       http://www.apache.org/licenses/LICENSE-2.0
+#
+#    Unless required by applicable law or agreed to in writing, software
+#    distributed under the License is distributed on an "AS IS" BASIS,
+#    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#    See the License for the specific language governing permissions and
+#    limitations under the License.
+-->
+<xs:schema
+        xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" attributeFormDefault="unqualified"
+        xmlns:hpcc="someuri">
+    <xs:include schemaLocation="types.xsd"/>
+    <hpcc:insert hpcc:schemaPath="/Environment/Programs" hpcc:schemaLayoutType="hpcc_environment">
+        <xs:element name="Build" hpcc:itemType="programs_build" hpcc:displayName="Build" minOccurs="1" maxOccurs="1" hpcc:class="build">
+            <xs:complexType>
+                <xs:sequence>
+                    <xs:element name="BuildSet" hpcc:itemType="buildSet" maxOccurs="unbounded">
+                        <xs:complexType>
+                            <xs:sequence>
+                                <xs:element name="Properties" hpcc:itemType="properties" minOccurs="0" maxOccurs="1">
+                                    <xs:complexType>
+                                        <xs:sequence>
+                                            <xs:element name="Authenticate" hpcc:itemType="authenticate" minOccurs="0" maxOccurs="unbounded"
+                                                        hpcc:class="elementSet" hpcc:displayName="URL Authentication"
+                                                        hpcc:docid="ESP.t1">
+                                                <xs:complexType>
+                                                    <xs:attribute name="access" hpcc:presetValue="Read">
+                                                        <xs:simpleType>
+                                                            <xs:restriction base="xs:string">
+                                                                <xs:enumeration value="" hpcc:displayName="Use default"/>
+                                                                <xs:enumeration value="Access" hpcc:description=""/>
+                                                                <xs:enumeration value="Read" hpcc:description=""/>
+                                                                <xs:enumeration value="Write" hpcc:description=""/>
+                                                                <xs:enumeration value="Full" hpcc:description=""/>
+                                                                <xs:enumeration value="None" hpcc:description=""/>
+                                                            </xs:restriction>
+                                                        </xs:simpleType>
+                                                    </xs:attribute>
+                                                    <xs:attribute name="description" type="xs:string"/>
+                                                    <xs:attribute name="path" type="xs:string" use="required" hpcc:presetValue="/"/>
+                                                    <xs:attribute name="required" type="xs:string"/>"
+                                                    <xs:attribute name="resource" type="xs:string" use="required"/>
+                                                </xs:complexType>
+                                            </xs:element>
+                                            <xs:element name="AuthenticateFeature" hpcc:itemType="authenticateFeature" minOccurs="0" maxOccurs="unbounded"
+                                                        hpcc:class="elementSet" hpcc:displayName="Feature Authentication"
+                                                        hpcc:docid="ESP.t2">
+                                                <xs:complexType>
+                                                    <xs:attribute name="description" type="xs:string"/>
+                                                    <xs:attribute name="path" type="xs:string" use="required" hpcc:presetValue="/"/>
+                                                    <xs:attribute name="resource" type="xs:string" use="required"/>
+                                                    <xs:attribute name="service" type="xs:string" use="required"/>
+                                                </xs:complexType>
+                                            </xs:element>
+                                            <xs:element name="ProcessFilters" hpcc:itemType="processFilters">
+                                                <xs:complexType>
+                                                    <xs:sequence>
+                                                        <xs:element name="Platform" hpcc:itemType="platform">
+                                                            <xs:complexType>
+                                                                <xs:sequence>
+                                                                    <xs:element name="ProcessFilter" hpcc:itemType="processFilters" minOccurs="0" maxOccurs="unbounded">
+                                                                        <xs:complexType>
+                                                                            <xs:sequence>
+                                                                                <xs:element name="Process" hpcc:itemType="process">
+                                                                                    <xs:complexType>
+                                                                                        <xs:attribute name="name" type="xs:string"/>
+                                                                                        <xs:attribute name="remove" type="xs:boolean"/>
+                                                                                    </xs:complexType>
+                                                                                </xs:element>
+                                                                            </xs:sequence>
+                                                                            <xs:attribute name="name" type="xs:string"/>
+                                                                            <xs:attribute name="multipleInstances" type="xs:string"/>
+                                                                        </xs:complexType>
+                                                                    </xs:element>
+                                                                </xs:sequence>
+                                                                <xs:attribute name="name" type="xs:string"/>
+                                                            </xs:complexType>
+                                                        </xs:element>
+                                                    </xs:sequence>
+                                                </xs:complexType>
+                                            </xs:element>
+                                        </xs:sequence>
+                                        <xs:attribute name="defaultPort" type="xs:nonNegativeInteger"/>
+                                        <xs:attribute name="defaultResourcesBasedn" type="xs:string"/>
+                                        <xs:attribute name="defaultSecurePort" type="xs:nonNegativeInteger"/>
+                                        <xs:attribute name="type" type="xs:string"/>
+                                    </xs:complexType>
+                                </xs:element>
+                            </xs:sequence>
+                            <xs:attribute name="deployable" type="xs:string"/>
+                            <xs:attribute name="installSet" type="xs:string"/>
+                            <xs:attribute name="name" type="xs:string"/>
+                            <xs:attribute name="override" type="xs:string"/>
+                            <xs:attribute name="path" type="xs:string"/>
+                            <xs:attribute name="processName" type="xs:string"/>
+                            <xs:attribute name="schema" type="xs:string"/>
+                        </xs:complexType>
+                    </xs:element>
+
+                </xs:sequence>
+                <xs:attribute name="name" type="xs:string"  hpcc:forcedConfigValue="_"/>
+                <xs:attribute name="url" type="xs:string" hpcc:forcedConfigValue="${CONFIG_DIR}"/>
+            </xs:complexType>
+        </xs:element>
+    </hpcc:insert>
+</xs:schema>

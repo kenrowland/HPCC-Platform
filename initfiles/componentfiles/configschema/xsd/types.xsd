@@ -135,7 +135,7 @@
 
     <xs:complexType name="espservice_properties">
         <xs:sequence>
-            <xs:element name="Authenticate" minOccurs="0" maxOccurs="1">
+            <xs:element name="Authenticate" hpcc:itemType="authenticate" minOccurs="0" maxOccurs="1">
                 <xs:complexType>
                     <xs:attribute name="access" type="xs:string"/>
                     <xs:attribute name="description" type="xs:string"/>
@@ -144,7 +144,7 @@
                     <xs:attribute name="resource" type="xs:string"/>
                 </xs:complexType>
             </xs:element>
-            <xs:element name="AuthenticateFeature" hpcc:class="elementSet" minOccurs="0" maxOccurs="unbounded">
+            <xs:element name="AuthenticateFeature" hpcc:itemType="authenticateFeature" hpcc:class="elementSet" minOccurs="0" maxOccurs="unbounded">
                 <xs:complexType>
                     <xs:attribute name="description" type="xs:string"/>
                     <xs:attribute name="path" type="xs:string"/>

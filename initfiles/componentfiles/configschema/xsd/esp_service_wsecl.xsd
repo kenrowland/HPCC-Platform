@@ -48,7 +48,7 @@
                         </xs:complexType>
                     </xs:element>
                     <xs:element name="Properties" type="espservice_properties" minOccurs="0" maxOccurs="1"
-                                hpcc:hidden="true"/>
+                                hpcc:itemType="properties" hpcc:hidden="true"/>
 
                     <xs:annotation>
                         <xs:appinfo hpcc:infoType="event">
