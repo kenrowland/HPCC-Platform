@@ -480,7 +480,7 @@
                     <!-- the element set may need to relate to how current config manager displays these as children of
                          Roxie Ports, each child being named based on the 'name' attribute below,
                          Also, they are currently collected under the Ports tab in current config mgr -->
-                    <xs:element name="RoxieFarmProcess" hpcc:displayName="Roxie Ports" maxOccurs="unbounded" hpcc:class="elementSet">
+                    <xs:element name="RoxieFarmProcess" hpcc:displayName="Roxie Ports" hpcc:itemType="roxieFarmProcess" maxOccurs="unbounded" hpcc:class="elementSet">
                         <xs:complexType>
                             <xs:attribute name="name" hpcc:displayName="Farm Process Name" type="xs:string" hpcc:uniqueKey="roxie_farmprocess"
                                           hpcc:autoGenerateType="prefix#" hpcc:autoGenerateValue="farm"
@@ -522,7 +522,8 @@
                          Roxie Servers, each child being named based on the 'name' attribute below,
                          Also, these are currently configured using a dialog where the user selects the computers
                          Perhaps an hpcc:class that indicates an xpath to a set of nodes that can serve as allowable values -->
-                    <xs:element name="RoxieServerProcess" hpcc:displayName="Servers" maxOccurs="unbounded" hpcc:class="elementSet">
+                    <xs:element name="RoxieServerProcess" hpcc:displayName="Servers" hpcc:itemType="hwinstance" maxOccurs="unbounded" hpcc:class="elementSet"
+                                hpcc:requiredInstanceComponents="/Environment/Software/[#itemType='dafilesrv'],/Environment/Software/[#itemType='ftslave']">
                         <xs:complexType>
                             <xs:attribute name="name" type="xs:string" use="required" hpcc:readOnly="true"
                                           hpcc:autoGenerateType="siblingValue" hpcc:autoGenerateValue="computer"

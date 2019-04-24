@@ -29,13 +29,16 @@
                                 hpcc:displayName="Master Spark Node">
                         <xs:complexType>
                             <xs:attributeGroup ref="computerNodeReference"/>
+                            <xs:attribute name="directory" type="xs:string" hpcc:hidden="true"/>
+                            <xs:attribute name="name" type="xs:string" hpcc:autoGenerateType="prefix#" hpcc:autoGenerateValue="s"
+                                          hpcc:ignoreSourceOnAutoInsert="true"/>
                         </xs:complexType>
                     </xs:element>
                 </xs:sequence>
                 <xs:attributeGroup ref="buildInfo"/>
                 <xs:attribute name="name" type="xs:string" use="required" hpcc:tooltip="Name for the Spark-Thor instance"/>
                 <xs:attribute name="ThorClusterName" type="xs:string" hpcc:displayName="Thor Cluster Name" use="required"
-                              hpcc:sourceKey="thornode_name" hpcc:tooltip="Thor cluster to which Spark workers attach"/>
+                              hpcc:sourceKey="thorprocess_name" hpcc:tooltip="Thor cluster to which Spark workers attach"/>
                 <xs:attribute name="SPARK_EXECUTOR_CORES" type="xs:nonNegativeInteger" hpcc:displayName="Number Executor Cores"
                               hpcc:forcedConfigValue="1" hpcc:tooltip="Number of cores for executors"/>
                 <xs:attribute name="SPARK_EXECUTOR_MEMORY" type="xs:nonNegativeInteger" hpcc:displayName="Executor Memory"

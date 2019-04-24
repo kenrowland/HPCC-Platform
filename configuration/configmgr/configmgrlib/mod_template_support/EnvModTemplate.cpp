@@ -46,7 +46,12 @@ EnvModTemplate::EnvModTemplate(std::shared_ptr<Environment> &pEnv, const std::st
     m_isRoot(true),
     m_ignoreEmptyTemplate(false)
 {
+    //
+    // Create the variables object
     m_pVariables = std::make_shared<Variables>();
+
+    //
+    // Setup the environments
     m_pEnvironments = std::make_shared<Environments>();
     m_pDefaultEnv = pEnv;
 
@@ -567,6 +572,18 @@ void EnvModTemplate::parseOperationNodeCommonData(const rapidjson::Value &operat
     {
         parseTarget(it->value, pOpNode);
     }
+    else
+    {
+        std::shared_ptr<OperationCopy> pCopyOp = std::dynamic_pointer_cast<OperationCopy>(pOpNode);
+        if (pCopyOp)
+        {
+            it = dataObj.FindMember("source");
+            if (it != dataObj.MemberEnd())
+            {
+                parseTarget(it->value, pOpNode);
+            }
+        }
+    }
 
     //
     // Get the count (optional, default is 1)
@@ -844,6 +861,14 @@ void EnvModTemplate::parseIncludeOperation(const rapidjson::Value &include, std:
     if (it != includeObj.MemberEnd())
     {
         pOpInc->m_count = trim(it->value.GetString());
+    }
+
+    //
+    // Get the starting index (optional, for windowing into a range of values)
+    it = includeObj.FindMember("start_index");
+    if (it != includeObj.MemberEnd())
+    {
+        pOpInc->m_startIndex = trim(it->value.GetString());
     }
 
     // Is an envriomment specified?

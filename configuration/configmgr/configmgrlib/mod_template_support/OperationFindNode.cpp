@@ -28,21 +28,21 @@
 void OperationFindNode::doExecute(std::shared_ptr<EnvironmentMgr> pEnvMgr, std::shared_ptr<Variables> pVariables)
 {
     //
+    // The main reason to use a find nodes action is to either save the IDs of the matching nodes and/or attribute
+    // values from the matching nodes. Create the variable regardless as there could be a test for empty.
+    std::shared_ptr<Variable> pSaveNodeIdVar;
+    if (!m_saveNodeIdName.empty())
+    {
+        pSaveNodeIdVar = createVariable(pVariables->doValueSubstitution(m_saveNodeIdName), "string", pVariables, m_accumulateSaveNodeIdOk, m_saveNodeIdAsGlobalValue, m_saveNodeIdClear);
+    }
+
+    //
     // Any parent node IDs found?
     if (!m_parentNodeIds.empty())
     {
         //
-        // The main reason to use a find nodes action is to either save the IDs of the matching nodes and/or attribute
-        // values from the matching nodes
-        std::shared_ptr<Variable> pSaveNodeIdVar;
-        if (!m_saveNodeIdName.empty())
-        {
-            pSaveNodeIdVar = createVariable(pVariables->doValueSubstitution(m_saveNodeIdName), "string", pVariables, m_accumulateSaveNodeIdOk, m_saveNodeIdAsGlobalValue, m_saveNodeIdClear);
-        }
-
-        //
         // Saving the ID or any attribute values?
-        if (pSaveNodeIdVar || createAttributeSaveInputs(pVariables))
+        if (createAttributeSaveInputs(pVariables) || pSaveNodeIdVar)
         {
             for (auto &parentNodeId: m_parentNodeIds)
             {

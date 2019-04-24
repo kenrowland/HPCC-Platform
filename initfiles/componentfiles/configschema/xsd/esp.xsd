@@ -136,7 +136,7 @@
                     </xs:element>
 
                     <xs:element name="Authentication" hpcc:docid="ESP.t4" minOccurs="1" hpcc:class="valueSet"
-                                hpcc:displayName="Authentication">
+                                hpcc:itemType="authentication" hpcc:displayName="Authentication">
                         <xs:complexType>
                             <xs:attribute name="method" use="required" hpcc:presetValue="none" hpcc:displayName="Method"
                                           hpcc:modifiers="variableAttributes"
@@ -197,7 +197,7 @@
                     </xs:element>
 
                     <xs:element name="AuthDomain" minOccurs="0" maxOccurs="unbounded" hpcc:class="elementSet"
-                                hpcc:displayName="AuthDomain" hpcc:docid="ESP.t7">
+                                hpcc:itemType="authDomain" hpcc:displayName="AuthDomain" hpcc:docid="ESP.t7">
                         <xs:complexType>
                             <xs:attribute name="authType" use="required" hpcc:presetValue="AuthTypeMixed"
                                           hpcc:displayName="" hpcc:tooltip="User session Authentication type">

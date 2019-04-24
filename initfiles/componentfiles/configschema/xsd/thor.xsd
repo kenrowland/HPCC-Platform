@@ -24,53 +24,55 @@
                     hpcc:docId="Th.t1" hpcc:class="component">
             <xs:complexType>
                 <xs:sequence>
-                    <xs:element name="ThorSpareProcess" hpcc:displayName="Thor Spare Process" minOccurs="0"
+                    <xs:element name="ThorSpareProcess" hpcc:displayName="Thor Spare Process" hpcc:itemType="thorSpareProcess" minOccurs="0"
                                 maxOccurs="unbounded" hpcc:class="elementSet">
                         <xs:complexType>
                             <xs:attribute name="computer" hpcc:displayName="Computer" type="nodeName" use="required"
                                           hpcc:sourceKey="computer_name"
-                                          hpcc:mirrorFrom="/Environment/Hardware/Computer[@name]"hpcc:valueLimitRuleType="addDependencies_FromSiblingAttributeValue"
-                                          hpcc:valueLimitRuleData="/Environment/Hardware/Computer,name,netAddress,netAddress"/>
-                            <xs:attribute name="netAddress" hpcc:displayName="Net Address" type="ipV4Address"
-                                          hpcc:readOnly="true" hpcc:noOutput="true"
-                                          hpcc:sourceKey="computer_netaddress"
-                                          hpcc:mirrorFrom="/Environment/Hardware/Computer[@netAddress]"/>
+                                          hpcc:mirrorFrom="/Environment/Hardware/Computer[@name]"/>
+<!--                            hpcc:valueLimitRuleType="addDependencies_FromSiblingAttributeValue"-->
+<!--                                          hpcc:valueLimitRuleData="/Environment/Hardware/Computer,name,netAddress,netAddress"/>-->
+<!--                            <xs:attribute name="netAddress" hpcc:displayName="Net Address" type="ipV4Address"-->
+<!--                                          hpcc:readOnly="true" hpcc:noOutput="true"-->
+<!--                                          hpcc:sourceKey="computer_netaddress"-->
+<!--                                          hpcc:mirrorFrom="/Environment/Hardware/Computer[@netAddress]"/>-->
                             <xs:attribute name="name" type="xs:string" hpcc:displayName="Process"
-                                          hpcc:autoGenenerateType="prefix" hpcc:autoGenerateValue="spare"/>
+                                          hpcc:autoGenerateType="prefix#" hpcc:autoGenerateValue="spare"/>
                         </xs:complexType>
                     </xs:element>
-                    <xs:element name="ThorSlaveProcess" hpcc:displayName="Thor Slave Process" minOccurs="0"
+                    <xs:element name="ThorSlaveProcess" hpcc:displayName="Thor Slave Process" hpcc:itemType="thorSlaveProcess" minOccurs="0"
                                 maxOccurs="unbounded" hpcc:class="elementSet">
                         <xs:complexType>
                             <xs:attribute name="computer" hpcc:displayName="Computer" type="nodeName" use="required"
                                           hpcc:sourceKey="computer_name"
-                                          hpcc:mirrorFrom="/Environment/Hardware/Computer[@name]"hpcc:valueLimitRuleType="addDependencies_FromSiblingAttributeValue"
-                                          hpcc:valueLimitRuleData="/Environment/Hardware/Computer,name,netAddress,netAddress"/>
-                            <xs:attribute name="netAddress" hpcc:displayName="Net Address" type="ipV4Address"
-                                          hpcc:readOnly="true" hpcc:noOutput="true"
-                                          hpcc:sourceKey="computer_netaddress"
-                                          hpcc:mirrorFrom="/Environment/Hardware/Computer[@netAddress]"/>
+                                          hpcc:mirrorFrom="/Environment/Hardware/Computer[@name]"/>
+<!--                                          hpcc:valueLimitRuleType="addDependencies_FromSiblingAttributeValue"-->
+<!--                                          hpcc:valueLimitRuleData="/Environment/Hardware/Computer,name,netAddress,netAddress"/>-->
+<!--                            <xs:attribute name="netAddress" hpcc:displayName="Net Address" type="ipV4Address"-->
+<!--                                          hpcc:readOnly="true" hpcc:noOutput="true"-->
+<!--                                          hpcc:sourceKey="computer_netaddress"-->
+<!--                                          hpcc:mirrorFrom="/Environment/Hardware/Computer[@netAddress]"/>-->
                             <xs:attribute name="name" type="xs:string" hpcc:displayName="Process"
-                                          hpcc:autoGenenerateType="prefix" hpcc:autoGenerateValue="s"/>
+                                          hpcc:autoGenerateType="prefix#" hpcc:autoGenerateValue="s"/>
                         </xs:complexType>
                     </xs:element>
-                    <xs:element name="ThorMasterProcess" hpcc:displayName="Thor Master Process" minOccurs="0"
+                    <xs:element name="ThorMasterProcess" hpcc:displayName="Thor Master Process" hpcc:itemType="thorMasterProcess" minOccurs="0"
                                 maxOccurs="unbounded" hpcc:class="elementSet">
                         <xs:complexType>
                             <xs:attribute name="computer" hpcc:displayName="Computer" type="nodeName" use="required"
                                           hpcc:sourceKey="computer_name"
-                                          hpcc:mirrorFrom="/Environment/Hardware/Computer[@name]"hpcc:valueLimitRuleType="addDependencies_FromSiblingAttributeValue"
+                                          hpcc:mirrorFrom="/Environment/Hardware/Computer[@name]" hpcc:valueLimitRuleType="addDependencies_FromSiblingAttributeValue"
                                           hpcc:valueLimitRuleData="/Environment/Hardware/Computer,name,netAddress,netAddress"/>
-                            <xs:attribute name="netAddress" hpcc:displayName="Net Address" type="ipV4Address"
-                                          hpcc:readOnly="true" hpcc:noOutput="true"
-                                          hpcc:sourceKey="computer_netaddress"
-                                          hpcc:mirrorFrom="/Environment/Hardware/Computer[@netAddress]"/>
+<!--                            <xs:attribute name="netAddress" hpcc:displayName="Net Address" type="ipV4Address"-->
+<!--                                          hpcc:readOnly="true" hpcc:noOutput="true"-->
+<!--                                          hpcc:sourceKey="computer_netaddress"-->
+<!--                                          hpcc:mirrorFrom="/Environment/Hardware/Computer[@netAddress]"/>-->
                             <xs:attribute name="name" type="xs:string" hpcc:displayName="Process"
-                                          hpcc:autoGenenerateType="prefix" hpcc:autoGenerateValue="m"/>
+                                          hpcc:autoGenerateType="prefix#" hpcc:autoGenerateValue="m"/>
                         </xs:complexType>
                     </xs:element>
 
-                    <xs:element name="SSH" hpcc:displayName="SSH Options" minOccurs="1" hpcc:class="valueSet" hpcc:docId="Th.t3">
+                    <xs:element name="SSH" hpcc:displayName="SSH Options" hpcc:itemType="thorSSH" minOccurs="1" hpcc:class="valueSet" hpcc:docId="Th.t3">
                         <xs:complexType>
                             <xs:attribute name="SSHidentityfile" type="xs:string" hpcc:displayName="SSH Identity File"
                                           hpcc:presetValue="$HOME/.ssh/id_rsa"
@@ -128,7 +130,7 @@
                 <!--todo in the environment, there is a "computer" attribute, but it's not listed in the existing XSD, needed/used? What its value-->
                 <xs:attributeGroup ref="buildInfo"/>
                 <xs:attribute name="name" type="xs:string" use="required" hpcc:displayName="Name" hpcc:autoGenerateType="prefix_" hpcc:autoGenerateValue="mythor"
-                              hpcc:uniqueKey="thornode_name" hpcc:tooltip="Name for this thor node process"/>
+                              hpcc:uniqueKey="thorprocess_name" hpcc:tooltip="Name for this thor node process"/>
                 <xs:attribute name="description" type="xs:string" hpcc:displayName="Description" hpcc:presetValue="Thor process" hpcc:tooltip="Description for this process"/>
                 <!--@XSD_PLUGIN_DEFINITION@ LN adds an attribute here, use new format to add it -->
 

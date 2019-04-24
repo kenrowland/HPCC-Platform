@@ -27,23 +27,30 @@
                         <xs:complexType>
                             <xs:sequence>
                                 <xs:element name="EclAgentProcess" hpcc:displayName="ECL Agent Process" hpcc:itemType="topology_eclagentprocess" hpcc:class="elementSet"
-                                            maxOccurs="unbounded" hpcc:tooltip="Reference to ECL Agent Process">
+                                            minOccurs="0" maxOccurs="unbounded" hpcc:tooltip="Reference to ECL Agent Process">
                                     <xs:complexType>
                                         <xs:attribute name="process" type="xs:string" hpcc:displayName="Process" hpcc:sourceKey="eclagentprocess_name"
                                                       hpcc:tooltip="Name of ECL Agent process added to this cluster"/>
                                     </xs:complexType>
                                 </xs:element>
                                 <xs:element name="EclSchedulerProcess" hpcc:displayName="ECL Scheduler Process" hpcc:itemType="topology_eclschedulerprocess" hpcc:class="elementSet"
-                                            maxOccurs="unbounded" hpcc:tooltip="Reference to ECL Scheduler Process">
+                                            minOccurs="0" maxOccurs="unbounded" hpcc:tooltip="Reference to ECL Scheduler Process">
                                     <xs:complexType>
                                         <xs:attribute name="process" type="xs:string" hpcc:displayName="Process" hpcc:sourceKey="eclscheduler_name"
                                                       hpcc:tooltip="Name of ECL Scheduler process added to this cluster"/>
                                     </xs:complexType>
                                 </xs:element>
                                 <xs:element name="ThorCluster" hpcc:displayName="Thor Process" hpcc:itemType="topology_thorprocess" hpcc:class="elementSet"
-                                            maxOccurs="unbounded" hpcc:tooltip="Reference to Thor Process">
+                                            minOccurs="0" maxOccurs="unbounded" hpcc:tooltip="Reference to Thor Process">
                                     <xs:complexType>
                                         <xs:attribute name="process" type="xs:string" hpcc:displayName="Process" hpcc:sourceKey="thornode_name"
+                                                      hpcc:tooltip="Name of Thor process added to this cluster"/>
+                                    </xs:complexType>
+                                </xs:element>
+                                <xs:element name="RoxieCluster" hpcc:displayName="Roxie Process" hpcc:itemType="topology_roxieprocess" hpcc:class="elementSet"
+                                            minOccurs="0" maxOccurs="unbounded" hpcc:tooltip="Reference to Roxie Process">
+                                    <xs:complexType>
+                                        <xs:attribute name="process" type="xs:string" hpcc:displayName="Process" hpcc:sourceKey="roxiecluster_name"
                                                       hpcc:tooltip="Name of Thor process added to this cluster"/>
                                     </xs:complexType>
                                 </xs:element>

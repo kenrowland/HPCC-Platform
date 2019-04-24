@@ -59,41 +59,41 @@ SchemaItem::SchemaItem(const std::string &name, const std::string &className, co
 }
 
 
-SchemaItem::SchemaItem(const SchemaItem &item)
+SchemaItem::SchemaItem(const std::shared_ptr<SchemaItem> &pSchemaItem)
 {
     //
     // Copy stuff that doesn't have to be unique
-    m_hidden = item.m_hidden;
-    m_maxInstances = item.m_maxInstances;
-    m_minInstances = item.m_minInstances;
-    m_properties = item.m_properties;
-    m_types = item.m_types;
-    m_schemaTypes = item.m_schemaTypes;
+    m_hidden = pSchemaItem->m_hidden;
+    m_maxInstances = pSchemaItem->m_maxInstances;
+    m_minInstances = pSchemaItem->m_minInstances;
+    m_properties = pSchemaItem->m_properties;
+    m_types = pSchemaItem->m_types;
+    m_schemaTypes = pSchemaItem->m_schemaTypes;
 
     if (m_pItemValue)
-        m_pItemValue = std::make_shared<SchemaValue>(*(item.m_pItemValue));  // copy constructed
+        m_pItemValue = std::make_shared<SchemaValue>(*(pSchemaItem->m_pItemValue));  // copy constructed
 
     //
     // Make a copy of the children now
     for (auto &pChild: m_children)
     {
-        addChild(std::make_shared<SchemaItem>(*pChild));
+        addChild(std::make_shared<SchemaItem>(pChild));
     }
 
     //
     // Copy the attributes
-    for (auto attrIt = item.m_attributes.begin(); attrIt != item.m_attributes.end(); ++attrIt)
+    for (auto attrIt = pSchemaItem->m_attributes.begin(); attrIt != pSchemaItem->m_attributes.end(); ++attrIt)
     {
         addAttribute(std::make_shared<SchemaValue>(*(attrIt->second)));
     }
 
     //
     // Event handlers
-    m_eventHandlers = item.m_eventHandlers;
+    m_eventHandlers = pSchemaItem->m_eventHandlers;
 
-    m_uniqueAttributeValueSetReferences = item.m_uniqueAttributeValueSetReferences;
-    m_uniqueAttributeValueSetDefs = item.m_uniqueAttributeValueSetDefs;
-    m_requiredInstanceComponents = item.m_requiredInstanceComponents;
+    m_uniqueAttributeValueSetReferences = pSchemaItem->m_uniqueAttributeValueSetReferences;
+    m_uniqueAttributeValueSetDefs = pSchemaItem->m_uniqueAttributeValueSetDefs;
+    m_requiredInstanceComponents = pSchemaItem->m_requiredInstanceComponents;
 }
 
 

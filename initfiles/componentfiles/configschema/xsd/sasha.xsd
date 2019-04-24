@@ -152,7 +152,7 @@
                                 hpcc:requiredInstanceComponents="/Environment/Software/[#itemType='dafilesrv'],/Environment/Software/[#itemType='ftslave']">
                         <xs:complexType>
                             <xs:attributeGroup ref="computerNodeReference"/>
-                            <xs:attribute name="directory" type="absolutePath" hpcc:hidden="true"/>
+                            <xs:attribute name="directory" type="xs:string" hpcc:forcedConfigValue="${RUNTIME_DIR}/sasha" hpcc:hidden="true"/>
                             <xs:attribute name="port" type="xs:nonNegativeInteger" hpcc:displayName="Port" use="required"
                                           hpcc:presetValue="8877"/>
                         </xs:complexType>

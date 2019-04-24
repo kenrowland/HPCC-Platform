@@ -49,7 +49,8 @@ class Variables : public std::enable_shared_from_this<Variables>
 
         std::string evaluate(const std::string &expr) const;
         std::size_t findClosingDelimiter(const std::string &input, std::size_t startPos, const std::string &openDelim, const std::string &closeDelim) const;
-        void getVaribaleNameComponents(const std::string &varRef, std::string &varName, bool &isSize, std::string &index, std::string &member) const;
+        void
+        getVaribaleNameComponents(const std::string &varRef, std::string &varName, bool &isSize, std::string &index, std::string &member, std::string &defaultValue) const;
 
 
     private:

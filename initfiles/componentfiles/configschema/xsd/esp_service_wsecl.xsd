@@ -50,40 +50,40 @@
                     <xs:element name="Properties" type="espservice_properties" minOccurs="0" maxOccurs="1"
                                 hpcc:itemType="properties" hpcc:hidden="true"/>
 
-                    <xs:annotation>
-                        <xs:appinfo hpcc:infoType="event">
-                            <eventType>create</eventType>
-                            <eventAction>insertXML</eventAction>
-                            <eventData>
-                                <itemType>wsecl</itemType>
-                                <xml>
-                                    <Properties bindingType="ws_eclSoapBinding" defaultPort="8002" defaultResourcesBasedn="ou=WsEcl,ou=EspServices,ou=ecl"
-                                                defaultSecurePort="18002" type="ws_ecl" plugin="ws_ecl"/>
-                                </xml>
-                            </eventData>
-                        </xs:appinfo>
-                        <xs:appinfo hpcc:infoType="event">
-                            <eventType>create</eventType>
-                            <eventAction>insertXML</eventAction>
-                            <eventData>
-                                <itemType>espbinding</itemType>
-                                <match>
-                                    <!-- match the event node's (the created espbinding) "service" attribute value
-                                         against all /Environment/Software/EspService nodes with a matching "name"
-                                         attribute value (other rules may limit the number of matches) -->
-                                    <eventNodeAttribute>service</eventNodeAttribute>
-                                    <targetPath>/Environment/Software/EspService</targetPath>
-                                    <targetAttribute>name</targetAttribute>
-                                </match>
-                                <xml>
-                                    <Authenticate access="Read" description="Root access to WS ECL service"
-                                                  path="/" required="Read" resource="WsEclAccess"/>
-                                    <AuthenticateFeature description="Access to WS ECL service"
-                                                         path="WsEclAccess" resource="WsEclAccess" service="ws_ecl"/>
-                                </xml>
-                            </eventData>
-                        </xs:appinfo>
-                    </xs:annotation>
+<!--                    <xs:annotation>-->
+<!--                        <xs:appinfo hpcc:infoType="event">-->
+<!--                            <eventType>create</eventType>-->
+<!--                            <eventAction>insertXML</eventAction>-->
+<!--                            <eventData>-->
+<!--                                <itemType>wsecl</itemType>-->
+<!--                                <xml>-->
+<!--                                    <Properties bindingType="ws_eclSoapBinding" defaultPort="8002" defaultResourcesBasedn="ou=WsEcl,ou=EspServices,ou=ecl"-->
+<!--                                                defaultSecurePort="18002" type="ws_ecl" plugin="ws_ecl"/>-->
+<!--                                </xml>-->
+<!--                            </eventData>-->
+<!--                        </xs:appinfo>-->
+<!--                        <xs:appinfo hpcc:infoType="event">-->
+<!--                            <eventType>create</eventType>-->
+<!--                            <eventAction>insertXML</eventAction>-->
+<!--                            <eventData>-->
+<!--                                <itemType>espbinding</itemType>-->
+<!--                                <match>-->
+<!--                                    &lt;!&ndash; match the event node's (the created espbinding) "service" attribute value-->
+<!--                                         against all /Environment/Software/EspService nodes with a matching "name"-->
+<!--                                         attribute value (other rules may limit the number of matches) &ndash;&gt;-->
+<!--                                    <eventNodeAttribute>service</eventNodeAttribute>-->
+<!--                                    <targetPath>/Environment/Software/EspService</targetPath>-->
+<!--                                    <targetAttribute>name</targetAttribute>-->
+<!--                                </match>-->
+<!--                                <xml>-->
+<!--                                    <Authenticate access="Read" description="Root access to WS ECL service"-->
+<!--                                                  path="/" required="Read" resource="WsEclAccess"/>-->
+<!--                                    <AuthenticateFeature description="Access to WS ECL service"-->
+<!--                                                         path="WsEclAccess" resource="WsEclAccess" service="ws_ecl"/>-->
+<!--                                </xml>-->
+<!--                            </eventData>-->
+<!--                        </xs:appinfo>-->
+<!--                    </xs:annotation>-->
                 </xs:sequence>
                 <xs:attributeGroup ref="buildInfo"/>
                 <xs:attribute name="name" type="xs:string" hpcc:diaplayName="Name" use="required"

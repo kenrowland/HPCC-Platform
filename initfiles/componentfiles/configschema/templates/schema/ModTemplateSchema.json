@@ -493,6 +493,16 @@
                     "default" : true,
                     "description" : "Generate an error and halt execution if template file not found, skip operation otherwise"
                 },
+                "count": {
+                    "type": "string",
+                    "default" : "1",
+                    "description" : "Number of times to execute the create action"
+                },
+                "start_index": {
+                    "type": "string",
+                    "defalut" : "0",
+                    "description" : "Starting index for group variable value access (only applies to variable access)"
+                },
                 "template_parameters": {
                     "type": "array",
                     "minItems": 0,
@@ -532,11 +542,21 @@
         "copy_data_info" : {
             "type" : "object",
             "properties" : {
-                "target" : {
+                "source" : {
                     "$ref" : "#/definitions/target_node_or_path"
                 },
                 "save": {
                     "$ref": "#/definitions/save_info"
+                },
+                "count": {
+                    "type": "string",
+                    "default" : "1",
+                    "description" : "Number of times to execute the create action"
+                },
+                "start_index": {
+                    "type": "string",
+                    "defalut" : "0",
+                    "description" : "Starting index for group variable value access (only applies to variable access)"
                 },
                 "error_if_not_found" : {
                     "type" : "boolean",
@@ -552,7 +572,7 @@
                     "ref" : "#/definitions/copy_destination_info"
                 }
             },
-            "required" : [ "target", "destination" ]
+            "required" : [ "source", "destination" ]
         },
         "copy_destination_info" : {
             "type" : "object",

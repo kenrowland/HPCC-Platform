@@ -46,29 +46,7 @@ bool OperationCopy::execute(std::shared_ptr<Environments> pEnvironments, std::sh
     }
 
     //
-    // Get parent node Ids for copy source
-    // question as to whether >1 nodes to copy should be supported (I think yes right now)
-    m_parentNodeIds = getNodeIds(m_pOpEnvMgr, pVariables, m_parentNodeId, m_path);
-    if (m_parentNodeIds.empty() && m_throwOnEmpty)
-    {
-        throw TemplateExecutionException("No nodes selected for copy");
-    }
-
-    //
-    // Get the destination nodeId. Only one is allowed
-    auto destNodeIds = getNodeIds(m_pDestEnvMgr, pVariables, m_destParentNodeId, m_destPath);
-    if (destNodeIds.empty())
-    {
-        throw TemplateExecutionException("Unable to find the destination parent node");
-    }
-    else if (destNodeIds.size() > 1)
-    {
-        throw TemplateExecutionException("Only a single destination parent node may be selected");
-    }
-    auto destNodeId = destNodeIds[0];
-
-    //
-    // Create variables for saving attribute values
+    // Create variables for saving attribute values (if any)
     for (auto &attr: m_saveAttributes)
     {
         createVariable(attr.first, "string", pVariables, attr.second.accumulateOk, attr.second.global, attr.second.clear);
@@ -76,17 +54,90 @@ bool OperationCopy::execute(std::shared_ptr<Environments> pEnvironments, std::sh
     }
 
     //
-    // Copy the nodes
-    for (auto const &sourceNodeId: m_parentNodeIds)
+    // Now execute the operation count times
+    for (size_t idx=0; idx < m_executionCount; ++idx)
     {
+        pVariables->setIterationInfo(m_executionStartIndex + idx, idx);
+
         //
-        // If indicated, save the node ID
-        if (pSaveNodeIdInput)
+        // Get parent node Id for copy source based on execution index. Only one is supported as a source
+        m_parentNodeIds = getNodeIds(m_pOpEnvMgr, pVariables, m_parentNodeId, m_path);
+        if (m_parentNodeIds.empty() && m_throwOnEmpty)
         {
-            pSaveNodeIdInput->addValue(sourceNodeId);
+            throw TemplateExecutionException("No nodes selected for copy");
         }
-        doNodeCopy(sourceNodeId, destNodeId, false);
+        else if (m_parentNodeIds.size() > 1)
+        {
+            throw TemplateExecutionException("Only a single source node may be selected for a copy");
+        }
+
+        //
+        // Get the destination nodeIds. todo add check to allow for an empty set, ie don't fail the copy if no destination selected (support error_if_not_found flag)
+        auto destNodeIds = getNodeIds(m_pDestEnvMgr, pVariables, m_destParentNodeId, m_destPath);
+        if (destNodeIds.empty())
+        {
+            throw TemplateExecutionException("Unable to find the destination parent node");
+        }
+
+        //
+        // Copy the nodes
+        for (auto const &sourceNodeId: m_parentNodeIds)
+        {
+            //
+            // If indicated, save the node ID
+            if (pSaveNodeIdInput)
+            {
+                pSaveNodeIdInput->addValue(sourceNodeId);
+            }
+            doNodeCopy(sourceNodeId, destNodeIds[pVariables->getCurIndex()], false);
+        }
     }
+
+//    //
+//    // Get parent node Id for copy source. Only one is supported as a source
+//    m_parentNodeIds = getNodeIds(m_pOpEnvMgr, pVariables, m_parentNodeId, m_path);
+//    if (m_parentNodeIds.empty() && m_throwOnEmpty)
+//    {
+//        throw TemplateExecutionException("No nodes selected for copy");
+//    }
+//    else if (m_parentNodeIds.size() > 1)
+//    {
+//        throw TemplateExecutionException("Only a single source node may be selected for a copy");
+//    }
+//
+//    //
+//    // Get the destination nodeIds. todo add check to allow for an empty set, ie don't fail the copy if no destination selected (support error_if_not_found flag)
+//    auto destNodeIds = getNodeIds(m_pDestEnvMgr, pVariables, m_destParentNodeId, m_destPath);
+//    if (destNodeIds.empty())
+//    {
+//        throw TemplateExecutionException("Unable to find the destination parent node");
+//    }
+////    else if (destNodeIds.size() > 1)
+////    {
+////        throw TemplateExecutionException("Only a single destination parent node may be selected");
+////    }
+////    auto destNodeId = destNodeIds[0];
+//
+//    //
+//    // Create variables for saving attribute values (if any)
+//    for (auto &attr: m_saveAttributes)
+//    {
+//        createVariable(attr.first, "string", pVariables, attr.second.accumulateOk, attr.second.global, attr.second.clear);
+//        // todo make this name/save info a separate class and encapsulate in the OperationNode modAttribute class
+//    }
+//
+//    //
+//    // Copy the nodes
+//    for (auto const &sourceNodeId: m_parentNodeIds)
+//    {
+//        //
+//        // If indicated, save the node ID
+//        if (pSaveNodeIdInput)
+//        {
+//            pSaveNodeIdInput->addValue(sourceNodeId);
+//        }
+//        doNodeCopy(sourceNodeId, destNodeIds[pVariables->getCurIndex()], false);
+//    }
 
     return true;
 }

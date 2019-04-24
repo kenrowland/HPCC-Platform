@@ -39,7 +39,7 @@ class CFGMGRLIB_API SchemaItem : public std::enable_shared_from_this<SchemaItem>
     public:
 
         SchemaItem(const std::string &name, const std::string &className = "category", const std::shared_ptr<SchemaItem> &pParent = nullptr);
-        SchemaItem(const SchemaItem &schemaItem);
+        explicit SchemaItem(const std::shared_ptr<SchemaItem> &pSchemaItem);
         ~SchemaItem() { }
         std::string getItemType() const;
         void setMinInstances(unsigned num) { m_minInstances = num; }
