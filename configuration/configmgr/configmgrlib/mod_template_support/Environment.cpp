@@ -44,20 +44,29 @@ void Environment::initialize()
         {
             EnvironmentType envType = XML;
             m_pEnvMgr = getEnvironmentMgrInstance(envType);
-            m_pEnvMgr->loadSchema(m_masterCfgSchemaFile, m_configPaths);
-
-            //
-            // Load an environment ?
-            if (!m_inputEnvironment.empty())
+            if (m_pEnvMgr->loadSchema(m_masterCfgSchemaFile, m_configPaths))
             {
-                m_pEnvMgr->loadEnvironment(m_inputEnvironment);
-            }
+
+                //
+                // Load an environment ?
+                if (!m_inputEnvironment.empty())
+                {
+                    m_pEnvMgr->loadEnvironment(m_inputEnvironment);
+                }
 
                 //
                 // Or, init an empty one ?
-            else if (m_initializeEmpty)
+                else if (m_initializeEmpty)
+                {
+                    m_pEnvMgr->initializeEmptyEnvironment();
+                }
+
+                m_pEnvMgr->enableValidationOnChange(false);  // skip validation on each change, wait until the end
+            }
+            else
             {
-                m_pEnvMgr->initializeEmptyEnvironment();
+                std::string reason = "There was a problem loading the schema:" + m_pEnvMgr->getLastSchemaMessage();
+                throw TemplateExecutionException(reason);
             }
         }
         catch (const ParseException &pe)

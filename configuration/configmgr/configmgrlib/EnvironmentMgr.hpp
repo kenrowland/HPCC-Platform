@@ -56,7 +56,7 @@ class CFGMGRLIB_API EnvironmentMgr
                 bool createRequiredChildren = true);
         std::shared_ptr<EnvironmentNode> addNewEnvironmentNode(const std::shared_ptr<EnvironmentNode> &pParentNode, const std::string &nodeData,
                 Status &status, const std::string &itemType);
-        std::shared_ptr<EnvironmentNode> addNewEnvironmentNode(const std::shared_ptr<EnvironmentNode> &pParentNode, const std::shared_ptr<SchemaItem> &pNewCfgItem,
+        std::shared_ptr<EnvironmentNode> addNewEnvironmentNode(const std::shared_ptr<EnvironmentNode> &pParentNode, const std::shared_ptr<SchemaItem> &pSchemaItem,
                 std::vector<NameValue> &initAttributes, Status &status, bool allowInvalid=false, bool forceCreate=false,
                 bool createRequiredChildren = true);
         void insertRawEnvironmentData(const std::shared_ptr<EnvironmentNode> &pParentEnvNode, const std::string &itemType, const std::string &rawData);
@@ -70,6 +70,7 @@ class CFGMGRLIB_API EnvironmentMgr
         void fetchNodes(std::string path, std::vector<std::shared_ptr<EnvironmentNode>> &nodes, const std::shared_ptr<EnvironmentNode> &pStartNode = nullptr) const;
         bool isSchemaLoaded() const { return static_cast<bool>(m_pSchema); }
         bool isEnvironmentLoaded() const { return static_cast<bool>(m_pRootNode); }
+        void enableValidationOnChange(bool enable) { m_enableValidationOnChange = enable; }
 
 
     protected:
@@ -93,6 +94,7 @@ class CFGMGRLIB_API EnvironmentMgr
         std::map<std::string, std::shared_ptr<EnvironmentNode>> m_nodeIds;
         std::string m_message;
         std::vector<std::shared_ptr<EnvSupportLib>> m_supportLibs;
+        bool m_enableValidationOnChange;
 
 
     private:

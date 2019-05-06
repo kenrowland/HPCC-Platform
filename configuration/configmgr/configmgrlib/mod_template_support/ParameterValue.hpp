@@ -23,8 +23,10 @@
 
 struct ParameterValue
 {
+    ParameterValue() : conditional(false) {}
     std::string name;
     std::vector<std::string> values;
+    bool conditional;
 };
 
 #endif //HPCCSYSTEMS_PLATFORM_PARAMETERVALUE_HPP

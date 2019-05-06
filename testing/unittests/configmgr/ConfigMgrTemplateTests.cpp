@@ -291,7 +291,7 @@ class ConfigMgrTemplateTests : public CppUnit::TestFixture
             doTemplateLoad(ti1);
 
             printf("\n  Test getting inputs from template...");
-            std::vector<std::shared_ptr<Variable>> inputs = m_pTemplate->getVariables();
+            std::vector<std::shared_ptr<Variable>> inputs = m_pTemplate->getInputs();
             CPPUNIT_ASSERT_MESSAGE("Number of inputs was not 4", inputs.size() == 4);
             printf("passed.");
 

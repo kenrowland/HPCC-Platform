@@ -70,7 +70,7 @@ void OperationCreateNode::doExecute(std::shared_ptr<EnvironmentMgr> pEnvMgr, std
 
                 //
                 // Add the new node to the environment
-                pNewEnvNode = pEnvMgr->addNewEnvironmentNode(parentNodeId, m_nodeType, attrValues, status, true, true, m_populateChildren);
+                pNewEnvNode = pEnvMgr->addNewEnvironmentNode(parentNodeId, pVariables->doValueSubstitution(m_nodeType), attrValues, status, true, true, m_populateChildren);
                 if (pNewEnvNode)
                 {
                     // construct a status for just this new node's ID so we can see if there is an error

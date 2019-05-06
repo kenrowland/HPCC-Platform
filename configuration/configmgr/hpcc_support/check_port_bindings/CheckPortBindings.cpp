@@ -59,7 +59,9 @@ void CheckPortBindings::checkEspPortBindings(const std::shared_ptr<SchemaItem> &
         auto retVal = espServiceMap.insert({serviceName, pEspService});
         if (!retVal.second)
         {
-            status.addMsg(statusMsg::error, pEspService->getId(), "name", "Duplicate ESP Service name detected");
+            std::string path;
+            pEspService->getPath(path);
+            status.addMsg(statusMsg::error, pEspService->getId(), "name", "Duplicate ESP Service name detected", path);
             return;  // any additional validation is not valid because of the name conflict
         }
         espServiceNameToTypeMap[serviceName] = pEspService->getSchemaItem()->getItemType();
@@ -95,13 +97,17 @@ void CheckPortBindings::checkEspPortBindings(const std::shared_ptr<SchemaItem> &
                 auto retVal = espBindingPortsByServiceType[serviceType].insert(bindingPort);
                 if (!retVal.second)
                 {
-                    status.addMsg(statusMsg::error, pEspBindingNode->getId(), "port", "Binding port (" + bindingPort + ") must be unique for this service type");
+                    std::string path;
+                    pEspBindingNode->getPath(path);
+                    status.addMsg(statusMsg::error, pEspBindingNode->getId(), "port", "Binding port (" + bindingPort + ") must be unique for this service type", path);
                 }
                 espBindingPorts.insert(bindingPort);  // duplicates ok
             }
             else
             {
-                status.addMsg(statusMsg::error, pEspBindingNode->getId(), "service", "Unable to find ESP service");
+                std::string path;
+                pEspBindingNode->getPath(path);
+                status.addMsg(statusMsg::error, pEspBindingNode->getId(), "service", "Unable to find ESP service", path);
                 return;  // any additional validation is not valid because unable to find the service
             }
         }
@@ -116,11 +122,11 @@ void CheckPortBindings::checkEspPortBindings(const std::shared_ptr<SchemaItem> &
         {
             for (auto &bindingPort: espBindingPorts)
             {
-                addPortToHwInstance(pHwInstanceNode->getAttributeValue("netAddress"), bindingPort, pEspNode->getId(), status);
+                addPortToHwInstance(pHwInstanceNode->getAttributeValue("netAddress"), bindingPort, pEspNode, status);
             }
             if (addEspControlPort)
             {
-                addPortToHwInstance(pHwInstanceNode->getAttributeValue("netAddress"), espControlPort, pEspNode->getId(), status);
+                addPortToHwInstance(pHwInstanceNode->getAttributeValue("netAddress"), espControlPort, pEspNode, status);
             }
         }
     }
@@ -175,7 +181,7 @@ void CheckPortBindings::checkProcessPortBindings(const std::shared_ptr<SchemaIte
                 m_pEnvMgr->fetchNodes(processPathInfo.pathToInstanceNodes, hwInstanceNodes, pProcessNode);
                 for (auto const &pHwInstanceNode: hwInstanceNodes)
                 {
-                    addPortToHwInstance(pHwInstanceNode->getAttributeValue("netAddress"), bindingPort, pProcessNode->getId(), status);
+                    addPortToHwInstance(pHwInstanceNode->getAttributeValue("netAddress"), bindingPort, pProcessNode, status);
                 }
             }
         }
@@ -183,7 +189,7 @@ void CheckPortBindings::checkProcessPortBindings(const std::shared_ptr<SchemaIte
 }
 
 
-void CheckPortBindings::addPortToHwInstance(std::string netAddress, std::string port, std::string nodeId, Status &status) const
+void CheckPortBindings::addPortToHwInstance(std::string netAddress, std::string port, const std::shared_ptr<EnvironmentNode> &pEnvNode, Status &status) const
 {
     auto hwIt = m_hwInstancePortUsage.find(netAddress);
     if (hwIt == m_hwInstancePortUsage.end())
@@ -198,6 +204,8 @@ void CheckPortBindings::addPortToHwInstance(std::string netAddress, std::string 
     {
         std::string msg = "Binding to port ";
         msg.append(port).append("  in this process conflicts with a binding in another process for HW instance with netAddress ").append(netAddress);
-        status.addMsg(statusMsg::error, nodeId, "", msg);
+        std::string path;
+        pEnvNode->getPath(path);
+        status.addMsg(statusMsg::error, pEnvNode->getId(), "", msg, path);
     }
 }

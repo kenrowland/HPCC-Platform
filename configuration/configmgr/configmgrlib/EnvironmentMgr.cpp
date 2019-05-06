@@ -42,7 +42,8 @@ std::shared_ptr<EnvironmentMgr> getEnvironmentMgrInstance(const EnvironmentType 
 
 
 EnvironmentMgr::EnvironmentMgr() :
-    m_message("Unknown error")
+    m_message("Unknown error"),
+    m_enableValidationOnChange(true)
 {
     m_pSchema = std::make_shared<SchemaItem>("root");  // make the root
 }
@@ -75,22 +76,25 @@ bool EnvironmentMgr::loadSchema(const std::string &masterConfigFile, const std::
 
         //
         // Load support libs based on the schema type which is read from the itemType property of the schema root node.
-        std::string envType = m_pSchema->getItemType();
-        std::string libPath = LIB_DIR;
-        std::string libMask = "libcfg" + envType + "_*";
-        Owned<IFile> pDir = createIFile(libPath.c_str());
-        if (pDir->exists())
+        if (rc)
         {
-            Owned<IDirectoryIterator> it = pDir->directoryFiles(libMask.c_str(), false, false);
-            ForEach(*it)
+            std::string envType = m_pSchema->getItemType();
+            std::string libPath = LIB_DIR;
+            std::string libMask = "libcfg" + envType + "_*";
+            Owned<IFile> pDir = createIFile(libPath.c_str());
+            if (pDir->exists())
             {
-                StringBuffer fname;
-                std::string filename = LIB_DIR;
-                filename.append(PATHSEPSTR).append(it->getName(fname).str());
-                std::shared_ptr<EnvSupportLib> pLib = std::make_shared<EnvSupportLib>(filename, this);
-                if (pLib->isValid())
+                Owned<IDirectoryIterator> it = pDir->directoryFiles(libMask.c_str(), false, false);
+                ForEach(*it)
                 {
-                    m_supportLibs.push_back(pLib);
+                    StringBuffer fname;
+                    std::string filename = LIB_DIR;
+                    filename.append(PATHSEPSTR).append(it->getName(fname).str());
+                    std::shared_ptr<EnvSupportLib> pLib = std::make_shared<EnvSupportLib>(filename, this);
+                    if (pLib->isValid())
+                    {
+                        m_supportLibs.push_back(pLib);
+                    }
                 }
             }
         }
@@ -301,19 +305,22 @@ std::shared_ptr<EnvironmentNode> EnvironmentMgr::addNewEnvironmentNode(const std
         std::string itemType;
         std::vector<NameValue> attributeValues;
         getPredefinedAttributeValues(inputItemType, itemType, attributeValues);
-        std::shared_ptr<SchemaItem> pNewCfgItem = findInsertableItem(pParentNode, itemType);
-        if (pNewCfgItem)
+        std::shared_ptr<SchemaItem> pNewSchemaItem = findInsertableItem(pParentNode, itemType);
+        if (pNewSchemaItem)
         {
             // concatenate input attribute values with any predefined values.
             attributeValues.insert( attributeValues.end(), initAttributes.begin(), initAttributes.end() );
-            pNewNode = addNewEnvironmentNode(pParentNode, pNewCfgItem, attributeValues, status, allowInvalid, forceCreate, createRequiredChildren);
+            pNewNode = addNewEnvironmentNode(pParentNode, pNewSchemaItem, attributeValues, status, allowInvalid, forceCreate, createRequiredChildren);
             if (pNewNode == nullptr)
             {
                 status.addMsg(statusMsg::error, "Unable to create new node for itemType: " + inputItemType);
             }
             else
             {
-                m_pSchema->validate(status, true, false);
+                if (m_enableValidationOnChange)
+                {
+                    m_pSchema->validate(status, true, false);
+                }
             }
         }
         else
@@ -323,13 +330,13 @@ std::shared_ptr<EnvironmentNode> EnvironmentMgr::addNewEnvironmentNode(const std
     }
     else
     {
-        status.addMsg(statusMsg::error, parentNodeId, "", "Unable to find indicated parent node");
+        status.addMsg(statusMsg::error, parentNodeId, "", "Unable to find indicated parent node", "");
     }
     return pNewNode;
 }
 
 
-std::shared_ptr<EnvironmentNode> EnvironmentMgr::addNewEnvironmentNode(const std::shared_ptr<EnvironmentNode> &pParentNode, const std::shared_ptr<SchemaItem> &pCfgItem,
+std::shared_ptr<EnvironmentNode> EnvironmentMgr::addNewEnvironmentNode(const std::shared_ptr<EnvironmentNode> &pParentNode, const std::shared_ptr<SchemaItem> &pSchemaItem,
                                                                        std::vector<NameValue> &initAttributes, Status &status, bool allowInvalid, bool forceCreate,
                                                                        bool createRequiredChildren)
 {
@@ -337,23 +344,24 @@ std::shared_ptr<EnvironmentNode> EnvironmentMgr::addNewEnvironmentNode(const std
 
     //
     // Create the new node and add it to the parent
-    pNewEnvNode = std::make_shared<EnvironmentNode>(pCfgItem, pCfgItem->getProperty("name"), pParentNode);
+    pNewEnvNode = std::make_shared<EnvironmentNode>(pSchemaItem, pSchemaItem->getProperty("name"), pParentNode);
     pNewEnvNode->setId(EnvironmentMgr::getUniqueKey());
 
     addPath(pNewEnvNode);
     pParentNode->addChild(pNewEnvNode);
     pNewEnvNode->initialize();
     pNewEnvNode->setAttributeValues(initAttributes, status, allowInvalid, forceCreate);
+    pSchemaItem->addEnvironmentNode(pNewEnvNode);
 
     //
     // Send a create event now that it's been added to the environment
-    pCfgItem->getSchemaRoot()->processEvent("create", pNewEnvNode);
+    pSchemaItem->getSchemaRoot()->processEvent("create", pNewEnvNode);
 
     //
     // Call any registered support libs with the event
     for (auto &libIt: m_supportLibs)
     {
-        libIt->processEvent("create", pCfgItem, pNewEnvNode, status);
+        libIt->processEvent("create", pSchemaItem, pNewEnvNode, status);
     }
 
     insertExtraEnvironmentData(m_pRootNode);
@@ -363,7 +371,7 @@ std::shared_ptr<EnvironmentNode> EnvironmentMgr::addNewEnvironmentNode(const std
     if (createRequiredChildren)
     {
         std::vector<std::shared_ptr<SchemaItem>> cfgItemChildren;
-        pCfgItem->getChildren(cfgItemChildren);
+        pSchemaItem->getChildren(cfgItemChildren);
         std::vector<NameValue> empty;
         for (auto &pCfgChild: cfgItemChildren)
         {
@@ -389,7 +397,10 @@ std::shared_ptr<EnvironmentNode> EnvironmentMgr::addNewEnvironmentNode(const std
         pNewEnvNode = newNodes[0];
         pParentNode->addChild(pNewEnvNode);
         assignNodeIds(pNewEnvNode);
-        validate(status);
+        if (m_enableValidationOnChange)
+        {
+            validate(status);
+        }
     }
     else
     {

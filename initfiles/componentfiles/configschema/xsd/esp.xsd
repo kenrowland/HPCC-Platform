@@ -26,15 +26,14 @@
             <xs:complexType>
                 <xs:sequence>
                     <xs:element name="EspBinding" maxOccurs="unbounded" hpcc:itemType="espbinding"
-                                hpcc:category="ESP Bindings" hpcc:insertLimitType="attribute"
-                                hpcc:insertLimitData="service"
+                                hpcc:category="ESP Bindings"
                                 hpcc:displayName="ESP Service Bindings" hpcc:class="elementSet" hpcc:event="create"
                                 hpcc:docid="ESP.t3">
                         <xs:complexType>
                             <xs:sequence>
                                 <xs:element name="Authenticate" minOccurs="0" maxOccurs="unbounded"
                                             hpcc:class="elementSet" hpcc:displayName="URL Authentication"
-                                            hpcc:docid="ESP.t1">
+                                            hpcc:itemType="authenticate" hpcc:docid="ESP.t1">
                                     <xs:complexType>
                                         <xs:attribute name="description" type="xs:string"
                                                       hpcc:displayName="Description"/>
@@ -61,7 +60,7 @@
                                 </xs:element>
                                 <xs:element name="AuthenticateFeature" minOccurs="0" maxOccurs="unbounded"
                                             hpcc:class="elementSet" hpcc:displayName="Feature Authentication"
-                                            hpcc:docid="ESP.t2">
+                                            hpcc:itemType="authenticateFeature" hpcc:docid="ESP.t2">
                                     <xs:complexType>
                                         <xs:attribute name="authenticate" hpcc:presetValue="Yes"
                                                       hpcc:displayName="Authenticate"
@@ -76,8 +75,7 @@
                                         </xs:attribute>
                                         <xs:attribute name="description" type="xs:string"
                                                       hpcc:displayName="Description"/>
-                                        <xs:attribute name="path" type="xs:string" use="required"
-                                                      hpcc:displayName="Path" hpcc:presetValue="/"
+                                        <xs:attribute name="path" type="xs:string" hpcc:displayName="Path" hpcc:presetValue="/"
                                                       hpcc:tooltip="The logical path of a resource used for authentication"/>
                                         <xs:attribute name="resource" type="xs:string" use="required"
                                                       hpcc:displayName="Resource"/>
@@ -226,7 +224,7 @@
                         </xs:complexType>
                     </xs:element>
 
-                    <xs:element name="HTTPS" minOccurs="0" hpcc:class="valueSet" hpcc:requiredIf="">
+                    <xs:element name="HTTPS" minOccurs="0" hpcc:class="valueSet" hpcc:itemType="espHttps" hpcc:requiredIf="">
                         <xs:complexType>
                             <xs:attribute name="acceptSelfSigned" type="xs:boolean"
                                           hpcc:presetValue="true" hpcc:displayName="Accept Self Signed"
@@ -275,7 +273,7 @@
                     </xs:element>
 
                     <xs:element name="ESPCacheGroup" hpcc:displayName="ESP Cache Group" hpcc:class="elementSet"
-                                maxOccurs="unbounded">
+                                minOccurs="0" maxOccurs="unbounded">
                         <xs:complexType>
                             <xs:attribute name="id" type="xs:string" hpcc:displayName="ID" use="required"
                                           hpcc:uniqueKey="espprocess_cachegroup_id"
@@ -301,7 +299,9 @@
                                             hpcc:tooltip="The generated Certificate Signing Request (CSR) is displayed here after first deployment"/>
                             </xs:sequence>
                             <xs:attributeGroup ref="computerNodeReference"/>
-                            <xs:attribute name="directory" type="absolutePath" hpcc:hidden="true"/>
+                            <xs:attribute name="directory" type="xs:string" hpcc:forcedConfigValue="${RUNTIME_DIR}" hpcc:hidden="true"/>
+                            <xs:attribute name="name" type="xs:string" hpcc:autoGenerateType="prefix#" hpcc:autoGenerateValue="s"
+                                          hpcc:ignoreSourceOnAutoInsert="true"/>
                             <xs:attribute name="FQDN" type="xs:string"
                                           hpcc:displayName="Fully Qualified Domain Name"
                                           hpcc:tooltip="Enter the fully qualified domain name"/>

@@ -39,10 +39,17 @@ bool OperationCopy::execute(std::shared_ptr<Environments> pEnvironments, std::sh
 
     //
     // If indicated, create a variable to save the copy from node IDs
-    std::shared_ptr<Variable> pSaveNodeIdInput;
+    std::shared_ptr<Variable> pSourceSaveNodeIdVar;
     if (!m_saveNodeIdName.empty())
     {
-        pSaveNodeIdInput = createVariable(pVariables->doValueSubstitution(m_saveNodeIdName), "string", pVariables, m_accumulateSaveNodeIdOk, m_saveNodeIdAsGlobalValue, m_saveNodeIdClear);
+        pSourceSaveNodeIdVar = createVariable(pVariables->doValueSubstitution(m_saveNodeIdName), "string", pVariables, m_accumulateSaveNodeIdOk, m_saveNodeIdAsGlobalValue, m_saveNodeIdClear);
+    }
+
+    //
+    // Create destination node ID save variable if needed
+    if (!m_destSaveNodeIdName.empty())
+    {
+        m_pDestSaveNodeIdVar = createVariable(pVariables->doValueSubstitution(m_destSaveNodeIdName), "string", pVariables, m_destAccumulateSaveNodeIdOk, m_destSaveNodeIdAsGlobalValue, m_destSaveNodeIdClear);
     }
 
     //
@@ -66,17 +73,22 @@ bool OperationCopy::execute(std::shared_ptr<Environments> pEnvironments, std::sh
         {
             throw TemplateExecutionException("No nodes selected for copy");
         }
-        else if (m_parentNodeIds.size() > 1)
-        {
-            throw TemplateExecutionException("Only a single source node may be selected for a copy");
-        }
+//        else if (m_parentNodeIds.size() > 1)
+//        {
+//            throw TemplateExecutionException("Only a single source node may be selected for a copy");
+//        }
 
         //
-        // Get the destination nodeIds. todo add check to allow for an empty set, ie don't fail the copy if no destination selected (support error_if_not_found flag)
+        // Get the destination nodeIds.
+
         auto destNodeIds = getNodeIds(m_pDestEnvMgr, pVariables, m_destParentNodeId, m_destPath);
         if (destNodeIds.empty())
         {
-            throw TemplateExecutionException("Unable to find the destination parent node");
+            if (m_throwIfDestEmpty)
+            {
+                throw TemplateExecutionException("Unable to find any destination node(s)");
+            }
+            return true;   // not an error if non destination found, so just treat as a noop and leave now
         }
 
         //
@@ -85,9 +97,9 @@ bool OperationCopy::execute(std::shared_ptr<Environments> pEnvironments, std::sh
         {
             //
             // If indicated, save the node ID
-            if (pSaveNodeIdInput)
+            if (pSourceSaveNodeIdVar)
             {
-                pSaveNodeIdInput->addValue(sourceNodeId);
+                pSourceSaveNodeIdVar->addValue(sourceNodeId);
             }
             doNodeCopy(sourceNodeId, destNodeIds[pVariables->getCurIndex()], false);
         }
@@ -155,8 +167,9 @@ void OperationCopy::doNodeCopy(const std::string &sourceNodId, const std::string
 void OperationCopy::doNodeCopy(const std::shared_ptr<EnvironmentNode> &pSourceEnvNode, const std::string &destParentNodeId, bool isChildNode)
 {
     Status status;
+    // todo - Make destNodeType optional. If absent and !isChildNode, don't create a new child node as the des, use destParentNodeId as the destination node
     std::string newNodeType = (!isChildNode && !m_destNodeType.empty()) ? m_destNodeType : pSourceEnvNode->getSchemaItem()->getItemType();
-    std::shared_ptr<EnvironmentNode> pNewEnvNode = m_pDestEnvMgr->getNewEnvironmentNode(destParentNodeId, newNodeType, status);
+    //std::shared_ptr<EnvironmentNode> pNewEnvNode = m_pDestEnvMgr->getNewEnvironmentNode(destParentNodeId, newNodeType, status);
 
     //
     // Build the attribute values for initializing the new node (if indicated). An empty vector is required otherwise
@@ -164,6 +177,10 @@ void OperationCopy::doNodeCopy(const std::shared_ptr<EnvironmentNode> &pSourceEn
     getAttributeValues(pSourceEnvNode, copyAttributeValues, isChildNode ? "all" : m_copyAttributeType);
 
     auto pNewDestEnvNode = m_pDestEnvMgr->addNewEnvironmentNode(destParentNodeId, newNodeType, copyAttributeValues, status, true, true, false);
+    if (!isChildNode && m_pDestSaveNodeIdVar)
+    {
+        m_pDestSaveNodeIdVar->addValue(pNewDestEnvNode->getId());
+    }
 
     //
     // If not a child node, save attribute values (if needed)

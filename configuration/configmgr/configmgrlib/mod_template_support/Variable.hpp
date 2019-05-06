@@ -46,6 +46,7 @@ class CFGMGRLIB_API Variable
         virtual std::string getValue(size_t idx, const std::string &member) const;
         bool isUserInput() const { return m_userInput; }
         const std::string &getPreparedValue() const { return m_preparedValue; }
+        virtual std::string getType() const { return "string"; }
 
 
     protected:

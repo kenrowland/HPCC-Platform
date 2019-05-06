@@ -28,32 +28,35 @@ Status::Status(const Status &source, const std::string &nodeId) : m_highestMsgLe
 }
 
 
-void Status::addMsg(const statusMsg &msg)
+statusMsg & Status::addMsg(const statusMsg &msg)
 {
-    addMsg(msg.msgLevel, msg.nodeId, msg.attribute, msg.msg);
+    return addMsg(msg.msgLevel, msg.nodeId, msg.attribute, msg.msg, msg.path);
 }
 
 
-void Status::addMsg(enum statusMsg::msgLevel level, const std::string &nodeId, const std::string &name, const std::string &msg)
+statusMsg & Status::addMsg(enum statusMsg::msgLevel level, const std::string &nodeId, const std::string &name, const std::string &msg, const std::string &path)
 {
     statusMsg statusMsg(level, nodeId, name, msg);
-    m_messages.insert({level, statusMsg });
+    statusMsg.path = path;
+    auto newMsgIt = m_messages.insert({level, statusMsg });
     if (level > m_highestMsgLevel)
         m_highestMsgLevel = level;
+    return newMsgIt->second;
 }
 
 
-void Status::addUniqueMsg(enum statusMsg::msgLevel level, const std::string &nodeId, const std::string &name, const std::string &msg)
+statusMsg & Status::addUniqueMsg(enum statusMsg::msgLevel level, const std::string &nodeId, const std::string &name, const std::string &msg, const std::string &path)
 {
-    bool duplicateFound = false;
     auto msgRange = m_messages.equal_range(level);
-    for (auto msgIt = msgRange.first; msgIt != msgRange.second && !duplicateFound; ++msgIt)
+    for (auto msgIt = msgRange.first; msgIt != msgRange.second; ++msgIt)
     {
-        duplicateFound = (msgIt->second.nodeId == nodeId) && (msgIt->second.attribute == name) && (msgIt->second.msg == msg);
+        if (msgIt->second.nodeId == nodeId && (msgIt->second.attribute == name) && (msgIt->second.msg == msg))
+        {
+            return msgIt->second;
+        }
     }
 
-    if (!duplicateFound)
-        addMsg(level, nodeId, name, msg);
+    return addMsg(level, nodeId, name, msg, path);
 }
 
 

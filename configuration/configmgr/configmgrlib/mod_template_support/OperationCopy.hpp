@@ -47,7 +47,7 @@ class OperationCopy : public OperationNode
 {
     public:
 
-        OperationCopy() : m_copyAttributeType("all"), m_includeChildren(false) {}
+        OperationCopy() : m_copyAttributeType("all"), m_includeChildren(false), m_throwIfDestEmpty(true) {}
         bool execute(std::shared_ptr<Environments> pEnvironments, std::shared_ptr<Environment> pEnv, std::shared_ptr<Variables> pVariables) override ;
 
 
@@ -68,6 +68,12 @@ class OperationCopy : public OperationNode
         std::string m_destParentNodeId;
         std::string m_destEnvironmentName;
         std::string m_destNodeType;
+        bool        m_throwIfDestEmpty;
+        std::string m_destSaveNodeIdName;
+        bool m_destAccumulateSaveNodeIdOk = false;
+        bool m_destSaveNodeIdAsGlobalValue = false;
+        bool m_destSaveNodeIdClear = false;
+        std::shared_ptr<Variable> m_pDestSaveNodeIdVar;
         std::string m_copyAttributeType;
 
         bool m_includeChildren;

@@ -34,7 +34,7 @@
                     </xs:element>
                     <xs:element name="NodeGroup" hpcc:displayName="Thor Node Groups" hpcc:class="elementSet" maxOccurs="unbounded">
                         <xs:complexType>
-                            <xs:attribute name="name" hpcc:displayName="nodeGroup" type="xs:string" use="required"  hpcc:sourceKey="thornode_name" hpcc:tooltip="Thor node group to backup"/>
+                            <xs:attribute name="name" hpcc:displayName="nodeGroup" type="xs:string" use="required"  hpcc:sourceKey="thorprocess_name" hpcc:tooltip="Thor node group to backup"/>
                             <xs:attribute name="interval" hpcc:displayName="Interval (hrs)" type="xs:nonNegativeInteger" hpcc:presetValue="24" hpcc:tooltip="Interval in hours for backup to be run"/>
                         </xs:complexType>
                     </xs:element>

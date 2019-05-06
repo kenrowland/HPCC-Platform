@@ -22,6 +22,9 @@
 
 // input env name is that which is being used by the current template. Use it if no name is set
 
+// idea, make template execution a runtime event. Simply load this object at parse time with the name of the templates to run. Then when execute is called
+// load each template and parse it, executing each as you go. This would make template names and even lists of templates dynamic. Would, however, require
+// the execute step to know the template object that owns it. This could be a weak pointer assigned at Operation object instantiation.
 
 bool OperationIncludeTemplate::execute(std::shared_ptr<Environments> pEnvironments, std::shared_ptr<Environment> pEnv, std::shared_ptr<Variables> pVariables)
 {
@@ -45,9 +48,25 @@ bool OperationIncludeTemplate::execute(std::shared_ptr<Environments> pEnvironmen
             preparedValue.name = parm.name;
             for (auto &parmValue: parm.values)
             {
-                preparedValue.values.emplace_back(pVariables->doValueSubstitution(parmValue));
+                try
+                {
+                    preparedValue.values.emplace_back(pVariables->doValueSubstitution(parmValue));
+                }
+                catch (TemplateException &te)
+                {
+                    if (!parm.conditional)
+                    {
+                        throw;    // it's an error if the parameter is not conditional
+                    }
+                }
             }
-            preparedValues.emplace_back(preparedValue);
+
+            //
+            // Add the parameter if there are values assigned
+            if (!preparedValue.values.empty())
+            {
+                preparedValues.emplace_back(preparedValue);
+            }
         }
 
         //

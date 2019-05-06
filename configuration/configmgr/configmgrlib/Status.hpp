@@ -42,6 +42,7 @@ struct CFGMGRLIB_API statusMsg {
     std::string nodeId;               // if not '', the node ID to which this status applies
     std::string attribute;            // possible name of attribute in nodeId
     std::string msg;                  // message for user
+    std::string path;                 // path for nodeId
 };
 
 
@@ -52,10 +53,10 @@ class CFGMGRLIB_API Status
         Status() : m_highestMsgLevel(statusMsg::info) { }
         Status(const Status &status, const std::string &nodeId);
         ~Status() {}
-        void addMsg(const statusMsg &msg);
-        void addMsg(enum statusMsg::msgLevel status, const std::string &msg) { addMsg(status, "", "", msg); }
-        void addMsg(enum statusMsg::msgLevel status, const std::string &nodeId, const std::string &name, const std::string &msg);
-        void addUniqueMsg(enum statusMsg::msgLevel status, const std::string &nodeId, const std::string &name, const std::string &msg);
+        statusMsg & addMsg(const statusMsg &msg);
+        statusMsg & addMsg(enum statusMsg::msgLevel status, const std::string &msg) { return addMsg(status, "", "", msg, ""); }
+        statusMsg & addMsg(enum statusMsg::msgLevel status, const std::string &nodeId, const std::string &name, const std::string &msg, const std::string &path);
+        statusMsg & addUniqueMsg(enum statusMsg::msgLevel status, const std::string &nodeId, const std::string &name, const std::string &msg, const std::string &path);
         enum statusMsg::msgLevel getHighestMsgLevel() const { return m_highestMsgLevel; }
         bool isOk() const { return m_highestMsgLevel <= statusMsg::warning; }
         bool isError() const { return m_highestMsgLevel >= statusMsg::error; }

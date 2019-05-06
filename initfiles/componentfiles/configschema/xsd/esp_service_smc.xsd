@@ -34,13 +34,13 @@
                                   hpcc:tooltip="Port number of target Kibana server"/>
                     <xs:attribute name="kibanaEntryPointURI" type="xs:string"
                                   hpcc:tooltip="Declares the ECLWatch integration entry point URI for the target Kibana dashboard"/>
-                    <xs:attribute name="reportLogStashHealth" type="xs:boolean" use="required" hpcc:presetValue="true"
+                    <xs:attribute name="reportLogStashHealth" type="xs:boolean" hpcc:presetValue="true"
                                   hpcc:tooltip="Declare if connectivity to LogStash nodes is to be reported in ECLWatch"/>
                     <xs:attribute name="logStashAdresses" type="xs:string"
                                   hpcc:tooltip="Declares the target LogStash nodes' adresses (semicolon seperated)"/>
                     <xs:attribute name="logStashPort" type="xs:nonNegativeInteger"
                                   hpcc:tooltip="Declares the target LogStash nodes' port"/>
-                    <xs:attribute name="reportElasticHealth" type="xs:boolean" use="required" hpcc:presetValue="true"
+                    <xs:attribute name="reportElasticHealth" type="xs:boolean" hpcc:presetValue="true"
                                   hpcc:tooltip="Declare if connectivity to Elastic Search nodes is to be reported in ECLWatch"/>
                     <xs:attribute name="elasticSearchAdresses" type="xs:string"
                                   hpcc:tooltip="Declares the target ElasticSearch nodes' adresses (semicolon seperated)"/>

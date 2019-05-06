@@ -27,6 +27,7 @@ class HostNameVariable : public Variable
         explicit HostNameVariable(const std::string &name) : Variable(name) {}
         ~HostNameVariable() override = default;
         void addValue(const std::string &value) override;
+        virtual std::string getType() const { return "Hostname"; }
 };
 
 

@@ -498,7 +498,7 @@
                                           hpcc:tooltip="Number of simultaneous queries Roxie servers will process using the MERGE option of SOAPCALL"/>
                             <xs:attribute name="aclName" hpcc:displayName="ACL" type="xs:string"
                                           hpcc:tooltip="Name of any Access Control List to use"/>
-                            <xs:attribute name="protocol" hpcc:displayName="Protocol" use="required"
+                            <xs:attribute name="protocol" hpcc:displayName="Protocol"
                                           hpcc:presetValue="native" hpcc:tooltip="Protocol to use">
                                 <xs:simpleType>
                                     <xs:restriction base="xs:string">
@@ -601,7 +601,7 @@
                                           hpcc:tooltip="Expression to match"/>
                         </xs:complexType>
                     </xs:element>
-                    <xs:element name="Notes" type="usernotes" hpcc:displayName="Notes" maxOccurs="unbounded"/>
+                    <xs:element name="Notes" type="usernotes" hpcc:displayName="Notes" minOccurs="0" maxOccurs="unbounded"/>
 
                 </xs:sequence>
                 <xs:attributeGroup ref="buildInfo"/>

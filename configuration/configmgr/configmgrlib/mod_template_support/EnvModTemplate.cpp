@@ -31,6 +31,7 @@
 #include <fstream>
 #include "Utils.hpp"
 #include "EnvironmentMgr.hpp"
+#include "jfile.hpp"
 
 //
 // Good online resource for validation of modification templates is https://www.jsonschemavalidator.net/
@@ -54,6 +55,7 @@ EnvModTemplate::EnvModTemplate(std::shared_ptr<Environment> &pEnv, const std::st
     // Setup the environments
     m_pEnvironments = std::make_shared<Environments>();
     m_pDefaultEnv = pEnv;
+    m_pEnvironments->add(m_pDefaultEnv, "default");
 
     //
     // Load and compile the schema document
@@ -377,24 +379,19 @@ std::shared_ptr<Variable> EnvModTemplate::getVariable(const std::string &name, b
 }
 
 
-std::vector<std::shared_ptr<Variable>> EnvModTemplate::getVariables(bool userInputOnly) const
+std::vector<std::shared_ptr<Variable>> EnvModTemplate::getInputs() const
 {
-    std::vector<std::shared_ptr<Variable>> variables;
-//    if (!userInputOnly)
-//    {
-//        variables.insert( variables.end(), m_pVariables->all().begin(), m_pVariables->all().end() );
-//    }
-//    else
-//    {
-//        auto allVars = m_pVariables->all();
-//        for (auto &varIt: allVars)
-//        {
-//            if (varIt->m_userInput)
-//                variables.emplace_back(varIt);
-//        }
-//    }
-
-    return variables;
+    std::vector<std::shared_ptr<Variable>> returnVars;
+    std::shared_ptr<Variables> pGlobalVars = m_pVariables->getGlobalVariables();
+    const std::vector<std::shared_ptr<Variable>> &variables = pGlobalVars->getAllVariables();
+    for (auto const pVariable: variables)
+    {
+        if (pVariable->isUserInput())
+        {
+            returnVars.push_back(pVariable);
+        }
+    }
+    return returnVars;
 }
 
 
@@ -459,15 +456,31 @@ void EnvModTemplate::parseOperation(const rapidjson::Value &operation)
             parseIncludeOperation(dataIt->value, pIncOp);
         }
 
-        //
-        // for each path in the vector, create a modification template and add it to the include operation's list
-        for (auto const &path: pIncOp->m_paths)
+        for (auto &file: pIncOp->m_paths)
         {
             auto pEnvModTemplate = std::make_shared<EnvModTemplate>(*this);
             pEnvModTemplate->m_ignoreEmptyTemplate = !pIncOp->m_errorIfNotFound;
-            pEnvModTemplate->loadTemplateFromFile(path);
+            pEnvModTemplate->loadTemplateFromFile(file);
             pIncOp->m_envModTemplates.emplace_back(pEnvModTemplate);
         }
+
+//        Code for later when paths are supported
+//        // for each path in the vector, create a modification template and load it. Note that
+//        // the path may have a variable reference and it may have wild cards. Any variable reference must
+//        // have been previously defined.
+//        for (auto const &path: pIncOp->m_paths)
+//        {
+//            std::string filePath = m_pVariables->doValueSubstitution(path);
+//            std::vector<std::string> files;
+//            getFilelist(filePath, files);
+//            for (auto &file: files)
+//            {
+//                auto pEnvModTemplate = std::make_shared<EnvModTemplate>(*this);
+//                pEnvModTemplate->m_ignoreEmptyTemplate = !pIncOp->m_errorIfNotFound;
+//                pEnvModTemplate->loadTemplateFromFile(file);
+//                pIncOp->m_envModTemplates.emplace_back(pEnvModTemplate);
+//            }
+//        }
         m_operations.emplace_back(pIncOp);
     }
     else if (action == "copy")
@@ -741,14 +754,14 @@ void EnvModTemplate::parseEnvironment(const rapidjson::Value &environmentValue)
         //
         // Make a new Environment object and save it for this template. Note, the environment is
         // instantiated and saved at runtime using the name from above (which may be based on a variable value)
-        m_pEnv = std::make_shared<Environment>(masterSchemaFile, paths);
+        m_pLocalEnvironment = std::make_shared<Environment>(masterSchemaFile, paths);
 
         //
         // Load sets the name of an environment to load on use
-        valueIt = targetData.FindMember("load");
+        valueIt = targetData.FindMember("load_filename");
         if (valueIt != targetData.MemberEnd())
         {
-            m_pEnv->setLoadName(valueIt->value.GetString());
+            m_pLocalEnvironment->setLoadName(valueIt->value.GetString());
         }
 
         //
@@ -756,7 +769,7 @@ void EnvModTemplate::parseEnvironment(const rapidjson::Value &environmentValue)
         valueIt = targetData.FindMember("initialize");
         if (valueIt != targetData.MemberEnd())
         {
-            m_pEnv->setInitializeEmpty(valueIt->value.GetBool());
+            m_pLocalEnvironment->setInitializeEmpty(valueIt->value.GetBool());
         }
 
         //
@@ -764,7 +777,7 @@ void EnvModTemplate::parseEnvironment(const rapidjson::Value &environmentValue)
         valueIt = targetData.FindMember("write");
         if (valueIt != targetData.MemberEnd())
         {
-            m_pEnv->setOutputName(valueIt->value.GetString());
+            m_pLocalEnvironment->setOutputName(valueIt->value.GetString());
         }
     }
 
@@ -781,7 +794,7 @@ void EnvModTemplate::parseEnvironment(const rapidjson::Value &environmentValue)
 }
 
 
-void EnvModTemplate::parseTarget(const rapidjson::Value &targetValue, std::shared_ptr<OperationNode> pOp)
+void EnvModTemplate::parseTarget(const rapidjson::Value &targetValue, const std::shared_ptr<OperationNode> &pOp)
 {
     auto targetData = targetValue.GetObject();
 
@@ -815,29 +828,20 @@ void EnvModTemplate::parseTarget(const rapidjson::Value &targetValue, std::share
 }
 
 
-void EnvModTemplate::parseIncludeOperation(const rapidjson::Value &include, std::shared_ptr<OperationIncludeTemplate> pOpInc)
+void EnvModTemplate::parseIncludeOperation(const rapidjson::Value &include, const std::shared_ptr<OperationIncludeTemplate> &pOpInc)
 {
     auto includeObj = include.GetObject();
 
     //
-    // Get the include template file
-    auto it = includeObj.FindMember("template_file");
-    if (it != includeObj.MemberEnd())
+    // Get the include template files (a required property)
+    auto it = includeObj.FindMember("template_files");
+    for (auto &pathIt: it->value.GetArray())
     {
-        pOpInc->m_paths.emplace_back(it->value.GetString());
-    }
-    else
-    {
-        it = includeObj.FindMember("template_files");
-        if (it != includeObj.MemberEnd())
-        {
-            for (auto &pathIt: it->value.GetArray())
-            {
-                pOpInc->m_paths.emplace_back(pathIt.GetString());
-            }
-        }
+        pOpInc->m_paths.emplace_back(pathIt.GetString());
     }
 
+    //
+    // Template parameters to build when executing the template
     it = includeObj.FindMember("template_parameters");
     if (it != includeObj.MemberEnd())
     {
@@ -852,6 +856,11 @@ void EnvModTemplate::parseIncludeOperation(const rapidjson::Value &include, std:
             for (auto &val: valueIt->value.GetArray())
             {
                 parmValue.values.emplace_back(trim(val.GetString()));
+            }
+            valueIt = parmObject.FindMember("conditional");
+            if (valueIt != parmObject.MemberEnd())
+            {
+                parmValue.conditional = valueIt->value.GetBool();
             }
             pOpInc->addParameterValue(parmValue);
         }
@@ -887,7 +896,7 @@ void EnvModTemplate::parseIncludeOperation(const rapidjson::Value &include, std:
 }
 
 
-void EnvModTemplate::parseCopyOperation(const rapidjson::Value &data, std::shared_ptr<OperationCopy> pCopyOp)
+void EnvModTemplate::parseCopyOperation(const rapidjson::Value &data, const std::shared_ptr<OperationCopy> &pCopyOp)
 {
     auto dataObj = data.GetObject();
 
@@ -907,25 +916,43 @@ void EnvModTemplate::parseCopyOperation(const rapidjson::Value &data, std::share
     // Parse destination object
     auto destObj = dataObj.FindMember("destination")->value.GetObject();
 
-    auto targetObj = destObj.FindMember("target")->value.GetObject();
+    auto destTargetObj = destObj.FindMember("target")->value.GetObject();
 
-    valueIt = targetObj.FindMember("path");
-    if (valueIt != targetObj.MemberEnd())
+    valueIt = destTargetObj.FindMember("path");
+    if (valueIt != destTargetObj.MemberEnd())
     {
         pCopyOp->m_destPath = valueIt->value.GetString();
     }
 
-    valueIt = targetObj.FindMember("nodeid");
-    if (valueIt != targetObj.MemberEnd())
+    valueIt = destTargetObj.FindMember("nodeid");
+    if (valueIt != destTargetObj.MemberEnd())
     {
         pCopyOp->m_destParentNodeId = valueIt->value.GetString();
     }
 
-    valueIt = targetObj.FindMember("environment");
-    if (valueIt != targetObj.MemberEnd())
+    valueIt = destTargetObj.FindMember("environment");
+    if (valueIt != destTargetObj.MemberEnd())
     {
         pCopyOp->m_destEnvironmentName = valueIt->value.GetString();
     }
+
+    //
+    // Set the throw on destination empty flag
+    valueIt = destObj.FindMember("error_if_not_found");
+    if (valueIt != destObj.MemberEnd())
+    {
+        pCopyOp->m_throwIfDestEmpty = valueIt->value.GetBool();
+    }
+
+    //
+    // Save the destination Node IDs?
+    valueIt = destObj.FindMember("save");
+    if (valueIt != destObj.MemberEnd())
+    {
+        parseSaveInfo(valueIt->value, pCopyOp->m_destSaveNodeIdName, pCopyOp->m_destAccumulateSaveNodeIdOk,
+                pCopyOp->m_destSaveNodeIdAsGlobalValue, pCopyOp->m_destSaveNodeIdClear);
+    }
+
 
     //
     // Parse the copy attributes
@@ -1023,9 +1050,9 @@ void EnvModTemplate::execute(bool isFirst, const std::vector<ParameterValue> &pa
         {
             pTemplateEnv = m_pDefaultEnv;
         }
-        else if (m_pEnv && m_useLocalEnvironmentForTemplate)
+        else if (m_pLocalEnvironment && m_useLocalEnvironmentForTemplate)
         {
-            pTemplateEnv = m_pEnv;
+            pTemplateEnv = m_pLocalEnvironment;
         }
         else
         {
@@ -1091,10 +1118,10 @@ void EnvModTemplate::execute(bool isFirst, const std::vector<ParameterValue> &pa
             //
             // If there is an environment defined for the template, and it's not the default, initialize it and make
             // it available by name for use elsewhere
-            if (m_pEnv && !m_useLocalEnvironmentForTemplate)
+            if (m_pLocalEnvironment && !m_useLocalEnvironmentForTemplate)
             {
-                m_pEnv->initialize();
-                m_pEnvironments->add(m_pEnv, m_pVariables->doValueSubstitution(m_environmentName));
+                m_pLocalEnvironment->initialize();
+                m_pEnvironments->add(m_pLocalEnvironment, m_pVariables->doValueSubstitution(m_environmentName));
             }
         }
         catch (TemplateExecutionException &te)
@@ -1144,4 +1171,37 @@ void EnvModTemplate::execute(bool isFirst, const std::vector<ParameterValue> &pa
             }
         }
     }
+}
+
+
+void EnvModTemplate::getFilelist(const std::string &path, std::vector<std::string> &filepaths) const
+{
+    Owned<IFile> pDir = createIFile(path.c_str());
+    if (pDir->exists())
+    {
+        Owned<IDirectoryIterator> it = pDir->directoryFiles(nullptr, false, false);
+        ForEach(*it)
+        {
+            StringBuffer fname;
+            std::string filename = it->getName(fname).str();
+
+            std::string fullyQualifiedFilePath = path;
+            if (std::string(1, fullyQualifiedFilePath.back()) != PATHSEPSTR)
+                fullyQualifiedFilePath += PATHSEPSTR;
+            fullyQualifiedFilePath += filename;
+            filepaths.emplace_back(fullyQualifiedFilePath);
+        }
+    }
+}
+
+
+void EnvModTemplate::validateEnvironments(std::map<std::string, Status> &envStatus) const
+{
+    m_pEnvironments->validate(envStatus);
+}
+
+
+void EnvModTemplate::saveEnvironments() const
+{
+    m_pEnvironments->save(m_pVariables);
 }

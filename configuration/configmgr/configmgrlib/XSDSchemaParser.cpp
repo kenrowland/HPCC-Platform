@@ -115,12 +115,6 @@ void XSDSchemaParser::processXSDFiles(const std::string &path, const std::string
                 xsdDelayed = true;
                 ++it;
             }
-            catch (ParseException &e)
-            {
-                auto msg = e.what();
-                int i = 4;
-            }
-
         }
 
         done = xsdFiles.empty();
@@ -421,8 +415,6 @@ void XSDSchemaParser::parseElement(const pt::ptree &elemTree)
     std::string className = elemTree.get("<xmlattr>.hpcc:class", "");
     std::string displayName = elemTree.get("<xmlattr>.hpcc:displayName", elementName);
     std::string tooltip = elemTree.get("<xmlattr>.hpcc:tooltip", "");
-    std::string insertLimitType = elemTree.get("<xmlattr>.hpcc:insertLimitType", "");
-    std::string insertLimitData = elemTree.get("<xmlattr>.hpcc:insertLimitData", "");
     std::string createOnInit = elemTree.get("<xmlattr>.hpcc:createOnInit", "");
     unsigned minOccurs = elemTree.get<unsigned>("<xmlattr>.minOccurs", 1);
     std::string maxOccursStr = elemTree.get("<xmlattr>.maxOccurs", "1");
@@ -455,8 +447,6 @@ void XSDSchemaParser::parseElement(const pt::ptree &elemTree)
         if (!className.empty()) pNewSchemaItem->setProperty("className", className);
         if (!displayName.empty()) pNewSchemaItem->setProperty("displayName", displayName);
         if (!tooltip.empty()) pNewSchemaItem->setProperty("tooltip", tooltip);
-        if (!insertLimitType.empty()) pNewSchemaItem->setProperty("insertLimitType", insertLimitType);
-        if (!insertLimitData.empty()) pNewSchemaItem->setProperty("insertLimitData", insertLimitData);
         if (!createOnInit.empty()) pNewSchemaItem->setProperty("createOnInit", createOnInit);
         pNewSchemaItem->setProperty("itemType", itemType);
         pNewSchemaItem->setProperty("category", category.empty() ? displayName : category );

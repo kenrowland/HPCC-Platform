@@ -25,7 +25,7 @@
                     maxOccurs="1" hpcc:class="component" hpcc:docid="Th.t1">
             <xs:complexType>
                 <xs:sequence>
-                    <xs:element name="Instance" maxOccurs="1" hpcc:class="elementSet"
+                    <xs:element name="Instance" hpcc:itemType="instance" maxOccurs="1" hpcc:class="elementSet"
                                 hpcc:displayName="Master Spark Node">
                         <xs:complexType>
                             <xs:attributeGroup ref="computerNodeReference"/>

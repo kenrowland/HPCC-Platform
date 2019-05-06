@@ -45,12 +45,12 @@
                             <xs:attribute name="name" type="xs:string" hpcc:autoGenerateType="prefix#" hpcc:autoGenerateValue="s"/>
                         </xs:complexType>
                     </xs:element>
-                    <xs:element name="Notes" type="usernotes" hpcc:displayName="Notes" maxOccurs="unbounded"/>
+                    <xs:element name="Notes" type="usernotes" hpcc:displayName="Notes" minOccurs="0" maxOccurs="unbounded"/>
                 </xs:sequence>
                 <xs:attributeGroup ref="buildInfo"/>
                 <xs:attribute name="name" type="xs:string" hpcc:displayName="Name" use="required"
                               hpcc:autoGenerateType="prefix_" hpcc:autoGenerateValue="eclccserver"
-                              hpcc:uniqueKey="eclscheduler_name" hpcc:tooltip="Name for this process"/>
+                              hpcc:uniqueKey="eclccserver_name" hpcc:tooltip="Name for this process"/>
                 <xs:attribute name="description" type="xs:string" hpcc:displayName="Description"
                               hpcc:presetValue="EclCCServer process" hpcc:tooltip="EclCCServer process"/>
                 <xs:attribute name="daliServers" type="xs:string" hpcc:displayName="Dali Server" use="required"

@@ -50,6 +50,8 @@ class CFGMGRLIB_API EnvironmentValue
         std::string getNodeId() const;
         std::shared_ptr<EnvironmentNode> getEnvironmentNode() const { return m_pMyEnvNode.lock(); }
         void initialize();
+        void addStatusMsg(enum statusMsg::msgLevel msgLevel, const std::string &msg, Status &status, bool isUnique) const;
+
 
     private:
 

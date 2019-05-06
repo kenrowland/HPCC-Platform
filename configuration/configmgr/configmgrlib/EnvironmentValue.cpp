@@ -45,7 +45,7 @@ bool EnvironmentValue::setValue(const std::string &value, Status *pStatus, bool 
             if (pStatus != nullptr)
             {
                 std::string msg = "Attribute forced to invalid value (" + m_pSchemaValue->getType()->getLimitString() + ")";
-                pStatus->addMsg(statusMsg::info, m_pMyEnvNode.lock()->getId(), m_name, msg);
+                addStatusMsg(statusMsg::info, msg, *pStatus, false);
             }
         }
         else
@@ -54,7 +54,7 @@ bool EnvironmentValue::setValue(const std::string &value, Status *pStatus, bool 
             if (pStatus != nullptr)
             {
                 std::string msg = "Value not set. New value(" + value + ") not valid (" + m_pSchemaValue->getType()->getLimitString() + ")";
-                pStatus->addMsg(statusMsg::error, m_pMyEnvNode.lock()->getId(), m_name, msg);
+                addStatusMsg(statusMsg::error, msg, *pStatus, false);
             }
         }
 
@@ -111,10 +111,14 @@ void EnvironmentValue::validate(Status &status, const std::string &myId) const
     if (isValueSet())
     {
         if (!m_pSchemaValue->isDefined())
-            status.addMsg(statusMsg::warning, myId, m_name, "No type information exists");
+        {
+            addStatusMsg(statusMsg::warning, "No type information exists", status, false);
+        }
 
         if (m_forcedSet)
-            status.addMsg(statusMsg::warning, myId, m_name, "Current value was force set to an invalid value");
+        {
+            addStatusMsg(statusMsg::warning, "Current value was force set to an invalid value", status, false);
+        }
 
         // Will generate status based on current value and type
         m_pSchemaValue->validate(status, myId, this);
@@ -123,13 +127,16 @@ void EnvironmentValue::validate(Status &status, const std::string &myId) const
     {
         if (m_pSchemaValue->isRequired())
         {
-            status.addMsg(statusMsg::error, myId, m_name, "Required value has not been set");
+            if (!m_pSchemaValue->hasForcedValue())
+            {
+                addStatusMsg(statusMsg::error, "Required value has not been set", status, false);
+            }
         }
 
         if (m_pSchemaValue->hasForcedValue())
         {
             std::string msg = "No value provided, default value of " + m_pSchemaValue->getForcedValue() + " will be used.";
-            status.addMsg(statusMsg::warning, myId, m_name, msg);
+            addStatusMsg(statusMsg::warning, msg, status, false);
         }
     }
 }
@@ -215,4 +222,20 @@ void EnvironmentValue::initialize()
 std::string EnvironmentValue::getNodeId() const
 {
     return m_pMyEnvNode.lock()->getId();
+}
+
+
+void EnvironmentValue::addStatusMsg(enum statusMsg::msgLevel msgLevel, const std::string &msg, Status &status, bool isUnique) const
+{
+    std::string path;
+    std::shared_ptr<EnvironmentNode> pMyEnvNode = m_pMyEnvNode.lock();
+    pMyEnvNode->getPath(path);
+    if (!isUnique)
+    {
+        status.addMsg(msgLevel, pMyEnvNode->getId(), m_name, msg, path);
+    }
+    else
+    {
+        status.addUniqueMsg(msgLevel, pMyEnvNode->getId(), m_name, msg, path);
+    }
 }

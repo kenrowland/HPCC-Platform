@@ -27,8 +27,8 @@ class IPAddressVariable : public Variable
         explicit IPAddressVariable(const std::string &name) : Variable(name) {}
         ~IPAddressVariable() override = default;
         void addValue(const std::string &value) override;
-
         std::string getValue(size_t idx, const std::string &member) const override;
+        virtual std::string getType() const { return "IPAddress"; }
 
 };
 

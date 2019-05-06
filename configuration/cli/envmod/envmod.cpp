@@ -45,6 +45,7 @@ bool validate();
 std::string getNextArg(int argc, char *argv[], int idx);
 bool dirExists(const std::string &dirName);
 bool fileExists(const std::string &fileName);
+bool forceOutput = false;
 std::vector<std::string> splitString(const std::string &input, const std::string &delim);
 
 // Default configuration directories
@@ -101,21 +102,22 @@ void usage()
     std::cout << std::endl;
     std::cout << "  Execution Options:" << std::endl;
     std::cout << "    -t --template <filepath>          : filepath to modification template - required" << std::endl;
-    //std::cout << "    -n --new                          : Create a new empty environment (default if -e --env not specified" << std::endl;
     std::cout << "    -e --env <fullpath>               : Optional filepath to environment file to modify" << std::endl;
-    std::cout << "                                          Omit to validate the modification template" << std::endl;
-    std::cout << "       --inputs                       : List the template inputs. If this option is specified, the template" << std::endl;
+    std::cout << "                                          If omitted, a new empty environment is created" << std::endl;
+    std::cout << "       --list-inputs                  : List the template inputs. If this option is specified, the template" << std::endl;
     std::cout << "                                          inputs are listed and the command exits." << std::endl;
     std::cout << "       --input-file <fullpath>        : Optional full path to a file with defined inputs for the template" << std::endl;
-    std::cout << "                                          These would be combined with any command line inputs" << std::endl;
-    std::cout << "    -i --input <var=value>            : Assign the indicated value to the variable input." << std::endl;
-    std::cout << "                                          The input must be defined in the template" << std::endl;
+    std::cout << "                                          These would be combined with any command line variable assignments" << std::endl;
+    std::cout << "    -v --var <var=value>              : Assign the indicated value to the variable input." << std::endl;
     std::cout << "                                          value may be a comma separated list (no blanks) for multi-value inputs" << std::endl;
     std::cout << "                                          Inputs given on the command line override any in an input file (--input-file)" << std::endl;
-    std::cout << "    -o --output [fullpath]            : Optional. If present, results of applying template are saved." << std::endl;
+    std::cout << "                                          Repeat this option as many times as needed" << std::endl;
+    std::cout << "    -o --output [fullpath]            : Optional. If present, results of template execution is saved." << std::endl;
     std::cout << "                                          If fullpath is specified, results written to this file, " << std::endl;
-    std::cout << "                                          If not specified, input env file is overwritten" << std::endl;
-    std::cout << "                                          Omit the -o option to test the modification template" << std::endl;
+    std::cout << "                                          If not specified, input environment file is overwritten" << std::endl;
+    std::cout << "                                          If -o is omitted, no results are saved (validates application of the template)" << std::endl;
+    std::cout << "       --ignore-errors                : Optional. If present, outputs are written regardless of errors." << std::endl;
+
     std::cout << std::endl;
 }
 
@@ -203,10 +205,10 @@ int main(int argc, char *argv[])
     if (listInputs)
     {
         std::cout << "Template inputs:" << std::endl;
-        auto templateInputs = pTemplate->getVariables();
+        auto templateInputs = pTemplate->getInputs();
         for (auto &pInput : templateInputs)
         {
-            std::cout << pInput->getName() << " - " << pInput->getDescription() << std::endl;
+            std::cout << "Name: " << pInput->getName() << std::endl <<  "  Type-" << pInput->getType() << std::endl << "  Description: " << pInput->getDescription() << std::endl;
         }
         return 0;  // get out
     }
@@ -250,16 +252,41 @@ int main(int argc, char *argv[])
     }
 
     //
-    // Write results
-//    if (!envOutputFile.empty())
-//    {
-//        pEnvMgr->saveEnvironment(envOutputFile);
-//        std::cout << "Results written to " << envOutputFile << std::endl;
-//    }
-//    else
-//    {
-//        std::cout << "Resuls not saved." << std::endl;
-//    }
+    // Validate the results
+    std::map<std::string, Status> envStatuses;
+    pTemplate->validateEnvironments(envStatuses);
+    bool errorsFound = false;
+
+    //
+    // This is where the error messages are printed out
+    bool errorHeader = false;
+    for (auto const &envStatus: envStatuses)
+    {
+        if (envStatus.second.isError())
+        {
+            errorsFound = true;
+            std::vector<statusMsg> msgs = envStatus.second.getMessages(statusMsg::error, false);
+            if (!errorHeader)
+            {
+                std::cerr << "Errors were detected in one or more environments generated" << std::endl;
+                errorHeader = true;
+            }
+            std::cerr << "Environment: " << envStatus.first << std::endl;
+            std::cerr << "  Errors:" << std::endl;
+            for (auto const &msg: msgs)
+            {
+                std::cerr << "    Message: " << msg.msg << "    Path: " << msg.path << std::endl;
+            }
+        }
+    }
+
+
+    //
+    // If no errors or forced output, save the environments.
+    if (!errorsFound || forceOutput)
+    {
+        pTemplate->saveEnvironments();
+    }
 
 
     std::cout << "Done" << std::endl;
@@ -312,7 +339,7 @@ bool processOptions(int argc, char *argv[])
                     envOutputFile = getNextArg(argc, argv, idx++);
                 }
             }
-            else if (optName == "-i" || optName == "--input")
+            else if (optName == "-v" || optName == "--var")
             {
                 std::string assign = getNextArg(argc, argv, idx++);
                 std::size_t equalPos = assign.find_first_of('=');
@@ -328,9 +355,13 @@ bool processOptions(int argc, char *argv[])
                     throw CliException("Invalid input variable assignement: " + assign);
                 }
             }
-            else if (optName == "--inputs")
+            else if (optName == "--list-inputs")
             {
                 listInputs = true;
+            }
+            else if (optName == "--ignore-inputs")
+            {
+                forceOutput = true;
             }
 
         }

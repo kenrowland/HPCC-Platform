@@ -339,7 +339,7 @@
                 },
                 "node_type": {
                     "type": "string",
-                    "pattern" : "^[A-Za-z0-9_]*$",
+                    "pattern" : "^[A-Za-z0-9_{}]*$",
                     "description" : "The type of node to create (defined by the schema). Required"
                 },
                 "save": {
@@ -410,10 +410,11 @@
             "type": "object",
             "properties": {
                 "target" : {
-                    "$ref" : "#/definitions/target_path"
+                    "$ref" : "#/definitions/target_node_or_path"
                 },
                 "node_type": {
-                    "type": "string"
+                    "type": "string",
+                    "pattern" : "^[A-Za-z0-9_{}]*$"
                 },
                 "save": {
                     "$ref": "#/definitions/save_info"
@@ -491,7 +492,7 @@
                 "error_if_not_found" : {
                     "type" : "boolean",
                     "default" : true,
-                    "description" : "Generate an error and halt execution if template file not found, skip operation otherwise"
+                    "description" : "Generate an error and halt execution if template file is not found, skip operation otherwise"
                 },
                 "count": {
                     "type": "string",
@@ -520,6 +521,11 @@
                                     "type" : "string"
                                 },
                                 "description" : "Values to assign to the variable"
+                            },
+                            "conditional" : {
+                                "type" : "boolean",
+                                "default" : false,
+                                "description" : "If true, the variable is NOT assigned unless it has at least one valid value. The only way this happens is if all values are variable references that are not defined"
                             }
                         },
                         "required": [ "name", "values" ]
@@ -561,7 +567,7 @@
                 "error_if_not_found" : {
                     "type" : "boolean",
                     "default" : false,
-                    "description" : "Throw an error if no nodes are selected for copy"
+                    "description" : "Throw an error if no nodes are selected for the copy source"
                 },
                 "include_children" : {
                     "type" : "boolean",
@@ -585,8 +591,13 @@
                 },
                 "node_type": {
                     "type": "string",
-                    "pattern" : "^[A-Za-z0-9_]*$",
+                    "pattern" : "^[A-Za-z0-9_{}]*$",
                     "description" : "The type of node to create (defined by the schema). Required"
+                },
+                "error_if_not_found" : {
+                    "type" : "boolean",
+                    "default" : false,
+                    "description" : "Throw an error if no nodes are selected as destination"
                 },
                 "copy_attributes" : {
                     "type" : "object",
@@ -699,26 +710,41 @@
             },
             "allOf" : [
                 {
-                    "required": [ "name", "value" ]
-                },
-                {
-                    "allOf" : [
+                    "oneOf" : [
                         {
-                            "not" : {
-                                "required" : [ "error_if_not_found" ]
-                            }
+                            "allOf" : [
+                                {
+                                    "required" : [ "do_not_set" ]
+                                },
+                                {
+                                    "not" : {
+                                        "required" : [ "value" ]
+                                    }
+                                }
+                            ]
                         },
                         {
-                            "not" : {
-                                "required" : [ "error_if_empty" ]
-                            }
-                        },
-                        {
-                            "not" : {
-                                "required" : [ "first_of" ]
-                            }
+                            "required" : [ "value" ]
                         }
                     ]
+                },
+                {
+                    "not" : {
+                        "required" : [ "error_if_not_found" ]
+                    }
+                },
+                {
+                    "not" : {
+                        "required" : [ "error_if_empty" ]
+                    }
+                },
+                {
+                    "not" : {
+                        "required" : [ "first_of" ]
+                    }
+                },
+                {
+                    "required" : [ "name" ]
                 }
             ]
         },
@@ -972,18 +998,20 @@
                     "pattern" : "^[A-Za-z0-9~_.\\-]+(?: +[A-Za-z0-9~_.\\-]+)*$",
                     "description" : "Name of master schema file"
                 },
-                "load" : {
+                "load_filename" : {
                     "type" : "string",
-                    "description" : "If given, this environment is loaded (not allowed with initialize)"
+                    "description" : "If given, this environment is loaded (not allowed with initialize)",
+                    "default" : ""
                 },
                 "initialize" : {
                     "type" : "boolean",
-                    "description" : "True to create an empty environment (not allowed with load_environment)"
+                    "description" : "True to create an empty environment (not allowed with load_environment)",
+                    "default" : false
                 },
                 "write" : {
                     "type" : "string",
                     "pattern" : "^[A-Za-z0-9~_.\\-\\/\\\\{}]+(?: +[A-Za-z0-9~_.\\-\\/\\\\{}]+)*$",
-                    "description" : "Filepath to where environment is serialized after template execution (leave empty or missing for no output)",
+                    "description" : "Filepath to where environment is serialized after template execution (leave empty or missing for no output) may be a var ref",
                     "default" : ""
                 },
                 "set_as_target" : {

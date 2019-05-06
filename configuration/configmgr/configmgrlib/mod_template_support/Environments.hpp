@@ -24,6 +24,7 @@
 #include <vector>
 #include "Environment.hpp"
 #include "Variables.hpp"
+#include "Status.hpp"
 
 class Environments {
 
@@ -34,6 +35,7 @@ class Environments {
         void add(std::shared_ptr<Environment> &pEnv, const std::string &name);
         std::shared_ptr<Environment> get(const std::string &name) const;
         void save(const std::shared_ptr<Variables> &pVariables) const;
+        void validate(std::map<std::string, Status> &envStatus) const;
         void release(const std::string &name);
 
 

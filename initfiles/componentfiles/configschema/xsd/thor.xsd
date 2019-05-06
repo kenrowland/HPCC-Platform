@@ -88,7 +88,7 @@
                                           hpcc:tooltip="Number of times to retry failed connect"/>
                         </xs:complexType>
                     </xs:element>
-                    <xs:element name="Debug" hpcc:displayName="Debug" minOccurs="1" hpcc:class="valueSet" hpcc:docId="Th.t2">
+                    <xs:element name="Debug" hpcc:displayName="Debug" minOccurs="0" hpcc:class="valueSet" hpcc:docId="Th.t2">
                         <xs:complexType>
                             <xs:attribute name="dllsToSlaves" type="xs:boolean" hpcc:displayName="DLLs To Slaves" hpcc:presetValue="true"
                                           hpcc:tooltip="Controls whether query DLLs are broadcast to slaves at start of query, or loaded from master's shared directory"/>
@@ -100,7 +100,7 @@
                                           hpcc:tooltip="Set to true if thor slaves require dali connectivity"/>
                         </xs:complexType>
                     </xs:element>
-                    <xs:element name="SwapNode" hpcc:displayName="Swap Node" minOccurs="1" hpcc:docId="Th.t4" hpcc:class="valueSet">
+                    <xs:element name="SwapNode" hpcc:displayName="Swap Node" minOccurs="0" hpcc:docId="Th.t4" hpcc:class="valueSet">
                         <xs:complexType>
                             <xs:attribute name="AutoSwapNode" type="xs:boolean" hpcc:displayName="Auto Swap Node" hpcc:presetValue="false"
                                           hpcc:tooltip="Failing nodes will be automatically swapped for spare nodes"/>
@@ -120,7 +120,7 @@
                         </xs:complexType>
                     </xs:element>
                     <!--This doesn't appear in config mgr or is empty in the environment DEPRECATED? -->
-                    <xs:element name="Storage" hpcc:displayName="Backup" hpcc:docId="Th.t5">
+                    <xs:element name="Storage" hpcc:displayName="Backup" minOccurs="0" hpcc:docId="Th.t5">
                         <xs:complexType>
                         </xs:complexType>
                     </xs:element>

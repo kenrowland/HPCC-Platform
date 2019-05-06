@@ -32,12 +32,12 @@
 #include "OperationFindNode.hpp"
 #include "OperationIncludeTemplate.hpp"
 #include "OperationCopy.hpp"
-#include <map>
 #include <vector>
 #include <memory>
 #include <map>
 #include "platform.h"
 #include "Cfgmgrlib.hpp"
+#include "Status.hpp"
 
 class EnvironmentMgr;
 
@@ -53,10 +53,12 @@ class CFGMGRLIB_API EnvModTemplate
         void loadTemplateFromFile(const std::string &fqTemplateFile);
         std::string getTemplateFilename() const { return m_templateFile; }
         std::shared_ptr<Variable> getVariable(const std::string &name, bool throwIfNotFound = true) const;
-        std::vector<std::shared_ptr<Variable>> getVariables(bool userInputOnly = false) const;
+        std::vector<std::shared_ptr<Variable>> getInputs() const;
         void assignVariablesFromFile(const std::string &filepath);
         void execute(bool isFirst=true, const std::vector<ParameterValue> &parameters = std::vector<ParameterValue>());
-        void setTargetEnvironment(const std::string &name) { if (m_environmentName.empty()) m_environmentName = name; }
+        void validateEnvironments(std::map<std::string, Status> &envStatus) const;
+        void saveEnvironments() const;
+        //void setTargetEnvironment(const std::string &name) { if (m_environmentName.empty()) m_environmentName = name; }
 
 
     protected:
@@ -68,13 +70,14 @@ class CFGMGRLIB_API EnvModTemplate
         void parseVariable(const rapidjson::Value &varValue);
         void parseOperations(const rapidjson::Value &operations);
         void parseOperation(const rapidjson::Value &operation);
-        void parseCopyOperation(const rapidjson::Value &operation, std::shared_ptr<OperationCopy> pCopyOp);
+        void parseCopyOperation(const rapidjson::Value &data, const std::shared_ptr<OperationCopy> &pCopyOp);
         void parseOperationNodeCommonData(const rapidjson::Value &operationData, std::shared_ptr<OperationNode> pOpNode);
         void parseAttribute(const rapidjson::Value &attributeData, modAttribute *pAttribute);
-        void parseTarget(const rapidjson::Value &targetData, std::shared_ptr<OperationNode> pOp);
+        void parseTarget(const rapidjson::Value &targetValue, const std::shared_ptr<OperationNode> &pOp);
         void parseEnvironment(const rapidjson::Value &environmentValue);
-        void parseIncludeOperation(const rapidjson::Value &include, std::shared_ptr<OperationIncludeTemplate> pOpInc);
+        void parseIncludeOperation(const rapidjson::Value &include, const std::shared_ptr<OperationIncludeTemplate> &pOpInc);
         void parseSaveInfo(const rapidjson::Value &saveInfo, std::string &varName, bool &accumulateOk, bool &global, bool &clear);
+        void getFilelist(const std::string &path, std::vector<std::string> &filepaths) const;
 
 
     protected:
@@ -87,7 +90,7 @@ class CFGMGRLIB_API EnvModTemplate
         std::string m_templateFile;
         std::string m_environmentName;
         std::shared_ptr<Environment> m_pDefaultEnv;   // environment passed when created, use as default
-        std::shared_ptr<Environment> m_pEnv;   // present if an environment is defined by this template
+        std::shared_ptr<Environment> m_pLocalEnvironment;   // present if an environment is defined by this template
         bool m_useLocalEnvironmentForTemplate;
         bool m_isRoot;
         bool m_ignoreEmptyTemplate;

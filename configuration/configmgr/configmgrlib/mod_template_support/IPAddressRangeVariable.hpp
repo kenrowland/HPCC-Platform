@@ -27,6 +27,7 @@ class IPAddressRangeVariable : public IPAddressVariable
         explicit IPAddressRangeVariable(const std::string &name) : IPAddressVariable(name) {}
         ~IPAddressRangeVariable() override = default;
         void addValue(const std::string &value) override;
+        virtual std::string getType() const { return "IPAddressRange"; }
 };
 
 

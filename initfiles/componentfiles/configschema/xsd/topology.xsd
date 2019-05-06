@@ -23,7 +23,7 @@
         <xs:element name="Topology" hpcc:displayName="Topology" hpcc:itemType="topology" minOccurs="0" maxOccurs="unbounded" hpcc:class="component">
             <xs:complexType>
                 <xs:sequence>
-                    <xs:element name="Cluster" minOccurs="0" maxOccurs="unbounded">
+                    <xs:element name="Cluster" hpcc:itemType="cluster" minOccurs="0" maxOccurs="unbounded">
                         <xs:complexType>
                             <xs:sequence>
                                 <xs:element name="EclAgentProcess" hpcc:displayName="ECL Agent Process" hpcc:itemType="topology_eclagentprocess" hpcc:class="elementSet"
@@ -40,10 +40,17 @@
                                                       hpcc:tooltip="Name of ECL Scheduler process added to this cluster"/>
                                     </xs:complexType>
                                 </xs:element>
+                                <xs:element name="EclCCServerProcess" hpcc:displayName="ECL CC Server Process" hpcc:itemType="topology_eclccserverprocess" hpcc:class="elementSet"
+                                            minOccurs="0" maxOccurs="unbounded" hpcc:tooltip="Reference to ECL CC Serverr Process">
+                                    <xs:complexType>
+                                        <xs:attribute name="process" type="xs:string" hpcc:displayName="Process" hpcc:sourceKey="eclccserver_name"
+                                                      hpcc:tooltip="Name of ECL Scheduler process added to this cluster"/>
+                                    </xs:complexType>
+                                </xs:element>
                                 <xs:element name="ThorCluster" hpcc:displayName="Thor Process" hpcc:itemType="topology_thorprocess" hpcc:class="elementSet"
                                             minOccurs="0" maxOccurs="unbounded" hpcc:tooltip="Reference to Thor Process">
                                     <xs:complexType>
-                                        <xs:attribute name="process" type="xs:string" hpcc:displayName="Process" hpcc:sourceKey="thornode_name"
+                                        <xs:attribute name="process" type="xs:string" hpcc:displayName="Process" hpcc:sourceKey="thorprocess_name"
                                                       hpcc:tooltip="Name of Thor process added to this cluster"/>
                                     </xs:complexType>
                                 </xs:element>

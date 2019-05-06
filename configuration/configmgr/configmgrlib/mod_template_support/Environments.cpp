@@ -83,3 +83,14 @@ void Environments::save(const std::shared_ptr<Variables> &pVariables) const
         }
     }
 }
+
+
+void Environments::validate(std::map<std::string, Status> &envStatus) const
+{
+    for (auto const &env: m_environments)
+    {
+        Status status;
+        env.second->m_pEnvMgr->validate(status, false);
+        envStatus.insert({env.first, status});
+    }
+}

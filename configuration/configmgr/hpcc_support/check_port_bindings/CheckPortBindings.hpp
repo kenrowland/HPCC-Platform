@@ -34,7 +34,7 @@ class CheckPortBindings : public HPCCConfigSupport
         void checkEspPortBindings(const std::shared_ptr<SchemaItem> &pSchema, const std::shared_ptr<EnvironmentNode> &pEnvironment, Status &status) const;
         void checkProcessPortBindings(const std::shared_ptr<SchemaItem> &pSchema, const std::shared_ptr<EnvironmentNode> &pEnvironment, Status &status) const;
 //        void checkHwPortBindings(Status &status) const;
-        void addPortToHwInstance(std::string netAddress, std::string port, std::string nodeId, Status &status) const;
+        void addPortToHwInstance(std::string netAddress, std::string port, const std::shared_ptr<EnvironmentNode> &pEnvNode, Status &status) const;
 
 
     protected:

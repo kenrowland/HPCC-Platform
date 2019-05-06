@@ -468,7 +468,7 @@ void SchemaItem::doFetchSchemaValues(ConfigPath &configPath, std::vector<std::sh
 }
 
 
-std::shared_ptr<SchemaItem> SchemaItem::getSchemaRoot()
+std::shared_ptr<SchemaItem> SchemaItem::getSchemaRoot() const
 {
     auto pParent = m_pParent.lock();
     if (pParent)
@@ -476,7 +476,7 @@ std::shared_ptr<SchemaItem> SchemaItem::getSchemaRoot()
         return pParent->getSchemaRoot();
     }
 
-    std::shared_ptr<SchemaItem> ptr = shared_from_this();
+    std::shared_ptr<SchemaItem> ptr = std::const_pointer_cast<SchemaItem>(shared_from_this());
     return ptr;
 }
 
@@ -716,7 +716,7 @@ void SchemaItem::validate(Status &status, bool includeChildren, bool includeHidd
                       ") is outside the range of " + std::to_string(m_minInstances) +
                       " to " + std::to_string(m_maxInstances);
                 std::string nodeId = !envNodes.second.empty() ? envNodes.second[0]->getId() : "";
-                status.addMsg(statusMsg::error, nodeId, "", msg);
+                status.addMsg(statusMsg::error, nodeId, "", msg, path);
             }
         }
 

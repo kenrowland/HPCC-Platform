@@ -140,7 +140,7 @@ void SchemaValue::validate(Status &status, const std::string &id, const Environm
                 {
                     isValid = false;
                     std::string msg = "Environment value required based on requiredIf rule " + m_requiredIf + " being set.";
-                    status.addMsg(statusMsg::error, pEnvValue->getNodeId(), pEnvValue->getName(), msg);
+                    pEnvValue->addStatusMsg(statusMsg::error, msg, status, false);
                 }
             }
         }
@@ -155,8 +155,7 @@ void SchemaValue::validate(Status &status, const std::string &id, const Environm
             else
                 msg = "Value is invalid (" + curValue + ").";
             msg += " Valid value (" + m_pType->getLimitString() + ")";
-
-            status.addMsg(pEnvValue->wasForced() ? statusMsg::warning : statusMsg::error, pEnvValue->getNodeId(), pEnvValue->getName(), msg);
+            pEnvValue->addStatusMsg(pEnvValue->wasForced() ? statusMsg::warning : statusMsg::error, msg, status, false);
         }
 
         //
@@ -166,7 +165,7 @@ void SchemaValue::validate(Status &status, const std::string &id, const Environm
             const std::string &validateMsg = m_pType->getValidateMsg();
             if (!validateMsg.empty())
             {
-                status.addMsg(status.getMsgLevelFromString(m_pType->getValidateMsgType()), pEnvValue->getNodeId(), pEnvValue->getName(), validateMsg);
+                pEnvValue->addStatusMsg(status.getMsgLevelFromString(m_pType->getValidateMsgType()), validateMsg, status, false);
             }
         }
     }
@@ -200,7 +199,7 @@ void SchemaValue::doMirroroToEnvironmentValues(const std::string &oldValue, cons
             pEnvValue->setValue(newValue, nullptr, true);
             if (pStatus != nullptr)
             {
-                pStatus->addMsg(statusMsg::change, msg, pEnvValue->getEnvironmentNode()->getId(), pEnvValue->getSchemaValue()->getDisplayName());
+                pEnvValue->addStatusMsg(statusMsg::change, msg, *pStatus, false);
             }
         }
     }
