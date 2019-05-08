@@ -384,7 +384,7 @@ std::vector<std::shared_ptr<Variable>> EnvModTemplate::getInputs() const
     std::vector<std::shared_ptr<Variable>> returnVars;
     std::shared_ptr<Variables> pGlobalVars = m_pVariables->getGlobalVariables();
     const std::vector<std::shared_ptr<Variable>> &variables = pGlobalVars->getAllVariables();
-    for (auto const pVariable: variables)
+    for (auto const &pVariable: variables)
     {
         if (pVariable->isUserInput())
         {
@@ -427,7 +427,7 @@ void EnvModTemplate::assignVariablesFromFile(const std::string &filepath)
         auto valueArray = itr->value.GetArray();
         for (auto &val: valueArray)
         {
-            pVariable->addValue(m_pVariables->doValueSubstitution(val.GetString()));
+            pVariable->addValue(val.GetString());
         }
     }
 }
@@ -481,6 +481,7 @@ void EnvModTemplate::parseOperation(const rapidjson::Value &operation)
 //                pIncOp->m_envModTemplates.emplace_back(pEnvModTemplate);
 //            }
 //        }
+        parseCondition(operation, pIncOp);
         m_operations.emplace_back(pIncOp);
     }
     else if (action == "copy")
@@ -491,6 +492,7 @@ void EnvModTemplate::parseOperation(const rapidjson::Value &operation)
         {
             parseCopyOperation(dataIt->value, pCopyOp);
         }
+        parseCondition(operation, pCopyOp);
         m_operations.emplace_back(pCopyOp);
     }
     else
@@ -568,6 +570,7 @@ void EnvModTemplate::parseOperation(const rapidjson::Value &operation)
                     pOpInsert->m_nodeType = dataIt->value.FindMember("node_type")->value.GetString();
                 }
             }
+            parseCondition(operation, pOp);
             m_operations.emplace_back(pOp);
         }
     }
@@ -655,6 +658,16 @@ void EnvModTemplate::parseOperationNodeCommonData(const rapidjson::Value &operat
     {
         pOpNode->m_throwOnEmpty = it->value.GetBool();
     }
+
+
+    //
+    // Is there a condition?
+    it = dataObj.FindMember("condition");
+    if (it != dataObj.MemberEnd())
+    {
+        parseCondition(it->value, pOpNode);
+    }
+
 }
 
 
@@ -781,7 +794,6 @@ void EnvModTemplate::parseEnvironment(const rapidjson::Value &environmentValue)
         }
     }
 
-
     //
     // Set as target marks this environment as the default environment for the template
     valueIt = targetData.FindMember("set_as_target");
@@ -789,8 +801,6 @@ void EnvModTemplate::parseEnvironment(const rapidjson::Value &environmentValue)
     {
         m_useLocalEnvironmentForTemplate = valueIt->value.GetBool();
     }
-
-
 }
 
 
@@ -892,7 +902,6 @@ void EnvModTemplate::parseIncludeOperation(const rapidjson::Value &include, cons
     {
         pOpInc->m_errorIfNotFound = it->value.GetBool();
     }
-
 }
 
 
@@ -953,7 +962,6 @@ void EnvModTemplate::parseCopyOperation(const rapidjson::Value &data, const std:
                 pCopyOp->m_destSaveNodeIdAsGlobalValue, pCopyOp->m_destSaveNodeIdClear);
     }
 
-
     //
     // Parse the copy attributes
     valueIt = destObj.FindMember("copy_attributes");
@@ -1002,7 +1010,6 @@ void EnvModTemplate::parseCopyOperation(const rapidjson::Value &data, const std:
     {
         pCopyOp->m_destNodeType = valueIt->value.GetString();
     }
-
 }
 
 
@@ -1033,6 +1040,38 @@ void EnvModTemplate::parseSaveInfo(const rapidjson::Value &saveInfo, std::string
     if (it != saveInfoObj.MemberEnd())
     {
         clear = it->value.GetBool();
+    }
+}
+
+
+void EnvModTemplate::parseCondition(const rapidjson::Value &operation, const std::shared_ptr<Operation> &pOp)
+{
+    auto it = operation.FindMember("condition");
+    if (it != operation.MemberEnd())
+    {
+        std::shared_ptr<Condition> pCondition = std::make_shared<Condition>();
+        auto conditionObject = it->value.GetObject();
+
+        //
+        // Variable name for the conditional test
+        pCondition->m_varName = conditionObject.FindMember("variable")->value.GetString();
+
+        //
+        // Type of test
+        pCondition->m_type = conditionObject.FindMember("type")->value.GetString();
+
+        //
+        // Any values?
+        auto valueIt = conditionObject.FindMember("values");
+        if (valueIt != conditionObject.MemberEnd())
+        {
+            for (auto &val: valueIt->value.GetArray())
+            {
+                pCondition->m_values.emplace_back(val.GetString());
+            }
+        }
+
+        pOp->m_pCondition = pCondition;
     }
 }
 

@@ -25,6 +25,11 @@
 
 bool OperationCopy::execute(std::shared_ptr<Environments> pEnvironments, std::shared_ptr<Environment> pEnv, std::shared_ptr<Variables> pVariables)
 {
+    if (m_pCondition && !m_pCondition->testCondition(pVariables))
+    {
+        return false;
+    }
+
     //
     // Init for execution
     initializeForExecution(pEnvironments, pEnv, pVariables);

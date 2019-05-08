@@ -38,6 +38,7 @@
 #include "platform.h"
 #include "Cfgmgrlib.hpp"
 #include "Status.hpp"
+#include "Condition.hpp"
 
 class EnvironmentMgr;
 
@@ -76,6 +77,7 @@ class CFGMGRLIB_API EnvModTemplate
         void parseTarget(const rapidjson::Value &targetValue, const std::shared_ptr<OperationNode> &pOp);
         void parseEnvironment(const rapidjson::Value &environmentValue);
         void parseIncludeOperation(const rapidjson::Value &include, const std::shared_ptr<OperationIncludeTemplate> &pOpInc);
+        void parseCondition(const rapidjson::Value &operation, const std::shared_ptr<Operation> &pOp);
         void parseSaveInfo(const rapidjson::Value &saveInfo, std::string &varName, bool &accumulateOk, bool &global, bool &clear);
         void getFilelist(const std::string &path, std::vector<std::string> &filepaths) const;
 

@@ -205,6 +205,9 @@
                         "insert_raw"
                     ],
                     "description" : "Action to perform"
+                },
+                "condition" : {
+                    "$ref" : "#/definitions/condition_def"
                 }
             },
             "oneOf": [
@@ -488,6 +491,10 @@
                     "items" : {
                         "$ref" : "#/definitions/filepath_def"
                     }
+                },
+                "condition" : {
+                    "$ref" : "#/definitions/condition_def",
+                    "description" : "A condition that must evaluate to true in order to attempt to include the template"
                 },
                 "error_if_not_found" : {
                     "type" : "boolean",
@@ -989,7 +996,7 @@
                     "type": "array",
                     "items" : {
                         "type" : "string",
-                        "pattern" : "^[A-Za-z0-9~_\\-\\/\\\\]+(?: +[A-Za-z0-9~_\\/\\\\]+)*$"
+                        "pattern" : "^[A-Za-z0-9~_\\-/\\\\]+(?: +[A-Za-z0-9~_/\\\\]+)*$"
                     },
                     "description" : "Array of paths from which schema files are loaded. First entry MUST be the primary path where the master schema file is located"
                 },
@@ -1010,7 +1017,7 @@
                 },
                 "write" : {
                     "type" : "string",
-                    "pattern" : "^[A-Za-z0-9~_.\\-\\/\\\\{}]+(?: +[A-Za-z0-9~_.\\-\\/\\\\{}]+)*$",
+                    "pattern" : "^[A-Za-z0-9~_.\\-/\\\\{}]+(?: +[A-Za-z0-9~_.\\-/\\\\{}]+)*$",
                     "description" : "Filepath to where environment is serialized after template execution (leave empty or missing for no output) may be a var ref",
                     "default" : ""
                 },
@@ -1104,8 +1111,35 @@
         },
         "filepath_def" : {
             "type" : "string",
-            "pattern" : "^[A-Za-z0-9~_.\\-\\/\\\\{}]+(?: +[A-Za-z0-9~_.\\/\\\\{}]+)*$",
+            "pattern" : "^[A-Za-z0-9~_.\\-/\\\\{}]+(?: +[A-Za-z0-9~_./\\\\{}]+)*$",
             "description" : "The full path to the template file, with potential variable substitutions"
+        },
+        "condition_def" : {
+            "type" :"object",
+            "properties" : {
+                "variable" : {
+                    "type" : "string",
+                    "description" : "Required variable name for the condition test"
+                },
+                "type" : {
+                    "type" : "string",
+                    "enum" : [
+                        "defined",
+                        "not_empty",
+                        "one_of",
+                        "all_of"
+                    ],
+                    "description" : "Required conditional test to perform on the variable"
+                },
+                "values" : {
+                    "type" : "array",
+                    "items" : {
+                        "type" : "string"
+                    },
+                    "description" : "Optional values used for conditional test based on value of condition"
+                }
+            },
+            "required" : [ "variable", "type" ]
         }
     }
 }

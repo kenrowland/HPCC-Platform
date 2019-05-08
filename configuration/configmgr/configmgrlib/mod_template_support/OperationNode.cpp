@@ -34,6 +34,11 @@ bool OperationNode::execute(std::shared_ptr<Environments> pEnvironments, std::sh
 {
     bool rc = true;
 
+    if (m_pCondition && !m_pCondition->testCondition(pVariables))
+    {
+        return false;
+    }
+
     //
     // Get ready to execute the operation
     initializeForExecution(pEnvironments, pEnv, pVariables);

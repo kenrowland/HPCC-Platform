@@ -23,6 +23,7 @@
 #include "Variable.hpp"
 #include "Variables.hpp"
 #include "Environments.hpp"
+#include "Condition.hpp"
 
 class EnvironmentMgr;
 
@@ -49,6 +50,9 @@ class Operation
         std::string m_startIndex;
         size_t m_executionCount;
         size_t m_executionStartIndex;
+        std::shared_ptr<Condition> m_pCondition;
+
+    friend class EnvModTemplate;
 };
 
 
