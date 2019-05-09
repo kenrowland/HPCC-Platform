@@ -44,15 +44,15 @@
                         ],
                         "description" : "The variable type."
                     },
-                    "prompt": {
+                    "prompt" : {
                         "type": "string",
                         "description" : "String shown to user during interactive input"
                     },
-                    "description": {
+                    "description" : {
                         "type": "string",
                         "description" : "Description of what this value represents in the template."
                     },
-                    "values": {
+                    "values" : {
                         "type": "array",
                         "items" : {
                             "type" : "string"

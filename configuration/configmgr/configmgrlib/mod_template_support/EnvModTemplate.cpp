@@ -339,7 +339,6 @@ void EnvModTemplate::parseVariable(const rapidjson::Value &varValue)
                 throw TemplateException(msg, false);
             }
         }
-
     }
 
     it = varValue.FindMember("prepared_value");
@@ -667,7 +666,6 @@ void EnvModTemplate::parseOperationNodeCommonData(const rapidjson::Value &operat
     {
         parseCondition(it->value, pOpNode);
     }
-
 }
 
 

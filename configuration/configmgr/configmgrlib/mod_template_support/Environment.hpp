@@ -24,7 +24,7 @@
 #include "Variables.hpp"
 
 
-class Environment {
+class CFGMGRLIB_API Environment {
 
     public:
 
