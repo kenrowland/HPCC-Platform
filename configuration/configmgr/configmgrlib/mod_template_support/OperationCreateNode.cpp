@@ -50,6 +50,21 @@ void OperationCreateNode::doExecute(std::shared_ptr<EnvironmentMgr> pEnvMgr, std
         {
             Status status;
 
+
+            //
+            // Add a delete to delete any existing nodes, with potential attribute value matching from the
+            // create attribute values array
+            //
+            //  delete_first : {   empty object just means delete
+            //     "attibute_name" : "name"   delete if node exists
+            //  }
+
+            //
+            // Add a skip (mutually exclusive with delete) to skip the add if a node of type with matching
+            // attributes exists
+
+
+
             //
             // Get a new node for insertion (this does not insert the node, but rather returns an orphaned node that
             // can be inserted)

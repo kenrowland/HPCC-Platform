@@ -259,26 +259,26 @@ int main(int argc, char *argv[])
 
     //
     // This is where the error messages are printed out
-    bool errorHeader = false;
-    for (auto const &envStatus: envStatuses)
-    {
-        if (envStatus.second.isError())
-        {
-            errorsFound = true;
-            std::vector<statusMsg> msgs = envStatus.second.getMessages(statusMsg::error, false);
-            if (!errorHeader)
-            {
-                std::cerr << "Errors were detected in one or more environments generated" << std::endl;
-                errorHeader = true;
-            }
-            std::cerr << "Environment: " << envStatus.first << std::endl;
-            std::cerr << "  Errors:" << std::endl;
-            for (auto const &msg: msgs)
-            {
-                std::cerr << "    Message: " << msg.msg << "    Path: " << msg.path << std::endl;
-            }
-        }
-    }
+//    bool errorHeader = false;
+//    for (auto const &envStatus: envStatuses)
+//    {
+//        if (envStatus.second.isError())
+//        {
+//            errorsFound = true;
+//            std::vector<statusMsg> msgs = envStatus.second.getMessages(statusMsg::error, false);
+//            if (!errorHeader)
+//            {
+//                std::cerr << "Errors were detected in one or more environments generated" << std::endl;
+//                errorHeader = true;
+//            }
+//            std::cerr << "Environment: " << envStatus.first << std::endl;
+//            std::cerr << "  Errors:" << std::endl;
+//            for (auto const &msg: msgs)
+//            {
+//                std::cerr << "    Message: " << msg.msg << "    Path: " << msg.path << std::endl;
+//            }
+//        }
+//    }
 
 
     //

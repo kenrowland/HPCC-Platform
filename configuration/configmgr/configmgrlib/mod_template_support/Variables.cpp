@@ -143,6 +143,7 @@ std::string Variables::doValueSubstitution(const std::string &value) const
     {
         index = m_curIndex;  // always start with this value
         bool isSize = false;
+        bool isList = false;
         std::string varNameStr, varName;
         std::string indexStr;
         std::string memberStr, memberName;
@@ -152,7 +153,7 @@ std::string Variables::doValueSubstitution(const std::string &value) const
         // Isolate the variable reference
         std::size_t bracesEndPos = findClosingDelimiter(result, bracesStartPos,"{{", "}}");
         varRef = result.substr(bracesStartPos + 2, bracesEndPos - bracesStartPos - 2);
-        getVaribaleNameComponents(varRef, varNameStr, isSize, indexStr, memberStr, defaultValueStr);
+        getVaribaleNameComponents(varRef, varNameStr, isSize, isList, indexStr, memberStr, defaultValueStr);
 
         //
         // Do value substitutions on each component of the variable reference
@@ -179,6 +180,26 @@ std::string Variables::doValueSubstitution(const std::string &value) const
         {
             substitueValue = std::to_string(getVariable(varName, false, true)->getNumValues());
         }
+
+        //
+        // If list, then generate, potentially empty, list
+        else if (isList)
+        {
+            result = "";
+            auto pVar = getVariable(varName, false, false);
+            if (pVar)
+            {
+                auto numValues = pVar->getNumValues();
+                for (size_t i=0; i<numValues; ++i)
+                {
+                    result.append(pVar->getValue(i));
+                    if (i != numValues-1)
+                    {
+                        result.append(",");
+                    }
+                }
+            }
+        }
         else
         {
             auto pVar = getVariable(varName, false, defaultValueStr.empty());
@@ -203,7 +224,6 @@ std::string Variables::doValueSubstitution(const std::string &value) const
 
     //
     // This should NOT have a [] in it
-
     return evaluate(result);
 }
 
@@ -342,7 +362,7 @@ void Variables::initialize()
 }
 
 
-void Variables::getVaribaleNameComponents(const std::string &varRef, std::string &varName, bool &isSize, std::string &index, std::string &member, std::string &defaultValue) const
+void Variables::getVaribaleNameComponents(const std::string &varRef, std::string &varName, bool &isSize, bool &isList, std::string &index, std::string &member, std::string &defaultValue) const
 {
     //
     // The following forms are supported (note the {{ and }} have already been removed)
@@ -372,23 +392,22 @@ void Variables::getVaribaleNameComponents(const std::string &varRef, std::string
         varName.erase(barPos);
     }
 
-    std::size_t bracketPos, sizePos, memberPos;
+    std::size_t bracketPos, sizePos, memberPos, listPos;
 
     sizePos = varRef.find(".size");
+    listPos = varRef.find(".list");
     bracketPos = varRef.find('[');
 
-    //
-    // Double check it's a valid reference
-    if (sizePos != std::string::npos)
+
+    if ((sizePos    != std::string::npos && (bracketPos != std::string::npos || listPos != std::string::npos)) ||
+        (bracketPos != std::string::npos && (sizePos != std::string::npos    || listPos != std::string::npos)) ||
+        (listPos    != std::string::npos && (bracketPos != std::string::npos || sizePos != std::string::npos)))
     {
-        if (bracketPos != std::string::npos)
-        {
-            throw TemplateException("Both [] and .size may not appear in a variable");
-        }
-        else if (barPos != std::string::npos)
-        {
-            throw TemplateException("A default value is not allowed when using .size");
-        }
+        throw TemplateException("Only one of [], .size, or .list may appear in a variable reference");
+    }
+    else if (barPos != std::string::npos && (bracketPos != std::string::npos || listPos != std::string::npos || sizePos    != std::string::npos))
+    {
+        throw TemplateException("A default value is not allowed when using .size, [], or .list");
     }
 
     //
@@ -397,6 +416,11 @@ void Variables::getVaribaleNameComponents(const std::string &varRef, std::string
     {
         varName = varRef.substr(0, sizePos);
         isSize = true;
+    }
+    else if (listPos != std::string::npos)
+    {
+        varName = varRef.substr(0, sizePos);
+        isList = true;
     }
     else
     {

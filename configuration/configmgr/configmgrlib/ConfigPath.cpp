@@ -139,7 +139,7 @@ void ConfigPath::parsePathElement(std::size_t start, const std::shared_ptr<Confi
                 }
                 else
                 {
-                    throw(ParseException("Bad path, missng attribute values at or around: " + element));
+                    throw(ParseException("Bad path, missing attribute values at or around: " + element));
                 }
             }
             else

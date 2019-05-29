@@ -26,7 +26,7 @@
 
 struct modAttribute {
     modAttribute() : accumulateValuesOk(false), doNotSet(false), optional(false),
-            errorIfNotFound(false), errorIfEmpty(false), saveValueGlobal(false), clear(false) {}
+            errorIfNotFound(false), errorIfEmpty(false), saveValueGlobal(false), clear(false), notEqual(false) {}
     ~modAttribute() = default;
     void addName(const std::string &_name) { names.emplace_back(_name); }
     const std::string &getName(std::size_t idx=0) { return names[idx]; }
@@ -43,6 +43,7 @@ struct modAttribute {
     bool errorIfNotFound;
     bool errorIfEmpty;
     bool optional;
+    bool notEqual;
 };
 
 

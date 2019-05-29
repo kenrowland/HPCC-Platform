@@ -400,7 +400,14 @@
                     "required" : [ "target" ]
                 },
                 {
-                    "required": [ "attributes" ]
+                    "oneOf" : [
+                        {
+                            "required": [ "attributes" ]
+                        },
+                        {
+                            "required": [ "node_value" ]
+                        }
+                    ]
                 },
                 {
                     "not" : {
@@ -450,6 +457,43 @@
                 },
                 {
                     "required" : [ "target" ]
+                },
+                {
+                    "oneOf" : [
+                        {
+                            "allOf" : [
+                                {
+                                    "not" : {
+                                        "required" : [ "create_if_not_found" ]
+                                    }
+                                },
+                                {
+                                    "not" : {
+                                        "required" : [ "node_type" ]
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "allOf" : [
+                                {
+                                    "required" : [ "create_if_not_found" ]
+                                },
+                                {
+                                    "oneOf" : [
+                                        {
+                                            "required" : [ "node_type" ]
+                                        },
+                                        {
+                                            "not" : {
+                                                "required" : [ "node_type" ]
+                                            }
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
                 }
             ]
         },
@@ -769,10 +813,11 @@
                     "items" : {
                         "type" : "string"
                     },
-                    "description" : "Finds the first attribute from the array of names"
+                    "description" : "Finds the first attribute from the array of names (cannot be combined with 'name')"
                 },
                 "name": {
-                    "type": "string"
+                    "type": "string",
+                    "description" : "Find attribute with this name (cannot be combined with 'first_of')"
                 },
                 "save" : {
                     "$ref": "#/definitions/save_info"
