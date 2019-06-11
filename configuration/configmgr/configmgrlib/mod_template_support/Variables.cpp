@@ -398,6 +398,17 @@ void Variables::getVaribaleNameComponents(const std::string &varRef, std::string
     listPos = varRef.find(".list");
     bracketPos = varRef.find('[');
 
+    //
+    // If sizePos or listPos if valid, make sure that it's just that and not a longer name of which a portion matches
+    if (sizePos != std::string::npos && varRef.substr(sizePos).length() != 5)
+    {
+        sizePos = std::string::npos;
+    }
+    if (listPos != std::string::npos && varRef.substr(listPos).length() != 5)
+    {
+        listPos = std::string::npos;
+    }
+
 
     if ((sizePos    != std::string::npos && (bracketPos != std::string::npos || listPos != std::string::npos)) ||
         (bracketPos != std::string::npos && (sizePos != std::string::npos    || listPos != std::string::npos)) ||

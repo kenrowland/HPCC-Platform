@@ -452,34 +452,29 @@ void EnvModTemplate::parseOperation(const rapidjson::Value &operation)
         auto dataIt = operation.FindMember("data");
         if (dataIt != operation.MemberEnd())
         {
-            parseIncludeOperation(dataIt->value, pIncOp);
+            parseIncludeOperation(dataIt->value, pIncOp);  // schema requires data object
         }
 
-        for (auto &file: pIncOp->m_paths)
+        for (auto &path: pIncOp->m_paths)
         {
-            auto pEnvModTemplate = std::make_shared<EnvModTemplate>(*this);
-            pEnvModTemplate->m_ignoreEmptyTemplate = !pIncOp->m_errorIfNotFound;
-            pEnvModTemplate->loadTemplateFromFile(file);
-            pIncOp->m_envModTemplates.emplace_back(pEnvModTemplate);
-        }
+            std::vector<std::string> files;
+            if (pIncOp->m_isPath)
+            {
+                getFilelist(path, files);
+            }
+            else
+            {
+                files.emplace_back(path);
+            }
 
-//        Code for later when paths are supported
-//        // for each path in the vector, create a modification template and load it. Note that
-//        // the path may have a variable reference and it may have wild cards. Any variable reference must
-//        // have been previously defined.
-//        for (auto const &path: pIncOp->m_paths)
-//        {
-//            std::string filePath = m_pVariables->doValueSubstitution(path);
-//            std::vector<std::string> files;
-//            getFilelist(filePath, files);
-//            for (auto &file: files)
-//            {
-//                auto pEnvModTemplate = std::make_shared<EnvModTemplate>(*this);
-//                pEnvModTemplate->m_ignoreEmptyTemplate = !pIncOp->m_errorIfNotFound;
-//                pEnvModTemplate->loadTemplateFromFile(file);
-//                pIncOp->m_envModTemplates.emplace_back(pEnvModTemplate);
-//            }
-//        }
+            for (auto const &file: files)
+            {
+                auto pEnvModTemplate = std::make_shared<EnvModTemplate>(*this);
+                pEnvModTemplate->m_ignoreEmptyTemplate = !pIncOp->m_errorIfNotFound;
+                pEnvModTemplate->loadTemplateFromFile(file);
+                pIncOp->m_envModTemplates.emplace_back(pEnvModTemplate);
+            }
+        }
         parseCondition(operation, pIncOp);
         m_operations.emplace_back(pIncOp);
     }
@@ -841,8 +836,14 @@ void EnvModTemplate::parseIncludeOperation(const rapidjson::Value &include, cons
     auto includeObj = include.GetObject();
 
     //
-    // Get the include template files (a required property)
+    // Get the include template files or directories (one is required)
     auto it = includeObj.FindMember("template_files");
+    if (it == includeObj.MemberEnd())
+    {
+        it = includeObj.FindMember("template_directories");
+        pOpInc->m_isPath = true;
+    }
+
     for (auto &pathIt: it->value.GetArray())
     {
         pOpInc->m_paths.emplace_back(pathIt.GetString());

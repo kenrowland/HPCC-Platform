@@ -536,6 +536,12 @@
                         "$ref" : "#/definitions/filepath_def"
                     }
                 },
+                "template_directories" : {
+                    "type" : "array",
+                    "items" : {
+                        "$ref" : "#/definitions/filepath_def"
+                    }
+                },
                 "condition" : {
                     "$ref" : "#/definitions/condition_def",
                     "description" : "A condition that must evaluate to true in order to attempt to include the template"
@@ -548,7 +554,7 @@
                 "count": {
                     "type": "string",
                     "default" : "1",
-                    "description" : "Number of times to execute the create action"
+                    "description" : "Number of times to execute the incldue action"
                 },
                 "start_index": {
                     "type": "string",
@@ -586,7 +592,32 @@
             },
             "allOf" : [
                 {
-                    "required" : [ "template_files" ]
+                    "oneOf" : [
+                        {
+                            "allOf" : [
+                                {
+                                    "required" : [ "template_files" ]
+                                },
+                                {
+                                    "not" : {
+                                        "required" : [ "template_directories" ]
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "allOf" : [
+                                {
+                                    "required" : [ "template_directories" ]
+                                },
+                                {
+                                    "not" : {
+                                        "required" : [ "template_files" ]
+                                    }
+                                }
+                            ]
+                        }
+                    ]
                 },
                 {
                     "not" : {
@@ -594,7 +625,6 @@
                     }
                 }
             ]
-
         },
         "copy_data_info" : {
             "type" : "object",

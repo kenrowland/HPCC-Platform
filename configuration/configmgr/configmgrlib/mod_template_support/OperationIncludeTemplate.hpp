@@ -28,7 +28,7 @@ class OperationIncludeTemplate : public Operation
 {
     public:
 
-        OperationIncludeTemplate() : m_errorIfNotFound(true), Operation() {}
+        OperationIncludeTemplate() : m_errorIfNotFound(true), m_isPath(false), Operation() {}
         ~OperationIncludeTemplate() override = default;
         bool execute(std::shared_ptr<Environments> pEnvironments, std::shared_ptr<Environment> pEnv, std::shared_ptr<Variables> pVariables) override;
         void addParameterValue(const ParameterValue &parmValue) { m_parameters.emplace_back(parmValue); }
@@ -41,6 +41,7 @@ class OperationIncludeTemplate : public Operation
         std::vector<ParameterValue> m_parameters;
         std::string m_environmentName;
         bool m_errorIfNotFound;
+        bool m_isPath;
 
         friend class EnvModTemplate;
 };
