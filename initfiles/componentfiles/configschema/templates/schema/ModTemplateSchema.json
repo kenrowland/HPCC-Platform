@@ -657,9 +657,50 @@
                 },
                 "destination" : {
                     "ref" : "#/definitions/copy_destination_info"
+                },
+                "strict" : {
+                    "type" : "boolean",
+                    "default" : false,
+                    "description" : "Only valid if incldue_children is true. If set to true, only children in the source whose node type is valid in the destination are copied"
                 }
             },
-            "required" : [ "source", "destination" ]
+            "allOf" : [
+                {
+                    "required" : [ "source", "destination" ]
+                },
+                {
+                    "oneOf" : [
+                        {
+                            "allOf" : [
+                                {
+                                    "properties" : {
+                                        "include_children" : {
+                                            "enum" : [ false ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "not" : {
+                                        "properties" : {
+                                            "strict" : {
+                                                "enum" : [ true ]
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "not" : {
+                                "required" : [ "include_children" ]
+                            }
+                        },
+                        {
+                            "required" : [ "include_children" ]
+                        }
+                    ]
+                }
+            ]
         },
         "copy_destination_info" : {
             "type" : "object",
@@ -673,7 +714,7 @@
                 "node_type": {
                     "type": "string",
                     "pattern" : "^[A-Za-z0-9_{}]*$",
-                    "description" : "The type of node to create (defined by the schema). Required"
+                    "description" : "The type of node to create (defined by the schema). If absent, target is used as the destination and only attributes are copied"
                 },
                 "error_if_not_found" : {
                     "type" : "boolean",

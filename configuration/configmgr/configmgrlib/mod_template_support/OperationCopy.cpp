@@ -172,19 +172,56 @@ void OperationCopy::doNodeCopy(const std::string &sourceNodId, const std::string
 void OperationCopy::doNodeCopy(const std::shared_ptr<EnvironmentNode> &pSourceEnvNode, const std::string &destParentNodeId, bool isChildNode)
 {
     Status status;
+    std::string newNodeType;
     // todo - Make destNodeType optional. If absent and !isChildNode, don't create a new child node as the des, use destParentNodeId as the destination node
-    std::string newNodeType = (!isChildNode && !m_destNodeType.empty()) ? m_destNodeType : pSourceEnvNode->getSchemaItem()->getItemType();
+
+    if (!isChildNode)
+    {
+        newNodeType = m_destNodeType;
+    }
+    else
+    {
+        newNodeType = pSourceEnvNode->getSchemaItem()->getItemType();
+    }
+
+    //
+    // Create new node or get the dest parent node
+    std::shared_ptr<EnvironmentNode> pDestEnvNode;
+    if (newNodeType.empty())
+    {
+        pDestEnvNode = m_pDestEnvMgr->findEnvironmentNodeById(destParentNodeId);
+    }
+    else
+    {
+        std::vector<NameValue> emptyAttributes;
+        pDestEnvNode = m_pDestEnvMgr->addNewEnvironmentNode(destParentNodeId, newNodeType, emptyAttributes, status, true, true, false);
+    }
+
+    //
+    // Get source node's attribute values
+    std::vector<NameValue> copyAttributeValues;
+    getAttributeValues(pSourceEnvNode, copyAttributeValues, isChildNode ? "all" : m_copyAttributeType);
+
+    //
+    // Assign attribute values
+    pDestEnvNode->setAttributeValues(copyAttributeValues, status, true, true);
+
+
+    //std::string newNodeType = (!isChildNode && !m_destNodeType.empty()) ? m_destNodeType : pSourceEnvNode->getSchemaItem()->getItemType();
     //std::shared_ptr<EnvironmentNode> pNewEnvNode = m_pDestEnvMgr->getNewEnvironmentNode(destParentNodeId, newNodeType, status);
 
     //
     // Build the attribute values for initializing the new node (if indicated). An empty vector is required otherwise
-    std::vector<NameValue> copyAttributeValues;
-    getAttributeValues(pSourceEnvNode, copyAttributeValues, isChildNode ? "all" : m_copyAttributeType);
+    //std::vector<NameValue> copyAttributeValues;
+    //getAttributeValues(pSourceEnvNode, copyAttributeValues, isChildNode ? "all" : m_copyAttributeType);
 
-    auto pNewDestEnvNode = m_pDestEnvMgr->addNewEnvironmentNode(destParentNodeId, newNodeType, copyAttributeValues, status, true, true, false);
+    //auto pNewDestEnvNode = m_pDestEnvMgr->addNewEnvironmentNode(destParentNodeId, newNodeType, copyAttributeValues, status, true, true, false);
+
+
+
     if (!isChildNode && m_pDestSaveNodeIdVar)
     {
-        m_pDestSaveNodeIdVar->addValue(pNewDestEnvNode->getId());
+        m_pDestSaveNodeIdVar->addValue(pDestEnvNode->getId());
     }
 
     //
@@ -202,7 +239,19 @@ void OperationCopy::doNodeCopy(const std::shared_ptr<EnvironmentNode> &pSourceEn
         pSourceEnvNode->getChildren(childEnvNodes);
         for (auto const &pChildEnvNode: childEnvNodes)
         {
-            doNodeCopy(pChildEnvNode, pNewDestEnvNode->getId(), true);
+            bool doCopy = true;
+            if (m_strictCopyMode)
+            {
+                std::string sourceItemType = pChildEnvNode->getSchemaItem()->getProperty("itemType");
+                std::vector<std::shared_ptr<SchemaItem>> childSchemaNodes;
+                pDestEnvNode->getSchemaItem()->getChildren(childSchemaNodes, "", sourceItemType);
+                doCopy = !childSchemaNodes.empty();
+            }
+
+            if (doCopy)
+            {
+                doNodeCopy(pChildEnvNode, pDestEnvNode->getId(), true);
+            }
         }
     }
 }
@@ -275,7 +324,7 @@ void OperationCopy::getAttributeValues(const std::shared_ptr<EnvironmentNode> &p
             initAttributes.emplace_back(NameValue(attrEnvValue->getName(), attrEnvValue->getValue()));
         }
     }
-    else if (copyMpde == "except")
+    else if (copyMpde == "exclude")
     {
         pSourceNode->getAttributes(attrEnvValues);
         for (auto const &attrEnvValue: attrEnvValues)

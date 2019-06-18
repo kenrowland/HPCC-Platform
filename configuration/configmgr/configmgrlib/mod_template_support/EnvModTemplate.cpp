@@ -32,6 +32,7 @@
 #include "Utils.hpp"
 #include "EnvironmentMgr.hpp"
 #include "jfile.hpp"
+#include "platform.h"
 
 //
 // Good online resource for validation of modification templates is https://www.jsonschemavalidator.net/
@@ -40,12 +41,13 @@
 
 //
 // Constructor for a new top level root template.
-EnvModTemplate::EnvModTemplate(std::shared_ptr<Environment> &pEnv, const std::string &templateJsonSchemaFile) :
+EnvModTemplate::EnvModTemplate(std::shared_ptr<Environment> &pEnv, const std::string &templateJsonSchemaFile, const std::string &workingDir) :
     m_pTemplate(nullptr),
     m_pSchema(nullptr),
     m_useLocalEnvironmentForTemplate(false),
     m_isRoot(true),
-    m_ignoreEmptyTemplate(false)
+    m_ignoreEmptyTemplate(false),
+    m_workingDir(workingDir)
 {
     //
     // Create the variables object
@@ -85,6 +87,7 @@ EnvModTemplate::EnvModTemplate(const EnvModTemplate &modTemplate) :
     m_pVariables =  std::make_shared<Variables>(modTemplate.m_pVariables->getGlobalVariables());
     m_pEnvironments = modTemplate.m_pEnvironments;
     m_pDefaultEnv = modTemplate.m_pDefaultEnv;   // propagate the default environment
+    m_workingDir = modTemplate.m_workingDir;
 }
 
 
@@ -104,10 +107,19 @@ void EnvModTemplate::releaseTemplate()
 }
 
 
-void EnvModTemplate::loadTemplateFromFile(const std::string &fqTemplateFile)
+void EnvModTemplate::loadTemplateFromFile(const std::string &filename)
 {
-    m_templateFile = fqTemplateFile;
-    std::ifstream jsonFile(fqTemplateFile);
+    bool isAbsolutePath = false;
+
+#ifndef _WIN32
+    isAbsolutePath = filename[0] == PATHSEPCHAR;
+#else
+    isAbsolutePath = (filename.length() > 1 && filename[1] == ':');
+    isAbsolutePath |= filename[0] == '\\';
+#endif
+
+    m_templateFile = isAbsolutePath ? filename : (m_workingDir + filename);
+    std::ifstream jsonFile(m_templateFile);
     rapidjson::IStreamWrapper jsonStream(jsonFile);
     try
     {
@@ -918,6 +930,14 @@ void EnvModTemplate::parseCopyOperation(const rapidjson::Value &data, const std:
     if (valueIt != dataObj.MemberEnd())
     {
         pCopyOp->m_includeChildren = valueIt->value.GetBool();
+    }
+
+    //
+    // Strict mode?
+    valueIt = dataObj.FindMember("strict");
+    if (valueIt != dataObj.MemberEnd())
+    {
+        pCopyOp->m_strictCopyMode = valueIt->value.GetBool();
     }
 
     //

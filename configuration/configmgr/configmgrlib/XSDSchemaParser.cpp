@@ -36,12 +36,12 @@ bool XSDSchemaParser::loadSchema(const std::string &masterConfigFile, const std:
     bool rc = true;
     initializeTypes();
 
-
     //
     // Parse the master XSD
     m_basePath = configPaths[0];
     m_masterXSDFilename = masterConfigFile;
     parseXSD(m_basePath + m_masterXSDFilename);
+    m_schemaLayoutType = m_pSchemaItem->getProperty("schemaLayoutType", "unknown");
 
     for (auto const &configPath: configPaths)
     {
@@ -430,14 +430,23 @@ void XSDSchemaParser::parseElement(const pt::ptree &elemTree)
         throw(ParseException(msg));
     }
 
+    //
+    // If this is a root schema item, initialize it, but only if a schemaLayoutType is not already set.
     if (category == "root")
     {
-        std::string schemaLayoutType = elemTree.get("<xmlattr>.hpcc:schemaLayoutType", "");
-        m_pSchemaItem->setProperty("name", elementName);
-        m_pSchemaItem->setProperty("itemType", itemType);
-        m_pSchemaItem->setProperty("schemaLayoutType", schemaLayoutType);
-        m_pSchemaItem->setProperty("createOnInit", "true");
-        parseXSD(childTree);
+        if (m_schemaLayoutType.empty())
+        {
+            std::string schemaLayoutType = elemTree.get("<xmlattr>.hpcc:schemaLayoutType", "");
+            m_pSchemaItem->setProperty("name", elementName);
+            m_pSchemaItem->setProperty("itemType", itemType);
+            m_pSchemaItem->setProperty("schemaLayoutType", schemaLayoutType);
+            m_pSchemaItem->setProperty("createOnInit", "true");
+            parseXSD(childTree);
+        }
+        else
+        {
+            return;  // root element of another schema layout type
+        }
     }
     else
     {
@@ -510,7 +519,7 @@ void XSDSchemaParser::processSchemaInsert(const pt::ptree &elemTree)
 
     //
     // Make sure path is present and well formed
-    if (path.empty() || path[0] != '/' || path.back() == '/')
+    if (path.empty() || path[0] != '/' || (path.length() > 1 && path.back() == '/'))
     {
         std::string msg = "Insert schema path is missing, empty or not well formed";
         throw(ParseException(msg));

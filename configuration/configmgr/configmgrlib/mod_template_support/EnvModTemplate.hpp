@@ -46,7 +46,7 @@ class CFGMGRLIB_API EnvModTemplate
 {
     public:
 
-        EnvModTemplate(std::shared_ptr<Environment> &pEnv, const std::string &templateJsonSchemaFile);
+        EnvModTemplate(std::shared_ptr<Environment> &pEnv, const std::string &templateJsonSchemaFile, const std::string &workingDir = std::string());
         EnvModTemplate(const EnvModTemplate &modTemplate);
         ~EnvModTemplate();
 
@@ -59,6 +59,7 @@ class CFGMGRLIB_API EnvModTemplate
         void execute(bool isFirst=true, const std::vector<ParameterValue> &parameters = std::vector<ParameterValue>());
         void validateEnvironments(std::map<std::string, Status> &envStatus) const;
         void saveEnvironments() const;
+        void setWorkingDir(const std::string &dir) { m_workingDir = dir; }
         //void setTargetEnvironment(const std::string &name) { if (m_environmentName.empty()) m_environmentName = name; }
 
 
@@ -91,6 +92,7 @@ class CFGMGRLIB_API EnvModTemplate
         std::vector<std::shared_ptr<Operation>> m_operations;
         std::string m_templateFile;
         std::string m_environmentName;
+        std::string m_workingDir;
         std::shared_ptr<Environment> m_pDefaultEnv;   // environment passed when created, use as default
         std::shared_ptr<Environment> m_pLocalEnvironment;   // present if an environment is defined by this template
         bool m_useLocalEnvironmentForTemplate;

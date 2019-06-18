@@ -39,6 +39,7 @@
 //   "input-name" : [ <array of values> ],
 //   ...
 // }
+// -t master.json -o env160cluster.xml -d /home/rowlke01/hpcc/src/initfiles/componentfiles/configschema/xsd -d /home/rowlke01/hpcc/ln/initfiles/componentfiles/configschema/xsd -m environment.xsd -s /home/rowlke01/hpcc/src/initfiles/componentfiles/configschema/templates/schema/ModTemplateSchema.json
 
 bool processOptions(int argc, char *vargv[]);
 bool validate();
@@ -54,6 +55,7 @@ std::string masterSchemaFile = "environment.xsd";
 //std::string configSchemaDir = "";
 std::string configSchemaRelativetDir = ".." PATHSEPSTR "componentfiles"  PATHSEPSTR "configschema" PATHSEPSTR "xsd" PATHSEPSTR;
 std::string configSchemaDefaultDir;
+std::string workingDir;
 std::string modTemplateFile;
 std::string modTemplateSchemaFile = COMPONENTFILES_DIR PATHSEPSTR "configschema" PATHSEPSTR "templates" PATHSEPSTR "schema" PATHSEPSTR "ModTemplateSchema.json";
 //std::string configSchemaPluginsDir = "";
@@ -101,7 +103,8 @@ void usage()
     std::cout << "    -s --template-schema <fullpath>   : path to template schema file (" << modTemplateSchemaFile << ")" << std::endl;
     std::cout << std::endl;
     std::cout << "  Execution Options:" << std::endl;
-    std::cout << "    -t --template <filepath>          : filepath to modification template - required" << std::endl;
+    std::cout << "    -t --template <filename>          : Name of template file. If the template file is not in the current directory" << std::endl;
+    std::cout << "                                          Then use -w/--working-dir to define the path to the template file" << std::endl;
     std::cout << "    -e --env <fullpath>               : Optional filepath to environment file to modify" << std::endl;
     std::cout << "                                          If omitted, a new empty environment is created" << std::endl;
     std::cout << "       --list-inputs                  : List the template inputs. If this option is specified, the template" << std::endl;
@@ -117,6 +120,8 @@ void usage()
     std::cout << "                                          If not specified, input environment file is overwritten" << std::endl;
     std::cout << "                                          If -o is omitted, no results are saved (validates application of the template)" << std::endl;
     std::cout << "       --ignore-errors                : Optional. If present, outputs are written regardless of errors." << std::endl;
+    std::cout << "    -w --working-dir                  : Optional. If present, use this as the working directory for loading templates." << std::endl;
+    std::cout << "                                          All included templates with a relative path are loaded from this directory" << std::endl;
 
     std::cout << std::endl;
 }
@@ -190,7 +195,7 @@ int main(int argc, char *argv[])
             }
         }
 
-        pTemplate = new EnvModTemplate(pEnv, modTemplateSchemaFile);
+        pTemplate = new EnvModTemplate(pEnv, modTemplateSchemaFile, workingDir);
         pTemplate->loadTemplateFromFile(modTemplateFile);
     }
     catch (const TemplateException &te)
@@ -309,7 +314,11 @@ bool processOptions(int argc, char *argv[])
 
             if (optName == "-d" || optName == "--schema-dir")
             {
-                std::string schemaDir = getNextArg(argc, argv, idx++) += PATHSEPSTR;
+                std::string schemaDir = getNextArg(argc, argv, idx++);
+                if (schemaDir.back() != PATHSEPCHAR)
+                {
+                    schemaDir.append(PATHSEPSTR);
+                }
                 configDirs.emplace_back(schemaDir);
             }
 
@@ -364,6 +373,16 @@ bool processOptions(int argc, char *argv[])
                 forceOutput = true;
             }
 
+            else if (optName == "-w" || optName == "--working-dir")
+            {
+                std::string dir = getNextArg(argc, argv, idx++);
+                if (dir.back() != PATHSEPCHAR)
+                {
+                    dir.append(PATHSEPSTR);
+                }
+                workingDir = dir;
+            }
+
         }
     }
     catch(const CliException &e)
@@ -392,7 +411,7 @@ bool validate()
         return false;
     }
 
-    if (!fileExists(modTemplateFile))
+    if (!fileExists(modTemplateFile) && !fileExists(workingDir + modTemplateFile))
     {
         std::cout << "The modification template " << modTemplateFile << " does not exist" << std::endl;
         return false;

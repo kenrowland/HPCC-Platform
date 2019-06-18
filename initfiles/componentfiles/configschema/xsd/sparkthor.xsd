@@ -20,7 +20,7 @@
         xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" attributeFormDefault="unqualified"
         xmlns:hpcc="someuri">
     <xs:include schemaLocation="types.xsd"/>
-    <hpcc:insert hpcc:schemaPath="/Environment/Software">
+    <hpcc:insert hpcc:schemaPath="/Environment/Software" hpcc:schemaLayoutType="hpcc_environment">
         <xs:element name="SparkThorProcess" hpcc:itemType="sparkthor" hpcc:displayName="Spark-Thor" minOccurs="0"
                     maxOccurs="1" hpcc:class="component" hpcc:docid="Th.t1">
             <xs:complexType>

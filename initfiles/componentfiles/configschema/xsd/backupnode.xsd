@@ -21,7 +21,7 @@
         xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" attributeFormDefault="unqualified"
         xmlns:hpcc="someuri">
     <xs:include schemaLocation="types.xsd"/>
-    <hpcc:insert hpcc:schemaPath="/Environment/Software">
+    <hpcc:insert hpcc:schemaPath="/Environment/Software" hpcc:schemaLayoutType="hpcc_environment">
         <xs:element name="BackupNodeProcess" hpcc:displayName="Backup Node Process" hpcc:itemType="backupnode" minOccurs="0" maxOccurs="unbounded" hpcc:class="component">
             <xs:complexType>
                 <xs:sequence>

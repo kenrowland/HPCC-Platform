@@ -72,7 +72,7 @@ bool XMLEnvironmentMgr::save(std::ostream &out)
     {
         pt::ptree envTree, topTree;
         serializeTree(envTree, m_pRootNode);
-        topTree.add_child("Environment", envTree);
+        topTree.add_child(m_pRootNode->getName(), envTree);
 //        boost::property_tree::xml_writer_settings<std::string> settings;
         //pt::write_xml(out, topTree, pt::xml_parser::xml_writer_make_settings<std::string>(' ', 4));
 #if BOOST_VERSION >= 105700

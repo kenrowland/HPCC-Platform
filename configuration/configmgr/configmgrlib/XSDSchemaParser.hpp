@@ -78,6 +78,7 @@ class XSDSchemaParser : public SchemaParser
         std::string m_buildsetFilename;
         std::string m_basePath;
         std::string m_masterXSDFilename;
+        std::string m_schemaLayoutType;
 };
 
 
