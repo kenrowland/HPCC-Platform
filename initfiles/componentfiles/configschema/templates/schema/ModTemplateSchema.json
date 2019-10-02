@@ -147,6 +147,16 @@
                                                 "user_input"
                                             ]
                                         }
+                                    },
+                                    {
+                                        "properties" : {
+                                            "type" : {
+                                                "enum" : [
+                                                    "member_set"
+                                                ]
+                                            }
+                                        },
+                                        "required" : [ "members" ]
                                     }
                                 ]
                             },

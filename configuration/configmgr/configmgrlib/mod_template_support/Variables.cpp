@@ -371,7 +371,7 @@ void Variables::getVaribaleNameComponents(const std::string &varRef, std::string
     //   {{varName.size}} - the number of values stored in the variable varName
     //   {{varName[index]}} - the value at the specified index of the variable varName
     //   {{varName[index].member}} - the value of "member" at the specified index
-    // An optional default value can be specified by adding ':defaultValue' to the end
+    // An optional default value can be specified by adding '|defaultValue' to the end
     // of the reference. A default value is not allowed in the .size case
     //
     // Another general note, [index] could be implicity implied for an operation executing over
