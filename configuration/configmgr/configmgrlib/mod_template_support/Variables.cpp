@@ -105,21 +105,6 @@ std::shared_ptr<Variable> Variables::getGlobalVariable(const std::string &name, 
 }
 
 
-void Variables::prepare()
-{
-    //
-    // Prepare all local values
-    for (auto &pVar: m_variables)
-    {
-        std::string preparedValue = pVar->getPreparedValue();
-        if (!preparedValue.empty())
-        {
-            pVar->addValue(doValueSubstitution(preparedValue));
-        }
-    }
-}
-
-
 std::string Variables::doValueSubstitution(const std::string &value) const
 {
     //

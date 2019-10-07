@@ -42,20 +42,20 @@ bool OperationIncludeTemplate::execute(std::shared_ptr<Environments> pEnvironmen
         pVariables->setIterationInfo(m_executionStartIndex + idx, idx);
 
         //
-        // Create a vector of prepared parameter values based on this execution of the template
-        std::vector<ParameterValue> preparedValues;
+        // Create a vector of parameter values based on this execution of the template
+        std::vector<ParameterValue> templateParameters;
 
         //
         // Add any parameter values to the local variables for this template
         for (auto &parm: m_parameters)
         {
-            ParameterValue preparedValue;
-            preparedValue.name = parm.name;
+            ParameterValue parameterValue;
+            parameterValue.name = parm.name;
             for (auto &parmValue: parm.values)
             {
                 try
                 {
-                    preparedValue.values.emplace_back(pVariables->doValueSubstitution(parmValue));
+                    parameterValue.values.emplace_back(pVariables->doValueSubstitution(parmValue));
                 }
                 catch (TemplateException &te)
                 {
@@ -68,21 +68,21 @@ bool OperationIncludeTemplate::execute(std::shared_ptr<Environments> pEnvironmen
 
             //
             // Add the parameter if there are values assigned
-            if (!preparedValue.values.empty())
+            if (!parameterValue.values.empty())
             {
-                preparedValues.emplace_back(preparedValue);
+                templateParameters.emplace_back(parameterValue);
             }
         }
 
         //
         // Note, pEnv is not used here. When the template was instantiated, the default environment was passed from the
-        // parent environment. That's the way templates work.
+        // parent environment during parsing. That's the way templates work.
 
         //
         // Go execute it each template
         for (auto &pEnvModTemplate: m_envModTemplates)
         {
-            pEnvModTemplate->execute((idx == 0), preparedValues);
+            pEnvModTemplate->execute((idx == 0), templateParameters);
         }
     }
 

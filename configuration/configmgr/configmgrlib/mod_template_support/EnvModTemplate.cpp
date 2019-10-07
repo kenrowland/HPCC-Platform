@@ -299,7 +299,9 @@ void EnvModTemplate::parseVariable(const rapidjson::Value &varValue)
             std::string varVal = val.GetString();
             try
             {
-                pVariable->addValue(m_pVariables->doValueSubstitution(varVal));
+                // todo, do NOT do the value substitution here, do it runtime
+                //pVariable->addValue(m_pVariables->doValueSubstitution(varVal));
+                pVariable->addValue(varVal);
             }
             catch (TemplateException &te)
             {
@@ -351,12 +353,6 @@ void EnvModTemplate::parseVariable(const rapidjson::Value &varValue)
                 throw TemplateException(msg, false);
             }
         }
-    }
-
-    it = varValue.FindMember("prepared_value");
-    if (it != varValue.MemberEnd())
-    {
-        pVariable->m_preparedValue = trim(it->value.GetString());
     }
 
     it = varValue.FindMember("user_input");
@@ -1157,19 +1153,6 @@ void EnvModTemplate::execute(bool isFirst, const std::vector<ParameterValue> &pa
                 pParmVar->addValue(parmValue);
             }
         }
-
-        try
-        {
-            //
-            // Do final prep on inputs. This may set values for inputs that are dependent on previously set inputs
-            m_pVariables->prepare();
-        }
-        catch (TemplateExecutionException &te)
-        {
-            te.setContext("Variable preparation", m_templateFile);
-            throw;
-        }
-
 
         try
         {

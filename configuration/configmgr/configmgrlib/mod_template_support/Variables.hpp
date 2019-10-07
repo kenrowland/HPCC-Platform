@@ -42,7 +42,6 @@ class Variables : public std::enable_shared_from_this<Variables>
         size_t getCurIteration() const { return m_iter; }
         std::string doValueSubstitution(const std::string &value) const;
         const std::vector<std::shared_ptr<Variable>> &getAllVariables() const { return m_variables; }
-        void prepare();
         void initialize();
 
 

@@ -84,10 +84,6 @@
                         "description" : "Set to true if user is required to provide a value for the variable in order to execute the template",
                         "default" : false
                     },
-                    "prepared_value": {
-                        "type": "string",
-                        "description" : "Optional. Used to prepare the final value for use during template execution. Usually combined with other variable values of the form {{varname}}"
-                    },
                     "global" : {
                         "type" : "boolean",
                         "default" : false,
@@ -117,20 +113,6 @@
                                         "not" : {
                                             "required" : [
                                                 "values"
-                                            ]
-                                        }
-                                    },
-                                    {
-                                        "properties" : {
-                                            "type" : {
-                                                "enum" : [
-                                                    "member_set"
-                                                ]
-                                            }
-                                        },
-                                        "not" : {
-                                            "required" : [
-                                                "prepared_value"
                                             ]
                                         }
                                     },
@@ -968,7 +950,7 @@
         "save_info" : {
             "type": "object",
             "properties": {
-                "name": {
+                "variable_name": {
                     "type": "string",
                     "pattern" : "^[A-Za-z0-9_]*$"
                 },
@@ -989,8 +971,12 @@
                     "description" : "Save the value as a global variable as opposed to a local value"
                 }
             },
-            "required": [
-                "name"
+            "allOf" : [
+                {
+                    "required": [
+                        "variable_name"
+                    ]
+                }
             ]
         },
         "node_value_ref" : {
@@ -1080,35 +1066,6 @@
                     ]
                 }
             ]
-        },
-        "target_path" : {
-            "type" : "object",
-            "properties" : {
-                "path" : {
-                    "type" : "string"
-                },
-                "environment" : {
-                    "type" : "string",
-                    "pattern" : "^[A-Za-z0-9_{}]*$",
-                    "description" : "Name of environment to target (a single override only)"
-                }
-            },
-            "required" : [ "path" ]
-        },
-        "target_node" : {
-            "type" : "object",
-            "properties" : {
-                "nodeid" : {
-                    "type" : "string",
-                    "pattern" : "^[A-Za-z0-9_{}]*$"
-                },
-                "environment" : {
-                    "type" : "string",
-                    "pattern" : "^[A-Za-z0-9_{}]*$",
-                    "description" : "Name of environment to target (a single override only)"
-                }
-            },
-            "required" : [ "nodeid" ]
         },
         "environment_def" : {
             "type" : "object",
