@@ -24,105 +24,60 @@
 #include "Status.hpp"
 
 
-void OperationCreateNode::doExecute(std::shared_ptr<EnvironmentMgr> pEnvMgr, std::shared_ptr<Variables> pVariables)
+void OperationCreateNode::doExecute(std::shared_ptr<EnvironmentMgr> pEnvMgr, std::shared_ptr<Variables> pVariables, const std::string &nodeId)
 {
-    std::shared_ptr<EnvironmentNode> pNewEnvNode;
+    std::string parentNodeId = pVariables->doValueSubstitution(nodeId);
 
-    //
-    // Create an input to hold the newly created node ID(s) if indicated. The IDs are saved as the node(s) is/are
-    // created.
-    std::shared_ptr<Variable> pSaveNodeIdInput;
-    if (!m_saveNodeIdName.empty())
+    Status status;
+    std::shared_ptr<EnvironmentNode> pNewEnvNode = pEnvMgr->getNewEnvironmentNode(parentNodeId, m_nodeType, status);
+    if (pNewEnvNode)
     {
-        pSaveNodeIdInput = createVariable(pVariables->doValueSubstitution(m_saveNodeIdName), "string", pVariables,
-                m_accumulateSaveNodeIdOk, m_saveNodeIdAsGlobalValue, m_saveNodeIdClear);
-    }
-
-    //
-    // Create any attribute save inputs
-    createAttributeSaveInputs(pVariables);
-
-    //
-    // Execute for each parent node
-    if (!m_parentNodeIds.empty())
-    {
-        for (auto &parentNodeId: m_parentNodeIds)
+        //
+        // Build a vector of name value pairs of the attributes to set for the node. Also, if any attribute
+        // indicates that its set value shall be saved, ensure an input exists.
+        std::vector<NameValue> attrValues;
+        for (auto &attr: m_attributes)
         {
-            Status status;
-
-
-            //
-            // Add a delete to delete any existing nodes, with potential attribute value matching from the
-            // create attribute values array
-            //
-            //  delete_first : {   empty object just means delete
-            //     "attibute_name" : "name"   delete if node exists
-            //  }
-
-            //
-            // Add a skip (mutually exclusive with delete) to skip the add if a node of type with matching
-            // attributes exists
-
-
-
-            //
-            // Get a new node for insertion (this does not insert the node, but rather returns an orphaned node that
-            // can be inserted)
-            pNewEnvNode = pEnvMgr->getNewEnvironmentNode(parentNodeId, m_nodeType, status);
-            if (pNewEnvNode)
+            if (!attr.doNotSet && (!attr.cookedValue.empty() || !attr.optional))
             {
-                //
-                // Build a vector of name value pairs of the attributes to set for the node. Also, if any attribute
-                // indicates that its set value shall be saved, ensure an input exists.
-                std::vector<NameValue> attrValues;
-                for (auto &attr: m_attributes)
-                {
-                    if (!attr.doNotSet && (!attr.cookedValue.empty() || !attr.optional))
-                    {
-                        attrValues.emplace_back(NameValue(attr.getName(), attr.cookedValue));
-                    }
-                }
-
-                //
-                // Add the new node to the environment
-                pNewEnvNode = pEnvMgr->addNewEnvironmentNode(parentNodeId, pVariables->doValueSubstitution(m_nodeType), attrValues, status, true, true, m_populateChildren);
-                if (pNewEnvNode)
-                {
-                    // construct a status for just this new node's ID so we can see if there is an error
-                    Status newNodeStatus(status, pNewEnvNode->getId());
-                    if (newNodeStatus.isError())
-                    {
-                        throw TemplateExecutionException("There was a problem adding the new node, status returned an error");
-                    }
-
-                    //
-                    // save the node id if indicated
-                    if (pSaveNodeIdInput)
-                    {
-                        pSaveNodeIdInput->addValue(pNewEnvNode->getId());
-                    }
-
-                    //
-                    // Save any attribute values to inputs for use later
-                    saveAttributeValues(pVariables, pNewEnvNode);
-
-                    //
-                    // Process node value
-                    processNodeValue(pVariables, pNewEnvNode);
-                }
-                else
-                {
-                    throw TemplateExecutionException("There was a problem adding the new node");
-                }
-            }
-            else
-            {
-                throw TemplateExecutionException("Unable to get new node");
+                attrValues.emplace_back(NameValue(attr.getName(), attr.cookedValue));
             }
         }
+
+        //
+        // Add the new node to the environment
+        pNewEnvNode = pEnvMgr->addNewEnvironmentNode(parentNodeId, pVariables->doValueSubstitution(m_nodeType), attrValues, status, true, true, m_populateChildren);
+        if (pNewEnvNode)
+        {
+            // construct a status for just this new node's ID so we can see if there is an error
+            Status newNodeStatus(status, pNewEnvNode->getId());
+            if (newNodeStatus.isError())
+            {
+                throw TemplateExecutionException("There was a problem adding the new node, status returned an error");
+            }
+
+            //
+            // save the node id if indicated
+            if (m_pSaveNodeIdVar)
+            {
+                m_pSaveNodeIdVar->addValue(pNewEnvNode->getId());
+            }
+
+            //
+            // Save any attribute values to inputs for use later
+            saveAttributeValues(pVariables, pNewEnvNode);
+
+            //
+            // Process node value
+            processNodeValue(pVariables, pNewEnvNode);
+        }
+        else
+        {
+            throw TemplateExecutionException("There was a problem adding the new node");
+        }
     }
-    else if (m_throwOnEmpty)
+    else
     {
-        throw TemplateExecutionException("No parent nodes selected for creation of new child nodes");
+        throw TemplateExecutionException("Unable to get new node");
     }
 }

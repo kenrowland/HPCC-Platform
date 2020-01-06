@@ -53,7 +53,7 @@ class CFGMGRLIB_API Variable
         std::string m_name;
         std::string m_userPrompt;
         std::string m_description;
-        bool m_userInput = true;
+        bool m_userInput;
         std::vector<std::string> m_values;
 
 

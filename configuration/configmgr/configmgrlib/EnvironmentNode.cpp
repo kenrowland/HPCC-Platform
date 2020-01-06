@@ -288,15 +288,15 @@ void EnvironmentNode::getAttributeValueForAllSiblings(const std::string &attrNam
     {
         std::vector<std::shared_ptr<EnvironmentNode>> nodes;
         pParentNode->getChildren(nodes, m_name);
-        for (auto it = nodes.begin(); it != nodes.end(); ++it)
+        for (auto const &pNode: nodes)
         {
-            result.push_back((*it)->getAttributeValue(attrName));
+            result.push_back(pNode->getAttributeValue(attrName));
         }
     }
 }
 
 
-const std::shared_ptr<EnvironmentValue> EnvironmentNode::getAttribute(const std::string &name) const
+std::shared_ptr<EnvironmentValue> EnvironmentNode::getAttribute(const std::string &name) const
 {
     std::shared_ptr<EnvironmentValue> pValue;
     auto it = m_attributes.find(name);
@@ -315,9 +315,9 @@ void EnvironmentNode::getInsertableItems(std::vector<InsertableItem> &insertable
     //
     // Iterate over the children and for each, create a childCount entry based on the
     // child node's configuration type
-    for (auto childIt = m_children.begin(); childIt != m_children.end(); ++childIt)
+    for (auto const &childIt: m_children)
     {
-        std::string itemType = childIt->second->getSchemaItem()->getItemType();
+        std::string itemType = childIt.second->getSchemaItem()->getItemType();
         auto findIt = childCounts.find(itemType);
         if (findIt != childCounts.end())
         {
@@ -370,9 +370,9 @@ void EnvironmentNode::initialize()
 
     //
     // Initilize each attribute
-    for (auto attrIt = m_attributes.begin(); attrIt != m_attributes.end(); ++attrIt)
+    for (auto const &attrIt: m_attributes)
     {
-        attrIt->second->initialize();
+        attrIt.second->initialize();
     }
 }
 
@@ -475,9 +475,9 @@ void EnvironmentNode::doFetchNodes(ConfigPath &configPath, std::vector<std::shar
             {
                 //
                 // For all the matching nodes at this element, call each to continue the search
-                for (auto childNodeIt = childNodes.begin(); childNodeIt != childNodes.end(); ++childNodeIt)
+                for (auto const &pChildNode: childNodes)
                 {
-                    (*childNodeIt)->doFetchNodes(configPath, nodes);
+                    pChildNode->doFetchNodes(configPath, nodes);
                 }
             }
             else

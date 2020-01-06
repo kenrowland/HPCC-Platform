@@ -47,6 +47,24 @@ void Variables::add(const std::shared_ptr<Variable> pVariable, bool global)
 }
 
 
+bool Variables::hasMultiValueVariableReference(const std::string &name) const
+{
+    bool rc = false;
+    std::size_t bracesStartPos = name.find("{{");
+    if (bracesStartPos != std::string::npos)
+    {
+        std::size_t bracesEndPos = findClosingDelimiter(name, bracesStartPos,"{{", "}}");
+        std::string varName = name.substr(bracesStartPos + 2, bracesEndPos - bracesStartPos - 2);
+        auto pVar = getVariable(varName, false, false);
+        if (pVar)
+        {
+            rc = pVar->getNumValues() > 1;
+        }
+    }
+    return rc;
+}
+
+
 std::shared_ptr<Variable> Variables::getVariable(const std::string &name, bool localOnly, bool throwIfNotFound) const
 {
     std::shared_ptr<Variable> pRetVar;
@@ -401,10 +419,10 @@ void Variables::getVaribaleNameComponents(const std::string &varRef, std::string
     {
         throw TemplateException("Only one of [], .size, or .list may appear in a variable reference");
     }
-    else if (barPos != std::string::npos && (bracketPos != std::string::npos || listPos != std::string::npos || sizePos    != std::string::npos))
-    {
-        throw TemplateException("A default value is not allowed when using .size, [], or .list");
-    }
+//    else if (barPos != std::string::npos && (bracketPos != std::string::npos || listPos != std::string::npos || sizePos != std::string::npos))
+//    {
+//        throw TemplateException("A default value is not allowed when using .size, [], or .list");
+//    }
 
     //
     // If asking for size....

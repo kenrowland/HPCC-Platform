@@ -18,9 +18,9 @@
 #ifndef HPCCSYSTEMS_PLATFORM_OPERATIONFINDNODE_HPP
 #define HPCCSYSTEMS_PLATFORM_OPERATIONFINDNODE_HPP
 
-#include "OperationCreateNode.hpp"
+#include "OperationNode.hpp"
 
-class OperationFindNode : public OperationCreateNode
+class OperationFindNode : public OperationNode
 {
     public:
 
@@ -30,12 +30,7 @@ class OperationFindNode : public OperationCreateNode
 
     protected:
 
-        void doExecute(std::shared_ptr<EnvironmentMgr> pEnvMgr, std::shared_ptr<Variables> pVariables) override;
-
-
-    private:
-
-        bool m_createIfNotFound = false;
+        void doExecute(std::shared_ptr<EnvironmentMgr> pEnvMgr, std::shared_ptr<Variables> pVariables, const std::string &nodeId) override;
 
 
     friend class EnvModTemplate;

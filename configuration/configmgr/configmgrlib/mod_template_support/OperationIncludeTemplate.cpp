@@ -28,6 +28,11 @@
 
 bool OperationIncludeTemplate::execute(std::shared_ptr<Environments> pEnvironments, std::shared_ptr<Environment> pEnv, std::shared_ptr<Variables> pVariables)
 {
+    if (m_breakExecution)
+    {
+        int i = 5;
+    }
+
     if (m_pCondition && !m_pCondition->testCondition(pVariables))
     {
         return false;
@@ -59,9 +64,9 @@ bool OperationIncludeTemplate::execute(std::shared_ptr<Environments> pEnvironmen
                 }
                 catch (TemplateException &te)
                 {
-                    if (!parm.conditional)
+                    if (!parm.m_errorIfEmpty)
                     {
-                        throw;    // it's an error if the parameter is not conditional
+                        throw;    // it's an error if the parameter is not conditional, just rethrow the exception
                     }
                 }
             }

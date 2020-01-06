@@ -1,6 +1,6 @@
 {
     "$schema": "http://json-schema.org/draft-04/schema#",
-    "description": "Schema for validating environment modification template",
+    "description": "Schema for validating configuration modification template",
     "type": "object",
     "properties": {
         "name": {
@@ -19,8 +19,12 @@
             ],
             "description" : "Type of template. Mainly used for filtering templates."
         },
-        "environment" : {
-            "$ref": "#/definitions/environment_def"
+        "configuration" : {
+            "$ref": "#/definitions/configuration_def"
+        },
+        "configuration_name" : {
+            "type" : "string",
+            "description" : "Name of a previously defined configuration to use as the default for the template"
         },
         "variables": {
             "type": "array",
@@ -173,10 +177,47 @@
             }
         }
     },
-    "required": [
-        "name",
-        "type",
-        "operations"
+    "allOf" : [
+        {
+            "required": [
+                "name",
+                "type",
+                "operations"
+            ]
+        },
+        {
+            "oneOf" : [
+                {
+                    "not" : {
+                        "required" : [ "configuration", "configuration_name" ]
+                    }
+                },
+                {
+                    "allOf" : [
+                        {
+                            "required" : [ "configuration" ]
+                        },
+                        {
+                            "not" : {
+                                "required" : [ "configuration_name" ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "allOf" : [
+                        {
+                            "required" : [ "configuration_name" ]
+                        },
+                        {
+                            "not" : {
+                                "required" : [ "configuration" ]
+                            }
+                        }
+                    ]
+                }
+            ]
+        }
     ],
     "definitions": {
         "operation": {
@@ -194,12 +235,18 @@
                         "delete",
                         "include",
                         "copy",
-                        "insert_raw"
+                        "insert_raw",
+                        "noop"
                     ],
                     "description" : "Action to perform"
                 },
                 "condition" : {
                     "$ref" : "#/definitions/condition_def"
+                },
+                "break" : {
+                    "type" : "boolean",
+                    "default" : false,
+                    "description" : "Used in development work for templates only. Forces code into an if block where a breakpoint can be set to debug execution of an operation"
                 }
             },
             "oneOf": [
@@ -312,6 +359,18 @@
                         "action",
                         "data"
                     ]
+                },
+                {
+                    "properties": {
+                        "action": {
+                            "enum": [
+                                "noop"
+                            ]
+                        }
+                    },
+                    "required": [
+                        "action"
+                    ]
                 }
             ],
             "description" : "Definition of the operation to perform"
@@ -329,7 +388,7 @@
                 },
                 "start_index": {
                     "type": "string",
-                    "defalut" : "0",
+                    "default" : "0",
                     "description" : "Starting index for group variable value access (only applies to variable access)"
                 },
                 "node_type": {
@@ -370,9 +429,6 @@
                 "target" : {
                     "$ref" : "#/definitions/target_node_or_path"
                 },
-                "start_index": {
-                    "type": "string"
-                },
                 "save": {
                     "$ref": "#/definitions/save_info"
                 },
@@ -405,6 +461,11 @@
                     "not" : {
                         "required" : [ "count" ]
                     }
+                },
+                {
+                    "not" : {
+                        "required" : [ "start_index" ]
+                    }
                 }
             ]
         },
@@ -414,20 +475,12 @@
                 "target" : {
                     "$ref" : "#/definitions/target_node_or_path"
                 },
-                "node_type": {
-                    "type": "string",
-                    "pattern" : "^[A-Za-z0-9_{}]*$"
-                },
                 "save": {
                     "$ref": "#/definitions/save_info"
                 },
                 "error_if_not_found": {
                     "type": "boolean",
                     "default" : true
-                },
-                "create_if_not_found": {
-                    "type": "boolean",
-                    "default" : false
                 },
                 "node_value" : {
                     "$ref" : "#/definitions/node_value_ref"
@@ -550,7 +603,7 @@
                 },
                 "start_index": {
                     "type": "string",
-                    "defalut" : "0",
+                    "default" : "0",
                     "description" : "Starting index for group variable value access (only applies to variable access)"
                 },
                 "template_parameters": {
@@ -571,10 +624,10 @@
                                 },
                                 "description" : "Values to assign to the variable"
                             },
-                            "conditional" : {
+                            "error_if_empty" : {
                                 "type" : "boolean",
                                 "default" : false,
-                                "description" : "If true, the variable is NOT assigned unless it has at least one valid value. The only way this happens is if all values are variable references that are not defined"
+                                "description" : "If true, an error is generated if any value is empty (only applies to variable references). Otherwise, if false and the variable is empty, no value is added"
                             }
                         },
                         "required": [ "name", "values" ]
@@ -627,16 +680,6 @@
                 "save": {
                     "$ref": "#/definitions/save_info"
                 },
-                "count": {
-                    "type": "string",
-                    "default" : "1",
-                    "description" : "Number of times to execute the create action"
-                },
-                "start_index": {
-                    "type": "string",
-                    "defalut" : "0",
-                    "description" : "Starting index for group variable value access (only applies to variable access)"
-                },
                 "error_if_not_found" : {
                     "type" : "boolean",
                     "default" : false,
@@ -653,7 +696,13 @@
                 "strict" : {
                     "type" : "boolean",
                     "default" : false,
-                    "description" : "Only valid if incldue_children is true. If set to true, only children in the source whose node type is valid in the destination are copied"
+                    "description" : "Only valid if include_children is true. If set to true, only children in the source whose node type is valid in the destination are copied"
+                },
+                "copy_type" : {
+                    "type" : "string",
+                    "default" : "",
+                    "description" : "type of copy, many_to_many copies each source to a new node of the source type under the target, many_to_one copies all source nodes under one target node",
+                    "enum" : [ "many_to_many", "many_to_one" ]
                 }
             },
             "allOf" : [
@@ -691,6 +740,14 @@
                             "required" : [ "include_children" ]
                         }
                     ]
+                },
+                {
+                    "not" : {
+                        "required" : [ "start_index" ]
+                    }
+                },
+                {
+                    "required" : [ "copy_type" ]
                 }
             ]
         },
@@ -734,7 +791,12 @@
                         }
                     }
                 }
-            }
+            },
+            "allOf" : [
+                {
+                    "required" : [ "target" ]
+                }
+            ]
         },
         "insert_data_info" : {
             "type" : "object",
@@ -908,6 +970,9 @@
                     ]
                 },
                 {
+                    "required" : [ "save" ]
+                },
+                {
                     "allOf" : [
                         {
                             "not" : {
@@ -990,7 +1055,8 @@
                     "default" : false,
                     "description" : "Halt execution if the node has no value"
                 }
-            }
+            },
+            "required" : [ "save" ]
         },
         "node_value_new" : {
             "type" : "object",
@@ -1034,10 +1100,10 @@
                     "pattern" : "^[A-Za-z0-9_{}]*$",
                     "description" : "Node id of the target"
                 },
-                "environment" : {
+                "configuration_name" : {
                     "type" : "string",
                     "pattern" : "^[A-Za-z0-9_{}]*$",
-                    "description" : "Name of environment to target (a single override only)"
+                    "description" : "Name of configuration to target"
                 }
             },
             "oneOf" : [
@@ -1067,13 +1133,13 @@
                 }
             ]
         },
-        "environment_def" : {
+        "configuration_def" : {
             "type" : "object",
             "properties" : {
                 "name" : {
                     "type" : "string",
                     "pattern" : "^[A-Za-z0-9_]*$",
-                    "description" : "Either references an existing environment or names a new one described by other values in this object"
+                    "description" : "name of new configuration"
                 },
                 "schema_paths": {
                     "type": "array",
@@ -1090,103 +1156,55 @@
                 },
                 "load_filename" : {
                     "type" : "string",
-                    "description" : "If given, this environment is loaded (not allowed with initialize)",
+                    "description" : "If given, the configuration is loaded from this filename (not allowed with initialize)",
                     "default" : ""
                 },
                 "initialize" : {
                     "type" : "boolean",
-                    "description" : "True to create an empty environment (not allowed with load_environment)",
+                    "description" : "True to create an empty configuration (not allowed with load)",
                     "default" : false
                 },
-                "write" : {
+                "write_filename" : {
                     "type" : "string",
                     "pattern" : "^[A-Za-z0-9~_.\\-/\\\\{}]+(?: +[A-Za-z0-9~_.\\-/\\\\{}]+)*$",
-                    "description" : "Filepath to where environment is serialized after template execution (leave empty or missing for no output) may be a var ref",
+                    "description" : "Filepath to where the configuration is serialized after template execution (leave empty or missing for no output) may be a var ref",
                     "default" : ""
                 },
                 "set_as_target" : {
                     "type" : "boolean",
-                    "description" : "Set to true if this environment is the default for the template",
+                    "description" : "Set to true if this configuration is the default for the template",
                     "default" : false
                 }
             },
-            "oneOf" : [
+            "allOf" : [
                 {
-                    "allOf" : [
-                        {
-                            "required" : [ "name" ]
-                        },
-                        {
-                            "not" : {
-                                "required" : [ "schema_paths" ]
-                            }
-                        },
-                        {
-                            "not" : {
-                                "required" : [ "master_schema_filename" ]
-                            }
-                        },
-                        {
-                            "not" : {
-                                "required" : [ "load_environment" ]
-                            }
-                        },
-                        {
-                            "not" : {
-                                "required" : [ "initialize_empty_environment" ]
-                            }
-                        },
-                        {
-                            "not" : {
-                                "required" : [ "write_environment" ]
-                            }
-                        }
-                    ]
+                    "required" : [ "name", "schema_paths", "master_schema_filename"]
                 },
                 {
-                    "allOf" : [
+                    "oneOf" : [
                         {
-                            "required" : [ "name", "schema_paths", "master_schema_filename"]
+                            "allOf" : [
+                                {
+                                    "required" : [ "load_filename" ]
+                                },
+                                {
+                                    "not" : {
+                                        "required" : [ "initialize" ]
+                                    }
+                                }
+                            ]
                         },
                         {
-                            "not" : {
-                                "required" : [ "load_environment" ]
-                            }
-                        },
-                        {
-                            "not" : {
-                                "required" : [ "initialize_empty_environment" ]
-                            }
-                        }
-                    ]
-                },
-                {
-                    "allOf" : [
-                        {
-                            "required" : [ "name", "schema_paths", "master_schema_filename"]
-                        },
-                        {
-                            "required" : [ "load_environment" ]
-                        },
-                        {
-                            "not" : {
-                                "required" : [ "initialize_empty_environment" ]
-                            }
-                        }
-                    ]
-                },
-                {
-                    "allOf" : [
-                        {
-                            "required" : [ "name", "schema_paths", "master_schema_filename"]
-                        },
-                        {
-                            "required" : [ "initialize_empty_environment" ]
-                        },
-                        {
-                            "not" : {
-                                "required" : [ "load_environment" ]
-                            }
+                            "allOf" : [
+                                {
+                                    "required" : [ "initialize" ]
+                                },
+                                {
+                                    "not" : {
+                                        "required" : [ "load_filename" ]
+                                    }
+                                }
+                            ]
                         }
                     ]
                 }

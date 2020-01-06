@@ -26,6 +26,7 @@
 #include "OperationIncludeTemplate.hpp"
 #include "OperationInsertRaw.hpp"
 #include "MemberSetVariable.hpp"
+#include "Target.hpp"
 #include "Exceptions.hpp"
 #include <sstream>
 #include <fstream>
@@ -276,7 +277,6 @@ void EnvModTemplate::parseVariable(const rapidjson::Value &varValue)
         pVariable = variableFactory(type, varName);
     }
 
-
     //
     // Get and set the rest of the input values
     it = varValue.FindMember("prompt");
@@ -299,13 +299,11 @@ void EnvModTemplate::parseVariable(const rapidjson::Value &varValue)
             std::string varVal = val.GetString();
             try
             {
-                // todo, do NOT do the value substitution here, do it runtime
-                //pVariable->addValue(m_pVariables->doValueSubstitution(varVal));
-                pVariable->addValue(varVal);
+                pVariable->addValue(m_pVariables->doValueSubstitution(varVal));
             }
             catch (TemplateException &te)
             {
-                std::string msg = "Error assigning value " + varVal + " to variable " + pVariable->getName() + " in template " + m_templateFile;
+                std::string msg = "Error assigning value '" + varVal + "' to variable '" + pVariable->getName() + "' in template '" + m_templateFile + "'";
                 throw TemplateException(msg, false);
             }
         }
@@ -451,7 +449,7 @@ void EnvModTemplate::parseOperations(const rapidjson::Value &operations)
 
 void EnvModTemplate::parseOperation(const rapidjson::Value &operation)
 {
-
+    std::shared_ptr<Operation> pOperation;
     std::string action(operation.FindMember("action")->value.GetString());
 
     if (action == "include")
@@ -485,6 +483,7 @@ void EnvModTemplate::parseOperation(const rapidjson::Value &operation)
         }
         parseCondition(operation, pIncOp);
         m_operations.emplace_back(pIncOp);
+        pOperation = pIncOp;
     }
     else if (action == "copy")
     {
@@ -496,6 +495,7 @@ void EnvModTemplate::parseOperation(const rapidjson::Value &operation)
         }
         parseCondition(operation, pCopyOp);
         m_operations.emplace_back(pCopyOp);
+        pOperation = pCopyOp;
     }
     else
     {
@@ -548,17 +548,6 @@ void EnvModTemplate::parseOperation(const rapidjson::Value &operation)
                 else if (action == "find")
                 {
                     std::shared_ptr<OperationFindNode> pFindOp = std::dynamic_pointer_cast<OperationFindNode>(pOp);
-                    auto it = dataIt->value.FindMember("create_if_not_found");
-                    if (it != dataIt->value.MemberEnd())
-                    {
-                        pFindOp->m_createIfNotFound = it->value.GetBool();
-                    }
-
-                    it = dataIt->value.FindMember("node_type");
-                    if (it != dataIt->value.MemberEnd())
-                    {
-                        pFindOp->m_nodeType = dataIt->value.FindMember("node_type")->value.GetString();
-                    }
                 }
                 else if (action == "insert_raw")
                 {
@@ -571,15 +560,26 @@ void EnvModTemplate::parseOperation(const rapidjson::Value &operation)
 
                     pOpInsert->m_nodeType = dataIt->value.FindMember("node_type")->value.GetString();
                 }
+                else if (action == "noop")
+                {
+                    return;
+                }
             }
             parseCondition(operation, pOp);
             m_operations.emplace_back(pOp);
+            pOperation = pOp;
         }
+    }
+
+    auto breakIt = operation.FindMember("break");
+    if (breakIt != operation.MemberEnd())
+    {
+        pOperation->m_breakExecution = breakIt->value.GetBool();
     }
 }
 
 
-void EnvModTemplate::parseOperationNodeCommonData(const rapidjson::Value &operationData, std::shared_ptr<OperationNode> pOpNode)
+void EnvModTemplate::parseOperationNodeCommonData(const rapidjson::Value &operationData, const std::shared_ptr<OperationNode>& pOpNode)
 {
     rapidjson::Value::ConstMemberIterator it;
     auto dataObj = operationData.GetObject();
@@ -588,7 +588,7 @@ void EnvModTemplate::parseOperationNodeCommonData(const rapidjson::Value &operat
     it = dataObj.FindMember("target");
     if (it != dataObj.MemberEnd())
     {
-        parseTarget(it->value, pOpNode);
+        parseTarget(it->value, pOpNode->m_target);
     }
     else
     {
@@ -598,7 +598,7 @@ void EnvModTemplate::parseOperationNodeCommonData(const rapidjson::Value &operat
             it = dataObj.FindMember("source");
             if (it != dataObj.MemberEnd())
             {
-                parseTarget(it->value, pOpNode);
+                parseTarget(it->value, pOpNode->m_target);
             }
         }
     }
@@ -661,14 +661,6 @@ void EnvModTemplate::parseOperationNodeCommonData(const rapidjson::Value &operat
         pOpNode->m_throwOnEmpty = it->value.GetBool();
     }
 
-
-    //
-    // Is there a condition?
-    it = dataObj.FindMember("condition");
-    if (it != dataObj.MemberEnd())
-    {
-        parseCondition(it->value, pOpNode);
-    }
 }
 
 
@@ -788,7 +780,7 @@ void EnvModTemplate::parseEnvironment(const rapidjson::Value &environmentValue)
 
         //
         // Write sets the name of an environment file to write when execution of the template completes
-        valueIt = targetData.FindMember("write");
+        valueIt = targetData.FindMember("write_filename");
         if (valueIt != targetData.MemberEnd())
         {
             m_pLocalEnvironment->setOutputName(valueIt->value.GetString());
@@ -805,7 +797,7 @@ void EnvModTemplate::parseEnvironment(const rapidjson::Value &environmentValue)
 }
 
 
-void EnvModTemplate::parseTarget(const rapidjson::Value &targetValue, const std::shared_ptr<OperationNode> &pOp)
+void EnvModTemplate::parseTarget(const rapidjson::Value &targetValue, Target &target)
 {
     auto targetData = targetValue.GetObject();
 
@@ -818,7 +810,7 @@ void EnvModTemplate::parseTarget(const rapidjson::Value &targetValue, const std:
     auto valueIt = targetData.FindMember("path");
     if (valueIt != targetData.MemberEnd())
     {
-        pOp->m_path = trim(valueIt->value.GetString());
+        target.setTargetPath(trim(valueIt->value.GetString()));
     }
 
     //
@@ -826,15 +818,15 @@ void EnvModTemplate::parseTarget(const rapidjson::Value &targetValue, const std:
     valueIt = targetData.FindMember("nodeid");
     if (valueIt != targetData.MemberEnd())
     {
-        pOp->m_parentNodeId = valueIt->value.GetString();
+        target.setTargetNodeId(valueIt->value.GetString());
     }
 
     //
     // Is there an environment override?
-    valueIt = targetData.FindMember("environment");
+    valueIt = targetData.FindMember("configuration_name");
     if (valueIt != targetData.MemberEnd())
     {
-        pOp->m_environmentName = valueIt->value.GetString();
+        target.setEnvironmentName(valueIt->value.GetString());
     }
 }
 
@@ -874,10 +866,10 @@ void EnvModTemplate::parseIncludeOperation(const rapidjson::Value &include, cons
             {
                 parmValue.values.emplace_back(trim(val.GetString()));
             }
-            valueIt = parmObject.FindMember("conditional");
+            valueIt = parmObject.FindMember("error_if_empty");
             if (valueIt != parmObject.MemberEnd())
             {
-                parmValue.conditional = valueIt->value.GetBool();
+                parmValue.m_errorIfEmpty = valueIt->value.GetBool();
             }
             pOpInc->addParameterValue(parmValue);
         }
@@ -897,8 +889,8 @@ void EnvModTemplate::parseIncludeOperation(const rapidjson::Value &include, cons
         pOpInc->m_startIndex = trim(it->value.GetString());
     }
 
-    // Is an envriomment specified?
-    it = includeObj.FindMember("environment");
+    // Is an environment specified?
+    it = includeObj.FindMember("configuration");
     if (it != includeObj.MemberEnd())
     {
         pOpInc->m_environmentName = trim(it->value.GetString());
@@ -937,28 +929,18 @@ void EnvModTemplate::parseCopyOperation(const rapidjson::Value &data, const std:
     }
 
     //
+    // Get the copy type
+    valueIt = dataObj.FindMember("copy_type");
+    if (valueIt != dataObj.MemberEnd())
+    {
+        pCopyOp->m_copyType = valueIt->value.GetString();
+    }
+
+    //
     // Parse destination object
     auto destObj = dataObj.FindMember("destination")->value.GetObject();
 
-    auto destTargetObj = destObj.FindMember("target")->value.GetObject();
-
-    valueIt = destTargetObj.FindMember("path");
-    if (valueIt != destTargetObj.MemberEnd())
-    {
-        pCopyOp->m_destPath = valueIt->value.GetString();
-    }
-
-    valueIt = destTargetObj.FindMember("nodeid");
-    if (valueIt != destTargetObj.MemberEnd())
-    {
-        pCopyOp->m_destParentNodeId = valueIt->value.GetString();
-    }
-
-    valueIt = destTargetObj.FindMember("environment");
-    if (valueIt != destTargetObj.MemberEnd())
-    {
-        pCopyOp->m_destEnvironmentName = valueIt->value.GetString();
-    }
+    parseTarget(destObj.FindMember("target")->value, pCopyOp->m_destTarget);
 
     //
     // Set the throw on destination empty flag
@@ -973,7 +955,7 @@ void EnvModTemplate::parseCopyOperation(const rapidjson::Value &data, const std:
     valueIt = destObj.FindMember("save");
     if (valueIt != destObj.MemberEnd())
     {
-        parseSaveInfo(valueIt->value, pCopyOp->m_destSaveNodeIdName, pCopyOp->m_destAccumulateSaveNodeIdOk,
+        parseSaveInfo(valueIt->value, pCopyOp->m_destSaveNodeIdName, pCopyOp->m_destSaveNodeIdAccumulateOk,
                 pCopyOp->m_destSaveNodeIdAsGlobalValue, pCopyOp->m_destSaveNodeIdClear);
     }
 
@@ -1032,7 +1014,7 @@ void EnvModTemplate::parseSaveInfo(const rapidjson::Value &saveInfo, std::string
 {
     auto saveInfoObj = saveInfo.GetObject();
 
-    varName = saveInfoObj.FindMember("name")->value.GetString();
+    varName = saveInfoObj.FindMember("variable_name")->value.GetString();
 
     // default values
     accumulateOk = false;

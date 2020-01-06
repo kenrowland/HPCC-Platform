@@ -31,7 +31,7 @@ class Operation
 {
     public:
 
-        Operation() : m_count("1"), m_startIndex("0"), m_executionCount(0), m_executionStartIndex(0) {}
+        Operation() : m_count("1"), m_startIndex("0"), m_executionCount(0), m_executionStartIndex(0), m_breakExecution(false) {}
         virtual ~Operation() = default;
         virtual bool execute(std::shared_ptr<Environments> pEnvironments, std::shared_ptr<Environment> pEnv, std::shared_ptr<Variables> pVariables) = 0;
 
@@ -41,8 +41,8 @@ class Operation
         void initializeForExecution(const std::shared_ptr<Variables> &pVariables);
 
 
-        std::vector<std::string> getNodeIds(const std::shared_ptr<EnvironmentMgr> &pEnvMgr, const std::shared_ptr<Variables> &pVariables,
-                                            const std::string &nodeId, const std::string &path);
+//        std::vector<std::string> getNodeIds(const std::shared_ptr<EnvironmentMgr> &pEnvMgr, const std::shared_ptr<Variables> &pVariables,
+//                                            const std::string &nodeId, const std::string &path);
 
     protected:
 
@@ -51,6 +51,7 @@ class Operation
         size_t m_executionCount;
         size_t m_executionStartIndex;
         std::shared_ptr<Condition> m_pCondition;
+        bool m_breakExecution;
 
     friend class EnvModTemplate;
 };

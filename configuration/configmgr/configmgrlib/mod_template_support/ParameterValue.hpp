@@ -23,10 +23,10 @@
 
 struct ParameterValue
 {
-    ParameterValue() : conditional(false) {}
+    ParameterValue() : m_errorIfEmpty(false) {}
     std::string name;
     std::vector<std::string> values;
-    bool conditional;
+    bool m_errorIfEmpty;
 };
 
 #endif //HPCCSYSTEMS_PLATFORM_PARAMETERVALUE_HPP

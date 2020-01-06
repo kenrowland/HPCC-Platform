@@ -104,7 +104,7 @@ std::string Variable::getValue(size_t idx, const std::string &member) const
     else if (idx >= m_values.size())
     {
         std::string msg = "Attempt to get value out of range (" + std::to_string(idx) + "), size = " + std::to_string(m_values.size()) + " for '" + m_name +"'";
-        throw TemplateException(msg, false);
+        throw TemplateExceptionVarIndexOutOfBounds(msg, false);
     }
 
     return m_values[idx];

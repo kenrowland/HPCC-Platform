@@ -18,7 +18,6 @@
 #include "OperationNode.hpp"
 #include "TemplateExecutionException.hpp"
 #include "TemplateException.hpp"
-#include "EnvironmentMgr.hpp"
 #include "EnvironmentNode.hpp"
 #include "EnvironmentValue.hpp"
 #include "Operation.hpp"
@@ -29,41 +28,113 @@ void OperationNode::addAttribute(modAttribute &newAttribute)
     m_attributes.emplace_back(newAttribute);
 }
 
+bool OperationNode::preExecute(const std::shared_ptr<Variables> &pVariables)
+{
+    bool rc = true;
+
+    if (m_parentNodeIds.empty() && m_throwOnEmpty)
+    {
+        throw TemplateExecutionException("No nodes selected for the operation");
+    }
+
+    //
+    // Crate save variable for node value if indicated
+    if (!m_saveNodeIdName.empty())
+    {
+        m_pSaveNodeIdVar = createVariable(pVariables->doValueSubstitution(m_saveNodeIdName), "string", pVariables, m_accumulateSaveNodeIdOk, m_saveNodeIdAsGlobalValue, m_saveNodeIdClear);
+    }
+
+    //
+    // Create variables to save attribute values.
+    m_saveAttributeValues = createAttributeSaveInputs(pVariables);
+
+    return rc;
+}
+
 
 bool OperationNode::execute(std::shared_ptr<Environments> pEnvironments, std::shared_ptr<Environment> pEnv, std::shared_ptr<Variables> pVariables)
 {
     bool rc = true;
+
+    if (m_breakExecution)
+    {
+        int i = 5;
+    }
 
     if (m_pCondition && !m_pCondition->testCondition(pVariables))
     {
         return false;
     }
 
+
     //
-    // Get ready to execute the operation
+    // Get ready to execute the operation (sets m_pOpEnvMgr as the default for the operations)
     initializeForExecution(pEnvironments, pEnv, pVariables);
 
     //
     // Select the nodes for execution
-    m_parentNodeIds = getNodeIds(m_pOpEnvMgr, pVariables, m_parentNodeId, m_path);
+    m_parentNodeIds.clear();
+    m_target.getTargetNodeIds(m_pOpEnvMgr, pVariables, m_parentNodeIds); // m_parentNodeIds =  getNodeIds(m_pOpEnvMgr, pVariables, m_parentNodeId, m_path);
+
+    preExecute(pVariables);
 
     //
-    // If count is > 1, then the number of selected nodes must be 1
-    if (m_executionCount > 1 && m_parentNodeIds.size() != 1)
+    // If there are selected nodes, iterate over each
+    if (!m_parentNodeIds.empty())
     {
-        throw TemplateExecutionException("Operation execution count > 1 attempted when selected node count is not 1");
-    }
-
-    //
-    // Now execute the operation count times
-    for (size_t idx=0; idx < m_executionCount; ++idx)
-    {
-        pVariables->setIterationInfo(m_executionStartIndex + idx, idx);
-        assignAttributeCookedValues(pVariables);
-        doExecute(m_pOpEnvMgr, pVariables);
+        //
+        // Execute the operation for each nodeId
+        for (auto const &nodeId: m_parentNodeIds)
+        {
+            //
+            // Now execute the operation count times on the nodeId
+            for (size_t idx=0; idx < m_executionCount; ++idx)
+            {
+                pVariables->setIterationInfo(m_executionStartIndex + idx, idx);
+                assignAttributeCookedValues(pVariables);
+                doExecute(m_pOpEnvMgr, pVariables, nodeId);
+            }
+        }
     }
     return rc;
 }
+
+
+
+//bool OperationNode::execute(std::shared_ptr<Environments> pEnvironments, std::shared_ptr<Environment> pEnv, std::shared_ptr<Variables> pVariables)
+//{
+//    bool rc = true;
+//
+//    if (m_pCondition && !m_pCondition->testCondition(pVariables))
+//    {
+//        return false;
+//    }
+//
+//    //
+//    // Get ready to execute the operation
+//    initializeForExecution(pEnvironments, pEnv, pVariables);
+//
+//    //
+//    // Select the nodes for execution
+//    m_parentNodeIds = getNodeIds(m_pOpEnvMgr, pVariables, m_parentNodeId, m_path);
+//
+//    //
+//    // If count is > 1, then the number of selected nodes must be 1
+//    if (m_executionCount > 1 && m_parentNodeIds.size() != 1)
+//    {
+//        throw TemplateExecutionException("Operation execution count > 1 attempted when selected node count is not 1");
+//    }
+//
+//    //
+//    // Now execute the operation count times
+//    for (size_t idx=0; idx < m_executionCount; ++idx)
+//    {
+//        pVariables->setIterationInfo(m_executionStartIndex + idx, idx);
+//        assignAttributeCookedValues(pVariables);
+//        doExecute(m_pOpEnvMgr, pVariables);
+//    }
+//    return rc;
+//}
 
 
 void OperationNode::assignAttributeCookedValues(const std::shared_ptr<Variables> &pVariables)
@@ -88,8 +159,8 @@ void OperationNode::assignAttributeCookedValues(const std::shared_ptr<Variables>
 }
 
 
-std::shared_ptr<Variable> OperationNode::createVariable(std::string varName, const std::string &varType,
-                                                    std::shared_ptr<Variables> pVariables, bool accumulateOk, bool global, bool clear)
+std::shared_ptr<Variable> OperationNode::createVariable(const std::string& varName, const std::string &varType,
+                                                    const std::shared_ptr<Variables>& pVariables, bool accumulateOk, bool global, bool clear)
 {
     std::shared_ptr<Variable> pVariable;
     bool existingOk = accumulateOk | clear;
@@ -218,14 +289,14 @@ void OperationNode::processNodeValue(const std::shared_ptr<Variables> &pVariable
             }
             else if (m_nodeValue.errorIfEmpty)
             {
-                throw TemplateExecutionException("No value found for attribute starting with name=" + m_nodeValue.getName());
+                throw TemplateExecutionException("No value found for node value starting with name=" + m_nodeValue.getName());
             }
         }
     }
 }
 
 
-void OperationNode::initializeForExecution(const std::shared_ptr<Environments> &pEnvironments, std::shared_ptr<Environment> pEnv,
+void OperationNode::initializeForExecution(const std::shared_ptr<Environments> &pEnvironments, const std::shared_ptr<Environment>& pEnv,
                                            const std::shared_ptr<Variables> &pVariables)
 {
     Operation::initializeForExecution(pVariables);
@@ -233,8 +304,8 @@ void OperationNode::initializeForExecution(const std::shared_ptr<Environments> &
     //
     // If there is an override for the environment used by the node, get it (it may be a variable)
     m_pOpEnvMgr = pEnv->m_pEnvMgr;
-    if (!m_environmentName.empty())
+    if (!m_target.getEnvironmentName().empty())
     {
-        m_pOpEnvMgr = pEnvironments->get(pVariables->doValueSubstitution(m_environmentName))->m_pEnvMgr;
+        m_pOpEnvMgr = pEnvironments->get(pVariables->doValueSubstitution(m_target.getEnvironmentName()))->m_pEnvMgr;
     }
 }

@@ -73,9 +73,9 @@ class CFGMGRLIB_API EnvModTemplate
         void parseOperations(const rapidjson::Value &operations);
         void parseOperation(const rapidjson::Value &operation);
         void parseCopyOperation(const rapidjson::Value &data, const std::shared_ptr<OperationCopy> &pCopyOp);
-        void parseOperationNodeCommonData(const rapidjson::Value &operationData, std::shared_ptr<OperationNode> pOpNode);
+        void parseOperationNodeCommonData(const rapidjson::Value &operationData, const std::shared_ptr<OperationNode>& pOpNode);
         void parseAttribute(const rapidjson::Value &attributeData, modAttribute *pAttribute);
-        void parseTarget(const rapidjson::Value &targetValue, const std::shared_ptr<OperationNode> &pOp);
+        void parseTarget(const rapidjson::Value &targetValue, Target &target);
         void parseEnvironment(const rapidjson::Value &environmentValue);
         void parseIncludeOperation(const rapidjson::Value &include, const std::shared_ptr<OperationIncludeTemplate> &pOpInc);
         void parseCondition(const rapidjson::Value &operation, const std::shared_ptr<Operation> &pOp);

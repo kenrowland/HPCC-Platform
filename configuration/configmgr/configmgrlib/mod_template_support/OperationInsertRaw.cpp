@@ -19,31 +19,18 @@
 #include "OperationInsertRaw.hpp"
 #include "TemplateExecutionException.hpp"
 
-void OperationInsertRaw::doExecute(std::shared_ptr<EnvironmentMgr> pEnvMgr, std::shared_ptr<Variables> pVariables)
+void OperationInsertRaw::doExecute(std::shared_ptr<EnvironmentMgr> pEnvMgr, std::shared_ptr<Variables> pVariables, const std::string &nodeId)
 {
+    Status status;
 
-    //
-    // Execute for each parent node
-    if (!m_parentNodeIds.empty())
+    std::string parentNodeId = pVariables->doValueSubstitution(nodeId);
+    std::shared_ptr<EnvironmentNode> pParentEnvNode = pEnvMgr->findEnvironmentNodeById(parentNodeId);
+    if (pParentEnvNode)
     {
-        for (auto &parentNodeId: m_parentNodeIds)
-        {
-            Status status;
-
-            std::shared_ptr<EnvironmentNode> pParentEnvNode = pEnvMgr->findEnvironmentNodeById(parentNodeId);
-            if (pParentEnvNode)
-            {
-                pEnvMgr->insertRawEnvironmentData(pParentEnvNode, m_nodeType, m_rawData);
-            }
-            else
-            {
-                throw TemplateExecutionException("Unable to find parent node");
-            }
-        }
+        pEnvMgr->insertRawEnvironmentData(pParentEnvNode, m_nodeType, m_rawData);
     }
-    else if (m_throwOnEmpty)
+    else
     {
-        throw TemplateExecutionException("No parent nodes selected for creation of new child nodes");
+        throw TemplateExecutionException("Unable to find parent node");
     }
-
 }

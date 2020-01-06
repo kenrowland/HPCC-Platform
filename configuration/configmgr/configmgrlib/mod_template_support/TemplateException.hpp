@@ -23,17 +23,19 @@
 #include "rapidjson/document.h"
 #include "rapidjson/error/en.h"
 
-class TemplateException : public std::exception
-{
+class TemplateException : public std::exception {
     public:
 
         explicit TemplateException(const rapidjson::Document *pDocument, const std::string &templateFilename);
-        explicit TemplateException(const std::string &reason, bool badTemplate = false) : m_reason(reason), m_invalidTemplate(badTemplate) { };
+
+        explicit TemplateException(std::string reason, bool badTemplate = false) :
+            m_reason(std::move(reason)), m_invalidTemplate(badTemplate) {};
+
         TemplateException() = default;
 
-        bool isTemplateInvalid() const { return  m_invalidTemplate; }
-        const char *what() const throw() override
-        {
+        bool isTemplateInvalid() const { return m_invalidTemplate; }
+
+        const char *what() const throw() override {
             return m_reason.c_str();
         }
 
@@ -44,5 +46,15 @@ class TemplateException : public std::exception
         bool m_invalidTemplate = false;
 };
 
+
+class TemplateExceptionVarIndexOutOfBounds : public TemplateException {
+
+    public:
+
+        explicit TemplateExceptionVarIndexOutOfBounds(std::string reason, bool badTemplate = false) :
+                TemplateException(reason, badTemplate) {}
+
+        TemplateExceptionVarIndexOutOfBounds() = default;
+};
 
 #endif //HPCCSYSTEMS_PLATFORM_TEMPLATEEXCEPTION_HPP

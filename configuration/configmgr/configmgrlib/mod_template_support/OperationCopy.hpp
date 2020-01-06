@@ -47,7 +47,7 @@ class OperationCopy : public OperationNode
 {
     public:
 
-        OperationCopy() : m_copyAttributeType("all"), m_includeChildren(false), m_throwIfDestEmpty(true), m_strictCopyMode(false) {}
+        OperationCopy() : m_copyAttributeType("all"), m_includeChildren(false), m_throwIfDestEmpty(true), m_strictCopyMode(false), m_copyType("many_to_one") {}
         bool execute(std::shared_ptr<Environments> pEnvironments, std::shared_ptr<Environment> pEnv, std::shared_ptr<Variables> pVariables) override ;
 
 
@@ -59,25 +59,24 @@ class OperationCopy : public OperationNode
         void getAttributeValues(const std::shared_ptr<EnvironmentNode> &pSourceNode, std::vector<NameValue> &initAttributes, const std::string &copyMpde);
         void doNodeCopy(const std::string &sourceNodId, const std::string &destParentNodeId, bool isChildNode);
         void doNodeCopy(const std::shared_ptr<EnvironmentNode> &pSourceEnvNode, const std::string &destParentNodeId, bool isChildNode);
-        void doExecute(std::shared_ptr<EnvironmentMgr> pEnvMgr, std::shared_ptr<Variables> pVariables) override {}
+        void doExecute(std::shared_ptr<EnvironmentMgr> pEnvMgr, std::shared_ptr<Variables> pVariables, const std::string &nodeId) override {}
 
 
     protected:
 
-        std::string m_destPath;
-        std::string m_destParentNodeId;
-        std::string m_destEnvironmentName;
+        Target m_destTarget;
         std::string m_destNodeType;
         bool        m_throwIfDestEmpty;
         bool        m_strictCopyMode;
         std::string m_destSaveNodeIdName;
-        bool m_destAccumulateSaveNodeIdOk = false;
+        bool m_destSaveNodeIdAccumulateOk = false;
         bool m_destSaveNodeIdAsGlobalValue = false;
         bool m_destSaveNodeIdClear = false;
         std::shared_ptr<Variable> m_pDestSaveNodeIdVar;
         std::string m_copyAttributeType;
 
         bool m_includeChildren;
+        std::string m_copyType;
         std::vector<CopyAttributeInfo_t> m_copyAttributes;
         std::shared_ptr<EnvironmentMgr> m_pDestEnvMgr;
         std::map<std::string, SaveAttributeInfo_t> m_saveAttributes;

@@ -58,7 +58,7 @@ class CFGMGRLIB_API EnvironmentNode : public std::enable_shared_from_this<Enviro
         const std::shared_ptr<EnvironmentValue> &getLocalEnvValue() const { return m_pLocalValue;  }
         bool isLocalValueSet() const { return m_pLocalValue != nullptr; }
         void getAttributes(std::vector<std::shared_ptr<EnvironmentValue>> &attrs) const;
-        const std::shared_ptr<EnvironmentValue> getAttribute(const std::string &name) const;
+        std::shared_ptr<EnvironmentValue> getAttribute(const std::string &name) const;
         bool hasAttribute(const std::string &name) const { return m_attributes.find(name) != m_attributes.end();  }
         bool hasAttributes() const { return m_attributes.size() != 0; }
         void setId(const std::string &id) { m_id = id; }

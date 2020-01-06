@@ -18,8 +18,9 @@
 #ifndef HPCCSYSTEMS_PLATFORM_OPERATIONNODE_HPP
 #define HPCCSYSTEMS_PLATFORM_OPERATIONNODE_HPP
 
-#include "Variable.hpp"
+#include "Variables.hpp"
 #include "Operation.hpp"
+#include "Target.hpp"
 #include <string>
 #include <vector>
 
@@ -63,31 +64,33 @@ class OperationNode : public Operation
 
     protected:
 
-        virtual void doExecute(std::shared_ptr<EnvironmentMgr> pEnvMgr, std::shared_ptr<Variables> pVariables) = 0;
+        virtual bool preExecute(const std::shared_ptr<Variables> &pVariables);
+        virtual void doExecute(std::shared_ptr<EnvironmentMgr> pEnvMgr, std::shared_ptr<Variables> pVariables, const std::string &nodeId) = 0;
 
-        std::shared_ptr<Variable> createVariable(std::string varName, const std::string &varType, std::shared_ptr<Variables> pVariables,
+        std::shared_ptr<Variable> createVariable(const std::string& varName, const std::string &varType, const std::shared_ptr<Variables>& pVariables,
                 bool accumulateOk, bool global, bool clear);
         bool createAttributeSaveInputs(const std::shared_ptr<Variables> &pVariables);
         void saveAttributeValues(const std::shared_ptr<Variables> &pVariables, const std::shared_ptr<EnvironmentNode> &pEnvNode);
         void processNodeValue(const std::shared_ptr<Variables> &pVariables, const std::shared_ptr<EnvironmentNode> &pEnvNode);
-        void initializeForExecution(const std::shared_ptr<Environments> &pEnvironments, std::shared_ptr<Environment> pEnv,
+        void initializeForExecution(const std::shared_ptr<Environments> &pEnvironments, const std::shared_ptr<Environment>& pEnv,
                 const std::shared_ptr<Variables> &pVariables);
 
 
     protected:
 
-        std::string m_path;
-        std::string m_parentNodeId;
-        std::string m_environmentName;
+        Target m_target;
+        //std::string m_environmentName;
         std::vector<std::string> m_parentNodeIds;
         std::vector<modAttribute> m_attributes;
         modAttribute m_nodeValue;
         bool m_nodeValueValid = false;
         bool m_throwOnEmpty = true;
         std::string m_saveNodeIdName;
+        std::shared_ptr<Variable> m_pSaveNodeIdVar;
         bool m_accumulateSaveNodeIdOk = false;
         bool m_saveNodeIdAsGlobalValue = false;
         bool m_saveNodeIdClear = false;
+        bool m_saveAttributeValues = false;
         std::shared_ptr<EnvironmentMgr> m_pOpEnvMgr;   // the environment mgr to use for operation execution
 
 

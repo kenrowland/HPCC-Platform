@@ -54,36 +54,36 @@ void Operation::initializeForExecution(const std::shared_ptr<Variables> &pVariab
 }
 
 
-std::vector<std::string> Operation::getNodeIds(const std::shared_ptr<EnvironmentMgr> &pEnvMgr, const std::shared_ptr<Variables> &pVariables,
-                                                   const std::string &nodeId, const std::string &path)
-{
-    std::vector<std::string> nodeIds;
-
-    //
-    // If the parent node ID is valid, then it is either a variable name or an actual ID (the latter unlikely).
-    if (!nodeId.empty())
-    {
-        std::shared_ptr<Variable> pInput = pVariables->getVariable(nodeId, false, false);
-        if (pInput)
-        {
-            std::size_t numIds = pInput->getNumValues();
-            for (std::size_t idx = 0; idx < numIds; ++idx)
-            {
-                nodeIds.emplace_back(pVariables->doValueSubstitution(pInput->getValue(idx)));
-            }
-        }
-        else
-        {
-            nodeIds.emplace_back(pVariables->doValueSubstitution(nodeId));
-        }
-    }
-    else
-    {
-        std::vector<std::shared_ptr<EnvironmentNode>> envNodes;
-        pEnvMgr->fetchNodes(pVariables->doValueSubstitution(path), envNodes);
-        for (auto &envNode: envNodes)
-            nodeIds.emplace_back(envNode->getId());
-    }
-
-    return nodeIds;
-}
+//std::vector<std::string> Operation::getNodeIds(const std::shared_ptr<EnvironmentMgr> &pEnvMgr, const std::shared_ptr<Variables> &pVariables,
+//                                                   const std::string &nodeId, const std::string &path)
+//{
+//    std::vector<std::string> nodeIds;
+//
+//    //
+//    // If the parent node ID is valid, then it is either a variable name or an actual ID (the latter unlikely).
+//    if (!nodeId.empty())
+//    {
+//        std::shared_ptr<Variable> pInput = pVariables->getVariable(nodeId, false, false);
+//        if (pInput)
+//        {
+//            std::size_t numIds = pInput->getNumValues();
+//            for (std::size_t idx = 0; idx < numIds; ++idx)
+//            {
+//                nodeIds.emplace_back(pVariables->doValueSubstitution(pInput->getValue(idx)));
+//            }
+//        }
+//        else
+//        {
+//            nodeIds.emplace_back(pVariables->doValueSubstitution(nodeId));
+//        }
+//    }
+//    else
+//    {
+//        std::vector<std::shared_ptr<EnvironmentNode>> envNodes;
+//        pEnvMgr->fetchNodes(pVariables->doValueSubstitution(path), envNodes);
+//        for (auto &envNode: envNodes)
+//            nodeIds.emplace_back(envNode->getId());
+//    }
+//
+//    return nodeIds;
+//}

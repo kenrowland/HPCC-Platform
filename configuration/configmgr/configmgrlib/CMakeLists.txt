@@ -59,6 +59,7 @@ SET(  SRCS
         mod_template_support/OperationIncludeTemplate.cpp
         mod_template_support/OperationInsertRaw.cpp
         mod_template_support/Condition.cpp
+        mod_template_support/Target.cpp
 )
 
 INCLUDE_DIRECTORIES(

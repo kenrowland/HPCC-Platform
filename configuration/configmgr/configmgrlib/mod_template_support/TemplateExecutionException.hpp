@@ -28,9 +28,9 @@ class TemplateExecutionException : public std::exception
     public:
 
         explicit TemplateExecutionException(std::string reason) :
-                m_reason(std::move(reason)) { }
+            m_reason(std::move(reason)) { }
         TemplateExecutionException(std::string reason, const std::string &step, const std::string &filename) :
-                m_reason(std::move(reason)) { setContext(step, filename); }
+            m_reason(std::move(reason)) { setContext(step, filename); }
         TemplateExecutionException() = default;
 
         void setContext(const std::string &step, const std::string &filename)
@@ -48,6 +48,5 @@ class TemplateExecutionException : public std::exception
 
         std::string m_reason;
 };
-
 
 #endif //HPCCSYSTEMS_PLATFORM_TEMPLATEEXECUTIONEXCEPTION_HPP

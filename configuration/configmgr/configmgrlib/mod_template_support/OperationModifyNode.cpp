@@ -23,63 +23,39 @@
 #include "TemplateExecutionException.hpp"
 
 
-void OperationModifyNode::doExecute(std::shared_ptr<EnvironmentMgr> pEnvMgr, std::shared_ptr<Variables> pVariables)
+void OperationModifyNode::doExecute(std::shared_ptr<EnvironmentMgr> pEnvMgr, std::shared_ptr<Variables> pVariables, const std::string &nodeId)
 {
     std::shared_ptr<EnvironmentNode> pEnvNode;
 
-    //
-    // If there are nodes...
-    if (!m_parentNodeIds.empty())
+    Status status;
+
+    std::string parentNodeId = pVariables->doValueSubstitution(nodeId);
+    pEnvNode = pEnvMgr->findEnvironmentNodeById(nodeId);
+    if (pEnvNode)
     {
-        //
-        // The main reason to use a find nodes action is to either save the IDs of the matching nodes and/or attribute
-        // values from the matching nodes
-        std::shared_ptr<Variable> pSaveNodeIdVar;
-        if (!m_saveNodeIdName.empty())
+        if (m_pSaveNodeIdVar)
         {
-            pSaveNodeIdVar = createVariable(pVariables->doValueSubstitution(m_saveNodeIdName), "string", pVariables,
-                    m_accumulateSaveNodeIdOk, m_saveNodeIdAsGlobalValue, m_saveNodeIdClear);
+            m_pSaveNodeIdVar->addValue(nodeId);
         }
 
         //
-        // Process each node
-        for (auto &parentNodeId: m_parentNodeIds)
+        // Set the indicated attribute values
+        std::vector<NameValue> attrValues;
+        for (auto &attr: m_attributes)
         {
-            Status status;
-
-            std::string nodeId = pVariables->doValueSubstitution(parentNodeId);
-            pEnvNode = pEnvMgr->findEnvironmentNodeById(nodeId);
-            if (pEnvNode)
+            if (!attr.doNotSet)
             {
-                if (pSaveNodeIdVar)
-                {
-                    pSaveNodeIdVar->addValue(nodeId);
-                }
-
-                //
-                // Set the indicated attribute values
-                std::vector<NameValue> attrValues;
-                for (auto &attr: m_attributes)
-                {
-                    if (!attr.doNotSet)
-                    {
-                        attrValues.emplace_back(NameValue(attr.getName(), attr.cookedValue));
-                    }
-                }
-                pEnvNode->setAttributeValues(attrValues, status, true, true);
-
-                //
-                // Process node value
-                processNodeValue(pVariables, pEnvNode);
-            }
-            else
-            {
-                throw TemplateExecutionException("There was an error retrieving a node for modification");
+                attrValues.emplace_back(NameValue(attr.getName(), attr.cookedValue));
             }
         }
+        pEnvNode->setAttributeValues(attrValues, status, true, true);
+
+        //
+        // Process node value
+        processNodeValue(pVariables, pEnvNode);
     }
-    else if (m_throwOnEmpty)
+    else
     {
-        throw TemplateExecutionException("No nodes selected.");
+        throw TemplateExecutionException("There was an error retrieving a node for modification");
     }
 }

@@ -29,7 +29,7 @@ class OperationInsertRaw : public OperationNode
 
     protected:
 
-        void doExecute(std::shared_ptr<EnvironmentMgr> pEnvMgr, std::shared_ptr<Variables> pVariables) override;
+        void doExecute(std::shared_ptr<EnvironmentMgr> pEnvMgr, std::shared_ptr<Variables> pVariables, const std::string &nodeId) override;
 
 
     protected:

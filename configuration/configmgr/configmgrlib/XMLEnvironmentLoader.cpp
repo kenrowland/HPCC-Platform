@@ -40,6 +40,7 @@ std::vector<std::shared_ptr<EnvironmentNode>> XMLEnvironmentLoader::load(std::is
         // For each top level element, parse it
         for (auto envIt = envTree.begin(); envIt != envTree.end(); ++envIt)
         {
+            std::string firstName = envIt->first;
             if (envIt->first == pSchemaItem->getProperty("name"))
             {
                 pParseRootSchemaItem = pSchemaItem;

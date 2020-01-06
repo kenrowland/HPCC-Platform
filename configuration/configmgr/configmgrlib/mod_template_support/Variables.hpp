@@ -41,6 +41,7 @@ class Variables : public std::enable_shared_from_this<Variables>
         size_t getCurIndex() const { return m_curIndex; }
         size_t getCurIteration() const { return m_iter; }
         std::string doValueSubstitution(const std::string &value) const;
+        bool hasMultiValueVariableReference(const std::string &value) const;
         const std::vector<std::shared_ptr<Variable>> &getAllVariables() const { return m_variables; }
         void initialize();
 
