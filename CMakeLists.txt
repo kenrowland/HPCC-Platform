@@ -183,6 +183,8 @@ elseif ( NOT MAKE_DOCS_ONLY )
       HPCC_ADD_SUBDIRECTORY (configuration)
     endif()
     
+    HPCC_ADD_SUBDIRECTORY (metrics)
+
     if ( WIN32 )
         HPCC_ADD_SUBDIRECTORY (clienttools/IDEPlugins "CLIENTTOOLS_ONLY")
         HPCC_ADD_SUBDIRECTORY (clienttools/win "CLIENTTOOLS_ONLY")
@@ -211,7 +213,7 @@ if ( WIN32 )
         if (EXISTS "${MSVC14_REDIST}")
             install ( PROGRAMS ${MSVC14_REDIST} DESTINATION tmp )
             get_filename_component(MSVC14_REDIST_NAME ${MSVC14_REDIST} NAME)
-            list ( APPEND CPACK_NSIS_EXTRA_INSTALL_COMMANDS " 
+            list ( APPEND CPACK_NSIS_EXTRA_INSTALL_COMMANDS "
                 ExecWait '$INSTDIR\\\\tmp\\\\${MSVC14_REDIST_NAME} /S'
             ")
         else ()
@@ -413,7 +415,7 @@ if(TOP_LEVEL_PROJECT)
                 # Standard group names: http://fedoraroject.org/wiki/RPMGroups
                 set(CPACK_RPM_PACKAGE_GROUP "development/system")
                 set(CPACK_RPM_PACKAGE_SUMMARY "${PACKAGE_FILE_NAME_PREFIX}")
-            endif() 
+            endif()
             set(CPACK_RPM_EXCLUDE_FROM_AUTO_FILELIST_ADDITION /usr/etc)
         else()
             message("WARNING: Unsupported package ${packageManagement}.")
