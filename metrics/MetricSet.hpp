@@ -1,6 +1,19 @@
-//
-// Created by rowlke01 on 2/27/20.
-//
+/*##############################################################################
+
+    HPCC SYSTEMS software Copyright (C) 2020 HPCC Systems®.
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+############################################################################## */
 
 #pragma once
 
@@ -11,8 +24,10 @@
 #include <chrono>
 #include <thread>
 #include "Metric.hpp"
+#include "MetricSink.hpp"
 
-#include "stdio.h"
+#include <cstdio>
+#include <utility>
 
 
 namespace hpcc_metrics {
@@ -21,8 +36,12 @@ namespace hpcc_metrics {
 
         public:
 
-            explicit MetricSet(std::string name) : m_name{std::move(name)}, m_periodSeconds{10},
-                                                   m_stopCollection(false) {}
+            explicit MetricSet(std::string name, std::shared_ptr<MetricSink> pSink) :
+                m_name{std::move(name)},
+                m_periodSeconds{10},
+                m_stopCollection(false),
+                m_pSink(std::move(pSink))
+                {}
 
             bool addMetric(const std::shared_ptr<Metric> &pMetric) {
                 auto rc = m_metrics.insert({pMetric->getName(), pMetric});
@@ -47,14 +66,10 @@ namespace hpcc_metrics {
 
 
             void collect() {
+                std::vector<std::shared_ptr<MetricValueBase>> values;
                 for (const auto &pMetricIt : m_metrics)
                 {
-                    auto values = pMetricIt.second->collect();
-                    for (auto const &val : values)
-                    {
-                        printf("Collection %s -> %s\n", val->getName().c_str(), val->toString().c_str());
-                    }
-                    //printf("Collection: val = %d\n", val);
+                    m_pSink->send(values);
                 }
             }
 
@@ -78,6 +93,7 @@ namespace hpcc_metrics {
             std::map<std::string, std::shared_ptr<Metric>> m_metrics;
             std::chrono::seconds m_periodSeconds;
             std::thread m_collectThread;
+            std::shared_ptr<MetricSink> m_pSink;
             bool m_stopCollection;
     };
 

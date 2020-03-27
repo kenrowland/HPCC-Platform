@@ -18,6 +18,7 @@ project ( metrictest )
 
 SET (SRC_FILES
         metrictest.cpp
+        ../sinks/file/FileSink.cpp
         )
 
 INCLUDE_DIRECTORIES(
@@ -25,6 +26,8 @@ INCLUDE_DIRECTORIES(
         ${CMAKE_BINARY_DIR}/oss
         ${HPCC_SOURCE_DIR}/system/include
         ${HPCC_SOURCE_DIR}/metrics
+        ${HPCC_SOURCE_DIR}/metrics/sinks
+        ${HPCC_SOURCE_DIR}/metrics/sinks/file
 )
 
 HPCC_ADD_EXECUTABLE ( metrictest ${SRC_FILES} )
