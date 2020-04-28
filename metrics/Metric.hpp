@@ -18,26 +18,29 @@
 #pragma once
 
 #include <string>
-#include <atomic>
 #include <vector>
-#include <mutex>
 #include "MetricValue.hpp"
 
 
-namespace hpcc_metrics {
-
-    class Metric {
+namespace hpcc_metrics
+{
+    class Metric
+    {
         public:
 
-            explicit Metric(std::string &metricName) : m_metricName(std::move(metricName)) {}
             virtual ~Metric() = default;
             const std::string &getName() const { return m_metricName; }
-            virtual bool collect(std::vector<std::shared_ptr<MetricValueBase>> &values) = 0;
+            virtual void initializeForCollection() { }
+            virtual bool report(std::vector<std::shared_ptr<MetricValueBase>> &values) = 0;
+
+
+        protected:
+
+            explicit Metric(std::string metricName) : m_metricName(std::move(metricName)) {}
 
 
         protected:
 
             std::string m_metricName;
     };
-
 }

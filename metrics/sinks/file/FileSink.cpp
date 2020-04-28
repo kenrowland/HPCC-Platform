@@ -37,6 +37,7 @@ namespace hpcc_metrics {
         {
             fprintf(handle, "%s -> %s\n", pValue->getName().c_str(), pValue->toString().c_str());
         }
+        fprintf(handle, "\n");
         fclose(handle);
     }
 

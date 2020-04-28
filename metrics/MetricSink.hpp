@@ -20,16 +20,21 @@
 #include <vector>
 #include <memory>
 
-namespace hpcc_metrics {
+namespace hpcc_metrics
+{
 
     class MetricValueBase;
 
-    class MetricSink {
-
+    class MetricSink
+    {
         public:
-            MetricSink() = default;
+
             virtual ~MetricSink() = default;
             virtual void send(const std::vector<std::shared_ptr<MetricValueBase>> &values) = 0;
-    };
 
+
+        protected:
+
+            MetricSink() = default;
+    };
 }

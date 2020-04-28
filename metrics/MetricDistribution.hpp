@@ -24,24 +24,23 @@
 #include <atomic>
 #include "Metric.hpp"
 
-namespace hpcc_metrics {
+namespace hpcc_metrics
+{
 
     template <typename T>
-    class MetricDistribution : public Metric {
-
+    class MetricDistribution : public Metric
+    {
         public:
 
             MetricDistribution(std::string &name, const std::vector<T> &dist);
-            void increment(const T &level);
-
-            bool collect(std::vector<std::shared_ptr<MetricValueBase>> &values) override;
+            void increment(T level);
+            bool report(std::vector<std::shared_ptr<MetricValueBase>> &values) override;
 
 
         protected:
 
             std::map<T, std::atomic<unsigned> *> m_distribution;
     };
-
 
 
     template <typename T>
@@ -62,7 +61,7 @@ namespace hpcc_metrics {
 
 
     template <typename T>
-    void MetricDistribution<T>::increment(const T &level)
+    void MetricDistribution<T>::increment(T level)
     {
         auto it = m_distribution.lower_bound(level);
         if (it != m_distribution.end())
@@ -71,10 +70,9 @@ namespace hpcc_metrics {
         }
     }
 
+
     template<typename T>
-    bool MetricDistribution<T>::collect(std::vector<std::shared_ptr<MetricValueBase>> &values) {
+    bool MetricDistribution<T>::report(std::vector<std::shared_ptr<MetricValueBase>> &values) {
         return false;
     }
-
-
 }

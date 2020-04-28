@@ -2,9 +2,14 @@
 
 #include <cstdio>
 
-#include "MetricsManager.hpp"
+#include "MetricsRegistry.hpp"
+#include "MetricSet.hpp"
 #include "FileSink.hpp"
 #include "CountableMetric.hpp"
+#include "QueueSizeMetric.hpp"
+#include "QueueLatencyMetric.hpp"
+#include "RateMetric.hpp"
+#include "PeriodicMetricsReporter.hpp"
 #include <thread>
 #include <chrono>
 
@@ -12,57 +17,58 @@
 
 using namespace hpcc_metrics;
 
-MetricsManager mm;
+MetricsRegistry mr;
 
 void processThread(int, unsigned);
-std::shared_ptr<CountableMetric> pMetric;
+std::shared_ptr<CountableMetric> pCountableMetric;
+std::shared_ptr<QueueSizeMetric> pQueueSizeMetric;
+std::shared_ptr<QueueLatencyMetric> pQueueLatencyMetric;
+std::shared_ptr<RateMetric> pRateMetric;
 
 int main(int argc, char *argv[])
 {
-    std::string distName = "distname";
-    MetricDistribution<unsigned> md(distName, std::vector<unsigned>{10, 20, 30});
 
+    //
+    // Create a metric set for request type metrics
+    auto pRequestMetricSet = std::make_shared<MetricSet>();
+    pCountableMetric     = std::make_shared<CountableMetric>("requests");
+    pRateMetric = std::make_shared<RateMetric>("rate");
+    pRequestMetricSet->addMetric(pCountableMetric);
+    pRequestMetricSet->addMetric(pRateMetric);
+    mr.add(pCountableMetric);  // demo use of the registry (optional)
 
-//    std::map<unsigned, std::string> latency;
-//    latency[0] = "a";
-//    latency[10] = "b"; // <-- 0 - 10
-//    latency[20] = "c"; // <-- 11-19
-//    latency[30] = "d"; // <-- 20-29
-//    latency[UINT32_MAX] = "e"; // <-- 30 and up
-//
-//    auto itLow = latency.lower_bound(9);
-//    itLow = latency.lower_bound(10);  // b
-//    itLow = latency.lower_bound(11);  // c
-//    itLow = latency.lower_bound(15);  // c
-//    itLow = latency.lower_bound(19);  // c
-//    itLow = latency.lower_bound(20);  // c
-//    itLow = latency.lower_bound(22);  // d
-//    itLow = latency.lower_bound(31);  // e
-//    //auto itHi = latency.lower_bound(9);
+    //
+    // create a metric set for queues
+    auto pQueueMetricSet = std::make_shared<MetricSet>();
+    pQueueSizeMetric = std::make_shared<QueueSizeMetric>("queuesize");
+    pQueueLatencyMetric = std::make_shared<QueueLatencyMetric>("queue_latency");
+    pQueueMetricSet->addMetric(pQueueSizeMetric);
+    pQueueMetricSet->addMetric(pQueueLatencyMetric);
 
-
-    std::string name = "mymetricset";
+    //
+    // Create a file sink for saving metric values
     auto pFileSink = std::make_shared<FileMetricSink>("/home/ken/metric_output.txt");
-    auto pMetricSet = mm.createMetricSet(name, pFileSink);
-    pMetric = mm.createMetric<CountableMetric>("numrequests");
-    pMetricSet->addMetric(pMetric);
-    pMetricSet->setCollectionPeriod(5);
-    pMetricSet->startCollection();
 
-    //pMetric->inc(2);
+    //
+    // Create a collector
+    PeriodicMetricsReporter collector;
+    collector.addMetricSet(pRequestMetricSet);
+    collector.addMetricSet(pQueueMetricSet);
+    collector.addSink(pFileSink);
 
-    std::thread first (processThread, 20, 2);
+    //
+    // start collection
+    collector.start(10);
+
+    std::thread first (processThread, 20, 1);
     std::thread second (processThread, 15, 3);
 
     first.join();
     second.join();
 
-    pMetricSet->stopCollection();
+    collector.stop();
 
-//    unsigned curVal = pMetric->getAndClear();
-//    unsigned clearedVal = pMetric->getAndClear();
-
-    printf("Hello World\n");
+    printf("Test complete\n");
 }
 
 
@@ -70,7 +76,12 @@ void processThread(int numLoops, unsigned delay)
 {
     for (int i=0; i<numLoops; ++i)
     {
-        pMetric->inc(1);
+        mr.get<CountableMetric>("requests")->update(1u);
+        pQueueSizeMetric->addElement();
+        pQueueLatencyMetric->add();
+        pRateMetric->update();
         std::this_thread::sleep_for(std::chrono::seconds(delay));
+        pQueueSizeMetric->removeElement();
+        pQueueLatencyMetric->remove();
     }
 }

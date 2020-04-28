@@ -30,81 +30,41 @@
 #include <utility>
 
 
-namespace hpcc_metrics {
+namespace hpcc_metrics
+{
 
-    class MetricSet {
-
+    class MetricSet
+    {
         public:
 
-            explicit MetricSet(std::string name, std::shared_ptr<MetricSink> pSink) :
-                m_name{std::move(name)},
-                m_periodSeconds{10},
-                m_stopCollection(false),
-                m_pSink(std::move(pSink))
-                {}
+            MetricSet() = default;
+            virtual ~MetricSet() = default;
 
-            bool addMetric(const std::shared_ptr<Metric> &pMetric) {
+            bool addMetric(const std::shared_ptr<Metric> &pMetric)
+            {
                 auto rc = m_metrics.insert({pMetric->getName(), pMetric});
                 return rc.second;
             }
 
-
-            void setCollectionPeriod(unsigned periodSeconds) {
-                m_periodSeconds = std::chrono::seconds(periodSeconds);
-            }
-
-
-            void startCollection() {
-                m_collectThread = std::thread(collectionThread, this);
-                m_collectThread.detach();
-            }
-
-
-            void stopCollection() {
-                m_stopCollection = true;
-            }
-
-
-            void collect() {
-                std::vector<std::shared_ptr<MetricValueBase>> values;
-                for (const auto &pMetricIt : m_metrics)
+            void initializeForCollection()
+            {
+                for (const auto& metricIt : m_metrics)
                 {
-                    m_pSink->send(values);
+                    metricIt.second->initializeForCollection();
                 }
             }
 
-
-            static void collectionThread(MetricSet *pMetricSet);
-
-            std::shared_ptr<Metric> getMetric(const std::string &name) const {
-                std::shared_ptr<Metric> pMetric;
-                auto it = m_metrics.find(name);
-                if (it != m_metrics.end())
+            void report(std::vector<std::shared_ptr<MetricValueBase>> &values)
+            {
+                for (const auto &metricIt : m_metrics)
                 {
-                    pMetric = it->second;
+                    metricIt.second->report(values);
                 }
-                return pMetric;
             }
 
 
         protected:
 
-            std::string m_name;
             std::map<std::string, std::shared_ptr<Metric>> m_metrics;
-            std::chrono::seconds m_periodSeconds;
-            std::thread m_collectThread;
-            std::shared_ptr<MetricSink> m_pSink;
-            bool m_stopCollection;
     };
-
-
-    void MetricSet::collectionThread(MetricSet *pMetricSet) {
-        while (!pMetricSet->m_stopCollection)
-        {
-            std::this_thread::sleep_for(pMetricSet->m_periodSeconds);
-            pMetricSet->collect();
-        }
-        printf("Collected\n");
-    }
-
 }

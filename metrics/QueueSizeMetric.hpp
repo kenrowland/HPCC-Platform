@@ -20,28 +20,40 @@
 #include <string>
 #include <atomic>
 #include <vector>
+#include <mutex>
 #include "Metric.hpp"
-#include "MetricValue.hpp"
+
 
 namespace hpcc_metrics
 {
-    class CountableMetric : public Metric
+    class QueueSizeMetric : public Metric
     {
         public:
 
-            explicit CountableMetric(std::string metricName) : Metric{std::move(metricName)}, m_count{0} {}
-            ~CountableMetric() override = default;
-            void update(uint32_t incVal) { m_count.fetch_add(incVal); }
+            explicit QueueSizeMetric(std::string metricName) : Metric{std::move(metricName)}, m_queueSize(0) {}
+            ~QueueSizeMetric() override = default;
+            void addElement() { m_queueSize.fetch_add(1); }
+            virtual void removeElement()
+            {
+                uint32_t curQueueSize = m_queueSize.load();
+                uint32_t newQueueSize;
+                do
+                {
+                    if (curQueueSize > 1)
+                        newQueueSize = curQueueSize - 1;
+                    else
+                        break;
+                } while (!m_queueSize.compare_exchange_weak(curQueueSize, newQueueSize));
+            }
 
             bool report(std::vector<std::shared_ptr<MetricValueBase>> &values) override
             {
-                values.emplace_back(std::make_shared<MetricValue<uint32_t>>(m_metricName, m_count.exchange(0)));
+                values.emplace_back(std::make_shared<MetricValue<uint32_t>>(m_metricName, m_queueSize.load()));
                 return true;
             }
 
-
         protected:
 
-            std::atomic<uint32_t> m_count;
+            std::atomic<uint32_t> m_queueSize;
     };
 }
