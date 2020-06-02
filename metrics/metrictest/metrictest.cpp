@@ -47,14 +47,14 @@ int main(int argc, char *argv[])
 
     //
     // Create a file sink for saving metric values
-    auto pFileSink = std::make_shared<FileMetricSink>("/home/ken/metric_output.txt");
+    //auto pFileSink = std::make_shared<FileMetricSink>("/home/ken/metric_output.txt");
 
     //
     // Create a collector
     PeriodicMetricsReporter collector;
     collector.addMetricSet(pRequestMetricSet);
     collector.addMetricSet(pQueueMetricSet);
-    collector.addSink(pFileSink);
+    //collector.addSink(pFileSink);
 
     //
     // start collection

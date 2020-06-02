@@ -15,4 +15,4 @@
 ################################################################################
 
 #HPCC_ADD_SUBDIRECTORY (ELK)
-#HPCC_ADD_SUBDIRECTORY (file)
+HPCC_ADD_SUBDIRECTORY (file)

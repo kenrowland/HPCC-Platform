@@ -35,6 +35,12 @@ namespace hpcc_metrics
             }
 
 
+            void addSink(const std::string &sinkName)
+            {
+
+            }
+
+
             void addMetricSet(const std::shared_ptr<MetricSet>& pSet)
             {
                 m_metricSets.emplace_back(pSet);

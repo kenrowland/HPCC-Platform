@@ -15,21 +15,23 @@
     limitations under the License.
 ############################################################################## */
 
-
 #pragma once
 
-#include "sinks/MetricSink.hpp"
+#include <vector>
+#include <memory>
+#include <map>
 
-using namespace hpcc_metrics;
-
-class FileMetricSink : public MetricSink
+namespace hpcc_metrics
 {
-    public:
 
-        explicit FileMetricSink(const std::map<std::string, std::string> &parms);
-        void send(const std::vector<std::shared_ptr<MetricValueBase>> &values) override;
+    class MetricValueBase;
 
-    protected:
+    class MetricSink
+    {
+        public:
 
-        std::string m_filename;
-};
+            explicit MetricSink(const std::map<std::string, std::string> &parms) {  }
+            virtual ~MetricSink() = default;
+            virtual void send(const std::vector<std::shared_ptr<MetricValueBase>> &values) = 0;
+    };
+}
