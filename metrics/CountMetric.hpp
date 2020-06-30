@@ -18,32 +18,40 @@
 #pragma once
 
 #include <string>
+#include <atomic>
 #include <vector>
+#include "Metric.hpp"
 #include "Measurement.hpp"
-
 
 namespace hpcc_metrics
 {
-    class Metric
+    template <typename T>
+    class CountMetric : public Metric
     {
         public:
 
-            virtual ~Metric() = default;
-            const std::string &getName() const { return metricName; }
-            void setType(const std::string &_type) { type = _type; }
-            std::string getType() const { return type; }
-            virtual void init() { }
-            virtual bool collect(std::vector<std::shared_ptr<MeasurementBase>> &values) = 0;
-
+            explicit CountMetric(std::string metricName) : Metric{std::move(metricName)}, count{0} {}
+            ~CountMetric() override = default;
+            void inc(T incVal);
+            bool collect(std::vector<std::shared_ptr<MeasurementBase>> &values) override;
 
         protected:
 
-            explicit Metric(std::string metricName) : metricName(std::move(metricName)) {}
-
-
-        protected:
-
-            std::string metricName;
-            std::string type;         // optional
+            std::atomic<T> count;
     };
+
+
+    template <typename T>
+    void CountMetric<T>::inc(T incVal)
+    {
+        count.fetch_add(incVal);
+    }
+
+
+    template <typename T>
+    bool CountMetric<T>::collect(std::vector<std::shared_ptr<MeasurementBase>> &values)
+    {
+        values.emplace_back(std::make_shared<Measurement<T>>(metricName, count.exchange(0)));
+        return true;
+    }
 }

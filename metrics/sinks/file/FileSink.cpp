@@ -16,7 +16,7 @@
 ############################################################################## */
 
 #include "FileSink.hpp"
-#include "MetricValue.hpp"
+#include "Measurement.hpp"
 #include <cstdio>
 #include <map>
 
@@ -43,7 +43,7 @@ FileMetricSink::FileMetricSink(const std::map<std::string, std::string> &parms) 
 }
 
 
-void FileMetricSink::send(const std::vector<std::shared_ptr<MetricValueBase>> &values)
+void FileMetricSink::send(const std::vector<std::shared_ptr<MeasurementBase>> &values, const std::string &setName)
 {
     auto handle = fopen(m_filename.c_str(), "a");
     for (const auto& pValue : values)
@@ -51,5 +51,14 @@ void FileMetricSink::send(const std::vector<std::shared_ptr<MetricValueBase>> &v
         fprintf(handle, "%s -> %s\n", pValue->getName().c_str(), pValue->toString().c_str());
     }
     fprintf(handle, "\n");
+    fclose(handle);
+}
+
+
+void FileMetricSink::init(const std::vector<std::shared_ptr<MetricSet>> &metricSets)
+{
+    //
+    // Clear the file
+    auto handle = fopen(m_filename.c_str(), "w");
     fclose(handle);
 }

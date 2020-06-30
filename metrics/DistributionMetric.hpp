@@ -28,51 +28,51 @@ namespace hpcc_metrics
 {
 
     template <typename T>
-    class MetricDistribution : public Metric
+    class DistributionMetric : public Metric
     {
         public:
 
-            MetricDistribution(std::string &name, const std::vector<T> &dist);
-            void increment(T level);
-            bool report(std::vector<std::shared_ptr<MetricValueBase>> &values) override;
+            DistributionMetric(std::string &name, const std::vector<T> &bucketLevels);
+            void inc(T level, uint32_t val);
+            bool collect(std::vector<std::shared_ptr<MeasurementBase>> &values) override;
 
 
         protected:
 
-            std::map<T, std::atomic<unsigned> *> m_distribution;
+            std::map<T, std::atomic<uint32_t> *> buckets;
     };
 
 
     template <typename T>
-    MetricDistribution<T>::MetricDistribution(std::string &name, const std::vector<T> &dist) :
+    DistributionMetric<T>::DistributionMetric(std::string &name, const std::vector<T> &bucketLevels) :
         Metric(name)
     {
-        if (dist[0] != std::numeric_limits<T>::min())
-            m_distribution[0] = new std::atomic<unsigned>();
+        if (bucketLevels[0] != std::numeric_limits<T>::min())
+            buckets[0] = new std::atomic<uint32_t>();
 
-        for (auto const &distValue : dist)
+        for (auto const &distValue : bucketLevels)
         {
-            m_distribution.insert(std::pair<T, std::atomic<unsigned> *>(distValue, new std::atomic<unsigned>()));
+            buckets.insert(std::pair<T, std::atomic<unsigned> *>(distValue, new std::atomic<unsigned>()));
         }
 
-        if (dist[dist.size()-1] != std::numeric_limits<T>::max())
-            m_distribution.insert(std::pair<T, std::atomic<unsigned> *>(std::numeric_limits<T>::max(), new std::atomic<unsigned>()));
+        if (bucketLevels[bucketLevels.size() - 1] != std::numeric_limits<T>::max())
+            buckets.insert(std::pair<T, std::atomic<uint32_t> *>(std::numeric_limits<T>::max(), new std::atomic<uint32_t>()));
     }
 
 
     template <typename T>
-    void MetricDistribution<T>::increment(T level)
+    void DistributionMetric<T>::inc(T level, uint32_t val)
     {
-        auto it = m_distribution.lower_bound(level);
-        if (it != m_distribution.end())
+        auto it = buckets.lower_bound(level);
+        if (it != buckets.end())
         {
-            ++(it.second);
+            it.second += val;
         }
     }
 
 
     template<typename T>
-    bool MetricDistribution<T>::report(std::vector<std::shared_ptr<MetricValueBase>> &values) {
+    bool DistributionMetric<T>::collect(std::vector<std::shared_ptr<MeasurementBase>> &values) {
         return false;
     }
 }

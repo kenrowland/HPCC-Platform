@@ -37,34 +37,51 @@ namespace hpcc_metrics
     {
         public:
 
-            MetricSet() = default;
+            explicit MetricSet(std::string _name) : name{std::move(_name)} { }
             virtual ~MetricSet() = default;
+
+            std::string getName()
+            {
+                return name;
+            }
 
             bool addMetric(const std::shared_ptr<Metric> &pMetric)
             {
-                auto rc = m_metrics.insert({pMetric->getName(), pMetric});
+                auto rc = metrics.insert({pMetric->getName(), pMetric});
                 return rc.second;
             }
 
-            void initializeForCollection()
+            void init()
             {
-                for (const auto& metricIt : m_metrics)
+                for (const auto& metricIt : metrics)
                 {
-                    metricIt.second->initializeForCollection();
+                    metricIt.second->init();
                 }
             }
 
-            void report(std::vector<std::shared_ptr<MetricValueBase>> &values)
+            void collect(std::vector<std::shared_ptr<MeasurementBase>> &values)
             {
-                for (const auto &metricIt : m_metrics)
+                for (const auto &metricIt : metrics)
                 {
-                    metricIt.second->report(values);
+                    metricIt.second->collect(values);
                 }
+            }
+
+
+            std::vector<std::shared_ptr<Metric>> getMetrics() const
+            {
+                std::vector<std::shared_ptr<Metric>> metricVector;
+                for (const auto& metricIt : metrics)
+                {
+                    metricVector.push_back(metricIt.second);
+                }
+                return metricVector;
             }
 
 
         protected:
 
-            std::map<std::string, std::shared_ptr<Metric>> m_metrics;
+            std::map<std::string, std::shared_ptr<Metric>> metrics;
+            std::string name;
     };
 }

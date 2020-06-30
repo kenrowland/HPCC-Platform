@@ -36,7 +36,7 @@ namespace hpcc_metrics
 
             void start(unsigned periodSeconds)
             {
-                initializeForCollection();
+                init();
                 m_periodSeconds = std::chrono::seconds(periodSeconds);
                 m_collectThread = std::thread(collectionThread, this);
                 m_collectThread.detach();

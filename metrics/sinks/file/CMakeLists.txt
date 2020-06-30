@@ -27,6 +27,5 @@ include_directories(
 
 add_definitions( -DSINKDLL)
 HPCC_ADD_LIBRARY( hpccmetrics_filesink SHARED ${srcs} )
-#TARGET_LINK_LIBRARIES( hpccmetrics_filesink )
 
 INSTALL ( TARGETS hpccmetrics_filesink RUNTIME DESTINATION ${EXEC_DIR} LIBRARY DESTINATION ${LIB_DIR} )

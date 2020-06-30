@@ -19,49 +19,91 @@
 
 #include <memory>
 #include <vector>
+#include <map>
+#include <platform.h>
+#include <dlfcn.h>
 #include "MetricSet.hpp"
 #include "MetricSink.hpp"
 
+typedef hpcc_metrics::MetricSink* (*getMetricSinkInstance)(const std::map<std::string, std::string> &parms);
+
 namespace hpcc_metrics
 {
+
+    struct SinkInfo {
+        explicit SinkInfo(MetricSink *_pSink, HINSTANCE handle = nullptr) : pSink{_pSink}, libHandle{handle} { }
+        ~SinkInfo()
+        {
+
+            if (libHandle != nullptr)
+                dlclose(libHandle);
+
+            if (pSink != nullptr)
+                free(pSink);
+        }
+        HINSTANCE libHandle;
+        MetricSink *pSink;
+    };
+
     class MetricsReporter
     {
         public:
 
             virtual ~MetricsReporter() = default;
-            void addSink(const std::shared_ptr<MetricSink>& pSink)
+
+
+            void addSink(MetricSink *pSink)
             {
-                m_sinks.emplace_back(pSink);
+                std::shared_ptr<SinkInfo> pSi = std::make_shared<SinkInfo>(pSink, nullptr);
+                sinks.emplace_back(pSi);
             }
 
 
-            void addSink(const std::string &sinkName)
+            void addSink(const std::string &sinkName, const std::map<std::string, std::string> &parms)
             {
+                std::string libName = "libhpccmetrics_" + sinkName + ".so";
 
+                HINSTANCE libHandle = dlopen(libName.c_str(), RTLD_NOW|RTLD_GLOBAL);
+                if (libHandle != nullptr)
+                {
+                    auto getInstanceProc = (getMetricSinkInstance) GetSharedProcedure(libHandle, "getMetricSinkInstance");
+                    if (getInstanceProc != nullptr)
+                    {
+                        MetricSink *pSink = getInstanceProc(parms);
+                        std::shared_ptr<SinkInfo> pSi = std::make_shared<SinkInfo>(pSink, libHandle);
+                        sinks.emplace_back(pSi);
+                    }
+                }
+                // todo throw an exception here, or return false?
             }
 
 
             void addMetricSet(const std::shared_ptr<MetricSet>& pSet)
             {
-                m_metricSets.emplace_back(pSet);
+                metricSets.emplace_back(pSet);
             }
 
 
             virtual bool report()
             {
+                std::map<std::string, std::vector<std::shared_ptr<MeasurementBase>>> values;
                 //
                 // Collect all the values
-                std::vector<std::shared_ptr<MetricValueBase>> values;
-                for (const auto &pMetricSet : m_metricSets)
+                //std::vector<std::shared_ptr<MeasurementBase>> values;
+                for (const auto &pMetricSet : metricSets)
                 {
-                    pMetricSet->report(values);
+                    values[pMetricSet->getName()] = std::vector<std::shared_ptr<MeasurementBase>>();
+                    pMetricSet->collect(values[pMetricSet->getName()]);
                 }
 
                 //
                 // Send them
-                for (const auto &pSink : m_sinks)
+                for (auto &pSinkInfo : sinks)
                 {
-                    pSink->send(values);
+                    for (auto const &valueIt : values)
+                    {
+                        pSinkInfo->pSink->send(valueIt.second, valueIt.first);
+                    }
                 }
                 return true;
             }
@@ -70,20 +112,28 @@ namespace hpcc_metrics
         protected:
 
             MetricsReporter() = default;
-            virtual void initializeForCollection()
+            virtual void init()
             {
                 //
-                // Tell each metric that collection is beginning
-                for (const auto& pMetricSet : m_metricSets)
+                // Initialization consists of initializing each sink, informing
+                // each sink about the metric sets for which it shall report
+                // measurements, and initializing each metric set.
+                for (auto &pSinkInfo : sinks)
                 {
-                    pMetricSet->initializeForCollection();
+                    pSinkInfo->pSink->init(metricSets);
+                }
+
+                //
+                // Tell each metric that collection is beginning
+                for (const auto& pMetricSet : metricSets)
+                {
+                    pMetricSet->init();
                 }
             }
 
 
         protected:
-
-            std::vector<std::shared_ptr<MetricSet>> m_metricSets;
-            std::vector<std::shared_ptr<MetricSink>> m_sinks;
+            std::vector<std::shared_ptr<MetricSet>> metricSets;
+            std::vector<std::shared_ptr<SinkInfo>> sinks;
     };
 }

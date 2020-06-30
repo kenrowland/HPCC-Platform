@@ -6,7 +6,7 @@
     you may not use this file except in compliance with the License.
     You may obtain a copy of the License at
 
-       http://www.apache.org/licenses/LICENSE-2.0
+    http://www.apache.org/licenses/LICENSE-2.0
 
     Unless required by applicable law or agreed to in writing, software
     distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,31 +17,23 @@
 
 #pragma once
 
-#include <string>
-#include <atomic>
 #include <vector>
-#include "Metric.hpp"
-#include "MetricValue.hpp"
+#include <memory>
+#include <map>
 
 namespace hpcc_metrics
 {
-    class CountableMetric : public Metric
+
+    class MeasurementBase;
+    class MetricSet;
+
+    class MetricSink
     {
         public:
 
-            explicit CountableMetric(std::string metricName) : Metric{std::move(metricName)}, m_count{0} {}
-            ~CountableMetric() override = default;
-            void update(uint32_t incVal) { m_count.fetch_add(incVal); }
-
-            bool report(std::vector<std::shared_ptr<MetricValueBase>> &values) override
-            {
-                values.emplace_back(std::make_shared<MetricValue<uint32_t>>(m_metricName, m_count.exchange(0)));
-                return true;
-            }
-
-
-        protected:
-
-            std::atomic<uint32_t> m_count;
+            explicit MetricSink(const std::map<std::string, std::string> &parms) {  }
+            virtual ~MetricSink() = default;
+            virtual void init(const std::vector<std::shared_ptr<MetricSet>> &metricSets) = 0;
+            virtual void send(const std::vector<std::shared_ptr<MeasurementBase>> &values, const std::string &setName) = 0;
     };
 }

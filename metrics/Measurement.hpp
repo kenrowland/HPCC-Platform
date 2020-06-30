@@ -17,21 +17,41 @@
 
 #pragma once
 
-#include <vector>
-#include <memory>
-#include <map>
+#include <string>
 
 namespace hpcc_metrics
 {
+    class MeasurementBase {
 
-    class MetricValueBase;
-
-    class MetricSink
-    {
         public:
 
-            explicit MetricSink(const std::map<std::string, std::string> &parms) {  }
-            virtual ~MetricSink() = default;
-            virtual void send(const std::vector<std::shared_ptr<MetricValueBase>> &values) = 0;
+            explicit MeasurementBase(std::string name) : name{std::move(name)} {}
+            virtual ~MeasurementBase() = default;
+
+            virtual std::string toString() const = 0;
+            virtual const std::string &getName() const { return name; }
+
+
+        protected:
+
+            std::string name;
     };
+
+
+    template<typename T>
+    class Measurement : public MeasurementBase {
+        public:
+            Measurement(const std::string &name, T value) :
+                    value{value},
+                    MeasurementBase(name) {}
+
+            std::string toString() const override  {
+                return std::to_string(value);
+            }
+
+        protected:
+
+            T value;
+    };
+
 }

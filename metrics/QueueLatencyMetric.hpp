@@ -36,9 +36,9 @@ namespace hpcc_metrics
                 m_totalCompleteElements{0},
                 m_totalDurationUs{0}
                 {
-                    m_queueNameLatency = m_metricName;
+                    m_queueNameLatency = metricName;
                     m_queueNameLatency.append("elements.latency.avg_us");
-                    m_queueNameElementsProcessed = m_metricName;
+                    m_queueNameElementsProcessed = metricName;
                     m_queueNameElementsProcessed.append("elements.count");
                 }
 
@@ -63,12 +63,12 @@ namespace hpcc_metrics
             }
 
 
-            bool report(std::vector<std::shared_ptr<MetricValueBase>> &values) override
+            bool collect(std::vector<std::shared_ptr<MeasurementBase>> &values) override
             {
                 std::unique_lock<std::mutex> lock(m_mutex);
                 uint32_t avgLatencyUs = m_totalDurationUs.count() / m_totalCompleteElements;  // may truncate a us, but should be good enough
-                values.emplace_back(std::make_shared<MetricValue<uint32_t>>(m_queueNameLatency, avgLatencyUs));
-                values.emplace_back(std::make_shared<MetricValue<uint32_t>>(m_queueNameElementsProcessed, m_totalCompleteElements));
+                values.emplace_back(std::make_shared<Measurement<uint32_t>>(m_queueNameLatency, avgLatencyUs));
+                values.emplace_back(std::make_shared<Measurement<uint32_t>>(m_queueNameElementsProcessed, m_totalCompleteElements));
                 m_totalDurationUs = std::chrono::microseconds(0);
                 m_totalCompleteElements = 0;
                 return true;

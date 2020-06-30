@@ -32,54 +32,52 @@ namespace hpcc_metrics
         public:
 
             explicit RateMetric(std::string metricName) :
-                Metric{std::move(metricName)},
-                m_count{0}
+                    Metric{std::move(metricName)},
+                    count{0}
                 { }
 
             ~RateMetric() override = default;
 
 
-            void initializeForCollection() override
+            void init() override
             {
-                m_periodStart = std::chrono::high_resolution_clock::now();
+                periodStart = std::chrono::high_resolution_clock::now();
             }
 
 
-            void update()
+            void inc(uint32_t val)
             {
-                //
-                // For performance, update only operates on the atomic
-                ++m_count;
+                count += val;
             }
 
 
-            bool report(std::vector<std::shared_ptr<MetricValueBase>> &values) override
+            bool collect(std::vector<std::shared_ptr<MeasurementBase>> &values) override
             {
                 std::chrono::time_point<std::chrono::high_resolution_clock> now, start;
                 unsigned numEvents;
 
                 now = std::chrono::high_resolution_clock::now();
-                start = m_periodStart;
+                start = periodStart;
 
                 // Synchronized with update of count
                 {
-                    std::unique_lock<std::mutex> lock(m_mutex);
-                    numEvents = m_count.exchange(0);
-                    m_periodStart = now;
+                    std::unique_lock<std::mutex> lock(mutex);
+                    numEvents = count.exchange(0);
+                    periodStart = now;
                 }
 
 
                 auto seconds = (std::chrono::duration_cast<std::chrono::seconds>(now - start)).count();
                 float rate = static_cast<float>(numEvents) / static_cast<float>(seconds);
-                values.emplace_back(std::make_shared<MetricValue<float>>(m_metricName, rate));
+                values.emplace_back(std::make_shared<Measurement<float>>(metricName, rate));
                 return true;
             }
 
 
         protected:
 
-            std::mutex m_mutex;
-            std::atomic<uint32_t> m_count;
-            std::chrono::time_point<std::chrono::high_resolution_clock> m_periodStart;
+            std::mutex mutex;
+            std::atomic<uint32_t> count;
+            std::chrono::time_point<std::chrono::high_resolution_clock> periodStart;
     };
 }
