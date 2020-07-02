@@ -26,6 +26,36 @@ std::shared_ptr<GaugeMetric<uint32_t>> pGaugeMetric;
 //std::shared_ptr<QueueLatencyMetric> pQueueLatencyMetric;
 std::shared_ptr<RateMetric> pRateMetric;
 
+
+/*
+
+ What needs to be specified
+ - Sinks and metric sets (would be nice if a single sink, it gets all metric sets)
+
+ Global level:
+
+ metrics:
+   sinks:
+   - name: elasticsearchsink
+     type: elasticsearch
+     host: <hostname>
+     port: <port>
+
+   reporters
+   - name: myreporter
+     type: periodic
+     period: 10
+
+
+ Component level
+ metrics:
+   sinks:
+   - name:  if same, then overrides existing, otherwise creates a new one
+
+
+*/
+
+
 int main(int argc, char *argv[])
 {
 
