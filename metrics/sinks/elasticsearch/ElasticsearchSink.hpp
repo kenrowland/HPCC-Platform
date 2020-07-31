@@ -41,7 +41,7 @@
 #include "MetricSink.hpp"
 #include <map>
 
-using namespace hpcc_metrics;
+using namespace hpccMetrics;
 
 
 struct MetricSetInfo  {
@@ -49,9 +49,6 @@ struct MetricSetInfo  {
     std::string setName;                                 // name of the set
     std::string indexTemplate;                           // template for generating the index name
     std::string lastIndexName;                           // last index name. If !empty, it also exists
-    std::string timestampType;                           // type of timestamp to add
-    std::string timestampName;                           // if !empty, add a timestamp with this name
-    std::map<std::string, std::string> metricValueTypes; // used to create index mapping on new index
 };
 
 
@@ -61,20 +58,21 @@ class ElasticsearchSink : public MetricSink
     public:
 
         explicit ElasticsearchSink(const std::map<std::string, std::string> &parms);
-        void send(const std::vector<std::shared_ptr<MeasurementBase>> &values, const std::string &setName) override;
-        void init(const std::vector<std::shared_ptr<MetricSet>> &metricSets) override;
+        void send(const std::vector<std::shared_ptr<IMeasurement>> &values, const std::string &setName) override;
+        void init() override;
+        void addMetricSet(const std::shared_ptr<IMetricSet> &pSet) override;
 
 
     protected:
 
-        bool initializeIndex(MetricSetInfo *pSetInfo);
-        std::string buildIndexName(const std::string &nameTemplate, const std::string &setName);
-        bool createNewIndex(MetricSetInfo *pSetInfo, const std::string &indexName);
+        bool initializeIndex(const std::shared_ptr<IMetricSet>  &pMetricSet);
+        static std::string buildIndexName(const std::string &nameTemplate, const std::string &setName);
+        bool createNewIndex(MetricSetInfo *pSetInfo, const std::shared_ptr<IMetricSet>& pMetricSet, const std::string &indexName);
 
 
     protected:
 
-        std::map<std::string, MetricSetInfo> setInfo;
+        std::map<std::string, MetricSetInfo> metricSetInfo;
         std::string protocol;
         std::string domain;
         std::string port;

@@ -21,67 +21,85 @@
 #include <map>
 #include <string>
 #include <memory>
-#include <chrono>
-#include <thread>
-#include "Metric.hpp"
-#include "MetricSink.hpp"
-
-#include <cstdio>
-#include <utility>
+#include "IMetricSet.hpp"
+#include "Metrics.hpp"
 
 
-namespace hpcc_metrics
+namespace hpccMetrics
 {
 
-    class MetricSet
-    {
-        public:
+class MetricSet : public IMetricSet
+{
+    public:
 
-            explicit MetricSet(std::string _name) : name{std::move(_name)} { }
-            virtual ~MetricSet() = default;
+        MetricSet(std::string _name, std::string _prefix) :
+            name{std::move(_name)},
+            metricNamePrefix{std::move(_prefix)} { }
 
-            std::string getName()
-            {
-                return name;
-            }
+        virtual ~MetricSet() = default;
 
-            bool addMetric(const std::shared_ptr<Metric> &pMetric)
+
+        std::string getName() const override
+        {
+            return name;
+        }
+
+
+        void addMetric(const std::shared_ptr<IMetric> &pMetric) override
+        {
+            //
+            // A metric may only be added to one metric set
+            if (!pMetric->isInMetricSet())
             {
                 auto rc = metrics.insert({pMetric->getName(), pMetric});
-                return rc.second;
-            }
-
-            void init()
-            {
-                for (const auto& metricIt : metrics)
+                if (!rc.second)
                 {
-                    metricIt.second->init();
+                    throw std::exception();   // metric already added with the same name
+                }
+                pMetric->setInMetricSet(true);
+                //pMetric->setPrefix(metricNamePrefix);
+
+                if (pMetric->isTyped())
+                {
+                    typedMetrics[pMetric->getName()] = pMetric->getType();
                 }
             }
-
-            void collect(std::vector<std::shared_ptr<MeasurementBase>> &values)
+            else
             {
-                for (const auto &metricIt : metrics)
-                {
-                    metricIt.second->collect(values);
-                }
+                throw std::exception();  // not sure if this is the right thing to do yet
             }
+        }
 
 
-            std::vector<std::shared_ptr<Metric>> getMetrics() const
+        void init() override
+        {
+            for (const auto& metricIt : metrics)
             {
-                std::vector<std::shared_ptr<Metric>> metricVector;
-                for (const auto& metricIt : metrics)
-                {
-                    metricVector.push_back(metricIt.second);
-                }
-                return metricVector;
+                metricIt.second->init();
             }
+        }
 
 
-        protected:
+        void collect(std::vector<std::shared_ptr<IMeasurement>> &values) override
+        {
+            for (const auto &metricIt : metrics)
+            {
+                metricIt.second->collect(values, metricNamePrefix);
+            }
+        }
 
-            std::map<std::string, std::shared_ptr<Metric>> metrics;
-            std::string name;
-    };
+
+        const std::map<std::string, std::string> &getTypedMetrics() const override
+        {
+            return typedMetrics;
+        }
+
+
+    protected:
+
+        std::map<std::string, std::shared_ptr<IMetric>> metrics;
+        std::map<std::string, std::string> typedMetrics;
+        std::string name;
+        std::string metricNamePrefix;
+};
 }

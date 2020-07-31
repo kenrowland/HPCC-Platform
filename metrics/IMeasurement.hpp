@@ -6,7 +6,7 @@
     you may not use this file except in compliance with the License.
     You may obtain a copy of the License at
 
-       http://www.apache.org/licenses/LICENSE-2.0
+    http://www.apache.org/licenses/LICENSE-2.0
 
     Unless required by applicable law or agreed to in writing, software
     distributed under the License is distributed on an "AS IS" BASIS,
@@ -18,32 +18,22 @@
 #pragma once
 
 #include <string>
-#include <vector>
-#include "Measurement.hpp"
 
-
-namespace hpcc_metrics
+namespace hpccMetrics
 {
-    class Metric
-    {
+    //
+    // The base interface for a metrics measurement when reporting to a sink. Generally, a sink
+    // will use the methods defined below when it sends values to its store
+    class IMeasurement {
+
         public:
 
-            virtual ~Metric() = default;
-            const std::string &getName() const { return metricName; }
-            void setType(const std::string &_type) { type = _type; }
-            std::string getType() const { return type; }
-            virtual void init() { }
-            virtual bool collect(std::vector<std::shared_ptr<MeasurementBase>> &values) = 0;
+            //
+            // Convert the value to a string for reporting purposes
+            virtual std::string toString() const = 0;
 
-
-        protected:
-
-            explicit Metric(std::string metricName) : metricName(std::move(metricName)) {}
-
-
-        protected:
-
-            std::string metricName;
-            std::string type;         // optional
+            //
+            // Return the name of the metric value for reporting purposes
+            virtual const std::string &getName() const = 0;
     };
 }

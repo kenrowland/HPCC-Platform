@@ -23,6 +23,9 @@
 using std::find_if;
 using std::for_each;
 
+
+
+
 #define VALIDATE_KEY(k) if (!(k) || !(*k)) return false
 #define MATCH_KEY       [&](const Entry& entry) { return stricmp(entry.key.str(), key) == 0; }
 
@@ -34,6 +37,12 @@ bool operator < (const StringAttr& a, const StringAttr& b)
 CTxSummary::CTxSummary(unsigned creationTime)
 : m_creationTime(creationTime ? creationTime : msTick())
 {
+    if (!pEspMetrics)
+    {
+        pEspMetrics = new EspMetrics();
+        pEspMetrics->init(5);
+    }
+    pEspMetrics->pCountRequests->inc(1);
 }
 
 CTxSummary::~CTxSummary()

@@ -19,52 +19,56 @@
 
 #include <memory>
 #include <vector>
+#include <thread>
 #include "MetricsReporter.hpp"
 
-namespace hpcc_metrics
+namespace hpccMetrics
 {
-    class PeriodicMetricsReporter : public MetricsReporter
-    {
-        public:
 
-            explicit PeriodicMetricsReporter() :
-                m_periodSeconds{0},
-                m_stopCollection{false}
-                { }
+class PeriodicMetricsReporter : public MetricsReporter
+{
+    public:
 
-            ~PeriodicMetricsReporter() override = default;
+        explicit PeriodicMetricsReporter() :
+                periodSeconds{0},
+                stopCollection{false}
+            { }
 
-            void start(unsigned periodSeconds)
-            {
-                init();
-                m_periodSeconds = std::chrono::seconds(periodSeconds);
-                m_collectThread = std::thread(collectionThread, this);
-                m_collectThread.detach();
-            }
+        ~PeriodicMetricsReporter() override = default;
 
-            void stop()
-            {
-                m_stopCollection = true;
-            }
-
-            bool isStopCollection() const { return m_stopCollection; }
-            static void collectionThread(PeriodicMetricsReporter *pMetricCollector);
-
-
-        private:
-
-            bool m_stopCollection;
-            std::thread m_collectThread;
-            std::chrono::seconds m_periodSeconds;
-    };
-
-
-    void PeriodicMetricsReporter::collectionThread(PeriodicMetricsReporter *pMetricCollector)
-    {
-        while (!pMetricCollector->isStopCollection())
+        void start(unsigned seconds)
         {
-            std::this_thread::sleep_for(pMetricCollector->m_periodSeconds);
-            pMetricCollector->report();
+            init();
+            periodSeconds = std::chrono::seconds(seconds);
+            collectThread = std::thread(collectionThread, this);
         }
-    }
+
+        void stop()
+        {
+            stopCollection = true;
+            collectThread.join();
+        }
+
+        bool isStopCollection() const
+        {
+            return stopCollection;
+        }
+
+        static void collectionThread(PeriodicMetricsReporter *pMetricCollector)
+        {
+            while (!pMetricCollector->isStopCollection())
+            {
+                std::this_thread::sleep_for(pMetricCollector->periodSeconds);
+                pMetricCollector->report();
+            }
+        }
+
+
+    private:
+
+        bool stopCollection;
+        std::thread collectThread;
+        std::chrono::seconds periodSeconds;
+};
+
 }

@@ -50,6 +50,7 @@ set(SRCS
     ../../platform/persistent.cpp
     mapinfo.cpp
     plugin.cpp
+    espmetrics.cpp
     )
 
 include_directories(
@@ -65,9 +66,10 @@ include_directories(
     ./../../../system/security/shared
     ./../../../system/security/LdapSecurity
     ./../../../system/security/zcrypt
-    ./../../../system/mp 
+    ./../../../system/mp
     ./../../../dali/base
     ./../../../common/workunit
+    ./../../../metrics
     )
 
 add_definitions(-DESPHTTP_EXPORTS -DESP_TIMING -D_USRDLL -DESP_PLUGIN)

@@ -25,7 +25,7 @@
 #include "MetricSet.hpp"
 #include "MetricSink.hpp"
 
-namespace hpcc_metrics
+namespace hpccMetrics
 {
 
     class MetricsRegistry

@@ -17,36 +17,33 @@
 
 #pragma once
 
-#include <string>
-#include "IMeasurement.hpp"
+#include "MetricSink.hpp"
 
 namespace hpccMetrics
 {
-
-    template<typename T>
-    class Measurement : public IMeasurement
+    //
+    // Interface for reporting metrics
+    class IMetricsReporter
     {
         public:
-            Measurement(const std::string &_name, const std::string& _prefix, T value) :
-                value{value}
-            {
-                name = _prefix + _name;
-            }
 
-            const std::string &getName() const override
-            {
-                return name;
-            }
+            //
+            // Add a sink to the set of sinks to which the defined metric set's values are reported.
+            virtual void addSink(IMetricSink *pSink) = 0;
 
-            std::string toString() const override
-            {
-                return std::to_string(value);
-            }
+            //
+            // Add a metric set for collection and reporting.
+            virtual void addMetricSet(const std::shared_ptr<IMetricSet>& pSet) = 0;
 
-        protected:
+            //
+            // Initialize the defined sinks and metric sets for collection and reporting
+            virtual void init() = 0;
 
-            std::string name;
-            T value;
+
+            //
+            // Collect and report values for the defined metric sets to the defined metric sinks.
+            virtual bool report() = 0;
     };
+
 
 }

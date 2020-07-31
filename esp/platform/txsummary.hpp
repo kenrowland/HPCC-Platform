@@ -27,6 +27,34 @@
 #include <list>
 #include <map>
 
+
+/*
+ * Class with all of the metrics defined that ESP collects wrt requests
+ * All public
+ * std::shared<Countable> pNumRequests;
+ * <etc>
+ *
+ * init(<config params>) {
+ *     creates all of the metrics
+ *     Add to metric set
+ *     Create sink
+ *     Add metric set to the sink
+ *     start collection
+ * }
+ *
+ * There is a static of this class
+ * TxSummary has access to the class and can return it
+ * TxSummary->getMetricsCollection()->pNumRequests->inc(1);
+ *
+ *
+ *
+ *
+ */
+
+#include "../../protocols/http/espmetrics.hpp"
+
+static EspMetrics *pEspMetrics = nullptr;
+
 class CTxSummary : extends CInterface
 {
 public:

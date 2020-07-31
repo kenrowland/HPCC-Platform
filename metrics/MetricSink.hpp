@@ -20,20 +20,58 @@
 #include <vector>
 #include <memory>
 #include <map>
+#include "IMetricSet.hpp"
+#include "IMetricSink.hpp"
+#include <platform.h>
+#include <dlfcn.h>
 
-namespace hpcc_metrics
+namespace hpccMetrics
 {
 
-    class MeasurementBase;
-    class MetricSet;
 
-    class MetricSink
-    {
-        public:
+typedef hpccMetrics::IMetricSink* (*getMetricSinkInstance)(const std::map<std::string, std::string> &parms);
 
-            explicit MetricSink(const std::map<std::string, std::string> &parms) {  }
-            virtual ~MetricSink() = default;
-            virtual void init(const std::vector<std::shared_ptr<MetricSet>> &metricSets) = 0;
-            virtual void send(const std::vector<std::shared_ptr<MeasurementBase>> &values, const std::string &setName) = 0;
-    };
+
+class MetricSink : public IMetricSink
+{
+    public:
+
+        explicit MetricSink(const std::map<std::string, std::string> &parms) {  }
+        virtual ~MetricSink() = default;
+        void addMetricSet(const std::shared_ptr<IMetricSet> &pSet) override
+        {
+            metricSets[pSet->getName()] = pSet;
+        }
+
+        // not sure if this is the best place for this or not, but wanted a static kind of factory that would load
+        // a sink from a .so  (see the metrics/sinks folder for available sink libs)
+        static IMetricSink *getMetricSinkFromLib(const char *sinkLibName, const std::map<std::string, std::string> &parms)
+        {
+            std::string libName = "libhpccmetrics_";
+            libName.append(sinkLibName).append(".so");
+
+            HINSTANCE libHandle = dlopen(libName.c_str(), RTLD_NOW|RTLD_GLOBAL);
+            if (libHandle != nullptr)
+            {
+                auto getInstanceProc = (getMetricSinkInstance) GetSharedProcedure(libHandle, "getMetricSinkInstance");
+                if (getInstanceProc != nullptr)
+                {
+                    IMetricSink *pSink = getInstanceProc(parms);
+                    return pSink;
+                }
+            }
+            // todo throw an exception here, or return false?
+            return nullptr;
+        }
+
+
+    protected:
+
+        std::map<std::string, std::shared_ptr<IMetricSet>> metricSets;
+};
+
+
+
+
+
 }

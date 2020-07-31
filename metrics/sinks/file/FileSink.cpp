@@ -20,7 +20,7 @@
 #include <cstdio>
 #include <map>
 
-using namespace hpcc_metrics;
+using namespace hpccMetrics;
 
 extern "C" MetricSink* getMetricSinkInstance(const std::map<std::string, std::string> &parms)
 {
@@ -36,14 +36,11 @@ FileMetricSink::FileMetricSink(const std::map<std::string, std::string> &parms) 
     if (it != parms.end())
     {
         m_filename = it->second;
-        //todo maybe the open mode can be a parameter later
-        auto handle = fopen(m_filename.c_str(), "w");
-        fclose(handle);
     }
 }
 
 
-void FileMetricSink::send(const std::vector<std::shared_ptr<MeasurementBase>> &values, const std::string &setName)
+void FileMetricSink::send(const std::vector<std::shared_ptr<IMeasurement>> &values, const std::string &setName)
 {
     auto handle = fopen(m_filename.c_str(), "a");
     for (const auto& pValue : values)
@@ -55,7 +52,7 @@ void FileMetricSink::send(const std::vector<std::shared_ptr<MeasurementBase>> &v
 }
 
 
-void FileMetricSink::init(const std::vector<std::shared_ptr<MetricSet>> &metricSets)
+void FileMetricSink::init()
 {
     //
     // Clear the file

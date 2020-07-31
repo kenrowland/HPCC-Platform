@@ -20,16 +20,16 @@
 
 #include "MetricSink.hpp"
 
-using namespace hpcc_metrics;
+using namespace hpccMetrics;
 
 class FileMetricSink : public MetricSink
 {
     public:
 
         explicit FileMetricSink(const std::map<std::string, std::string> &parms);
-        void send(const std::vector<std::shared_ptr<MeasurementBase>> &values, const std::string &setName) override;
+        void send(const std::vector<std::shared_ptr<IMeasurement>> &values, const std::string &setName) override;
 
-        void init(const std::vector<std::shared_ptr<MetricSet>> &metricSets) override;
+        void init() override;
 
     protected:
 

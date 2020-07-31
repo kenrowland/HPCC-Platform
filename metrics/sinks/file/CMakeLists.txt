@@ -23,6 +23,7 @@ set ( srcs
 include_directories(
         ../
         ../../../metrics
+        ${HPCC_SOURCE_DIR}/system/include
 )
 
 add_definitions( -DSINKDLL)
