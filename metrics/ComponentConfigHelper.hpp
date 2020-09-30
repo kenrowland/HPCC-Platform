@@ -1,0 +1,59 @@
+/*##############################################################################
+
+    HPCC SYSTEMS software Copyright (C) 2020 HPCC Systems®.
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+############################################################################## */
+
+#pragma once
+
+#include <map>
+#include "Metrics.hpp"
+#include "jptree.hpp"
+
+using namespace hpccMetrics;
+
+class ComponentConfigHelper
+{
+    public:
+
+        ComponentConfigHelper() = default;
+        bool init(IPropertyTree *pGlobalConfig, IPropertyTree *pComponentConfig);
+        bool addMetricToSet(const std::shared_ptr<IMetric> &pMetric, const char *metricPrefix, const char *setName);
+        bool start();
+        void stop();
+//        void addMetricSetToSink(void *setName);
+//        void addMetricSet(void *pMetricSet);
+//        void startCollection();
+//        void stopCollection();
+
+
+    protected:
+
+        bool processSinks(IPropertyTreeIterator *pSinkIt);
+        void processReportConfig(IPropertyTreeIterator *pReportSinks);
+        bool createTrigger(IPropertyTree *pTriggerTree);
+        bool buildReportConfig();
+
+    private:
+
+        std::map<std::string, IMetricSink *> sinks;
+        IMetricsReportTrigger *pTrigger = nullptr;
+        MetricsReporter *pReporter;
+        MetricsReportConfig reportConfig;
+        IPropertyTree *pGlobalConfig, *pComponentConfig;
+        std::map<std::string, std::vector<std::shared_ptr<IMetric>>> metricsBySetName;
+        std::map<std::string, std::unordered_set<std::string>> sinkToMetricSets;
+        StringBuffer componentReportingPrefix;
+
+};
