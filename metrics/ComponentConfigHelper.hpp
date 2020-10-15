@@ -51,9 +51,9 @@ class ComponentConfigHelper
         IMetricsReportTrigger *pTrigger = nullptr;
         MetricsReporter *pReporter;
         MetricsReportConfig reportConfig;
-        IPropertyTree *pGlobalConfig, *pComponentConfig;
+        //IPropertyTree *pGlobalConfig, *pComponentConfig;
         std::map<std::string, std::vector<std::shared_ptr<IMetric>>> metricsBySetName;
-        std::map<std::string, std::unordered_set<std::string>> sinkToMetricSets;
+        std::map<std::string, std::unordered_set<std::string>> metricSetsBySinkName;
         StringBuffer componentReportingPrefix;
 
 };

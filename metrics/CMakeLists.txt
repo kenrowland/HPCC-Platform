@@ -24,6 +24,7 @@ HPCC_ADD_SUBDIRECTORY (collectionsystems)
 
 set ( srcs
         Metrics.cpp
+        ComponentConfigHelper.cpp
         )
 
 include_directories(

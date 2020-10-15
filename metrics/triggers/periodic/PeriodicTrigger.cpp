@@ -29,9 +29,9 @@ extern "C" IMetricsReportTrigger* getTriggerInstance(const IPropertyTree *pSetti
 PeriodicTrigger::PeriodicTrigger(const IPropertyTree *pSettingsTree) :
     periodSeconds{std::chrono::seconds(60)}
 {
-    if (pSettingsTree->hasProp("period"))
+    if (pSettingsTree->hasProp("@period"))
     {
-        unsigned seconds = pSettingsTree->getPropInt("period");
+        unsigned seconds = pSettingsTree->getPropInt("@period");
         periodSeconds = std::chrono::seconds(seconds);
     }
 }

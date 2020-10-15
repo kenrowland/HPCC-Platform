@@ -31,8 +31,8 @@ extern "C" IMetricSink* getSinkInstance(const char *name, const IPropertyTree *p
 FileMetricSink::FileMetricSink(const char *name, const IPropertyTree *pSettingsTree) :
     MetricSink(name, "file")
 {
-    pSettingsTree->getProp("filename", fileName);
-    bool clearFile = pSettingsTree->getPropBool("clear", false);
+    pSettingsTree->getProp("@filename", fileName);
+    bool clearFile = pSettingsTree->getPropBool("@clear", false);
 
     //
     // Clear the file if indicated.

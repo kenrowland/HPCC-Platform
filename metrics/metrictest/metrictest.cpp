@@ -1,15 +1,11 @@
 
 
 #include <cstdio>
-
-#include "Metrics.hpp"
-//#include "MetricSet.hpp"
-//#include "MetricSink.hpp"
-//#include "triggers/periodic/PeriodicTrigger.hpp"
-//#include "MetricsReporter.hpp"
 #include <thread>
 #include <chrono>
 #include <jptree.hpp>
+#include "Metrics.hpp"
+#include "ComponentConfigHelper.hpp"
 
 
 using namespace hpccMetrics;
@@ -23,25 +19,85 @@ std::shared_ptr<RateMetric> pRateMetric;
 MetricsReporter *pReporter;
 
 
-//const char *configYml = R"!!(metrics:
-//  name: config_name
-//  sinks:
-//    - type: sinktype
-//      name: sinkname
-//      config:
-//        key1: data1
-//        key2: data2
-//        Key3:
-//          key3.1: data3.1
-//          key3.2: data3.2
-//    )!!";
+const char *testYml = R"!!(config:
+  metrics:
+    name: config_name
+    sinks:
+      - type: sinktype
+        name: sinkname
+        config:
+          key1: data1
+          key2: data2
+          Key3:
+            key3.1: data3.1
+            key3.2: data3.2
+    prefixes:
+      - key1: val1
+      - key2: val2
+)!!";
 
+
+const char *globalConfigYml = R"!!(config:
+  metrics:
+    name: cluster config
+    sinks:
+      - type: file
+        name: default
+        config:
+          filename: /home/rowlke01
+          clear: true
+    report_trigger:
+      type: periodic
+      settings:
+        period: 15
+)!!";
+
+
+const char *localConfigYml = R"!!(config:
+  metrics:
+    name: config_name
+    prefix: myprefix
+
+)!!";
+
+ComponentConfigHelper testCfgHelper;
 
 int main(int argc, char *argv[])
 {
     InitModuleObjects();
 
-//    IPropertyTree *pSettings = createPTreeFromYAMLString(configYml, ipt_none, ptr_ignoreWhiteSpace, nullptr);
+    IPropertyTree *pTestSettings = createPTreeFromYAMLString(testYml, ipt_none, ptr_ignoreWhiteSpace, nullptr);
+    IPropertyTreeIterator *pPrefixIter = pTestSettings->getElements("config/metrics/prefixes");
+    pPrefixIter->first();
+    IPropertyTree &sinkTree = pPrefixIter->query();
+    StringBuffer setName;
+    sinkTree.getName(setName);
+    StringBuffer prefix;
+    sinkTree.getProp("", prefix);
+
+
+
+    //Owned<IPropertyTree> configTree;
+    //configTree.setown(createPTreeFromYAMLFile(filename, 0, ptr_ignoreWhiteSpace, nullptr));
+    IPropertyTree *pSettingsGlobal = createPTreeFromYAMLString(globalConfigYml, ipt_none, ptr_ignoreWhiteSpace, nullptr);
+    IPropertyTree *pSettingsLocal = createPTreeFromYAMLString(localConfigYml, ipt_none, ptr_ignoreWhiteSpace, nullptr);
+
+    IPropertyTree *pGlobalMetricsTree = pSettingsGlobal->getPropTree("config/metrics");
+    IPropertyTree *pLocalMetricsTree = pSettingsLocal->getPropTree("config/metrics");
+
+    testCfgHelper.init(pGlobalMetricsTree, pLocalMetricsTree);
+
+    pEventCountMetric = std::make_shared<EventCountMetric>("requests", "The number of requests that have come in");
+    //testCfgHelper.addMetricToSet(pEventCountMetric, "set1");
+    pRateMetric = std::make_shared<RateMetric>("rate", "");
+
+
+
+//    StringBuffer _name;
+//    pMetricsTree->getProp("@name", _name);
+//    std::string name(_name.str());
+
+
 
     MetricsReportConfig reportConfig;
 

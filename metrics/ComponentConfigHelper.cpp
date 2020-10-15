@@ -65,6 +65,9 @@ Component level
 
   metrics:                            # may define a sink if necessary, cannot define a trigger
     prefix: {{name}}                  # define domain prefix for all sets (probably a substituted variable reference, could include cluster and component information
+    set_prefixes:
+      - setname1: prefix
+      - setname2: prefix
 
     sinks:   optionally define more sinks for the component
 
@@ -80,22 +83,6 @@ Component level
           - set1
           - set2
 
-
- A configuration class a component can instantiate, then pass in the global and component config
-
- configuration class
- - reads the global and component configs and creates an internal template of the config
- - maybe creates the metric sets that are referenced
- - component creates the required metrics
-   - calls method in config class to add metric to a named set  pConfig->addMetricToSet(pmetric, setname)
- - Once done creating and adding call pConfig->startCollection();
-   creates the metric sets, sinks, report trigger
-   creates metric report config
-   starts the whole process
-
- - When done, pConfig->stopCollection() to clean up and close down
-
-
 */
 
 
@@ -103,14 +90,13 @@ Component level
 
 using namespace hpccMetrics;
 
-bool ComponentConfigHelper::init(IPropertyTree *_pGlobalConfig, IPropertyTree *_pComponentConfig)
+bool ComponentConfigHelper::init(IPropertyTree *pGlobalMetricsTree, IPropertyTree *pComponentMetricsTree)
 {
-    pGlobalConfig = _pGlobalConfig;
-    pComponentConfig = _pComponentConfig;
+//    pGlobalConfig = _pGlobalConfig;
+//    pComponentConfig = _pComponentConfig;
 
     //
     // Process global
-    IPropertyTree *pGlobalMetricsTree = pGlobalConfig->getPropTree("metrics");
     processSinks(pGlobalMetricsTree->getElements("sinks"));
 
     //
@@ -122,10 +108,9 @@ bool ComponentConfigHelper::init(IPropertyTree *_pGlobalConfig, IPropertyTree *_
 
     //
     // Component config
-    if (pComponentConfig->hasProp("metrics"))
+    if (pComponentMetricsTree != nullptr)
     {
-        IPropertyTree *pComponentMetricsTree = pComponentConfig->getPropTree("metrics");
-        pComponentMetricsTree->getProp("component_prefix", componentReportingPrefix);
+        pComponentMetricsTree->getProp("@prefix", componentReportingPrefix);
 
         //
         // Any additional sinks defined for the component?
@@ -145,10 +130,10 @@ bool ComponentConfigHelper::processSinks(IPropertyTreeIterator *pSinkIt)
             IPropertyTree &sinkTree = pSinkIt->query();
 
             StringBuffer cfgSinkType, cfgLibName, cfgSinkName, cfgProcName;
-            sinkTree.getProp("type", cfgSinkType);  // this one is required
-            sinkTree.getProp("libname", cfgLibName);
-            sinkTree.getProp("name", cfgSinkName);
-            sinkTree.getProp("instance_proc", cfgProcName);
+            sinkTree.getProp("@type", cfgSinkType);  // this one is required
+            sinkTree.getProp("@libname", cfgLibName);
+            sinkTree.getProp("@name", cfgSinkName);
+            sinkTree.getProp("@instance_proc", cfgProcName);
 
             const char *type = cfgLibName.isEmpty() ? cfgSinkType.str() : cfgLibName.str();
             IPropertyTree *pSinkSettings = sinkTree.getPropTree("setting");
@@ -178,13 +163,13 @@ void ComponentConfigHelper::processReportConfig(IPropertyTreeIterator *pReportSi
         {
             IPropertyTree &reportSinkTree = pReportSinksIt->query();
             StringBuffer _sinkName;
-            reportSinkTree.getProp("sink", _sinkName);
+            reportSinkTree.getProp("@sink", _sinkName);
 
             std::string sinkName(_sinkName.str());
-            auto sinkNameIt = sinkToMetricSets.find(sinkName);
-            if (sinkNameIt == sinkToMetricSets.end())
+            auto sinkNameIt = metricSetsBySinkName.find(sinkName);
+            if (sinkNameIt == metricSetsBySinkName.end())
             {
-                sinkToMetricSets.insert({sinkName, std::unordered_set<std::string>()});
+                metricSetsBySinkName.insert({sinkName, std::unordered_set<std::string>()});
             }
 
             IPropertyTreeIterator *pMetricSetNamesIt = reportSinkTree.getElements("metric_sets");
@@ -194,7 +179,7 @@ void ComponentConfigHelper::processReportConfig(IPropertyTreeIterator *pReportSi
                 for (pMetricSetNamesIt->first(); pMetricSetNamesIt->isValid(); pMetricSetNamesIt->next())
                 {
                     pMetricSetNamesIt->query().getProp("", _setName);
-                    sinkToMetricSets[sinkName].emplace(std::string(_setName.str()));
+                    metricSetsBySinkName[sinkName].emplace(std::string(_setName.str()));
                 }
             }
         }
@@ -205,11 +190,11 @@ void ComponentConfigHelper::processReportConfig(IPropertyTreeIterator *pReportSi
 bool ComponentConfigHelper::createTrigger(IPropertyTree *pTriggerTree)
 {
     StringBuffer cfgTriggerType, cfgLibName, cfgProcName;
-    pTriggerTree->getProp("type", cfgTriggerType);  // this one is required
-    pTriggerTree->getProp("libname", cfgLibName);
-    pTriggerTree->getProp("instance_proc", cfgProcName);
+    pTriggerTree->getProp("@type", cfgTriggerType);  // this one is required
+    pTriggerTree->getProp("@libname", cfgLibName);
+    pTriggerTree->getProp("@instance_proc", cfgProcName);
     const char *type = cfgLibName.isEmpty() ? cfgTriggerType.str() : cfgLibName.str();
-    IPropertyTree *pTriggerSettings = pTriggerTree->getPropTree("setting");
+    IPropertyTree *pTriggerSettings = pTriggerTree->getPropTree("settings");
     pTrigger = MetricsReportTrigger::getTriggerFromLib(type, cfgProcName.str(), pTriggerSettings);
     return (pTrigger != nullptr);
 }
@@ -268,8 +253,8 @@ bool ComponentConfigHelper::buildReportConfig()
     // actively assigned to a sink, then by default assign all metricsets to it
     for (auto const &sinkIt : sinks)
     {
-        auto metricSetToSinkIt = sinkToMetricSets.find(sinkIt.first);
-        if (metricSetToSinkIt == sinkToMetricSets.end())
+        auto metricSetToSinkIt = metricSetsBySinkName.find(sinkIt.first);
+        if (metricSetToSinkIt == metricSetsBySinkName.end())
         {
             for (auto const &metricSetIt : metricSets)
             {
