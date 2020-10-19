@@ -161,7 +161,8 @@ IMetricSink *MetricSink::getSinkFromLib(const char *type, const char *getInstanc
         auto getInstanceProc = (getSinkInstance) GetSharedProcedure(libHandle, epName);
         if (getInstanceProc != nullptr)
         {
-            pSink = getInstanceProc(isEmptyString(sinkName) ? type : sinkName, pSettingsTree);
+            const char *name = isEmptyString(sinkName) ? type : sinkName;
+            pSink = getInstanceProc(name, pSettingsTree);
         }
     }
     return pSink;

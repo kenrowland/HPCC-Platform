@@ -246,7 +246,7 @@ interface IMetricSink
 };
 
 
-extern "C" { typedef hpccMetrics::IMetricSink* (*getSinkInstance)(const std::string &sinkName, const IPropertyTree *pSettingsTree); }
+extern "C" { typedef hpccMetrics::IMetricSink* (*getSinkInstance)(const char *, const IPropertyTree *pSettingsTree); }
 
 class METRICS_API MetricSink : public IMetricSink
 {

@@ -101,7 +101,7 @@ bool ComponentConfigHelper::init(IPropertyTree *pGlobalMetricsTree, IPropertyTre
 
     //
     // Now the trigger
-    IPropertyTree *pTriggerTree = pGlobalMetricsTree->getPropTree("report_trigger");
+    IPropertyTree *pTriggerTree = pGlobalMetricsTree->getPropTree("./report_trigger");
     createTrigger(pTriggerTree);
 
     processReportConfig(pGlobalMetricsTree->getElements("report_config"));
@@ -116,6 +116,10 @@ bool ComponentConfigHelper::init(IPropertyTree *pGlobalMetricsTree, IPropertyTre
         // Any additional sinks defined for the component?
         processSinks(pComponentMetricsTree->getElements("sinks"));
 
+        //
+        // Any metric set specific prefixes?
+        processMetricSetPrefixes(pComponentMetricsTree->getElements("metric_set_prefixes"));
+
     }
     return true;
 }
@@ -123,7 +127,7 @@ bool ComponentConfigHelper::init(IPropertyTree *pGlobalMetricsTree, IPropertyTre
 
 bool ComponentConfigHelper::processSinks(IPropertyTreeIterator *pSinkIt)
 {
-    if (pSinkIt->isValid())
+    //if (pSinkIt->isValid())
     {
         for (pSinkIt->first(); pSinkIt->isValid(); pSinkIt->next())
         {
@@ -136,7 +140,7 @@ bool ComponentConfigHelper::processSinks(IPropertyTreeIterator *pSinkIt)
             sinkTree.getProp("@instance_proc", cfgProcName);
 
             const char *type = cfgLibName.isEmpty() ? cfgSinkType.str() : cfgLibName.str();
-            IPropertyTree *pSinkSettings = sinkTree.getPropTree("setting");
+            IPropertyTree *pSinkSettings = sinkTree.getPropTree("./settings");
             IMetricSink *pSink = MetricSink::getSinkFromLib(type, cfgProcName.str(),
                                                             cfgSinkName.isEmpty() ? "default" : cfgSinkName.str(),
                                                             pSinkSettings);
@@ -155,9 +159,34 @@ bool ComponentConfigHelper::processSinks(IPropertyTreeIterator *pSinkIt)
 }
 
 
+bool ComponentConfigHelper::processMetricSetPrefixes(IPropertyTreeIterator *pSetPrefixIt)
+{
+    //if (pSetPrefixIt->isValid())
+    {
+        for (pSetPrefixIt->first(); pSetPrefixIt->isValid(); pSetPrefixIt->next())
+        {
+            IPropertyTree &setPrefixTree = pSetPrefixIt->query();
+
+            StringBuffer setName, prefix;
+            setPrefixTree.getProp("@set_name", setName);  // this one is required
+            setPrefixTree.getProp("@prefix", prefix);
+
+            auto insertIt = metricSetPrefixes.insert({std::string(setName), std::string(prefix)});
+            if (!insertIt.second)
+            {
+                // set an error message for a getLastError call?
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+
+
 void ComponentConfigHelper::processReportConfig(IPropertyTreeIterator *pReportSinksIt)
 {
-    if (pReportSinksIt->isValid())
+    //if (pReportSinksIt->isValid())
     {
         for (pReportSinksIt->first(); pReportSinksIt->isValid(); pReportSinksIt->next())
         {
@@ -194,14 +223,14 @@ bool ComponentConfigHelper::createTrigger(IPropertyTree *pTriggerTree)
     pTriggerTree->getProp("@libname", cfgLibName);
     pTriggerTree->getProp("@instance_proc", cfgProcName);
     const char *type = cfgLibName.isEmpty() ? cfgTriggerType.str() : cfgLibName.str();
-    IPropertyTree *pTriggerSettings = pTriggerTree->getPropTree("settings");
+    IPropertyTree *pTriggerSettings = pTriggerTree->getPropTree("./settings");
     pTrigger = MetricsReportTrigger::getTriggerFromLib(type, cfgProcName.str(), pTriggerSettings);
     return (pTrigger != nullptr);
 }
 
 
 
-bool ComponentConfigHelper::addMetricToSet(const std::shared_ptr<IMetric> &pMetric, const char *metricReportingPrefix, const char *_setName)
+bool ComponentConfigHelper::addMetricToSet(const std::shared_ptr<IMetric> &pMetric, const char *_setName)
 {
     std::string setName(_setName);
 
@@ -215,7 +244,9 @@ bool ComponentConfigHelper::addMetricToSet(const std::shared_ptr<IMetric> &pMetr
     //
     // Set the reporting name for the metric
     std::string reportingName(componentReportingPrefix);
-    reportingName.append(metricReportingPrefix);
+    auto itSet = metricSetPrefixes.find(setName);
+    std::string setPrefix((itSet == metricSetPrefixes.end()) ? "" : itSet->second);
+    reportingName.append(setPrefix);
     reportingName.append(pMetric->getName());
     pMetric->setReportingName(reportingName);
     return true;

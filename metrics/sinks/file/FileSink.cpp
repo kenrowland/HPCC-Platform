@@ -31,6 +31,22 @@ extern "C" IMetricSink* getSinkInstance(const char *name, const IPropertyTree *p
 FileMetricSink::FileMetricSink(const char *name, const IPropertyTree *pSettingsTree) :
     MetricSink(name, "file")
 {
+
+//    IAttributeIterator *pAttrIter = pSettingsTree->getAttributes();
+//    const char *pName;
+//    const char *pValue;
+//    unsigned num = pAttrIter->count();
+//    for (pAttrIter->first(); pAttrIter->isValid(); pAttrIter->next())
+//    {
+//        pName = pAttrIter->queryName();
+//        pValue = pAttrIter->queryValue();
+//        int i = 3;
+//    }
+//
+//    fileName = pValue;
+//    unsigned j = num;
+
+
     pSettingsTree->getProp("@filename", fileName);
     bool clearFile = pSettingsTree->getPropBool("@clear", false);
 

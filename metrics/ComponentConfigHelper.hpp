@@ -29,7 +29,7 @@ class ComponentConfigHelper
 
         ComponentConfigHelper() = default;
         bool init(IPropertyTree *pGlobalConfig, IPropertyTree *pComponentConfig);
-        bool addMetricToSet(const std::shared_ptr<IMetric> &pMetric, const char *metricPrefix, const char *setName);
+        bool addMetricToSet(const std::shared_ptr<IMetric> &pMetric, const char *setName);
         bool start();
         void stop();
 //        void addMetricSetToSink(void *setName);
@@ -41,6 +41,7 @@ class ComponentConfigHelper
     protected:
 
         bool processSinks(IPropertyTreeIterator *pSinkIt);
+        bool processMetricSetPrefixes(IPropertyTreeIterator *pSinkIt);
         void processReportConfig(IPropertyTreeIterator *pReportSinks);
         bool createTrigger(IPropertyTree *pTriggerTree);
         bool buildReportConfig();
@@ -51,9 +52,9 @@ class ComponentConfigHelper
         IMetricsReportTrigger *pTrigger = nullptr;
         MetricsReporter *pReporter;
         MetricsReportConfig reportConfig;
-        //IPropertyTree *pGlobalConfig, *pComponentConfig;
         std::map<std::string, std::vector<std::shared_ptr<IMetric>>> metricsBySetName;
         std::map<std::string, std::unordered_set<std::string>> metricSetsBySinkName;
+        std::map<std::string, std::string> metricSetPrefixes;
         StringBuffer componentReportingPrefix;
 
 };
