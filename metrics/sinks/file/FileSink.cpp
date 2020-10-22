@@ -31,22 +31,6 @@ extern "C" IMetricSink* getSinkInstance(const char *name, const IPropertyTree *p
 FileMetricSink::FileMetricSink(const char *name, const IPropertyTree *pSettingsTree) :
     MetricSink(name, "file")
 {
-
-//    IAttributeIterator *pAttrIter = pSettingsTree->getAttributes();
-//    const char *pName;
-//    const char *pValue;
-//    unsigned num = pAttrIter->count();
-//    for (pAttrIter->first(); pAttrIter->isValid(); pAttrIter->next())
-//    {
-//        pName = pAttrIter->queryName();
-//        pValue = pAttrIter->queryValue();
-//        int i = 3;
-//    }
-//
-//    fileName = pValue;
-//    unsigned j = num;
-
-
     pSettingsTree->getProp("@filename", fileName);
     bool clearFile = pSettingsTree->getPropBool("@clear", false);
 
@@ -62,11 +46,12 @@ FileMetricSink::FileMetricSink(const char *name, const IPropertyTree *pSettingsT
 
 void FileMetricSink::handle(const MeasurementVector &values, const std::shared_ptr<IMetricSet> &pMetricSet, MetricsReportContext *pContext)
 {
-    auto handle = fopen(fileName.str(), "a");
+    auto fh = fopen(fileName.str(), "a");
+    fprintf(fh, "---------- MetricSet=%s", pMetricSet->getName().c_str());
     for (const auto& pValue : values)
     {
-        fprintf(handle, "%s -> %s\n", pValue->getReportName().c_str(), pValue->valueToString().c_str());
+        fprintf(fh, "%s -> %s\n", pValue->getReportName().c_str(), pValue->valueToString().c_str());
     }
-    fprintf(handle, "\n");
-    fclose(handle);
+    fprintf(fh, "\n");
+    fclose(fh);
 }

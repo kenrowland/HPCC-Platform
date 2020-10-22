@@ -44,7 +44,7 @@ const char *globalConfigYml = R"!!(config:
       - type: filesink
         name: default
         settings:
-          filename: /home/rowlke01/testout.txt
+          filename: /testout.txt
           clear: true
     report_trigger:
       type: periodic
@@ -70,44 +70,34 @@ int main(int argc, char *argv[])
 {
     InitModuleObjects();
 
-//    IPropertyTree *pTestSettings = createPTreeFromYAMLString(testYml, ipt_none, ptr_ignoreWhiteSpace, nullptr);
-//    IPropertyTreeIterator *pPrefixIter = pTestSettings->getElements("config/metrics/prefixes");
-//    pPrefixIter->first();
-//    IPropertyTree &sinkTree = pPrefixIter->query();
-//    StringBuffer setName;
-//    sinkTree.getName(setName);
-//    StringBuffer prefix;
-//    sinkTree.getProp("", prefix);
-
-    IPropertyTree *pGlobal = createPTreeFromYAMLString(globalConfigYml, ipt_none, ptr_ignoreWhiteSpace, nullptr);
-    IPropertyTree *pGlobalTree = pGlobal->getPropTree("config/metrics");
-    StringBuffer cfgName;
-    pGlobalTree->getProp("@name", cfgName);
-    unsigned num = pGlobal->numChildren();
-    IPropertyTree *pTriggerTree = pGlobalTree->getPropTree("./report_trigger");
-    StringBuffer cfgTriggerType;
-    pTriggerTree->getProp("@type", cfgTriggerType);  // this one is required
-    std::string type(cfgTriggerType.str());
-
-    IPropertyTree *pSettings = pTriggerTree->getPropTree("./settings");
-    StringBuffer seconds;
-    bool hasProp = pSettings->hasProp("@period");
-    pSettings->getProp("@period", seconds);
-
-
-
-
-
-    //Owned<IPropertyTree> configTree;
-    //configTree.setown(createPTreeFromYAMLFile(filename, 0, ptr_ignoreWhiteSpace, nullptr));
+    //
+    // Simulate retrieving the component and global config
     IPropertyTree *pSettingsGlobal = createPTreeFromYAMLString(globalConfigYml, ipt_none, ptr_ignoreWhiteSpace, nullptr);
     IPropertyTree *pSettingsLocal = createPTreeFromYAMLString(localConfigYml, ipt_none, ptr_ignoreWhiteSpace, nullptr);
 
+    //
+    // Retrieve the glocal and component metrics config
     IPropertyTree *pGlobalMetricsTree = pSettingsGlobal->getPropTree("config/metrics");
     IPropertyTree *pLocalMetricsTree = pSettingsLocal->getPropTree("config/metrics");
 
+
+    //
+    // Allow override of output file for the file sink
+    if (argc > 1)
+    {
+        std::string sinkReportFilename;
+        sinkReportFilename = std::string(argv[1]);
+        auto pSinkTree = pSettingsGlobal->getPropTree("config/metrics/sinks[1]/settings");
+        pSinkTree->removeProp("@filename");
+        pSinkTree->addProp("@filename", sinkReportFilename.c_str());
+    }
+
+    //
+    // Initialize the config helper object
     testCfgHelper.init(pGlobalMetricsTree, pLocalMetricsTree);
 
+    //
+    // Create and add metrics to their named sets using the config helper object
     pEventCountMetric = std::make_shared<EventCountMetric>("requests", "The number of requests that have come in");
     testCfgHelper.addMetricToSet(pEventCountMetric, "set1");
 
@@ -117,67 +107,13 @@ int main(int argc, char *argv[])
     pQueueSizeMetric = std::make_shared<GaugeMetric<uint32_t>>("queuesize", "", ValueType::INTEGER);
     testCfgHelper.addMetricToSet(pQueueSizeMetric, "set2");
 
+    //
+    // Start collecting
     testCfgHelper.start();
 
-
-//    StringBuffer _name;
-//    pMetricsTree->getProp("@name", _name);
-//    std::string name(_name.str());
-
-
-
-//    MetricsReportConfig reportConfig;
-//
-//    //
-//    // Create a metric set for request type metrics
-//    std::vector<std::shared_ptr<IMetric>> metrics;
-//    pEventCountMetric     = std::make_shared<EventCountMetric>("requests", "The number of requests that have come in");
-//    metrics.emplace_back(pEventCountMetric);
-//
-//    pRateMetric = std::make_shared<RateMetric>("rate", "");
-//    metrics.emplace_back(pRateMetric);
-//
-//    auto pRequestMetricSet = std::make_shared<MetricSet>("set", "myprefix.", metrics);
-//
-//    //
-//    // create a metric set for queues
-//    metrics.clear();
-//    pQueueSizeMetric = std::make_shared<GaugeMetric<uint32_t>>("queuesize", "", ValueType::INTEGER);
-//    metrics.emplace_back(pQueueSizeMetric);
-//    auto pQueueMetricSet = std::make_shared<MetricSet>("set2", "myprefix2", metrics);
-
-//    //
-//    // Get the name of thee report file
-//    auto pSinkSettings = createPTree("SinkSettings");
-//    std::string sinkReportFilename;
-//    if (argc > 1)
-//    {
-//        StringBuffer fname;
-//        sinkReportFilename = std::string(argv[1]);
-//        pSinkSettings->addProp("filename", sinkReportFilename.c_str());
-//        pSinkSettings->getProp("filename", fname);
-//    }
-//    else
-//    {
-//        printf("You must provide the full path to the report file\n\n");
-//        exit(0);
-//    }
-//
-//    auto pSink = MetricSink::getSinkFromLib("filesink", nullptr, "es", pSinkSettings);
-//    reportConfig.addReportConfig(pSink, pRequestMetricSet);
-//    reportConfig.addReportConfig(pSink, pQueueMetricSet);
-//
-//    IPropertyTree *pTriggerSettings = createPTree("TriggerSettings");;
-//    pTriggerSettings->addPropInt("period", 10);
-//    IMetricsReportTrigger *pTrigger = MetricsReportTrigger::getTriggerFromLib("periodic", nullptr, pTriggerSettings);
-//
-//    pReporter = new MetricsReporter(reportConfig, pTrigger);
-//
-//    //
-//    // start collection
-//    pReporter->start();
-
-    std::thread first (processThread, 20, 1);
+    //
+    // Starts some threads, each updating metrics
+    std::thread first (processThread, 20, 2);
     std::thread second (processThread, 15, 3);
 
     first.join();
