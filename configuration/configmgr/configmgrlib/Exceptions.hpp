@@ -19,6 +19,7 @@
 #define _CONFIG2_CONFIGEXCEPTIONS_HPP_
 
 #include <exception>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
