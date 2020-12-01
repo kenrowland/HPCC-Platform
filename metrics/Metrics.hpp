@@ -276,6 +276,9 @@ struct MetricsReportConfig
     void addReportConfig(IMetricSink *pSink, const std::shared_ptr<IMetricSet> &set);
     std::unordered_set<std::shared_ptr<IMetricSet>> metricSets;
     std::map<IMetricSink *, std::vector<std::shared_ptr<IMetricSet>>> metricReportConfig;
+
+    //std::vector<std::weak_ptr<IMetricSet>> dynamicMetricSets;
+    std::map<IMetricSink *, std::vector<std::weak_ptr<IMetricSet>>> dynamicMetricReportConfig;
 };
 
 

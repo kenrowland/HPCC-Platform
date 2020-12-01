@@ -32,10 +32,8 @@ class ComponentConfigHelper
         bool addMetricToSet(const std::shared_ptr<IMetric> &pMetric, const char *setName);
         bool start();
         void stop();
-//        void addMetricSetToSink(void *setName);
-//        void addMetricSet(void *pMetricSet);
-//        void startCollection();
-//        void stopCollection();
+
+
 
 
     protected:
@@ -50,7 +48,7 @@ class ComponentConfigHelper
 
         std::map<std::string, IMetricSink *> sinks;
         IMetricsReportTrigger *pTrigger = nullptr;
-        MetricsReporter *pReporter;
+        MetricsReporter *pReporter = nullptr;
         MetricsReportConfig reportConfig;
         std::map<std::string, std::vector<std::shared_ptr<IMetric>>> metricsBySetName;
         std::map<std::string, std::unordered_set<std::string>> metricSetsBySinkName;
