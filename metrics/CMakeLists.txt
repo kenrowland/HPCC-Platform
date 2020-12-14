@@ -18,13 +18,10 @@ project(hpccmetrics)
 
 HPCC_ADD_SUBDIRECTORY (metrictest)
 HPCC_ADD_SUBDIRECTORY (sinks)
-HPCC_ADD_SUBDIRECTORY (triggers)
-HPCC_ADD_SUBDIRECTORY (collectionsystems)
 
 
 set ( srcs
         Metrics.cpp
-        ComponentConfigHelper.cpp
         )
 
 include_directories(

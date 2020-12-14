@@ -21,6 +21,7 @@
 #include "Metrics.hpp"
 #include "jptree.hpp"
 #include "jstring.hpp"
+#include <thread>
 
 using namespace hpccMetrics;
 
@@ -29,9 +30,17 @@ class METRICS_API FileMetricSink : public MetricSink
     public:
 
         explicit FileMetricSink(const char *name, const IPropertyTree *pSettingsTree);
-        void handle(const MeasurementVector &values, const std::shared_ptr<IMetricSet> &pMetricSet, MetricsReportContext *pContext) override;
+        void reportMeasurements(const MeasurementVector &values) override;
+        void startCollection(MetricsReporter *pReporter) override;
+        void stopCollection() override;
+
+    protected:
+        void collectionThread() const;
 
     protected:
 
         StringBuffer fileName;
+        std::chrono::seconds periodSeconds;
+        std::thread collectThread;
+        bool stopCollectionFlag = false;
 };

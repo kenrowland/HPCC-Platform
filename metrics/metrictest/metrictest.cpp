@@ -5,16 +5,16 @@
 #include <chrono>
 #include <jptree.hpp>
 #include "Metrics.hpp"
-#include "ComponentConfigHelper.hpp"
+//#include "ComponentConfigHelper.hpp"
 
 
 using namespace hpccMetrics;
 
 void processThread(int, unsigned);
-std::shared_ptr<EventCountMetric> pEventCountMetric;
+std::shared_ptr<CounterMetric> pEventCountMetric;
 std::shared_ptr<GaugeMetric<uint32_t>> pQueueSizeMetric;
 //std::shared_ptr<QueueLatencyMetric> pQueueLatencyMetric;
-std::shared_ptr<RateMetric> pRateMetric;
+//std::shared_ptr<RateMetric> pRateMetric;
 
 MetricsReporter *pReporter;
 
@@ -44,12 +44,9 @@ const char *globalConfigYml = R"!!(config:
       - type: filesink
         name: default
         settings:
-          filename: /testout.txt
+          filename: testout.txt
           clear: true
-    report_trigger:
-      type: periodic
-      settings:
-        period: 15
+          period: 5
 )!!";
 
 
@@ -57,14 +54,18 @@ const char *localConfigYml = R"!!(config:
   metrics:
     name: config_name
     prefix: myprefix.
-    metric_set_prefixis:
-      - set_name: set1
-        prefix: set1prefix.
-      - set_name: set2
-        prefix: prefixset2.
+    sinks:
+      - name: default
+        metrics:
+          - name: myprefix.requests(count)
+          - name: myprefix.requests(resetting_count)
+          - name: myprefix.requests(rate)
+            description: Number of request arriving per second
+          - name: myprefix.queuesize
 )!!";
 
-ComponentConfigHelper testCfgHelper;
+//ComponentConfigHelper testCfgHelper;
+MetricsReporter reporter;
 
 int main(int argc, char *argv[])
 {
@@ -76,10 +77,9 @@ int main(int argc, char *argv[])
     IPropertyTree *pSettingsLocal = createPTreeFromYAMLString(localConfigYml, ipt_none, ptr_ignoreWhiteSpace, nullptr);
 
     //
-    // Retrieve the glocal and component metrics config
+    // Retrieve the global and component metrics config
     IPropertyTree *pGlobalMetricsTree = pSettingsGlobal->getPropTree("config/metrics");
     IPropertyTree *pLocalMetricsTree = pSettingsLocal->getPropTree("config/metrics");
-
 
     //
     // Allow override of output file for the file sink
@@ -93,23 +93,18 @@ int main(int argc, char *argv[])
     }
 
     //
-    // Initialize the config helper object
-    testCfgHelper.init(pGlobalMetricsTree, pLocalMetricsTree);
+    // Init reporter with config
+    reporter.init(pGlobalMetricsTree, pLocalMetricsTree);
 
     //
-    // Create and add metrics to their named sets using the config helper object
-    pEventCountMetric = std::make_shared<EventCountMetric>("requests", "The number of requests that have come in");
-    testCfgHelper.addMetricToSet(pEventCountMetric, "set1");
+    // Now create the metrics and add them to the reporter
+    pEventCountMetric = std::make_shared<CounterMetric>("requests", "The number of requests");
+    reporter.addMetric(pEventCountMetric);
+    pQueueSizeMetric = std::make_shared<GaugeMetric<uint32_t>>("queuesize", "request queue size", hpccMetrics::FLOAT);
+    reporter.addMetric(pQueueSizeMetric);
 
-    pRateMetric = std::make_shared<RateMetric>("rate", "");
-    testCfgHelper.addMetricToSet(pRateMetric, "set1");
+    reporter.startCollecting();
 
-    pQueueSizeMetric = std::make_shared<GaugeMetric<uint32_t>>("queuesize", "", ValueType::INTEGER);
-    testCfgHelper.addMetricToSet(pQueueSizeMetric, "set2");
-
-    //
-    // Start collecting
-    testCfgHelper.start();
 
     //
     // Starts some threads, each updating metrics
@@ -119,7 +114,7 @@ int main(int argc, char *argv[])
     first.join();
     second.join();
 
-    testCfgHelper.stop();
+    reporter.stopCollecting();
 
     printf("Test complete\n");
 }
@@ -129,9 +124,8 @@ void processThread(int numLoops, unsigned delay)
 {
     for (int i=0; i<numLoops; ++i)
     {
-        pEventCountMetric->inc(1u);
-        pQueueSizeMetric->inc(1);
-        pRateMetric->inc(1);
+        pEventCountMetric->inc(2u);
+        pQueueSizeMetric->inc(3);
         std::this_thread::sleep_for(std::chrono::seconds(delay));
         pQueueSizeMetric->dec(1);
     }

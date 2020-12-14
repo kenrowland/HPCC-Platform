@@ -19,108 +19,68 @@
 
 using namespace hpccMetrics;
 
-void EventCountMetric::collect(MeasurementVector &values)
+
+void CounterMetric::init(const std::string &context)
 {
-    auto pMeasurement = std::make_shared<Measurement<uint32_t>>(this, reportingName, count.exchange(0, std::memory_order_relaxed));
-    values.emplace_back(pMeasurement);
-}
-
-void CounterMetric::collect(MeasurementVector &values)
-{
-    auto pMeasurement = std::make_shared<Measurement<uint32_t>>(this, reportingName, count.load(std::memory_order_relaxed));
-    values.emplace_back(pMeasurement);
-}
-
-void RateMetric::collect(MeasurementVector &values)
-{
-    std::chrono::time_point<std::chrono::high_resolution_clock> now, start;
-    unsigned numEvents;
-
-    now = std::chrono::high_resolution_clock::now();
-    start = periodStart;
-    numEvents = count.exchange(0);
-    periodStart = now;
-
-    auto seconds = (std::chrono::duration_cast<std::chrono::seconds>(now - start)).count();
-    float rate = (seconds != 0) ? (static_cast<float>(numEvents) / static_cast<float>(seconds)) : 0;
-    auto pMeasurement = std::make_shared<Measurement<float>>(this, reportingName, rate);
-    values.emplace_back(pMeasurement);
-}
-
-MetricSet::MetricSet(const char *_name, const char *_prefix, const std::vector<std::shared_ptr<IMetric>> &_metrics) :
-    name{_name},
-    reportNamePrefix{_prefix}
-{
-    setMetrics(_metrics);
-}
-
-std::vector<std::shared_ptr<const IMetric>> MetricSet::getMetrics()
-{
-    std::vector<std::shared_ptr<const IMetric>> returnMetrics;
-    for (const auto& metricIt : metrics)
+    //
+    // Find the current context collection object. If not found, create one
+    auto it = contextValues.find(context);
+    if (it == contextValues.end())
     {
-        returnMetrics.emplace_back(metricIt.second);
-    }
-    return returnMetrics;
-}
-
-void MetricSet::init()
-{
-    for (const auto& metricIt : metrics)
-    {
-        metricIt.second->init();
+        CounterMetric::collectionValues initialContextValues;
+        initialContextValues.curValue = initialContextValues.lastValue = 0;
+        initialContextValues.curCollectedAt = std::chrono::high_resolution_clock::now();
+        contextValues.insert({context, initialContextValues});
     }
 }
 
-void MetricSet::collect(MeasurementVector &values)
+
+void CounterMetric::saveState(const std::string &context)
 {
-    for (const auto &metricIt : metrics)
+    //
+    // Find the current context values object and update it
+    auto it = contextValues.find(context);
+    if (it != contextValues.end())
     {
-        metricIt.second->collect(values);
+        it->second.lastValue = it->second.curValue;
+        it->second.curValue = count.load(std::memory_order_relaxed);
+        it->second.lastCollectedAt = it->second.curCollectedAt;
+        it->second.curCollectedAt = std::chrono::high_resolution_clock::now();
     }
+    // throw?
 }
 
-void MetricSet::setMetrics(const std::vector<std::shared_ptr<IMetric>> &_metrics)
+
+void CounterMetric::getMeasurement(const std::string &measType, const std::string &measName, const std::string &context, MeasurementVector &measurements)
 {
-    for (auto const &pMetric : _metrics)
+    std::shared_ptr<MeasurementBase> pMeasurement;
+    auto it = contextValues.find(context);
+    if (it != contextValues.end())
     {
-        //
-        // Make sure the metric has a type
-        if (pMetric->getValueType() == ValueType::NONE)
+        std::string measurementName(measName);
+        measurementName.append(".").append(measType);
+        if (measType == "count" || measType == "default")
         {
-            throw std::exception();
+            pMeasurement = std::make_shared<Measurement<uint32_t>>(this, measurementName, description, it->second.curValue);
         }
-
-        //
-        // A metric may only be added to one metric set
-        if (!pMetric->isInMetricSet())
+        else if (measType == "resetting_count")
         {
-            //
-            // Set the metric name used for reporting by prefixing the metric name
-            pMetric->setReportingName(reportNamePrefix + pMetric->getName());
-
-            //
-            // Insert the metric, but ensure the name is unique
-            auto rc = metrics.insert({pMetric->getName(), pMetric});
-            if (!rc.second)
-            {
-                throw std::exception();   // metric already added with the same name
-            }
-            pMetric->setInMetricSet(true);
+            pMeasurement = std::make_shared<Measurement<uint32_t>>(this, measurementName, description, it->second.curValue - it->second.lastValue);
         }
-        else
+        else if (measType == "rate")
         {
-            throw std::exception();  // not sure if this is the right thing to do yet
+            unsigned numEvents = it->second.curValue - it->second.lastValue;
+            auto seconds = (std::chrono::duration_cast<std::chrono::seconds>(it->second.curCollectedAt - it->second.lastCollectedAt)).count();
+            float rate = (seconds != 0) ? (static_cast<float>(numEvents) / static_cast<float>(seconds)) : 0;
+            pMeasurement = std::make_shared<Measurement<float>>(this, measurementName, description, rate);
         }
+        // throw ?
     }
-}
+    // else throw ?
 
-
-void MetricSink::setMetricSets(const std::vector<std::shared_ptr<IMetricSet>> &sets)
-{
-    for (const auto& pSet : sets)
+    if (pMeasurement)
     {
-        metricSets[pSet->getName()] = pSet;
+        measurements.emplace_back(pMeasurement);
     }
 }
 
@@ -169,135 +129,258 @@ IMetricSink *MetricSink::getSinkFromLib(const char *type, const char *getInstanc
 }
 
 
-void MetricsReportConfig::addReportConfig(IMetricSink *pSink, const std::shared_ptr<IMetricSet> &set)
-{
-    auto reportCfgIt = metricReportConfig.find(pSink);
-    if (reportCfgIt == metricReportConfig.end())
-    {
-        reportCfgIt = metricReportConfig.insert({pSink, std::vector<std::shared_ptr<IMetricSet>>()}).first;
-    }
-    reportCfgIt->second.emplace_back(set);
-    metricSets.insert(set);
-}
 
-
-void MetricsReporter::init()
-{
-    //
-    // Tell the trigger who we are
-    pTrigger->setReporter(this);
-
-    //
-    // Initialization consists of initializing each sink, informing
-    // each sink about the metric sets for which it shall report
-    // measurements, and initializing each metric set.
-    for (auto reportConfigIt : reportConfig.metricReportConfig)
-    {
-        reportConfigIt.first->setMetricSets(reportConfigIt.second);
-    }
-
-    //
-    // Tell each metric that collection is beginning
-    for (const auto& pMetricSet : reportConfig.metricSets)
-    {
-        pMetricSet->init();
-    }
-}
-
-bool MetricsReporter::report(std::map<std::string, MetricsReportContext *> &reportContexts)
+void MetricsReporter::addMetric(const std::shared_ptr<IMetric> &pMetric)
 {
     std::unique_lock<std::mutex> lock(reportMutex);
-    //
-    // vectors of measurements for each metric set
-    std::map<std::shared_ptr<IMetricSet>, MeasurementVector> metricSetReportValues;
-
-    //
-    // Collect all the values
-    for (auto &pMetricSet : reportConfig.metricSets)
+    std::string metricReportName = metricNamePrefix.str();
+    metricReportName.append(pMetric->getName());
+    auto it = metrics.find(metricReportName);
+    if (it == metrics.end())
     {
-        metricSetReportValues[pMetricSet] = MeasurementVector();
-        pMetricSet->collect(metricSetReportValues[pMetricSet]);
+        metrics.insert({metricReportName, pMetric});
     }
+}
 
-    MetricsReportContext defaultReportContext;
+
+void MetricsReporter::removeMetric(const std::shared_ptr<IMetric> &pMetric)
+{
+    std::unique_lock<std::mutex> lock(reportMutex);
+    std::string metricName = metricNamePrefix.str();
+    metricName.append(pMetric->getName());
+    auto it = metrics.find(metricName);
+    if (it != metrics.end())
+    {
+        metrics.erase(it);
+    }
+}
+
+
+void MetricsReporter::collectMeasurements(const std::string &sinkName)
+{
+    auto sinkIt = sinks.find(sinkName);
+    if (sinkIt != sinks.end())
+    {
+        std::unique_lock<std::mutex> lock(reportMutex);
+
+        //
+        // Get metric report info based on what the sink wants to report
+        std::map<std::string, MetricReportInfo> reportMetrics = getMetricReportInfo(sinkIt->second.reportMeasurements);
+
+        //
+        // Save state for each metric in the report
+        for (auto const &reportMetric : reportMetrics)
+        {
+            reportMetric.second.pMetric->saveState(sinkName);
+        }
+
+        //
+        // Build vector of measurements to report
+        MeasurementVector measurements;
+        for (auto &reportMetric : reportMetrics)
+        {
+            for (auto const &measType : reportMetric.second.measurementTypes)
+            {
+                reportMetric.second.pMetric->getMeasurement(measType, reportMetric.first, sinkName, measurements);
+            }
+        }
+
+        //
+        // Send the measurements to the sink for reporting
+        sinkIt->second.pSink->reportMeasurements(measurements);
+    }
+}
+
+
+std::map<std::string, MetricsReporter::MetricReportInfo> MetricsReporter::getMetricReportInfo(const std::vector<SinkInfo::measurementInfo> &reportMeasurements) const
+{
+    std::map<std::string, MetricsReporter::MetricReportInfo>  reportMetrics;
 
     //
-    // Send registered metric sets to each sink
-    for (const auto &reportConfigIt : reportConfig.metricReportConfig)
+    // If the sink has a specific list of measurements to report, build the list, otherwise report the default measurement for all metrics
+    if (!reportMeasurements.empty())
     {
-        //
-        // Obtain the context for the sink. If no specific context has been set, build a default
-        // context and use it.
-        MetricsReportContext *pReportContext;
-        auto it = reportContexts.find(reportConfigIt.first->getName());
-        if (it != reportContexts.end())
+        for (auto const &measurementInfo : reportMeasurements)
         {
-            pReportContext = it->second;
+            std::string reportMetricName, measType;
+            extractNameAndMeasurementType(measurementInfo.name, reportMetricName, measType);
+
+            for (auto const &metricIt : metrics)
+            {
+                //
+                // reportMetricName is to be a pattern to match against each metric name.
+                // Not sure if we'll just user a '*' or regex. Will be added later. Just
+                // do an exact match for now
+                bool isMatch = metricIt.first == reportMetricName;
+
+                //
+                //
+                // If the metric is a match, add it to the report info
+                if (isMatch)
+                {
+                    auto it = reportMetrics.find(metricIt.first);
+                    if (it == reportMetrics.end())
+                    {
+                        MetricReportInfo mri;
+                        mri.pMetric = metricIt.second;
+                        it = reportMetrics.insert({metricIt.first, mri}).first;
+                    }
+                    it->second.measurementTypes.emplace_back(measType);
+                }
+            }
+        }
+    }
+    else
+    {
+        for (auto const &metricIt : metrics)
+        {
+            MetricReportInfo mri;
+            mri.pMetric = metricIt.second;
+            mri.measurementTypes.emplace_back("default");
+            reportMetrics.insert({metricIt.first, mri});
+        }
+    }
+    return reportMetrics;
+}
+
+
+void MetricsReporter::extractNameAndMeasurementType(const std::string &measurement, std::string &name, std::string &measType)
+{
+    name = measurement;
+    measType = "default";
+
+    //
+    // Extract the type of measurement from the report namme
+    auto parenPos = measurement.find_first_of('(');
+    if (parenPos != std::string::npos)
+    {
+        auto endPos = measurement.find_first_of(')');
+        if (endPos != std::string::npos)
+        {
+            measType = measurement.substr(parenPos + 1, endPos - parenPos - 1);
+            name = measurement.substr(0, parenPos);
+        }
+    }
+}
+
+
+// true if new, false if already existed
+SinkInfo *MetricsReporter::addSink(IMetricSink *pSink)
+{
+    SinkInfo sinkInfo;
+    sinkInfo.pSink = pSink;
+    auto rc = sinks.insert({pSink->getName(), sinkInfo});
+    return &(rc.first->second);
+}
+
+
+bool MetricsReporter::init(IPropertyTree *pGlobalMetricsTree, IPropertyTree *pComponentMetricsTree)
+{
+    bool rc = false;
+
+    //
+    // Process the global config (which is really just sinks)
+    processSinks(pGlobalMetricsTree->getElements("sinks"));
+
+    //
+    // Process component config
+    if (pComponentMetricsTree != nullptr)
+    {
+        pComponentMetricsTree->getProp("@prefix", metricNamePrefix);
+
+        //
+        // Process sinks for the component, which should include metrics to report
+        processSinks(pComponentMetricsTree->getElements("sinks"));
+    }
+    return rc;
+}
+
+void MetricsReporter::startCollecting()
+{
+    initContexts();
+    for (auto const &sinkIt : sinks)
+    {
+        sinkIt.second.pSink->startCollection(this);
+    }
+}
+
+
+void MetricsReporter::initContexts()
+{
+    for (auto const &metricsIt : metrics)
+    {
+        for (auto const &sinkIt : sinks)
+        {
+            metricsIt.second->init(sinkIt.first);
+        }
+    }
+}
+
+
+void MetricsReporter::stopCollecting()
+{
+    for (auto const &sinkIt : sinks)
+    {
+        sinkIt.second.pSink->stopCollection();
+    }
+}
+
+
+bool MetricsReporter::processSinks(IPropertyTreeIterator *pSinkIt)
+{
+    bool rc = true;
+    for (pSinkIt->first(); pSinkIt->isValid() && rc; pSinkIt->next())
+    {
+        SinkInfo *pSinkInfo;
+        IPropertyTree &sinkTree = pSinkIt->query();
+
+        StringBuffer cfgSinkType, cfgLibName, cfgSinkName, cfgProcName;
+        sinkTree.getProp("@type", cfgSinkType);  // this one is required
+        sinkTree.getProp("@libname", cfgLibName);
+        sinkTree.getProp("@name", cfgSinkName);
+        sinkTree.getProp("@instance_proc", cfgProcName);
+
+        std::string sinkName = cfgSinkName.isEmpty() ? "default" : cfgSinkName.str();
+
+        //
+        // If sink already registered, use it, otherwise it's new
+        auto sinkIt = sinks.find(sinkName);
+        if (sinkIt != sinks.end())
+        {
+            pSinkInfo = &(sinkIt->second);
         }
         else
         {
-            pReportContext = &defaultReportContext;
+            const char *type = cfgLibName.isEmpty() ? cfgSinkType.str() : cfgLibName.str();
+            IPropertyTree *pSinkSettings = sinkTree.getPropTree("./settings");
+            IMetricSink *pSink = MetricSink::getSinkFromLib(type, cfgProcName.str(), sinkName.c_str(), pSinkSettings);
+            if (pSink != nullptr)
+            {
+                pSinkInfo = addSink(pSink);
+            }
         }
 
         //
-        // call each sink
-        for (auto const &pMetricSet : reportConfigIt.second)
+        // Retrieve metrics to be reported
+        if (pSinkInfo != nullptr)
         {
-            reportConfigIt.first->handle(metricSetReportValues[pMetricSet], pMetricSet, pReportContext);
+            //
+            // Now add defined metrics if present
+            IPropertyTreeIterator *pSinkMetricsIt = sinkTree.getElements("metrics");
+            for (pSinkMetricsIt->first(); pSinkMetricsIt->isValid(); pSinkMetricsIt->next())
+            {
+                StringBuffer metricName, description;
+                pSinkMetricsIt->query().getProp("@name", metricName);
+                pSinkMetricsIt->query().getProp("@description", description);
+                SinkInfo::measurementInfo mi{std::string(metricName.str()), std::string(description.str())};
+                pSinkInfo->reportMeasurements.emplace_back(mi);
+            }
+        }
+        else
+        {
+            rc = false;
+            // todo - need to decide how to handle bad metrics configurations. Hobble along with what is valid? Log the error?
         }
     }
-    return true;
-}
-
-IMetricsReportTrigger *MetricsReportTrigger::getTriggerFromLib(const char *type, const IPropertyTree *pSettingsTree)
-{
-    return MetricsReportTrigger::getTriggerFromLib(type, "", pSettingsTree);
-}
-
-IMetricsReportTrigger *MetricsReportTrigger::getTriggerFromLib(const char *type, const char *getInstanceProcName, const IPropertyTree *pSettingsTree)
-{
-    IMetricsReportTrigger *pTrigger = nullptr;
-
-    std::string libName;
-
-    //
-    // First, treat type as a full library name
-    libName = type;
-    if (libName.find(SharedObjectExtension) == std::string::npos)
-    {
-        libName.append(SharedObjectExtension);
-    }
-    HINSTANCE libHandle = LoadSharedObject(libName.c_str(), true, false);
-
-    //
-    // If not, use type as a part of the standard metrics lib naming convention
-    if (libHandle == nullptr)
-    {
-        libName.clear();
-        libName.append("libhpccmetrics_").append(type).append(SharedObjectExtension);
-        libHandle = LoadSharedObject(libName.c_str(), true, false);
-    }
-
-    if (libHandle != nullptr)
-    {
-        const char *epName = (getInstanceProcName != nullptr && strlen(getInstanceProcName) != 0) ?
-                             getInstanceProcName : "getTriggerInstance";
-        auto getInstanceProc = (getTriggerInstance) GetSharedProcedure(libHandle, epName);
-        if (getInstanceProc != nullptr)
-        {
-            pTrigger = getInstanceProc(pSettingsTree);
-        }
-    }
-    return pTrigger;
-}
-
-
-void MetricsReportTrigger::doReport(const std::string& sinkName, MetricsReportContext *pReportContext)
-{
-    std::map<std::string, MetricsReportContext *> reportContexts;
-    if (pReportContext != nullptr)
-    {
-        reportContexts[sinkName] = pReportContext;
-    }
-    pReporter->report(reportContexts);
+    return rc;
 }

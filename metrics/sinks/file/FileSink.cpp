@@ -17,6 +17,7 @@
 
 #include "FileSink.hpp"
 #include <cstdio>
+#include <thread>
 
 using namespace hpccMetrics;
 
@@ -29,8 +30,15 @@ extern "C" IMetricSink* getSinkInstance(const char *name, const IPropertyTree *p
 
 
 FileMetricSink::FileMetricSink(const char *name, const IPropertyTree *pSettingsTree) :
-    MetricSink(name, "file")
+    MetricSink(name, "file"),
+    periodSeconds{std::chrono::seconds(60)}
 {
+    if (pSettingsTree->hasProp("@period"))
+    {
+        unsigned seconds = pSettingsTree->getPropInt("@period");
+        periodSeconds = std::chrono::seconds(seconds);
+    }
+
     pSettingsTree->getProp("@filename", fileName);
     bool clearFile = pSettingsTree->getPropBool("@clear", false);
 
@@ -39,19 +47,46 @@ FileMetricSink::FileMetricSink(const char *name, const IPropertyTree *pSettingsT
     if (clearFile)
     {
         auto handle = fopen(fileName.str(), "w");
-        fclose(handle);
+        if (handle != nullptr)
+        {
+            fclose(handle);
+        }
     }
 }
 
 
-void FileMetricSink::handle(const MeasurementVector &values, const std::shared_ptr<IMetricSet> &pMetricSet, MetricsReportContext *pContext)
+void FileMetricSink::reportMeasurements(const MeasurementVector &values)
 {
     auto fh = fopen(fileName.str(), "a");
-    fprintf(fh, "---------- MetricSet=%s", pMetricSet->getName().c_str());
+    fprintf(fh, "---------- Metric Report ------------\n");
     for (const auto& pValue : values)
     {
-        fprintf(fh, "%s -> %s\n", pValue->getReportName().c_str(), pValue->valueToString().c_str());
+        fprintf(fh, "%s -> %s, %s\n", pValue->getName().c_str(), pValue->valueToString().c_str(), pValue->getDescription().c_str());
     }
     fprintf(fh, "\n");
     fclose(fh);
+}
+
+
+void FileMetricSink::startCollection(MetricsReporter *_pReporter)
+{
+    pReporter = _pReporter;
+    collectThread = std::thread(&FileMetricSink::collectionThread, this);
+}
+
+
+void FileMetricSink::collectionThread() const
+{
+    while (!stopCollectionFlag)
+    {
+        std::this_thread::sleep_for(periodSeconds);
+        pReporter->collectMeasurements(name);
+    }
+}
+
+
+void FileMetricSink::stopCollection()
+{
+    stopCollectionFlag = true;
+    collectThread.join();
 }
