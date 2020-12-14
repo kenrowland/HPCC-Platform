@@ -20,25 +20,13 @@
 using namespace hpccMetrics;
 
 
-void CounterMetric::init(const std::string &context)
+bool CounterMetric::prepareMeasurements(const std::string &context)
 {
-    //
-    // Find the current context collection object. If not found, create one
-    auto it = contextValues.find(context);
-    if (it == contextValues.end())
-    {
-        CounterMetric::collectionValues initialContextValues;
-        initialContextValues.curValue = initialContextValues.lastValue = 0;
-        initialContextValues.curCollectedAt = std::chrono::high_resolution_clock::now();
-        contextValues.insert({context, initialContextValues});
-    }
-}
+    bool rc = false;
 
-
-void CounterMetric::saveState(const std::string &context)
-{
     //
-    // Find the current context values object and update it
+    // Find the current context values object and update it. If not found, this is the first call
+    // for this, so create context.
     auto it = contextValues.find(context);
     if (it != contextValues.end())
     {
@@ -46,8 +34,16 @@ void CounterMetric::saveState(const std::string &context)
         it->second.curValue = count.load(std::memory_order_relaxed);
         it->second.lastCollectedAt = it->second.curCollectedAt;
         it->second.curCollectedAt = std::chrono::high_resolution_clock::now();
+        rc = true;
     }
-    // throw?
+    else
+    {
+        CounterMetric::collectionValues initialContextValues;
+        initialContextValues.curValue = initialContextValues.lastValue = 0;
+        initialContextValues.curCollectedAt = std::chrono::high_resolution_clock::now();
+        contextValues.insert({context, initialContextValues});
+    }
+    return rc;
 }
 
 
@@ -169,9 +165,9 @@ void MetricsReporter::collectMeasurements(const std::string &sinkName)
 
         //
         // Save state for each metric in the report
-        for (auto const &reportMetric : reportMetrics)
+        for (auto &reportMetric : reportMetrics)
         {
-            reportMetric.second.pMetric->saveState(sinkName);
+            reportMetric.second.stateSaved = reportMetric.second.pMetric->prepareMeasurements(sinkName);
         }
 
         //
@@ -179,9 +175,12 @@ void MetricsReporter::collectMeasurements(const std::string &sinkName)
         MeasurementVector measurements;
         for (auto &reportMetric : reportMetrics)
         {
-            for (auto const &measType : reportMetric.second.measurementTypes)
+            if (reportMetric.second.stateSaved)
             {
-                reportMetric.second.pMetric->getMeasurement(measType, reportMetric.first, sinkName, measurements);
+                for (auto const &measType : reportMetric.second.measurementTypes)
+                {
+                    reportMetric.second.pMetric->getMeasurement(measType, reportMetric.first, sinkName, measurements);
+                }
             }
         }
 
@@ -297,22 +296,9 @@ bool MetricsReporter::init(IPropertyTree *pGlobalMetricsTree, IPropertyTree *pCo
 
 void MetricsReporter::startCollecting()
 {
-    initContexts();
     for (auto const &sinkIt : sinks)
     {
         sinkIt.second.pSink->startCollection(this);
-    }
-}
-
-
-void MetricsReporter::initContexts()
-{
-    for (auto const &metricsIt : metrics)
-    {
-        for (auto const &sinkIt : sinks)
-        {
-            metricsIt.second->init(sinkIt.first);
-        }
     }
 }
 

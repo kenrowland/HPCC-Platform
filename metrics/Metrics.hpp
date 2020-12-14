@@ -103,8 +103,8 @@ interface IMetric
     virtual std::string getDescription() const = 0;
     virtual MetricType getMetricType() const = 0;
     virtual ValueType getValueType() const = 0;
-    virtual void init(const std::string &context) = 0;
-    virtual void saveState(const std::string &context) = 0;
+    //virtual void init(const std::string &context) = 0;
+    virtual bool prepareMeasurements(const std::string &context) = 0;
     virtual void getMeasurement(const std::string &type, const std::string &measurementName,
                                 const std::string &context, MeasurementVector &measurements) = 0;
 };
@@ -118,7 +118,6 @@ class METRICS_API Metric : public IMetric
         std::string getDescription() const override { return description; }
         ValueType getValueType() const override { return valueType; }
         MetricType getMetricType() const override { return metricType; }
-        void init(const std::string &context) override { }
 
     protected:
         // No one should be able to create one of these
@@ -142,8 +141,7 @@ class CounterMetric : public Metric
         CounterMetric(const char *name, const char *description) :
                 Metric{name, description, ValueType::INTEGER, MetricType::COUNTER}  { }
         void inc(uint32_t val) { count.fetch_add(val, std::memory_order_relaxed);  }
-        void init(const std::string &context) override;
-        void saveState(const std::string &context) override;
+        bool prepareMeasurements(const std::string &context) override;
         void getMeasurement(const std::string &measType, const std::string &measName, const std::string &context, MeasurementVector &measurements) override;
 
 
@@ -168,7 +166,7 @@ class GaugeMetric : public Metric {
                 Metric{name, description, valueType, MetricType::GAUGE}  { }
         void inc(T inc) { value += inc; }
         void dec(T dec) { value -= dec; }
-        void saveState(const std::string &context) override { }
+        bool prepareMeasurements(const std::string &context) override { return true; }
         void getMeasurement(const std::string &type, const std::string &measurementName, const std::string &context, MeasurementVector &measurements) override;
 
     protected:
@@ -256,6 +254,7 @@ class METRICS_API MetricsReporter
         {
             std::shared_ptr<IMetric> pMetric;
             std::vector<std::string> measurementTypes;
+            bool stateSaved;
         };
 
         std::map<std::string, MetricReportInfo> getMetricReportInfo(const std::vector<SinkInfo::measurementInfo> &reportMeasurements) const;
