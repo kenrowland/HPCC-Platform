@@ -360,8 +360,14 @@ void initializeMetrics(CEspConfig* config)
     //
     // Initialize metrics
     Owned<IPropertyTree> pMetricsTree = config->queryConfigPTree()->getPropTree("metrics");
+    if (pMetricsTree == nullptr)
+    {
+        pMetricsTree.setown(queryComponentConfig().getPropTree("metrics"));
+    }
+
     if (pMetricsTree != nullptr)
     {
+        PROGLOG("Metrics initializing...");
         MetricsReporter &metricsReporter = queryMetricsReporter();
         metricsReporter.init(pMetricsTree);
         metricsReporter.startCollecting();
@@ -447,11 +453,13 @@ int init_main(int argc, const char* argv[])
         Owned<IPropertyTree> envpt;
         if (application)
         {
+            DBGLOG("Running as application");
             appConfig.setown(buildApplicationLegacyConfig(application, argv));
             envpt.set(appConfig);
         }
         else
         {
+            DBGLOG("Running not as application");
             envpt.setown(createPTreeFromXMLFile(cfgfile, ipt_caseInsensitive));
             espConfig.setown(loadConfiguration(defaultYaml, argv, "esp", "ESP", nullptr, nullptr));
         }

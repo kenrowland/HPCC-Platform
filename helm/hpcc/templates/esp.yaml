@@ -12,6 +12,7 @@ data:
     esp:
 {{ toYaml (omit .me "logging") | indent 6 }}
 {{- include "hpcc.generateLoggingConfig" . | indent 6 }}
+{{- include "hpcc.generateMetricsConfig" . | indent 6 }}
 {{- if and .root.Values.certificates .root.Values.certificates.enabled }}
  {{- if not (hasKey .me "tls" )}}
       tls: true
