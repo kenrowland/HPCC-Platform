@@ -25,6 +25,7 @@
 #include "jptree.hpp"
 #include "jmisc.hpp"
 #include "jutil.hpp"
+#include "jmetrics.hpp"
 
 #include "mpbase.hpp"
 #include "mpcomm.hpp"
@@ -54,7 +55,7 @@
 #include "daldap.hpp"
 #endif
 
-
+void initializeMetrics(IPropertyTree *pConfig);
 
 Owned<IPropertyTree> serverConfig;
 static IArrayOf<IDaliServer> servers;
@@ -419,6 +420,7 @@ int main(int argc, const char* argv[])
         setAllocHook(true);
 
         serverConfig.setown(loadConfiguration(defaultYaml, argv, "dali", "DALI", DALICONF, nullptr));
+        initializeMetrics(serverConfig);
         Owned<IFile> sentinelFile = createSentinelTarget();
         removeSentinelFile(sentinelFile);
 #ifndef _CONTAINERIZED
@@ -752,6 +754,7 @@ int main(int argc, const char* argv[])
         if (ok) {
             writeSentinelFile(sentinelFile);
             covenMain();
+//            initializeMetrics(serverConfig);
             removeAbortHandler(actionOnAbort);
         }
         stopServer();
@@ -764,4 +767,26 @@ int main(int argc, const char* argv[])
     }
     UseSysLogForOperatorMessages(false);
     return 0;
+}
+
+
+//
+// Initialize metrics
+void initializeMetrics(IPropertyTree *pConfig)
+{
+    //
+    // Initialize metrics
+    Owned<IPropertyTree> pMetricsTree = pConfig->getPropTree("metrics");
+    if (pMetricsTree == nullptr)
+    {
+        pMetricsTree.setown(getComponentConfigSP()->getPropTree("metrics"));
+    }
+
+    if (pMetricsTree != nullptr)
+    {
+        PROGLOG("Metrics initializing...");
+        hpccMetrics::MetricsReporter &metricsReporter = hpccMetrics::queryMetricsReporter();
+        metricsReporter.init(pMetricsTree);
+        metricsReporter.startCollecting();
+    }
 }

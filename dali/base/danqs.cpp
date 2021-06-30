@@ -28,6 +28,7 @@
 #include "mputil.hpp"
 #include "daserver.hpp"
 #include "danqs.hpp"
+#include "jmetrics.hpp"
 
 #ifdef _MSC_VER
 #pragma warning (disable : 4355)
@@ -41,6 +42,7 @@
 // # TYPE nq_active_requests gauge
 // A unsigned scalar should suffice, i.e. never going to have that many active transactions
 
+static auto pRequestCount = hpccMetrics::createMetricAndAddToReporter<hpccMetrics::CounterMetric>("requests", "Number of Requests");
 
 enum MQueueRequestKind { 
     MQR_ADD_QUEUE,
@@ -1010,5 +1012,3 @@ IDaliServer *createDaliNamedQueueServer()
     daliNamedQueueServer = new CDaliNamedQueueServer();
     return daliNamedQueueServer;
 }
-
-
