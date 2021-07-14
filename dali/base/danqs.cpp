@@ -42,7 +42,10 @@
 // # TYPE nq_active_requests gauge
 // A unsigned scalar should suffice, i.e. never going to have that many active transactions
 
-static auto pRequestCount = hpccMetrics::createMetricAndAddToReporter<hpccMetrics::CounterMetric>("requests", "Number of Requests");
+static auto pNqRequestsCount = hpccMetrics::createMetricAndAddToReporter<hpccMetrics::CounterMetric>("nq_requests", "The total number of Dali NQ requests handled");
+static auto pNqActiveRequests = hpccMetrics::createMetricAndAddToReporter<hpccMetrics::GaugeMetric>("nq_active_requests", "Current number of active NQ requests being handled");
+
+//nq_requests
 
 enum MQueueRequestKind { 
     MQR_ADD_QUEUE,
@@ -533,6 +536,7 @@ public:
             try {
                 // 1) Need to increment nq_requests here
                 // NB: it will never be decremented. This is total for life of this instance.
+                pNqRequestsCount->inc(1);
 
                 // 2) Need to increment nq_active_requests here
                 // and ensure it's scoped, such that it is guaranteed
@@ -558,6 +562,8 @@ public:
 
     void processMessage(CMessageBuffer &mb)
     {
+        hpccMetrics::GaugeMetricUpdater gaugeUpdater(pNqActiveRequests, 1);
+
         // single threaded by caller
         ICoven &coven=queryCoven();
         mb.read(fn);

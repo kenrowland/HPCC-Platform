@@ -420,7 +420,6 @@ int main(int argc, const char* argv[])
         setAllocHook(true);
 
         serverConfig.setown(loadConfiguration(defaultYaml, argv, "dali", "DALI", DALICONF, nullptr));
-        initializeMetrics(serverConfig);
         Owned<IFile> sentinelFile = createSentinelTarget();
         removeSentinelFile(sentinelFile);
 #ifndef _CONTAINERIZED
@@ -754,7 +753,7 @@ int main(int argc, const char* argv[])
         if (ok) {
             writeSentinelFile(sentinelFile);
             covenMain();
-//            initializeMetrics(serverConfig);
+            initializeMetrics(serverConfig);
             removeAbortHandler(actionOnAbort);
         }
         stopServer();

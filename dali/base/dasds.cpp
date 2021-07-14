@@ -29,6 +29,7 @@
 #include "mplog.hpp"
 #include "jptree.ipp"
 #include "jqueue.tpp"
+#include "jmetrics.hpp"
 #include "dautils.hpp"
 #include "dadfs.hpp"
 
@@ -93,6 +94,10 @@ static unsigned msgCount=(unsigned)-1;
 // # HELP sds_pending_requests Current number of pending SDS requests.
 // # TYPE sds_pending_requests gauge
 // A unsigned scalar should suffice, i.e. never going to have that many pending transactions
+
+static auto pSdsRequestsCount = hpccMetrics::createMetricAndAddToReporter<hpccMetrics::CounterMetric>("sds_requests", "The total number of Dali SDS requests handled");
+static auto pSdsActiveRequests = hpccMetrics::createMetricAndAddToReporter<hpccMetrics::GaugeMetric>("sds_active_requests", "Current number of active SDS requests being handled");
+static auto pSdsPendingRequests = hpccMetrics::createMetricAndAddToReporter<hpccMetrics::GaugeMetric>("sds_pending_requests", "Current number of pending SDS requests");
 
 // #define TEST_NOTIFY_HANDLER
 
@@ -3754,6 +3759,8 @@ int CSDSTransactionServer::run()
                 // and ensure it's scoped, such that it is guaranteed
                 // to decrement when handling is complete.
                 // NB: most transactions are handled asynchronously, so decrement will need to happen on another thread
+                pSdsRequestsCount->inc(1);
+                pSdsActiveRequests->add(1);
 
                 msgCount++;
                 try
@@ -3782,6 +3789,7 @@ int CSDSTransactionServer::run()
                             // NB: pending requests are those received, but not yet being handled (not active)
                             // e.g. because thread pool limits are blocking them.
                             // sds_pending_requests should be decremented, when the transactions starts in processMessage()
+                            pSdsPendingRequests->add(1);
 
                             mb.reset();
                             handler.handleMessage(mb);
@@ -4097,6 +4105,8 @@ void CSDSTransactionServer::processMessage(CMessageBuffer &mb)
 
     // 2) Ensure sds_active_requests is decremented, when processMessage() is finished
     // e.g. use a scoped object here, and decrement in dtor.
+    pSdsPendingRequests->add(-1);
+    hpccMetrics::GaugeMetricUpdater sdsActiveGaugeUpdater(pSdsActiveRequests, 0);
 
     TimingBlock xactTimingBlock(xactTimingStats);
     ICoven &coven = queryCoven();

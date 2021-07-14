@@ -262,4 +262,22 @@ std::shared_ptr<CustomMetric<T>> createCustomMetricAndAddToReporter(const char *
     return pMetric;
 }
 
+class jlib_decl GaugeMetricUpdater
+{
+public:
+    GaugeMetricUpdater(std::shared_ptr<GaugeMetric> _pGauge, int64_t inc=1) :
+        pGauge{_pGauge}
+    {
+        pGauge->add(inc);
+    }
+
+    ~GaugeMetricUpdater()
+    {
+        pGauge->add(-1);
+    }
+
+protected:
+    std::shared_ptr<GaugeMetric> pGauge;
+};
+
 }
