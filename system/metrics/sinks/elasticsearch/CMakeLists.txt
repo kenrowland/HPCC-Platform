@@ -1,4 +1,4 @@
-###############################################################################
+################################################################################
 #    HPCC SYSTEMS software Copyright (C) 2021 HPCC Systems®.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,7 +14,18 @@
 #    limitations under the License.
 ################################################################################
 
-HPCC_ADD_SUBDIRECTORY (file)
-HPCC_ADD_SUBDIRECTORY (log)
-HPCC_ADD_SUBDIRECTORY (prometheus)
-HPCC_ADD_SUBDIRECTORY (elasticsearch)
+project(hpccmetrics_elasticsearchsink)
+
+set ( srcs
+        elasticsearchSink.cpp
+        )
+
+include_directories(
+        ${HPCC_SOURCE_DIR}/system/include
+        ${HPCC_SOURCE_DIR}/system/jlib
+)
+
+ADD_DEFINITIONS(  -DELASTICSEARCHSINK_EXPORTS )
+HPCC_ADD_LIBRARY( hpccmetrics_elasticsearchsink SHARED ${srcs} )
+TARGET_LINK_LIBRARIES( hpccmetrics_elasticsearchsink jlib)
+INSTALL ( TARGETS hpccmetrics_elasticsearchsink RUNTIME DESTINATION ${EXEC_DIR} LIBRARY DESTINATION ${LIB_DIR} )
