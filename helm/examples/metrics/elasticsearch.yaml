@@ -1,0 +1,19 @@
+#
+# Defines the settings to report to an elasticsearch instance
+# Settings:
+#   type              - type of sink (must be elasticsearch for the file sink)
+#   name              - name for the sink instance
+#   settings.period   - period in seconds between collections
+#   settings.indexNameTemplate - template for how to name the index to which documents are added on a report
+
+global:
+  metrics:
+    sinks:
+      - type: elasticsearch
+        name: elastic
+        settings:
+          period: 60
+          server:
+            hostname: <hostname>
+            port: 2345
+            protocol: http | https

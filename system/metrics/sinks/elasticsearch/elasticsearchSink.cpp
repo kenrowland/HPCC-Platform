@@ -11,7 +11,7 @@
     limitations under the License.
 ############################################################################## */
 
-
+#include "httpclient.hpp"
 #include "elasticsearchSink.hpp"
 
 #include <cstdio>
@@ -28,7 +28,15 @@ extern "C" MetricSink* getSinkInstance(const char *name, const IPropertyTree *pS
 ElasticsearchSink::ElasticsearchSink(const char *name, const IPropertyTree *pSettingsTree) :
         PeriodicMetricSink(name, "elasticsearch", pSettingsTree)
 {
-    //pSettingsTree->getProp("@filename", fileName);
+    pSettingsTree->getProp("@indexNameTemplate", indexNameTemplate);
+
+    Owned<IPropertyTree> pServerSettings = pSettingsTree->getPropTree("server");
+    pServerSettings->getProp("@hostname", hostName);
+    pServerSettings->getProp("@port", port);
+    pServerSettings->getProp("@protocol", protocol);
+
+
+
     //clearFileOnStartCollecting = pSettingsTree->getPropBool("@clear", false);
 }
 
@@ -39,7 +47,19 @@ void ElasticsearchSink::doCollection()
 }
 
 
-std::string ElasticsearchSink::getIndexName(const std::string &nameTemplate, const std::string &suffix)
+void ElasticsearchSink::prepareToStartCollecting()
+{
+
+}
+
+
+void ElasticsearchSink::collectingHasStopped()
+{
+
+}
+
+
+std::string ElasticsearchSink::getIndexName(const std::string &suffix)
 {
     time_t rawtime;
     struct tm *timeinfo;
@@ -47,13 +67,14 @@ std::string ElasticsearchSink::getIndexName(const std::string &nameTemplate, con
     timeinfo = gmtime (&rawtime);
     std::string indexName;
     size_t startPos = 0;
+    std::string nameTemplate(indexNameTemplate.str());
     size_t pos = nameTemplate.find_first_of('%', startPos);
     while (pos != std::string::npos)
     {
         indexName.append(nameTemplate.substr(startPos, pos - startPos));
-        if (pos < nameTemplate.length())
+        if (pos < indexNameTemplate.length())
         {
-            char elem = nameTemplate[pos+1];
+            char elem = nameTemplate[pos + 1];
             switch (elem)
             {
                 // date YYYY-MM-DD
@@ -88,4 +109,57 @@ std::string ElasticsearchSink::getIndexName(const std::string &nameTemplate, con
     indexName.append(nameTemplate.substr(startPos));
     transform(indexName.begin(), indexName.end(), indexName.begin(), ::tolower);
     return indexName;
+}
+
+
+//
+// Creates the index if needed
+bool ElasticsearchSink::initializeIndex()
+{
+    bool rc = false;
+    std::string indexName = buildIndexName("nossurewhatyet");
+
+    //
+    // If the index name matches the last used index name, then all is good.
+    if (indexName == curIndexName)
+    {
+        return true;
+    }
+
+    //
+    // If the requested index already exists, just set the name in the set info and the
+    // sink is ready to start reporting. If it doesn't, create it
+    Owned<IHttpClientContext> httpctx = getHttpClientContext();
+    StringBuffer urlBase, url;
+    urlBase.append(protocol.str()).append("://").append(hostName.str()).append(":").append(port.str());
+    url = urlBase;
+    url.append("/").append(indexName.c_str());
+    Owned<IHttpClient> httpClient = httpctx->createHttpClient(nullptr, url);
+
+    StringBuffer resp, status, content;
+    int ret = httpClient->sendRequest("GET", "application/json", content, resp, status);
+    if (ret == 0)
+    {
+        int statusCode = atoi(status.str());
+
+        //
+        // If the index does not exist, create it
+        if (statusCode == 404)
+        {
+            if (createNewIndex(pMetricSetInfo, pMetricSet, indexName))
+            {
+                rc = true;
+            }
+        }
+        else
+        {
+            rc = true;
+        }
+    }
+
+    if (rc)
+    {
+        pMetricSetInfo->lastIndexName = indexName;   // se we don't have to regenerate each time
+    }
+    return rc;
 }

@@ -29,13 +29,22 @@ using namespace hpccMetrics;
 class ELASTICSEARCHSINK_API ElasticsearchSink : public PeriodicMetricSink
 {
     public:
-
-        explicit ElasticsearchSink(const char *name, const IPropertyTree *pSettingsTree) override;
+        explicit ElasticsearchSink(const char *name, const IPropertyTree *pSettingsTree);
         ~ElasticsearchSink() override = default;
 
-        void doCollection() override;
+        void prepareToStartCollecting();
+        void collectingHasStopped();
+        void doCollection();
 
     protected:
+        std::string getIndexName(const std::string &suffix);
+        bool initializeIndex();
 
-        std::string ElasticsearchSink::getIndexName(const std::string &nameTemplate, const std::string &suffix)
+
+    protected:
+        StringBuffer indexNameTemplate;
+        StringBuffer protocol;
+        StringBuffer hostName;
+        StringBuffer port;
+        std::string curIndexName;
 };

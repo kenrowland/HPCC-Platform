@@ -23,9 +23,15 @@ set ( srcs
 include_directories(
         ${HPCC_SOURCE_DIR}/system/include
         ${HPCC_SOURCE_DIR}/system/jlib
+        ${HPCC_SOURCE_DIR}/esp/bindings
+        ${HPCC_SOURCE_DIR}/esp/bindings/http/client
+        ${HPCC_SOURCE_DIR}/esp/bindings/SOAP/xpp
+        ${HPCC_SOURCE_DIR}/esp/platform
+        ${CMAKE_SOURCE_DIR}/esp/bindings/SOAP/Platform
+        ${CMAKE_BINARY_DIR}/generated
 )
 
 ADD_DEFINITIONS(  -DELASTICSEARCHSINK_EXPORTS )
 HPCC_ADD_LIBRARY( hpccmetrics_elasticsearchsink SHARED ${srcs} )
-TARGET_LINK_LIBRARIES( hpccmetrics_elasticsearchsink jlib)
+TARGET_LINK_LIBRARIES( hpccmetrics_elasticsearchsink jlib esphttp)
 INSTALL ( TARGETS hpccmetrics_elasticsearchsink RUNTIME DESTINATION ${EXEC_DIR} LIBRARY DESTINATION ${LIB_DIR} )
