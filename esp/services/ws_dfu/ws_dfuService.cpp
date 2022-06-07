@@ -6754,4 +6754,141 @@ void CWsDfuEx::setPublishFileSize(const char *lfn, IFileDescriptor *fileDesc)
     async.For(fileDesc->numParts(), 100);
 }
 
+struct ownerInfo
+{
+    std::string name;
+    long long int totalFiles;
+    long long int totalSize;
+};
+
+struct groupInfo
+{
+    std::string name;
+    long long int totalSize;
+    long long int totalFiles;
+    std::unordered_map<std::string, std::unique_ptr<ownerInfo>> owners;
+};
+
+bool CWsDfuEx::onDFUGroupSpace(IEspContext &context, IEspDFUGroupSpaceRequest & req, IEspDFUGroupSpaceResponse & resp)
+{
+    StringBuffer username;
+    context.getUserID(username);
+
+    context.ensureFeatureAccess(FEATURE_URL, SecAccess_Read, ECLWATCH_DFU_ACCESS_DENIED, "WsDfu::DFUQuery: Permission denied.");
+
+    Owned<IUserDescriptor> userdesc;
+    if (username.length() > 0)
+    {
+        userdesc.setown(createUserDescriptor());
+        userdesc->set(username.str(), context.queryPassword(), context.querySignature());
+    }
+
+    const char * filterGroup = req.getGroup();
+    bool filterByGroup = strlen(filterGroup) && strcmp(filterGroup, "*");
+    const char *filterOwner = req.getOwner();
+    bool filterByOwner =  strlen(filterOwner);
+    bool addAllOwners = filterByOwner && !strcmp(filterOwner, "*");
+
+    PROGLOG("DFUGroupSpace: Getting files");
+    Owned<IDFAttributesIterator> fi = queryDistributedFileDirectory().getDFAttributesIterator("*", userdesc.get(), true, true, nullptr);
+    if (!fi)
+        throw makeStringException(ECLWATCH_CANNOT_GET_FILE_ITERATOR, "DFUGroupSpace: Cannot get information from file system.");
+
+    long long int totalFiles = 0, totalFileSize = 0;
+    std::unordered_map<std::string, std::unique_ptr<groupInfo>> groups;
+
+    ForEach (*fi)
+    {
+        IPropertyTree &attr = fi->query();
+        const char *fileGroupName = attr.queryProp("@group");
+
+        if (strlen(fileGroupName))
+        {
+            StringArray fileGroupNames;
+            fileGroupNames.appendListUniq(fileGroupName, ",");
+            ForEachItemIn(index, fileGroupNames)
+            {
+                const char * groupName = fileGroupNames.item(index);
+                if (!filterByGroup || !stricmp(filterGroup, groupName))
+                {
+                    long long int fileSize = attr.getPropInt64("@size", 0);
+                    auto groupIt = groups.find(std::string(groupName));
+                    if (groupIt != groups.end())
+                    {
+                        groupIt->second->totalFiles++;
+                        groupIt->second->totalSize += fileSize;
+                    }
+                    else
+                    {
+                        std::unique_ptr<groupInfo> pGi{new groupInfo()};
+                        pGi->totalFiles = 1;
+                        pGi->totalSize = fileSize;
+                        groupIt = groups.insert({std::string(groupName), std::move(pGi)}).first;
+                    }
+
+                    totalFiles++;
+                    totalFileSize += fileSize;
+
+                    if (filterByOwner)
+                    {
+                        const char *owner = attr.queryProp("@owner");
+
+                        if (addAllOwners || !stricmp(filterOwner, owner))
+                        {
+                            //std::string ownerStr(owner.str());
+                            std::string ownerStr(owner);
+                            auto ownerIt = groupIt->second->owners.find(ownerStr);
+                            if (ownerIt != groupIt->second->owners.end())
+                            {
+                                ownerIt->second->totalFiles++;
+                                ownerIt->second->totalSize += fileSize;
+                            }
+                            else
+                            {
+                                std::unique_ptr<ownerInfo> pOwner{new ownerInfo()};
+                                pOwner->name = ownerStr;
+                                pOwner->totalFiles = 1;
+                                pOwner->totalSize = fileSize;
+                                groupIt->second->owners.insert({ownerStr, std::move(pOwner)});
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // build response
+    IArrayOf<IEspDFUGroupInfo> responseGroups;
+    for (auto const &groupIt: groups)
+    {
+        Owned<IEspDFUGroupInfo> pGi = createDFUGroupInfo();
+        pGi->setTotalFiles(groupIt.second->totalFiles);
+        pGi->setTotalSize(groupIt.second->totalSize);
+        pGi->setName(groupIt.first.c_str());
+
+        if (filterByOwner)
+        {
+            IArrayOf<IEspDFUGroupOwnerInfo> groupOwners;
+            for (auto const &ownerIt: groupIt.second->owners)
+            {
+                Owned<IEspDFUGroupOwnerInfo> pOi = createDFUGroupOwnerInfo();
+
+                pOi->setName(ownerIt.first.c_str());
+                pOi->setTotalFiles(ownerIt.second->totalFiles);
+                pOi->setTotalSize(ownerIt.second->totalSize);
+                groupOwners.append(*pOi.getLink());
+            }
+            pGi->setOwners(groupOwners);
+        }
+        responseGroups.append(*pGi.getLink());
+    }
+
+    resp.setTotalSize(totalFileSize);
+    resp.setTotalFiles(totalFiles);
+    resp.setGroups(responseGroups);
+
+    return true;
+}
+
 //////////////////////HPCC Browser//////////////////////////
