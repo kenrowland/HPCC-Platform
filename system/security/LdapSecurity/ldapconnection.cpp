@@ -50,7 +50,7 @@
 #define LDAPSEC_MAX_RETRIES 2
 #define LDAPSEC_RETRY_WAIT  3
 
-#ifdef _WIN32 
+#ifdef _WIN32
 #define LDAP_NO_ATTRS "1.1"
 #endif
 
@@ -247,7 +247,7 @@ inline bool LdapServerDown(int rc)
 class CLdapConfig : implements ILdapConfig, public CInterface
 {
 private:
-    LdapServerType       m_serverType; 
+    LdapServerType       m_serverType;
     StringAttr           m_cfgServerType;//LDAP Server type name (ActiveDirectory, Fedora389, etc)
 
     Owned<IPropertyTree> m_cfg;
@@ -281,7 +281,7 @@ private:
     StringBuffer         m_HPCCAdminUser_password;
 
     int                  m_maxConnections;
-    
+
     StringBuffer         m_sdfieldname;
 
     int                  m_timeout;
@@ -373,7 +373,7 @@ public:
         {
             m_protocol.append("ldap");
         }
-        
+
         cfg->getProp(".//@ldapCipherSuite", m_cipherSuite);
 
         StringBuffer portbuf;
@@ -524,7 +524,7 @@ public:
             throw MakeStringException(-1, "users basedn not found in config");
         }
         LdapUtils::normalizeDn(user_basedn.str(), m_basedn.str(), m_user_basedn);
-        
+
         StringBuffer group_basedn;
         cfg->getProp(".//@groupsBasedn", group_basedn);
         if(group_basedn.length() == 0)
@@ -586,7 +586,7 @@ public:
         cfg->getProp(".//@workunitsBasedn", dnbuf);
         if(dnbuf.length() > 0)
             LdapUtils::normalizeDn(dnbuf.str(), m_basedn.str(), m_workunitscope_basedn);
-        
+
         if(m_resource_basedn.length() + m_filescope_basedn.length() + m_workunitscope_basedn.length() == 0)
         {
             throw MakeStringException(-1, "One of the following basedns need to be defined: modulesBasedn, resourcesBasedn, filesBasedn or workunitScopesBasedn.");
@@ -1032,13 +1032,13 @@ public:
         else
         {
             LDAPMessage* msg = NULL;
-            
+
             TIMEVAL timeOut = {m_ldapconfig->getLdapTimeout(),0};
             int err = ldap_search_ext_s(m_ld, NULL, LDAP_SCOPE_BASE, "objectClass=*", NULL, 0, NULL, NULL, &timeOut, 1, &msg);
 
             if(msg != NULL)
                 ldap_msgfree(msg);
-            
+
             if(err != LDAP_SUCCESS)
             {
                 if(m_ld != NULL)
@@ -1106,7 +1106,7 @@ public:
             {
                 throw MakeStringException(-1, "Connecting/authenticating to ldap server failed");
             }
-            
+
             if(m_currentsize <= m_maxsize)
             {
                 m_connections.append(*newcon);
@@ -1149,10 +1149,10 @@ public:
 class CLdapConnectionManager : implements IResourceFactory<CLdapConnection>, public CInterface
 {
     Owned<CLdapConfig>   m_ldapconfig;
-    
+
 public:
     IMPLEMENT_IINTERFACE;
-    
+
     CLdapConnectionManager(CLdapConfig* ldapconfig)
     {
         m_ldapconfig.setown(LINK(ldapconfig));
@@ -1167,7 +1167,7 @@ public:
             {
                 throw MakeStringException(-1, "Connecting/authenticating to ldap server failed");
             }
-            
+
             return newcon;
         }
         else
@@ -1605,7 +1605,7 @@ class CLdapClient : implements ILdapClient, public CInterface
 {
 private:
     Owned<ILdapConnectionPool> m_connections;
-    IPermissionProcessor* m_pp;     
+    IPermissionProcessor* m_pp;
     //int                  m_defaultFileScopePermission;
     //int                  m_defaultWorkunitScopePermission;
     Owned<CLdapConfig>   m_ldapconfig;
@@ -1629,9 +1629,9 @@ public:
     {
         m_ldapconfig.setown(new CLdapConfig(cfg));
         if(cfg && cfg->getPropBool("@useRealConnectionPool", false))
-            m_connections.setown(new CLdapConnectionPool2(m_ldapconfig.get())); 
+            m_connections.setown(new CLdapConnectionPool2(m_ldapconfig.get()));
         else
-            m_connections.setown(new CLdapConnectionPool(m_ldapconfig.get()));  
+            m_connections.setown(new CLdapConnectionPool(m_ldapconfig.get()));
         m_pp = NULL;
         //m_defaultFileScopePermission = -2;
         //m_defaultWorkunitScopePermission = -2;
@@ -1689,6 +1689,7 @@ public:
             {
                 //Create HPCC admin group
                 {
+                    // kar see how this creates the group
                     DBGLOG("Adding HPCC Admin group %s", adminGroupName.str());
                     try { addGroup(adminGroupName.str(), nullptr, "HPCC Administrators"); }
                     catch(...) {}//group may already exist, so just move on
@@ -2092,7 +2093,7 @@ public:
                 const char* res_name = res.getName();
                 if(res_name == NULL || *res_name == '\0')
                     res.setAccessFlags(defaultFileScopePermission); //res.setAccessFlags(m_defaultFileScopePermission);
-                else 
+                else
                     non_emptylist.append(*LINK(&res));
             }
 
@@ -2133,7 +2134,7 @@ public:
                 const char* res_name = res.getName();
                 if(res_name == NULL || *res_name == '\0')
                     res.setAccessFlags(defaultWorkunitScopePermission);
-                else 
+                else
                     non_emptylist.append(*LINK(&res));
             }
             ok = authorizeScope(user, non_emptylist, basedn);
@@ -2225,7 +2226,7 @@ public:
             if(resource != NULL)
             {
                 bool oneret = addResource(rtype, user, resource, ptype, basedn);
-                ret = ret && oneret; 
+                ret = ret && oneret;
             }
         }
 
@@ -2244,7 +2245,7 @@ public:
             DBGLOG("LDAP: getUserInfo : username is empty");
             return false;
         }
-        
+
         {
             StringBuffer filter;
             const char* basedn = m_ldapconfig->getUserBasedn();
@@ -2262,7 +2263,7 @@ public:
             filter.append(user.getName());
 
             TIMEVAL timeOut = {m_ldapconfig->getLdapTimeout(),0};
-            
+
             Owned<ILdapConnection> lconn = m_connections->getConnection();
             LDAP* ld = lconn.get()->getLd();
 
@@ -2366,7 +2367,7 @@ public:
             throw MakeStringException(-1, "systemUser not found in config");
 #endif
         }
-        
+
         MemoryBuffer usersidbuf;
         StringBuffer usersidstr;
 
@@ -2419,7 +2420,7 @@ public:
         {
             act_fieldname = "uid";
         }
-            
+
         char        *attrs[] = {"cn", act_fieldname, NULL};
         CLDAPMessage searchResult;
         int rc = ldap_search_ext_s(ld, (char*)m_ldapconfig->getUserBasedn(), LDAP_SCOPE_SUBTREE, (char*)filter.str(), attrs, 0, NULL, NULL, &timeOut, LDAP_NO_LIMIT,    &searchResult.msg );
@@ -2459,7 +2460,7 @@ public:
 
         ldapuser->setUserID(uid);
         ldapuser->setUserSid(usersidbuf.length(), usersidbuf.toByteArray());
-        
+
         // Since we've got the SID for the user, cache it for later uses.
         MemoryBuffer mb;
         if(m_pp != NULL)
@@ -2512,7 +2513,7 @@ public:
 
         Owned<ILdapConnection> lconn = m_connections->getConnection();
         LDAP* ld = lconn.get()->getLd();
-        
+
         char  *attrs[] = {"cn", act_fieldname, "objectClass", NULL};
         CLDAPMessage searchResult;
         int rc = ldap_search_ext_s(ld, (char*)m_ldapconfig->getUserBasedn(), LDAP_SCOPE_SUBTREE, (char*)filter.str(), attrs, 0, NULL, NULL, &timeOut, LDAP_NO_LIMIT,    &searchResult.msg );
@@ -2586,7 +2587,7 @@ public:
 
     virtual void lookupSid(const char* basedn, const char* filter, MemoryBuffer& act_sid)
     {
-        char        *attribute;       
+        char        *attribute;
         LDAPMessage *message;
 
         TIMEVAL timeOut = {m_ldapconfig->getLdapTimeout(),0};
@@ -2695,7 +2696,7 @@ public:
                     basebuf.append("cn=Builtin,").append(m_ldapconfig->getBasedn());
                     lookupSid(basebuf.str(), filter.str(), act_sid);
                 }
-            }       
+            }
         }
 
     }
@@ -3002,7 +3003,7 @@ public:
             };
 
             char *cn_values[] = {(char*)cnbuf.str(), NULL };
-            LDAPMod cn_attr = 
+            LDAPMod cn_attr =
             {
                 LDAP_MOD_REPLACE,
                 "cn",
@@ -3010,7 +3011,7 @@ public:
             };
 
             char *dispname_values[] = {(char*)cnbuf.str(), NULL };
-            LDAPMod dispname_attr = 
+            LDAPMod dispname_attr =
             {
                 LDAP_MOD_REPLACE,
                 "displayName",
@@ -3038,7 +3039,7 @@ public:
 
             LDAPMod *attrs[6];
             int ind = 0;
-        
+
             attrs[ind++] = &gn_attr;
             attrs[ind++] = &sn_attr;
 
@@ -3053,9 +3054,9 @@ public:
 
             attrs[ind++] = &employeeID_attr;
             attrs[ind++] = &employeeNumber_attr;
-            
+
             attrs[ind] = NULL;
-            
+
             Owned<ILdapConnection> lconn = m_connections->getConnection();
             LDAP* ld = lconn.get()->getLd();
 
@@ -3115,7 +3116,7 @@ public:
             };
 
             char *loginshell_values[] = {(char*)ldapuser->getLoginshell(), NULL };
-            LDAPMod loginshell_attr = 
+            LDAPMod loginshell_attr =
             {
                 LDAP_MOD_REPLACE,
                 "loginshell",
@@ -3124,7 +3125,7 @@ public:
 
             LDAPMod *attrs[7];
             int ind = 0;
-        
+
             attrs[ind++] = &gidnum_attr;
             attrs[ind++] = &uidnum_attr;
             attrs[ind++] = &homedir_attr;
@@ -3212,7 +3213,7 @@ public:
 
                 LDAPMod *attrs[7];
                 int ind = 0;
-            
+
                 attrs[ind++] = &gidnum_attr;
                 attrs[ind++] = &uidnum_attr;
                 attrs[ind++] = &homedir_attr;
@@ -4152,7 +4153,7 @@ public:
                 DBGLOG("ldap_search_ext_s error: %s, when searching %s under %s", ldap_err2string( rc ), filter.str(), m_ldapconfig->getUserBasedn());
                 return;
             }
-            
+
             unsigned entries = ldap_count_entries(ld, searchResult);
             if(entries == 0)
             {
@@ -4209,7 +4210,7 @@ public:
                     groups.append(grp);
                 }
             }
-        }       
+        }
     }
 
     virtual void changeUserGroup(const char* action, const char* username, const char* groupname, const char * groupDN=nullptr)
@@ -4238,10 +4239,10 @@ public:
 
         StringBuffer userdn;
         getUserDN(username, userdn);
-        
+
         Owned<ILdapConnection> lconn = m_connections->getConnection();
         LDAP* ld = lconn.get()->getLd();
-        
+
         int rc = ldap_delete_ext_s(ld, (char*)userdn.str(), NULL, NULL);
 
         if ( rc != LDAP_SUCCESS )
@@ -4302,7 +4303,7 @@ public:
         }
 
         char *cn_values[] = {(char*)groupname, NULL };
-        LDAPMod cn_attr = 
+        LDAPMod cn_attr =
         {
             LDAP_MOD_ADD,
             "cn",
@@ -4318,7 +4319,7 @@ public:
         };
 
         char *member_values[] = {"", NULL};
-        LDAPMod member_attr = 
+        LDAPMod member_attr =
         {
             LDAP_MOD_ADD,
             "uniqueMember",
@@ -4341,7 +4342,7 @@ public:
         };
         LDAPMod *attrs[6];
         int ind = 0;
-        
+
         attrs[ind++] = &cn_attr;
         attrs[ind++] = &oc_attr;
         if(m_ldapconfig->getServerType() == ACTIVE_DIRECTORY)
@@ -4395,10 +4396,10 @@ public:
 
         StringBuffer dn;
         getGroupDN(groupname, dn, groupsDN);
-        
+
         Owned<ILdapConnection> lconn = m_connections->getConnection();
         LDAP* ld = lconn.get()->getLd();
-        
+
         int rc = ldap_delete_ext_s(ld, (char*)dn.str(), NULL, NULL);
 
         if ( rc != LDAP_SUCCESS )
@@ -4565,7 +4566,7 @@ public:
 
         Owned<ILdapConnection> lconn = m_connections->getConnection();
         LDAP* ld = lconn.get()->getLd();
-        
+
         int rc = ldap_delete_ext_s(ld, (char*)dn.str(), NULL, NULL);
 
         if ( rc != LDAP_SUCCESS )
@@ -4641,7 +4642,7 @@ public:
 
         if(sd->getDescriptor().length() == 0)
             throw MakeStringException(-1, "error copying %s to %s, %s doesn't exist", oldname, newname, oldname);
-        
+
         ISecUser* user = NULL;
         CLdapSecResource resource(newname);
         addResource(rtype, *user, &resource, PT_ADMINISTRATORS_ONLY, basedn, sd.get(), false);
@@ -4726,7 +4727,7 @@ public:
             {
                 Owned<ILdapConnection> lconn = m_connections->getConnection();
                 LDAP* ld = lconn.get()->getLd();
-                
+
                 char* pw_attrs[] = {"nsslapd-rootpwstoragescheme", NULL};
                 CLDAPMessage msg;
                 TIMEVAL timeOut = {m_ldapconfig->getLdapTimeout(),0};
@@ -4746,7 +4747,7 @@ public:
                 ldap_msgfree(msg);
             }
         }
-        
+
         if(m_pwscheme.length() == 0)
             return NULL;
         else
@@ -4799,7 +4800,7 @@ private:
         LdapUtils::getName(dc, dcname);
 
         char *dc_values[] = {(char*)dcname.str(), NULL };
-        LDAPMod dc_attr = 
+        LDAPMod dc_attr =
         {
             LDAP_MOD_ADD,
             "dc",
@@ -4807,7 +4808,7 @@ private:
         };
 
         char *o_values[] = {(char*)dcname.str(), NULL };
-        LDAPMod o_attr = 
+        LDAPMod o_attr =
         {
             LDAP_MOD_ADD,
             "o",
@@ -4821,7 +4822,7 @@ private:
             "objectClass",
             oc_values
         };
-        
+
         LDAPMod *attrs[4];
         attrs[0] = &oc_attr;
         attrs[1] = &o_attr;
@@ -4910,7 +4911,7 @@ private:
         }
 
     }
-    
+
     virtual void getUidFromDN(LDAP* ld, const char* dn, StringBuffer& uid)
     {
         if(dn == NULL || *dn == '\0')
@@ -5151,9 +5152,9 @@ private:
                 const char* sdname = sd.getName();
                 if(sdname ==  NULL || *sdname == '\0')
                     continue;
-                if(strncmp(sdname, rname, strlen(sdname)) == 0 
-                    && (matchedsd == NULL 
-                        || ((matchedsd->getDescriptor().length() == 0 && sd.getDescriptor().length() > 0) 
+                if(strncmp(sdname, rname, strlen(sdname)) == 0
+                    && (matchedsd == NULL
+                        || ((matchedsd->getDescriptor().length() == 0 && sd.getDescriptor().length() > 0)
                         || (sd.getDescriptor().length() > 0 && strlen(sdname) > strlen(matchedsd->getName())))))
                     matchedsd = &sd;
             }
@@ -5184,7 +5185,7 @@ private:
             DBGLOG("corresponding resource basedn is not defined");
             return;
         }
-            
+
         std::map<std::string, IArrayOf<CSecurityDescriptor>*> sdmap;
 
         for(int i = 0; i < len; i++)
@@ -5223,7 +5224,7 @@ private:
         CLDAPGetValuesLenWrapper valsLen;
         LDAPMessage *message;
         int i;
-        
+
         const char *id_fieldname;
         if(m_ldapconfig->getServerType() == ACTIVE_DIRECTORY)
         {
@@ -5260,13 +5261,13 @@ private:
         SDServerCtlWrapper ctlwrapper(m_ldapconfig->isAzureAD());
 
         TIMEVAL timeOut = {m_ldapconfig->getLdapTimeout(),0};
-        
+
         char* attrs[] = {(char*)id_fieldname, (char*)des_fieldname, NULL};
         Owned<ILdapConnection> lconn = m_connections->getConnection();
         LDAP* ld = lconn.get()->getLd();
         CLDAPMessage searchResult;
         int rc = ldap_search_ext_s(ld, (char*)basedn, LDAP_SCOPE_SUBTREE, (char*)filter.str(), attrs, 0, ctlwrapper.ctls, NULL, &timeOut, LDAP_NO_LIMIT, &searchResult.msg );     /* returned results */
-        
+
         if ( rc != LDAP_SUCCESS )
         {
             DBGLOG("ldap_search_ext_s error: %s, when searching %s under %s", ldap_err2string( rc ), filter.str(), basedn);
@@ -5288,7 +5289,7 @@ private:
                     if (vals.hasValues())
                         resourcename.append(vals.queryCharValue(0));
                 }
-                else if(stricmp(attribute, des_fieldname) == 0) 
+                else if(stricmp(attribute, des_fieldname) == 0)
                 {
                     valsLen.retrieveBValues(ld, message, attribute);
                 }
@@ -5394,7 +5395,7 @@ private:
                     {
                         dn.append("ou=").append(curlen, curscope).append(",");
                     }
-                    
+
                     if (cn.isEmpty())//only process leftmost part of ou, so "ou=s3,ou=s2,ou=s1" only specify ou=s3
                     {
                         cn.append("ou=").append(curlen, curscope);
@@ -5435,13 +5436,13 @@ private:
         SDServerCtlWrapper ctlwrapper(m_ldapconfig->isAzureAD());
 
         TIMEVAL timeOut = {m_ldapconfig->getLdapTimeout(),0};
-        
+
         char* attrs[] = {sd_fieldname, NULL};
         Owned<ILdapConnection> lconn = m_connections->getConnection();
         LDAP* ld = lconn.get()->getLd();
         CLDAPMessage searchResult;
         int rc = ldap_search_ext_s(ld, (char*)basedn, LDAP_SCOPE_SUBTREE, (char*)filter.str(), attrs, 0, ctlwrapper.ctls, NULL, &timeOut, LDAP_NO_LIMIT, &searchResult.msg );     /* returned results */
-        
+
         if ( rc != LDAP_SUCCESS )
         {
             DBGLOG("ldap_search_ext_s error: %s, when searching %s under %s", ldap_err2string( rc ), filter.str(), basedn);
@@ -5462,7 +5463,7 @@ private:
                   attribute != NULL;
                   attribute = atts.getNext())
             {
-                if(stricmp(attribute, sd_fieldname) == 0) 
+                if(stricmp(attribute, sd_fieldname) == 0)
                 {
                     valsLen.retrieveBValues(ld, message, attribute);
                 }
@@ -5551,6 +5552,7 @@ private:
             ptr = comma + 1;
         }
 
+        // kar - follow to see how it recursively walks the ou string calling
         if (ptr && strstr(ptr,"ou=") && !organizationalUnitExists(ptr))
             createLdapBasedn(user, ptr, ptype, description);
 
@@ -5579,7 +5581,7 @@ private:
             return true;
 
         char *ou_values[] = {(char*)name, NULL };
-        LDAPMod ou_attr = 
+        LDAPMod ou_attr =
         {
             LDAP_MOD_ADD,
             "ou",
@@ -5587,7 +5589,7 @@ private:
         };
 
         char *name_values[] = {(char*)name, NULL };
-        LDAPMod name_attr = 
+        LDAPMod name_attr =
         {
             LDAP_MOD_ADD,
             "name",
@@ -5621,7 +5623,7 @@ private:
         int ind = 0;
         attrs[ind++] = &ou_attr;
         if(m_ldapconfig->getServerType() == ACTIVE_DIRECTORY)
-        {       
+        {
             attrs[ind++] = &name_attr;
         }
         attrs[ind++] = &oc_attr;
@@ -5634,7 +5636,7 @@ private:
         sd_val.bv_val = (char*)sdbuf.toByteArray();
         struct berval* sd_values[] = {&sd_val, NULL};
         sd_attr.mod_op = LDAP_MOD_ADD | LDAP_MOD_BVALUES;
-        
+
         sd_attr.mod_type = (char*)m_ldapconfig->getSdFieldName();
 
         sd_attr.mod_vals.modv_bvals = sd_values;
@@ -5708,7 +5710,7 @@ private:
             ldapname.append("cn=");
         else
             ldapname.append("ou=");
-        
+
         const char* prevptr = resourcename;
         const char* nextptr = strstr(resourcename, "::");
         while(nextptr != NULL)
@@ -5801,7 +5803,7 @@ private:
         char* description = (char*)((CLdapSecResource*)resource)->getDescription();
 
         StringBuffer dn;
-        
+
         char *fieldname, *oc_name;
         if(servertype == ACTIVE_DIRECTORY)
         {
@@ -5818,7 +5820,7 @@ private:
         dn.append(rbasedn);
 
         char *cn_values[] = {resourcename, NULL };
-        LDAPMod cn_attr = 
+        LDAPMod cn_attr =
         {
             LDAP_MOD_ADD,
             fieldname,
@@ -6142,7 +6144,7 @@ private:
         }
 
         char *cn_values[] = {(char*)fullname, NULL };
-        LDAPMod cn_attr = 
+        LDAPMod cn_attr =
         {
             LDAP_MOD_ADD,
             "cn",
@@ -6188,7 +6190,7 @@ private:
         };
 
         char *dispname_values[] = {(char*)fullname, NULL };
-        LDAPMod dispname_attr = 
+        LDAPMod dispname_attr =
         {
             LDAP_MOD_ADD,
             "displayName",
@@ -6221,7 +6223,7 @@ private:
 
         LDAPMod *attrs[10];
         int ind = 0;
-        
+
         attrs[ind++] = &cn_attr;
         attrs[ind++] = &oc_attr;
         if(fname != NULL && *fname != '\0')
@@ -6409,7 +6411,7 @@ private:
         StringBuffer baseresource;
         baseresource.append(basebasedn-basedn-4, basedn+3);
         IArrayOf<ISecResource> base_resources;
-        base_resources.append(*new CLdapSecResource(baseresource.str()));
+        base_resources.append(*new CLdapSecResource(baseresource.str()));  // kar - what's returned here
         bool baseok = authorizeScope(user, base_resources, basebasedn);
         if(baseok)
             return base_resources.item(0).getAccessFlags();
@@ -6735,4 +6737,3 @@ ILdapClient* createLdapClient(IPropertyTree* cfg)
 {
     return new CLdapClient(cfg);
 }
-
