@@ -556,7 +556,8 @@ bool CPermissionsCache::queryPermsManagedFileScope(ISecUser& sec_user, const cha
     if (!fullScope || !*fullScope)
     {
         *accessFlags = queryDefaultPermission(sec_user);
-        OWARNLOG("FileScope empty for %s, applying default permissions %s(%d), took %dms", sec_user.getName(), getSecAccessFlagName(*accessFlags), *accessFlags,  msTick()-start);
+        OWARNLOG("FileScope empty, applying default file scope permissions %s(%d) for user '%s', took %dms", getSecAccessFlagName(*accessFlags),
+             *accessFlags, sec_user.getName(), msTick()-start);
         return true;
     }
 
@@ -580,6 +581,8 @@ bool CPermissionsCache::queryPermsManagedFileScope(ISecUser& sec_user, const cha
     if (m_managedFileScopesMap.empty())
     {
         *accessFlags = queryDefaultPermission(sec_user);
+        OWARNLOG("Managed FileScopes empty, applying default file scope permissions %s(%d) for user '%s', took %dms", getSecAccessFlagName(*accessFlags),
+                 *accessFlags, sec_user.getName(), msTick()-start);
         return true;
     }
 
@@ -663,8 +666,8 @@ bool CPermissionsCache::queryPermsManagedFileScope(ISecUser& sec_user, const cha
     else
     {
         *accessFlags = queryDefaultPermission(sec_user);
-        if (isDebugBuild())
-            OWARNLOG("FileScope %s for %s not managed, using default %s(%d), took %dms", fullScope, sec_user.getName(), getSecAccessFlagName(*accessFlags), *accessFlags, msTick()-start);
+        OWARNLOG("FileScope '%s' not managed, applying default file scope permissions %s (%d), for user '%s' took %dms",
+             fullScope, getSecAccessFlagName(*accessFlags), *accessFlags, sec_user.getName(), msTick() - start);
         rc = true;
     }
     return rc;

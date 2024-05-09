@@ -2096,8 +2096,12 @@ public:
                 ForEachItemIn(x, non_emptylist)
                 {
                     ISecResource& res = non_emptylist.item(x);
-                    if(res.getAccessFlags() == -1)
+                    if(res.getAccessFlags() == SecAccess_Unavailable)
+                    {
+                        OWARNLOG("file scope access unavailable for '%s', applying default file scope permissions %s(%d), for user '%s'",
+                             res.getName(), getSecAccessFlagName(defaultFileScopePermission), defaultFileScopePermission, username);
                         res.setAccessFlags(defaultFileScopePermission); //res.setAccessFlags(m_defaultFileScopePermission);
+                    }
                 }
             }
 
