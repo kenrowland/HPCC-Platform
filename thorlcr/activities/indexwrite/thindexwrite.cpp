@@ -269,11 +269,6 @@ public:
             if (maxLeafMemorySize)
                 props.setPropInt64("@maxLeafMemorySize", maxLeafMemorySize);
 
-            Owned<IPropertyTree> metadata;
-            buildUserMetadata(metadata, *helper);
-            unsigned nodeSize = metadata ? metadata->getPropInt("_nodeSize", NODESIZE) : NODESIZE;
-            props.setPropInt64("@nodeSize", nodeSize);
-
             // Set the compression type that was actually used
             StringBuffer defaultIndexCompression;
             container.queryJob().getWorkUnitValue("defaultIndexCompression", defaultIndexCompression);
@@ -281,6 +276,11 @@ public:
             StringBuffer compressionType;
             getIndexCompressionType(compressionType, helper, defaultIndexCompression.str());
             props.setProp("@compressionType", compressionType.str());
+
+            Owned<IPropertyTree> metadata;
+            buildUserMetadata(metadata, helper, compressionType.str());
+            unsigned nodeSize = metadata ? metadata->getPropInt("_nodeSize", NODESIZE) : NODESIZE;
+            props.setPropInt64("@nodeSize", nodeSize);
 
             size32_t keyedSize = helper->getKeyedSize();
             if (keyedSize == (size32_t)-1)
