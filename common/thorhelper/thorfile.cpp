@@ -368,32 +368,53 @@ void mergeDerivedInformation(DerivedIndexInformation & result, const DerivedInde
 
 //-----------------------------------------------------------------------------
 
-void buildUserMetadata(Owned<IPropertyTree> & metadata, IHThorIndexWriteArg & helper)
+void buildUserMetadata(Owned<IPropertyTree> & metadata, IHThorIndexWriteArg * helper, const char * compressionOptions)
 {
+    if (!metadata)
+        metadata.setown(createPTree("metadata", ipt_fast));
+
     size32_t nameLen;
     char * nameBuff;
     size32_t valueLen;
     char * valueBuff;
     unsigned idx = 0;
-    while (helper.getIndexMeta(nameLen, nameBuff, valueLen, valueBuff, idx++))
+    if (helper)
     {
-        StringBuffer name(nameLen, nameBuff);
-        StringBuffer value(valueLen, valueBuff);
-        rtlFree(nameBuff);
-        rtlFree(valueBuff);
-        if(*name == '_' && !checkReservedMetadataName(name))
+        while (helper->getIndexMeta(nameLen, nameBuff, valueLen, valueBuff, idx++))
         {
-            roxiemem::OwnedRoxieString fname(helper.getFileName());
-            throw MakeStringException(0, "Invalid name %s in user metadata for index %s (names beginning with underscore are reserved)", name.str(), fname.get());
+            StringBuffer name(nameLen, nameBuff);
+            StringBuffer value(valueLen, valueBuff);
+            rtlFree(nameBuff);
+            rtlFree(valueBuff);
+            if(*name == '_' && !checkReservedMetadataName(name))
+            {
+                roxiemem::OwnedRoxieString fname(helper->getFileName());
+                throw MakeStringException(0, "Invalid name %s in user metadata for index %s (names beginning with underscore are reserved)", name.str(), fname.get());
+            }
+            if(!validateXMLTag(name.str()))
+            {
+                roxiemem::OwnedRoxieString fname(helper->getFileName());
+                throw MakeStringException(0, "Invalid name %s in user metadata for index %s (not legal XML element name)", name.str(), fname.get());
+            }
+            metadata->setProp(name.str(), value.str());
         }
-        if(!validateXMLTag(name.str()))
+    }
+
+    if (compressionOptions)
+    {
+        const char * colon = strchr(compressionOptions, ':');
+        if (colon)
         {
-            roxiemem::OwnedRoxieString fname(helper.getFileName());
-            throw MakeStringException(0, "Invalid name %s in user metadata for index %s (not legal XML element name)", name.str(), fname.get());
+            auto processOption = [&](const char * option, const char * value)
+            {
+                CompressionMethod method = translateToCompMethod(option, COMPRESS_METHOD_NONE);
+                if (method != COMPRESS_METHOD_NONE)
+                    metadata->setProp("compression", option);
+                else
+                    metadata->setProp(option, value);
+            };
+            processOptionString(colon+1, processOption);
         }
-        if(!metadata)
-            metadata.setown(createPTree("metadata", ipt_fast));
-        metadata->setProp(name.str(), value.str());
     }
 }
 
