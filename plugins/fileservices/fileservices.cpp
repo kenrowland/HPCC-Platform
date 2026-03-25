@@ -3120,7 +3120,8 @@ FILESERVICES_API void FILESERVICES_CALL fsLogicalFileSuperOwners(ICodeContext *c
 }
 
 
-FILESERVICES_API int  FILESERVICES_CALL fsCompareFiles(ICodeContext *ctx,const char *name1, const char *name2,bool logicalonly, bool usecrcs)
+static constexpr unsigned highTimeout = 1 * 60 * 60 * 1000; // 1 hour
+static int fsCompareFilesImpl(ICodeContext *ctx, const char *name1, const char *name2, bool logicalonly, bool usecrcs, int timeOut)
 {
     StringBuffer lfn1;
     constructLogicalName(ctx, name1, lfn1);
@@ -3128,10 +3129,22 @@ FILESERVICES_API int  FILESERVICES_CALL fsCompareFiles(ICodeContext *ctx,const c
     constructLogicalName(ctx, name2, lfn2);
     StringBuffer retstr;
     Linked<IUserDescriptor> udesc = ctx->queryUserDescriptor();
-    int ret = queryDistributedFileDirectory().fileCompare(lfn1.str(),lfn2.str(),usecrcs?DFS_COMPARE_FILES_PHYSICAL_CRCS:(logicalonly?DFS_COMPARE_FILES_LOGICAL:DFS_COMPARE_FILES_PHYSICAL),retstr,udesc);
+    DistributedFileCompareMode mode = usecrcs ? DFS_COMPARE_FILES_PHYSICAL_CRCS : (logicalonly ? DFS_COMPARE_FILES_LOGICAL : DFS_COMPARE_FILES_PHYSICAL);
+    unsigned timeout = (timeOut >= 0) ? static_cast<unsigned>(timeOut) : highTimeout; // NB: this is for SDS read locks to the files being compared
+    DistributedFileCompareResult ret = wsdfs::fileCompare(lfn1.str(), lfn2.str(), mode, retstr, udesc, timeout);
     if (ret==DFS_COMPARE_RESULT_FAILURE)
         throw MakeStringException(ret,"CompareLogicalFiles: %s",retstr.str());
-    return ret;
+    return static_cast<int>(ret);
+}
+
+FILESERVICES_API int  FILESERVICES_CALL fsCompareFiles(ICodeContext *ctx,const char *name1, const char *name2,bool logicalonly, bool usecrcs)
+{
+    return fsCompareFilesImpl(ctx, name1, name2, logicalonly, usecrcs, -1);
+}
+
+FILESERVICES_API int  FILESERVICES_CALL fsCompareFiles_v2(ICodeContext *ctx,const char *name1, const char *name2,bool logicalonly, bool usecrcs, int timeout)
+{
+    return fsCompareFilesImpl(ctx, name1, name2, logicalonly, usecrcs, timeout);
 }
 
 FILESERVICES_API char *  FILESERVICES_CALL fsVerifyFile(ICodeContext *ctx,const char *name,bool usecrcs)
