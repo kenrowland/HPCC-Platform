@@ -28,7 +28,23 @@
 class CEventFilter : public CInterfaceOf<IEventFilter>
 {
 public:
-    CEventFilter(CMetaInfoState& _metaState) : metaState(_metaState) {}
+    CEventFilter(CMetaInfoState& _metaState)
+        : metaState(_metaState)
+    {
+        // NOTE:
+        //   - We initialize a synthetic event here using EventIndexEviction even though this
+        //     filter is concerned with EventIndexPayload. The eviction and payload events
+        //     share the same metadata schema and attribute layout for node kind, so an
+        //     EventIndexEviction instance is sufficient as a template object to obtain and
+        //     configure the EvAttrNodeKind attribute used during filtering.
+        //   - The value 1ULL assigned to EvAttrNodeKind is the protocol/metadata-defined
+        //     node kind value that corresponds to payload nodes in the event index. It is
+        //     treated as an encoded constant (see eventindex.hpp) and is used here solely
+        //     to restrict matching to EventIndexPayload-related entries.
+        payloadNodeKindEvent.reset(EventIndexEviction);
+        payloadNodeKindAttribute = &payloadNodeKindEvent.queryAttribute(EvAttrNodeKind);
+        payloadNodeKindAttribute->setValue(1ULL);
+    }
 
 protected:
     class StringMatchHelper
@@ -438,6 +454,14 @@ public: // IEventVisitor
                 return true;
         }
 
+        // Special case for implied attribute(s)
+        if (event.queryType() == EventIndexPayload)
+        {
+            const FilterTerm* term = terms[EvAttrNodeKind];
+            if (term && !term->matches(payloadNodeKindEvent, *payloadNodeKindAttribute))
+                return true;
+        }
+
         // Forward the event to the next linked visitor.
         return nextLink->visitEvent(event);
     }
@@ -667,6 +691,8 @@ protected:
     Owned<FilterTerm> terms[EvAttrMax];
     std::unordered_set<EventType> acceptedEvents;
     CMetaInfoState& metaState;
+    CEvent payloadNodeKindEvent;
+    CEventAttribute* payloadNodeKindAttribute{nullptr};
 };
 
 std::map<std::string, FilterTermComparison> CEventFilter::comparisonMap{
