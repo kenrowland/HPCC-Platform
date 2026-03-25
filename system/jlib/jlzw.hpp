@@ -140,7 +140,7 @@ extern jlib_decl IRandRowExpander *createRandRDiffExpander(); // NB only support
 
 
 // Helper functions to make it easy to compress/decompress to memorybuffers.
-extern jlib_decl void compressToBuffer(MemoryBuffer & out, size32_t len, const void * src, CompressionMethod method=COMPRESS_METHOD_LZW_LITTLE_ENDIAN, const char *options=nullptr);
+extern jlib_decl void compressToBuffer(MemoryBuffer & out, size32_t len, const void * src, CompressionMethod method=COMPRESS_METHOD_ZSTD3, const char *options=nullptr);
 extern jlib_decl void decompressToBuffer(MemoryBuffer & out, MemoryBuffer & in, const char *options=nullptr);
 
 
