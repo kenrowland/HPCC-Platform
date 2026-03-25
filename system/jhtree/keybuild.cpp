@@ -217,6 +217,33 @@ private:
     bool enforceOrder = true;
     bool isTLK = false;
 
+    void appendPendingNode(CWriteNodeBase &node)
+    {
+        // Keep pending nodes sorted by file position so final flush does not require seek.
+        const offset_t fpos = node.getFpos();
+        unsigned ordinality = pendingNodes.ordinality();
+        
+        // Fast path: most nodes are appended to the end
+        if (ordinality == 0 || fpos >= pendingNodes.item(ordinality - 1).getFpos())
+        {
+            pendingNodes.append(node);
+            return;
+        }
+        
+        // Rare case: binary search for insertion position
+        unsigned lo = 0;
+        unsigned hi = ordinality;
+        while (lo < hi)
+        {
+            unsigned mid = lo + (hi - lo) / 2;
+            if (pendingNodes.item(mid).getFpos() <= fpos)
+                lo = mid + 1;
+            else
+                hi = mid;
+        }
+        pendingNodes.add(node, lo);
+    }
+
 public:
     CKeyBuilder(IFileIOStream *_out, const KeyBuilderOptions &options)
         : out(_out), enforceOrder(options.enforceOrder), isTLK(options.isTLK)
@@ -478,7 +505,9 @@ protected:
             }
             nodeInfo.append(* new CNodeInfo(prevLeafNode->getFpos(), prevLeafNode->getLastKeyValue(), keyedSize, lastSequence));
             if ((keyHdr->getKeyType() & TRAILING_HEADER_ONLY) != 0 && activeBlobNode && activeBlobNode->getFpos() < prevLeafNode->getFpos())
-                pendingNodes.append(*prevLeafNode);
+            {
+                appendPendingNode(*prevLeafNode);
+            }
             else
             {
                 writeNode(prevLeafNode, prevLeafNode->getFpos());
@@ -523,7 +552,7 @@ protected:
             keyHdr->setMaxKeyLength(maxRecordSizeSeen);
         if (activeBlobNode && (keyHdr->getKeyType() & TRAILING_HEADER_ONLY))
         {
-            pendingNodes.append(*activeBlobNode);
+            appendPendingNode(*activeBlobNode);
             activeBlobNode = nullptr;
         }
         if (NULL != activeNode)
@@ -666,7 +695,9 @@ protected:
             activeBlobNode->setLeftSib(prevBlobNode->getFpos());
             prevBlobNode->setRightSib(activeBlobNode->getFpos());
             if (keyHdr->getKeyType() & TRAILING_HEADER_ONLY)
-                pendingNodes.append(*prevBlobNode);
+            {
+                appendPendingNode(*prevBlobNode);
+            }
             else
             {
                 writeNode(prevBlobNode, prevBlobNode->getFpos());
