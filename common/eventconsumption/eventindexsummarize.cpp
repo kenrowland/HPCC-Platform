@@ -57,12 +57,61 @@ protected:
     };
     enum ReadBucket
     {
+        Total,
         PageCache,
         LocalFile,
         RemoteFile,
         NumBuckets
     };
-    static constexpr __uint64 readBucketBoundary[NumBuckets] = {20'000, 400'000, UINT64_MAX};
+    // ReadBucket categorizes read durations: Total is a special cumulative bucket that tracks
+    // aggregate metrics across all read operations, while PageCache, LocalFile, and RemoteFile
+    // represent mutually exclusive categories selected by time/source thresholds. The bucket
+    // boundaries for Total and RemoteFile are both intentionally UINT64_MAX. Total because every
+    // read counts toward the total time; RemoteFile because anything not read from the page cache
+    // or local storage must belong to the remaining catch-all bucket.
+    static constexpr __uint64 readBucketBoundary[NumBuckets] = {UINT64_MAX, 20'000, 400'000, UINT64_MAX};
+
+    template <typename single_bucket_t, typename cumulative_bucket_t>
+    static void accumulateBucket(const single_bucket_t& single, cumulative_bucket_t& cumulative)
+    {
+        if (single.count)
+        {
+            cumulative.count += single.count;
+            cumulative.total += single.total;
+            if (single.min < cumulative.min)
+                cumulative.min = single.min;
+            if (single.max > cumulative.max)
+                cumulative.max = single.max;
+            assertex(cumulative.min <= cumulative.max);
+        }
+    }
+
+    template <typename single_value_t, typename cumulative_bucket_t>
+    static void accumulateValue(const single_value_t& value, cumulative_bucket_t& cumulative)
+    {
+        if (value)
+        {
+            cumulative.count++;
+            cumulative.total += value;
+            if (value < cumulative.min)
+                cumulative.min = value;
+            if (value > cumulative.max)
+                cumulative.max = value;
+            assertex(cumulative.min <= cumulative.max);
+        }
+    }
+
+    // Identify the mutually exclusive read time category to which a given time belongs.
+    // The result will never be Total, which is not mutually exclusive.
+    static ReadBucket chooseBucketCategory(__uint64 time)
+    {
+        if (time <= readBucketBoundary[PageCache])
+            return PageCache;
+        if (time <= readBucketBoundary[LocalFile])
+            return LocalFile;
+        return RemoteFile;
+    }
+
     void appendCSVColumn(StringBuffer& line, const char* value)
     {
         if (!line.isEmpty())
@@ -168,80 +217,77 @@ protected:
         Events events;
         Bucket readTime[NumBuckets];
         Bucket expandTime;
+        __uint64 elapsedTime{0};
     };
 public: // IEventVisitor
     virtual bool visitEvent(CEvent& event) override
     {
         // Implicit event filter applied unconditionally
-        if (queryEventContext(event.queryType()) != EventCtxIndex)
-            return true;
-        __uint64 fileId = event.queryNumericValue(EvAttrFileId);
-        if (event.queryType() == MetaFileInformation)
-            return true; // Handled by CMetaInformationParser
-        else
+        EventType type = event.queryType();
+        switch (type)
         {
-            IndexHashKey key(event.queryNumericValue(EvAttrFileId), event.queryNumericValue(EvAttrFileOffset));
-            __uint64 nodeKind = queryIndexNodeKind(event);
-            NodeStats& nodeStats = stats[nodeKind][key];
-            __uint64 tmp;
-            switch (event.queryType())
-            {
-            case EventIndexCacheHit:
-                tmp = event.queryNumericValue(EvAttrInMemorySize);
-                if (tmp)
-                    nodeStats.inMemorySize = tmp;
-                nodeStats.events.hits++;
-                break;
-            case EventIndexCacheMiss:
-                nodeStats.events.misses++;
-                break;
-            case EventIndexLoad:
-                tmp = event.queryNumericValue(EvAttrInMemorySize);
-                if (tmp)
-                    nodeStats.inMemorySize = tmp;
-                tmp = event.queryNumericValue(EvAttrReadTime);
-                if (tmp)
-                {
-                    unsigned bucket = NumBuckets;
-                    while (bucket > 0 && tmp < readBucketBoundary[bucket - 1])
-                        bucket--;
-                    assertex(bucket < NumBuckets);
+        case EventIndexCacheHit:
+        case EventIndexCacheMiss:
+        case EventIndexLoad:
+        case EventIndexPayload:
+        case EventIndexEviction:
+            break;
+        default:
+            return true;
+        }
 
-                    nodeStats.readTime[bucket].count++;
-                    nodeStats.readTime[bucket].total += tmp;
-                    nodeStats.readTime[bucket].min = std::min(nodeStats.readTime[bucket].min, uint32_t(tmp));
-                    nodeStats.readTime[bucket].max = std::max(nodeStats.readTime[bucket].max, uint32_t(tmp));
-                    tmp = event.queryNumericValue(EvAttrExpandTime);
-                    if (tmp)
-                    {
-                        nodeStats.expandTime.count++;
-                        nodeStats.expandTime.total += tmp;
-                        nodeStats.expandTime.min = std::min(nodeStats.expandTime.min, uint32_t(tmp));
-                        nodeStats.expandTime.max = std::max(nodeStats.expandTime.max, uint32_t(tmp));
-                    }
-                }
-                nodeStats.events.loads++;
-                break;
-            case EventIndexEviction:
-                tmp = event.queryNumericValue(EvAttrInMemorySize);
-                if (tmp)
-                    nodeStats.inMemorySize = tmp;
-                nodeStats.events.evictions++;
-                break;
-            case EventIndexPayload:
+        __uint64 fileId = event.queryNumericValue(EvAttrFileId);
+        IndexHashKey key(event.queryNumericValue(EvAttrFileId), event.queryNumericValue(EvAttrFileOffset));
+        __uint64 nodeKind = queryIndexNodeKind(event);
+        NodeStats& nodeStats = stats[nodeKind][key];
+        __uint64 tmp;
+        switch (type)
+        {
+        case EventIndexCacheHit:
+            tmp = event.queryNumericValue(EvAttrInMemorySize);
+            if (tmp)
+                nodeStats.inMemorySize = tmp;
+            nodeStats.events.hits++;
+            break;
+        case EventIndexCacheMiss:
+            nodeStats.events.misses++;
+            break;
+        case EventIndexLoad:
+            tmp = event.queryNumericValue(EvAttrInMemorySize);
+            if (tmp)
+                nodeStats.inMemorySize = tmp;
+            tmp = event.queryNumericValue(EvAttrReadTime);
+            if (tmp)
+            {
+                accumulateValue(tmp, nodeStats.readTime[Total]);
+                accumulateValue(tmp, nodeStats.readTime[chooseBucketCategory(tmp)]);
+                nodeStats.elapsedTime += tmp;
                 tmp = event.queryNumericValue(EvAttrExpandTime);
-                if (tmp && event.queryBooleanValue(EvAttrFirstUse))
+                if (tmp)
                 {
-                    nodeStats.expandTime.count++;
-                    nodeStats.expandTime.total += tmp;
-                    nodeStats.expandTime.min = std::min(nodeStats.expandTime.min, uint32_t(tmp));
-                    nodeStats.expandTime.max = std::max(nodeStats.expandTime.max, uint32_t(tmp));
+                    accumulateValue(tmp, nodeStats.expandTime);
+                    nodeStats.elapsedTime += tmp;
                 }
-                nodeStats.events.payloads++;
-                break;
-            default:
-                break;
             }
+            nodeStats.events.loads++;
+            break;
+        case EventIndexEviction:
+            tmp = event.queryNumericValue(EvAttrInMemorySize);
+            if (tmp)
+                nodeStats.inMemorySize = tmp;
+            nodeStats.events.evictions++;
+            break;
+        case EventIndexPayload:
+            tmp = event.queryNumericValue(EvAttrExpandTime);
+            if (tmp && event.queryBooleanValue(EvAttrFirstUse))
+            {
+                accumulateValue(tmp, nodeStats.expandTime);
+                nodeStats.elapsedTime += tmp;
+            }
+            nodeStats.events.payloads++;
+            break;
+        default:
+            break;
         }
         return true;
     }
@@ -291,6 +337,7 @@ protected:
             Events events;
             Bucket readTime[NumBuckets];
             Bucket expandTime;
+            Bucket elapsedTime;
         };
         struct FileStats
         {
@@ -306,29 +353,16 @@ protected:
                 haveNodeKindEntries[nodeKind] = true;
                 NodeKindStats& nodeKindStats = summary[entry.first.fileId].kinds[nodeKind];
                 NodeStats& nodeStats = entry.second;
-                if (nodeStats.events.hits && !nodeStats.events.misses)
-                    nodeKindStats.inMemorySize.count++;
-                else
-                    nodeKindStats.inMemorySize.count += nodeStats.events.loads;
-                nodeKindStats.inMemorySize.total += nodeStats.inMemorySize;
-                nodeKindStats.inMemorySize.min = std::min(nodeKindStats.inMemorySize.min, __uint64(nodeStats.inMemorySize));
-                nodeKindStats.inMemorySize.max = std::max(nodeKindStats.inMemorySize.max, __uint64(nodeStats.inMemorySize));
+                accumulateValue(nodeStats.inMemorySize, nodeKindStats.inMemorySize);
                 nodeKindStats.events.hits += nodeStats.events.hits;
                 nodeKindStats.events.misses += nodeStats.events.misses;
                 nodeKindStats.events.loads += nodeStats.events.loads;
                 nodeKindStats.events.payloads += nodeStats.events.payloads;
                 nodeKindStats.events.evictions += nodeStats.events.evictions;
                 for (unsigned bucket = 0; bucket < NumBuckets; bucket++)
-                {
-                    nodeKindStats.readTime[bucket].count += nodeStats.readTime[bucket].count;
-                    nodeKindStats.readTime[bucket].total += nodeStats.readTime[bucket].total;
-                    nodeKindStats.readTime[bucket].min = std::min(nodeKindStats.readTime[bucket].min, __uint64(nodeStats.readTime[bucket].min));
-                    nodeKindStats.readTime[bucket].max = std::max(nodeKindStats.readTime[bucket].max, __uint64(nodeStats.readTime[bucket].max));
-                }
-                nodeKindStats.expandTime.count += nodeStats.expandTime.count;
-                nodeKindStats.expandTime.total += nodeStats.expandTime.total;
-                nodeKindStats.expandTime.min = std::min(nodeKindStats.expandTime.min, __uint64(nodeStats.expandTime.min));
-                nodeKindStats.expandTime.max = std::max(nodeKindStats.expandTime.max, __uint64(nodeStats.expandTime.max));
+                    accumulateBucket(nodeStats.readTime[bucket], nodeKindStats.readTime[bucket]);
+                accumulateBucket(nodeStats.expandTime, nodeKindStats.expandTime);
+                accumulateValue(nodeStats.elapsedTime, nodeKindStats.elapsedTime);
             }
         }
 
@@ -336,33 +370,39 @@ protected:
         appendCSVColumns(line, "File Id", "File Path");
         if (haveNodeKindEntries[BranchNode])
         {
-            appendCSVBucketHeaders(line, "Branch In Memory Size", false);
+            appendCSVBucketHeaders(line, "Branch In Memory", true);
             appendCSVEventsHeaders(line, "Branch");
+            appendCSVBucketHeaders(line, "Branch Read", true);
             appendCSVBucketHeaders(line, "Branch Page Cache Read", true);
             appendCSVBucketHeaders(line, "Branch Local Read", true);
             appendCSVBucketHeaders(line, "Branch Remote Read", true);
             appendCSVColumn(line, "Contentious Branch Reads");
             appendCSVBucketHeaders(line, "Branch Expansion", true);
+            appendCSVBucketHeaders(line, "Branch Elapsed Time", false);
         }
         if (haveNodeKindEntries[LeafNode])
         {
-            appendCSVBucketHeaders(line, "Leaf In Memory Size", false);
+            appendCSVBucketHeaders(line, "Leaf In Memory", true);
             appendCSVEventsHeaders(line, "Leaf");
+            appendCSVBucketHeaders(line, "Leaf Read", true);
             appendCSVBucketHeaders(line, "Leaf Page Cache Read", true);
             appendCSVBucketHeaders(line, "Leaf Local Read", true);
             appendCSVBucketHeaders(line, "Leaf Remote Read", true);
             appendCSVColumn(line, "Contentious Leaf Reads");
             appendCSVBucketHeaders(line, "Leaf Expansion", true);
+            appendCSVBucketHeaders(line, "Leaf Elapsed Time", false);
         }
         if (haveNodeKindEntries[BlobNode])
         {
-            appendCSVBucketHeaders(line, "Blob In Memory Size", false);
+            appendCSVBucketHeaders(line, "Blob In Memory", true);
             appendCSVEventsHeaders(line, "Blob");
+            appendCSVBucketHeaders(line, "Blob Read", true);
             appendCSVBucketHeaders(line, "Blob Page Cache Read", true);
             appendCSVBucketHeaders(line, "Blob Local Read", true);
             appendCSVBucketHeaders(line, "Blob Remote Read", true);
             appendCSVColumn(line, "Contentious Blob Reads");
             appendCSVBucketHeaders(line, "Blob Expansion", true);
+            appendCSVBucketHeaders(line, "Blob Elapsed Time", false);
         }
         outputLine(line);
 
@@ -375,16 +415,13 @@ protected:
                 if (!haveNodeKindEntries[nodeKind])
                     continue;
                 NodeKindStats& nodeStats = e.second.kinds[nodeKind];
-                appendCSVBucket(line, nodeStats.inMemorySize, false);
+                appendCSVBucket(line, nodeStats.inMemorySize, true);
                 appendCSVEvents(line, nodeStats.events);
-                __uint64 contentiousReads = nodeStats.events.loads;
                 for (unsigned bucket = 0; bucket < NumBuckets; bucket++)
-                {
                     appendCSVBucket(line, nodeStats.readTime[bucket], true);
-                    contentiousReads -= nodeStats.readTime[bucket].count;
-                }
-                appendCSVColumn(line, contentiousReads);
+                appendCSVColumn(line, nodeStats.events.loads - nodeStats.readTime[Total].count);
                 appendCSVBucket(line, nodeStats.expandTime, true);
+                appendCSVBucket(line, nodeStats.elapsedTime, false);
             }
             outputLine(line);
         }
@@ -410,13 +447,15 @@ protected:
 
         StringBuffer line;
         appendCSVColumn(line, "Node Kind");
-        appendCSVBucketHeaders(line, "In Memory Size", false);
+        appendCSVBucketHeaders(line, "In Memory", true);
         appendCSVEventsHeaders(line, nullptr);
+        appendCSVBucketHeaders(line, "Read Time", true);
         appendCSVBucketHeaders(line, "Page Cache Read Time", true);
         appendCSVBucketHeaders(line, "Local Read Time", true);
         appendCSVBucketHeaders(line, "Remote Read Time", true);
         appendCSVColumn(line, "Contentious Reads");
         appendCSVBucketHeaders(line, "Expand Time", true);
+        appendCSVBucketHeaders(line, "Elapsed Time", false);
         outputLine(line);
 
         for (unsigned nodeKind = 0; nodeKind < NumNodeKinds; nodeKind++)
@@ -428,46 +467,31 @@ protected:
             Events events;
             Bucket readTime[NumBuckets];
             Bucket expandTime;
+            Bucket elapsedTime;
 
             for (Cache::value_type& entry : stats[nodeKind])
             {
                 NodeStats& nodeStats = entry.second;
-                if (nodeStats.events.hits && !nodeStats.events.loads)
-                    inMemorySize.count++;
-                else
-                    inMemorySize.count += nodeStats.events.loads;
-                inMemorySize.total += nodeStats.inMemorySize;
-                inMemorySize.min = std::min(inMemorySize.min, nodeStats.inMemorySize);
-                inMemorySize.max = std::max(inMemorySize.max, nodeStats.inMemorySize);
+                accumulateValue(nodeStats.inMemorySize, inMemorySize);
                 events.hits += nodeStats.events.hits;
                 events.misses += nodeStats.events.misses;
                 events.loads += nodeStats.events.loads;
                 events.payloads += nodeStats.events.payloads;
                 events.evictions += nodeStats.events.evictions;
                 for (unsigned bucket = 0; bucket < NumBuckets; bucket++)
-                {
-                    readTime[bucket].count += nodeStats.readTime[bucket].count;
-                    readTime[bucket].total += nodeStats.readTime[bucket].total;
-                    readTime[bucket].min = std::min(readTime[bucket].min, uint32_t(nodeStats.readTime[bucket].min));
-                    readTime[bucket].max = std::max(readTime[bucket].max, uint32_t(nodeStats.readTime[bucket].max));
-                }
-                expandTime.count += nodeStats.expandTime.count;
-                expandTime.total += nodeStats.expandTime.total;
-                expandTime.min = std::min(expandTime.min, nodeStats.expandTime.min);
-                expandTime.max = std::max(expandTime.max, nodeStats.expandTime.max);
+                    accumulateBucket(nodeStats.readTime[bucket], readTime[bucket]);
+                accumulateBucket(nodeStats.expandTime, expandTime);
+                accumulateValue(nodeStats.elapsedTime, elapsedTime);
             }
 
             appendCSVColumn(line, mapNodeKind((NodeKind)nodeKind));
-            appendCSVBucket(line, inMemorySize, false);
+            appendCSVBucket(line, inMemorySize, true);
             appendCSVEvents(line, events);
-            __uint64 contentiousReads = events.loads;
             for (unsigned bucket = 0; bucket < NumBuckets; bucket++)
-            {
                 appendCSVBucket(line, readTime[bucket], true);
-                contentiousReads -= readTime[bucket].count;
-            }
-            appendCSVColumn(line, contentiousReads);
+            appendCSVColumn(line, events.loads - readTime[Total].count);
             appendCSVBucket(line, expandTime, true);
+            appendCSVBucket(line, elapsedTime, false);
             outputLine(line);
         }
     }
@@ -477,11 +501,13 @@ protected:
         StringBuffer line;
         appendCSVColumns(line, "File Id", "File Path", "File Offset", "Node Kind", "In Memory Size");
         appendCSVEventsHeaders(line, nullptr);
+        appendCSVBucketHeaders(line, "Read Time", true);
         appendCSVBucketHeaders(line, "Page Cache Read Time", true);
         appendCSVBucketHeaders(line, "Local Read Time", true);
         appendCSVBucketHeaders(line, "Remote Read Time", true);
         appendCSVColumn(line, "Contentious Reads");
         appendCSVBucketHeaders(line, "Expand Time", true);
+        appendCSVColumn(line, "Elapsed Time");
         outputLine(line);
 
         for (unsigned nodeKind = 0; nodeKind < NumNodeKinds; nodeKind++)
@@ -495,14 +521,11 @@ protected:
                 appendCSVColumn(line, mapNodeKind((NodeKind)nodeKind));
                 appendCSVColumn(line, nodeStats.inMemorySize);
                 appendCSVEvents(line, nodeStats.events);
-                __uint64 contentiousReads = nodeStats.events.loads;
                 for (unsigned bucket = 0; bucket < NumBuckets; bucket++)
-                {
                     appendCSVBucket(line, nodeStats.readTime[bucket], true);
-                    contentiousReads -= nodeStats.readTime[bucket].count;
-                }
-                appendCSVColumn(line, contentiousReads);
+                appendCSVColumn(line, nodeStats.events.loads - nodeStats.readTime[Total].count);
                 appendCSVBucket(line, nodeStats.expandTime, true);
+                appendCSVColumn(line, nodeStats.elapsedTime);
                 outputLine(line);
             }
         }
@@ -541,6 +564,8 @@ protected:
         Events events;
         Bucket readTime[NumBuckets];
         Bucket expandTime;
+        __uint64 elapsedTime{0}; // Elapsed time accumulated per trace
+        Bucket elapsedTimeBucket; // Accumulated across traces (for Service summarization)
         std::unordered_map<IndexHashKey, uint32_t, IndexHashKeyHash> nodeMemorySize; // Track memory size per unique node
     public:
         NodeKindStats() = default;
@@ -570,22 +595,14 @@ protected:
                 tmp = event.queryNumericValue(EvAttrReadTime);
                 if (tmp)
                 {
-                    unsigned bucket = NumBuckets;
-                    while (bucket > 0 && tmp < readBucketBoundary[bucket - 1])
-                        bucket--;
-                    assertex(bucket < NumBuckets);
-
-                    readTime[bucket].count++;
-                    readTime[bucket].total += tmp;
-                    readTime[bucket].min = std::min(readTime[bucket].min, uint32_t(tmp));
-                    readTime[bucket].max = std::max(readTime[bucket].max, uint32_t(tmp));
+                    accumulateValue(tmp, readTime[Total]);
+                    accumulateValue(tmp, readTime[chooseBucketCategory(tmp)]);
+                    elapsedTime += tmp;
                     tmp = event.queryNumericValue(EvAttrExpandTime);
                     if (tmp)
                     {
-                        expandTime.count++;
-                        expandTime.total += tmp;
-                        expandTime.min = std::min(expandTime.min, uint32_t(tmp));
-                        expandTime.max = std::max(expandTime.max, uint32_t(tmp));
+                        accumulateValue(tmp, expandTime);
+                        elapsedTime += tmp;
                     }
                 }
                 events.loads++;
@@ -600,10 +617,8 @@ protected:
                 tmp = event.queryNumericValue(EvAttrExpandTime);
                 if (tmp && event.queryBooleanValue(EvAttrFirstUse))
                 {
-                    expandTime.count++;
-                    expandTime.total += tmp;
-                    expandTime.min = std::min(expandTime.min, uint32_t(tmp));
-                    expandTime.max = std::max(expandTime.max, uint32_t(tmp));
+                    accumulateValue(tmp, expandTime);
+                    elapsedTime += tmp;
                 }
                 events.payloads++;
                 break;
@@ -622,18 +637,11 @@ protected:
             {
                 if (other.readTime[bucket].count == 0)
                     continue;
-                readTime[bucket].count += other.readTime[bucket].count;
-                readTime[bucket].total += other.readTime[bucket].total;
-                readTime[bucket].min = std::min(readTime[bucket].min, other.readTime[bucket].min);
-                readTime[bucket].max = std::max(readTime[bucket].max, other.readTime[bucket].max);
+                accumulateBucket(other.readTime[bucket], readTime[bucket]);
             }
             if (other.expandTime.count != 0)
-            {
-                expandTime.count += other.expandTime.count;
-                expandTime.total += other.expandTime.total;
-                expandTime.min = std::min(expandTime.min, other.expandTime.min);
-                expandTime.max = std::max(expandTime.max, other.expandTime.max);
-            }
+                accumulateBucket(other.expandTime, expandTime);
+            elapsedTime += other.elapsedTime;
             nodeMemorySize.insert(other.nodeMemorySize.begin(), other.nodeMemorySize.end());
         }
     };
@@ -781,12 +789,22 @@ protected:
             ServiceStats() = default;
             void addStats(const TraceStats& other)
             {
+                __uint64 traceElapsed = 0;
                 for (unsigned nodeKind = 0; nodeKind < NumNodeKinds; nodeKind++)
                 {
-                    const NodeKindStats& nodeKindStats = other.kinds[nodeKind];
-                    kinds[nodeKind].addStats(nodeKindStats);
-                    totals.addStats(nodeKindStats);
+                    NodeKindStats& thisNodeKindStats = kinds[nodeKind];
+                    const NodeKindStats& otherNodeKindStats = other.kinds[nodeKind];
+                    thisNodeKindStats.addStats(otherNodeKindStats);
+                    totals.addStats(otherNodeKindStats);
+
+                    // Track elapsed time per trace for this service
+                    if (otherNodeKindStats.elapsedTime)
+                        accumulateValue(otherNodeKindStats.elapsedTime, thisNodeKindStats.elapsedTimeBucket);
+
+                    traceElapsed += otherNodeKindStats.elapsedTime;
                 }
+
+                accumulateValue(traceElapsed, totals.elapsedTimeBucket);
             }
         };
 
@@ -881,6 +899,7 @@ protected:
     void appendNodeKindHeaders(StringBuffer& line, const char* prefix)
     {
         appendCSVEventsHeaders(line, prefix);
+        appendCSVBucketHeaders(line, VStringBuffer("%sRead Time", prefix), true);
         appendCSVBucketHeaders(line, VStringBuffer("%sPage Cache Read Time", prefix), true);
         appendCSVBucketHeaders(line, VStringBuffer("%sLocal Read Time", prefix), true);
         appendCSVBucketHeaders(line, VStringBuffer("%sRemote Read Time", prefix), true);
@@ -888,18 +907,18 @@ protected:
         appendCSVBucketHeaders(line, VStringBuffer("%sExpand Time", prefix), true);
         appendCSVColumn(line, VStringBuffer("%sUnique Nodes", prefix));
         appendCSVColumn(line, VStringBuffer("%sTotal Memory Size", prefix));
+        if (summarization == IndexSummarization::byService)
+            appendCSVBucketHeaders(line, VStringBuffer("%sElapsed Time", prefix), false);
+        else
+            appendCSVColumn(line, VStringBuffer("%sElapsed Time", prefix));
     }
 
     void appendNodeKindData(StringBuffer& line, const NodeKindStats& nodeKindStats)
     {
         appendCSVEvents(line, nodeKindStats.events);
-        __uint64 contentiousReads = nodeKindStats.events.loads;
         for (unsigned bucket = 0; bucket < NumBuckets; bucket++)
-        {
             appendCSVBucket(line, nodeKindStats.readTime[bucket], true);
-            contentiousReads -= nodeKindStats.readTime[bucket].count;
-        }
-        appendCSVColumn(line, contentiousReads);
+        appendCSVColumn(line, nodeKindStats.events.loads - nodeKindStats.readTime[Total].count);
         appendCSVBucket(line, nodeKindStats.expandTime, true);
 
         // Calculate unique nodes and total memory size
@@ -909,6 +928,10 @@ protected:
 
         appendCSVColumn(line, nodeKindStats.nodeMemorySize.size());
         appendCSVColumn(line, totalMemorySize);
+        if (summarization == IndexSummarization::byService)
+            appendCSVBucket(line, nodeKindStats.elapsedTimeBucket, false);
+        else
+            appendCSVColumn(line, nodeKindStats.elapsedTime);
     }
 
 protected:
