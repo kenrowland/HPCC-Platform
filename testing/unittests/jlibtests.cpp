@@ -3782,7 +3782,7 @@ CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(PTreeSerializationDeserializationTest, "PT
 #include "jutil.hpp"
 #include "jzstd.hpp"
 
-/* Test suite for PTree Binary timing tests
+/* Test suite for PTree Binary and XML timing tests
  *
  * Custom specific unittest parameters:
  * --PTreeBinaryTimingStressTest.path=/x/y/z/file.bin  Provide the Dali binary test data path. Can be .bin or .bin.zst (Zstd compressed)\n"
@@ -3792,6 +3792,7 @@ class PTreeBinaryTimingStressTest : public CppUnit::TestFixture
 {
     CPPUNIT_TEST_SUITE(PTreeBinaryTimingStressTest);
     CPPUNIT_TEST(testBinaryTimingWithNormalVsLowMem);
+    CPPUNIT_TEST(testXMLTimingWithNormalVsLowMem);
     CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -3837,8 +3838,8 @@ public:
 
         // Calculate differences
         double lowMemDeserializeDiff = 0.0;
-        if (binaryNormalResults.avgDeserializeCycles)
-            lowMemDeserializeDiff = ((double)binaryLowMemResults.avgDeserializeCycles - (double)binaryNormalResults.avgDeserializeCycles) / (double)binaryNormalResults.avgDeserializeCycles * 100.0;
+        if (binaryNormalResults.avgDeserializeNs)
+            lowMemDeserializeDiff = ((double)binaryLowMemResults.avgDeserializeNs - (double)binaryNormalResults.avgDeserializeNs) / (double)binaryNormalResults.avgDeserializeNs * 100.0;
 
         // Display results
         DBGLOG("=== BINARY TIMING COMPARISON TEST ===");
@@ -3846,13 +3847,66 @@ public:
         DBGLOG("Iterations: %u", iterations);
         DBGLOG("┌──────────────────────┬─────────────────┐");
         DBGLOG("│ Mode                 │ Avg Deserialize │");
-        DBGLOG("│                      │ (cycles)        │");
+        DBGLOG("│                      │ (nanoseconds)   │");
         DBGLOG("├──────────────────────┼─────────────────┤");
-        DBGLOG("│ Binary Normal        │ %15llu │",
-               (unsigned long long)binaryNormalResults.avgDeserializeCycles);
-        DBGLOG("│ Binary Low Memory    │ %15llu │",
-               (unsigned long long)binaryLowMemResults.avgDeserializeCycles);
+        DBGLOG("│ Binary Normal        │ %15lld │",
+               (long long)binaryNormalResults.avgDeserializeNs);
+        DBGLOG("│ Binary Low Memory    │ %15lld │",
+               (long long)binaryLowMemResults.avgDeserializeNs);
         DBGLOG("│ Binary LowMem Diff   │ %+14.2f%% │",
+               lowMemDeserializeDiff);
+        DBGLOG("└──────────────────────┴─────────────────┘");
+    }
+
+    void testXMLTimingWithNormalVsLowMem()
+    {
+        // Load Binary data
+        MemoryBuffer binaryData;
+        try
+        {
+            // Read raw file (with automatic decompression)
+            readBinaryFile(binaryPath.str(), binaryData);
+        }
+        catch (IException *e)
+        {
+            StringBuffer msg;
+            e->errorMessage(msg);
+            e->Release();
+            CPPUNIT_FAIL(msg.str());
+        }
+
+        unsigned binaryDataLen = (unsigned)binaryData.length();
+        CPPUNIT_ASSERT_MESSAGE("Binary timing test data is empty", binaryDataLen > 0);
+
+        // Convert binary to tree, then tree to XML
+        binaryData.reset();
+        Owned<IBufferedSerialInputStream> in = createBufferedSerialInputStream(binaryData);
+        Owned<IPropertyTree> tree = createPTreeFromBinary(*in, ipt_none);
+        StringBuffer xmlOutput;
+        toXML(tree, xmlOutput);
+
+        // Run XML timing tests
+        TimingResults xmlNormalResults = performXMLTimingTestWithResults("XML Normal", xmlOutput.str(), iterations, ipt_none);
+        TimingResults xmlLowMemResults = performXMLTimingTestWithResults("XML Low Memory", xmlOutput.str(), iterations, ipt_lowmem);
+
+        // Calculate differences
+        double lowMemDeserializeDiff = 0.0;
+        if (xmlNormalResults.avgDeserializeNs)
+            lowMemDeserializeDiff = ((double)xmlLowMemResults.avgDeserializeNs - (double)xmlNormalResults.avgDeserializeNs) / (double)xmlNormalResults.avgDeserializeNs * 100.0;
+
+        // Display results
+        DBGLOG("=== XML TIMING COMPARISON TEST ===");
+        DBGLOG("Binary data size: %u bytes", binaryDataLen);
+        DBGLOG("Iterations: %u", iterations);
+        DBGLOG("┌──────────────────────┬─────────────────┐");
+        DBGLOG("│ Mode                 │ Avg Deserialize │");
+        DBGLOG("│                      │ (nanoseconds)   │");
+        DBGLOG("├──────────────────────┼─────────────────┤");
+        DBGLOG("│ XML Normal           │ %15lld │",
+               (long long)xmlNormalResults.avgDeserializeNs);
+        DBGLOG("│ XML Low Memory       │ %15lld │",
+               (long long)xmlLowMemResults.avgDeserializeNs);
+        DBGLOG("│ XML LowMem Diff      │ %+14.2f%% │",
                lowMemDeserializeDiff);
         DBGLOG("└──────────────────────┴─────────────────┘");
     }
@@ -3860,8 +3914,8 @@ public:
 protected:
     struct TimingResults
     {
-        cycle_t avgDeserializeCycles{0};
-        cycle_t totalDeserializeCycles{0};
+        __int64 avgDeserializeNs{0};
+        __int64 totalDeserializeNs{0};
         const char *testName{nullptr};
         byte flags{ipt_none};
     };
@@ -3921,7 +3975,6 @@ protected:
         CCycleTimer timer;
         cycle_t totalDeserializeCycles = 0;
 
-        MemoryBuffer streamBufferIn;
         for (unsigned i = 0; i < iterations; i++)
         {
             binaryDataBuffer.reset();
@@ -3932,10 +3985,39 @@ protected:
         }
 
         TimingResults results;
-        results.totalDeserializeCycles = totalDeserializeCycles;
-        results.avgDeserializeCycles = totalDeserializeCycles / iterations;
+        results.totalDeserializeNs = cycle_to_nanosec(totalDeserializeCycles);
+        results.avgDeserializeNs = cycle_to_nanosec(totalDeserializeCycles / iterations);
         results.testName = testName;
         results.flags = flags;
+
+        return results;
+    }
+
+    TimingResults performXMLTimingTestWithResults(const char *testName, const char *xmlData, unsigned iterations, byte flags)
+    {
+        assertex(testName);
+        assertex(xmlData);
+        assertex(iterations > 0);
+
+        // Time the XML deserialization
+        CCycleTimer timer;
+        cycle_t totalDeserializeCycles = 0;
+
+        for (unsigned i = 0; i < iterations; i++)
+        {
+            timer.reset();
+            Owned<IPropertyTree> deserializedTree = createPTreeFromXMLString(xmlData, flags, ptr_ignoreWhiteSpace, nullptr);
+            totalDeserializeCycles += timer.elapsedCycles();
+        }
+
+        TimingResults results;
+        results.totalDeserializeNs = cycle_to_nanosec(totalDeserializeCycles);
+        results.avgDeserializeNs = cycle_to_nanosec(totalDeserializeCycles / iterations);
+        results.testName = testName;
+        results.flags = flags;
+
+        // Log XML data size for reference
+        DBGLOG("%s: XML data size: %zu bytes", testName, strlen(xmlData));
 
         return results;
     }
