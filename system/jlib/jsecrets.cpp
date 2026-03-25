@@ -1500,6 +1500,18 @@ private:
     }
 };
 
+static bool isValidVaultCombination(VaultType vaultType, CVaultKind vaultKind)
+{
+    switch (vaultType)
+    {
+        case VaultType::hashicorp:
+            return (vaultKind == CVaultKind::kv_v1 || vaultKind == CVaultKind::kv_v2);
+        case VaultType::akeyless:
+            return (vaultKind == CVaultKind::akeyless_v2);
+    }
+    return false;
+}
+
 static std::unique_ptr<CVault> createVault(const IPropertyTree *vault)
 {
     const char *typeProp = vault->queryProp("@type");
