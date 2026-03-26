@@ -83,9 +83,6 @@
       <vaults>
         <xsl:copy-of select="/Environment/Software/vaults/@*"/>
         <xsl:for-each select="/Environment/Software/vaults/*">
-          <xsl:variable name="vaultType" select="translate(normalize-space(@type), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz')"/>
-          <xsl:variable name="vaultKind" select="translate(normalize-space(@kind), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz')"/>
-
           <xsl:copy>
             <xsl:copy-of select="@*"/>
             <xsl:copy-of select="node()"/>
