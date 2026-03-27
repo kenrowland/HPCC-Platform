@@ -69,6 +69,9 @@ function formatQuery(_request: any): Partial<GetLogsExRequest> {
     if (_request.class) {
         request.class = _request.class.split(",");
     }
+    if (_request.components) {
+        request.components = _request.components.split(",");
+    }
     return request;
 }
 

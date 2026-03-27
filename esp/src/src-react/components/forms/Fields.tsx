@@ -997,7 +997,7 @@ export const CloudPodNameField: React.FunctionComponent<CloudPodNameFieldProps> 
 
     const [cloudPodNames] = usePodNames();
     const [options, setOptions] = React.useState<IComboBoxOption[]>();
-    const { label } = { ...props };
+    const { label, onChange, selectedKey, ...restProps } = { ...props };
 
     React.useEffect(() => {
         const options = cloudPodNames?.map(row => {
@@ -1009,8 +1009,19 @@ export const CloudPodNameField: React.FunctionComponent<CloudPodNameFieldProps> 
         setOptions(options);
     }, [cloudPodNames]);
 
+    const handleOptionSelect = React.useCallback((ev, data) => {
+        const newSelectedKeys = data.selectedOptions || [];
+        const newValue = newSelectedKeys.length ? newSelectedKeys[0] : "";
+        onChange?.(newValue);
+    }, [onChange]);
+
+    const handleInput = React.useCallback((ev) => {
+        const inputValue = ev.target.value;
+        onChange?.(inputValue);
+    }, [onChange]);
+
     return options === undefined ? <Skeleton><SkeletonItem /></Skeleton> : <Field label={label}>
-        <ComboBoxBase {...props as any} freeform autoComplete="on" value={options?.[0]?.text || ""}>
+        <ComboBoxBase {...restProps as any} freeform autoComplete="on" value={selectedKey ?? ""} selectedOptions={selectedKey ? [selectedKey] : []} onOptionSelect={handleOptionSelect} onInput={handleInput}>
             {options?.map(option => (
                 <Option key={String(option.key)} value={String(option.key)} text={option.text}>
                     {option.text}
@@ -1576,9 +1587,9 @@ export function createInputs(fields: Fields, onChange?: (id: string, newValue: a
                     field: <CloudContainerNameField
                         key={fieldID}
                         selectedKey={field.value}
-                        onChange={(ev, row) => {
-                            onChange(fieldID, row.key);
-                            setDropzone(row.key as string);
+                        onChange={value => {
+                            onChange(fieldID, value);
+                            setDropzone(value as string);
                         }}
                         placeholder={field.placeholder}
                     />
@@ -1591,9 +1602,10 @@ export function createInputs(fields: Fields, onChange?: (id: string, newValue: a
                     label: field.label,
                     field: <CloudPodNameField
                         key={fieldID}
-                        onChange={(ev, row) => {
-                            onChange(fieldID, row.key);
-                            setDropzone(row.key as string);
+                        selectedKey={field.value}
+                        onChange={value => {
+                            onChange(fieldID, value);
+                            setDropzone(value as string);
                         }}
                         placeholder={field.placeholder}
                     />
