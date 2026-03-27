@@ -3,14 +3,14 @@ import { useConst } from "@fluentui/react-hooks";
 import { tokens } from "@fluentui/react-components";
 import { d3Event, Palette } from "@hpcc-js/common";
 import { ColumnFormat, Table } from "@hpcc-js/dgrid";
-import { formatDecimal } from "src/Utility";
+import { encodeHTML, formatDecimal } from "src/Utility";
 import { formatTwoDigits } from "src/Session";
 import nlsHPCC from "src/nlsHPCC";
 import { IScopeEx } from "../hooks/metrics";
 import { useWorkunitArchive } from "../hooks/workunit";
 import { useUserTheme } from "../hooks/theme";
 import { AutosizeHpccJSComponent } from "../layouts/HpccJSAdapter";
-import { Attribute } from "../util/metricArchive";
+import { Attribute, UNNAMED_QUERY } from "../util/metricArchive";
 
 Palette.rainbow("StdDevs", ["#ffffff", "#ffffff", "#fff3cd", "#ffeaa7", "#fdcb6e", "#e17055", "#e17055"]);
 Palette.rainbow("StdDevsDark", ["#222222", "#222222", "#3d3520", "#4a3c1a", "#5a4a2e", "#6b2323", "#6b2323"]);
@@ -133,41 +133,46 @@ export const MetricsPropertiesTables: React.FunctionComponent<MetricsPropertiesT
                 switch (row.Key) {
                     case "Filename":
                     case "Indexname":
-                        rowValue = `<a href="#/files/${row.Value}" style="${linkStyle}">${row.Value}</a>`;
+                        rowValue = `<a href="#/files/${encodeURIComponent(row.Value)}" style="${linkStyle}">${encodeHTML(row.Value)}</a>`;
                         break;
                     case "DefinitionList":
-                        const matches = row.Value?.match(/[/\\]([^/\\]+)\((\d+),(\d+)\)/);
-                        if (matches && archive) {
-                            const fileName = matches[1];
-                            const lineNum = matches[2];
+                        const pathMatches = row.Value?.match(/[/\\]([^/\\]+)\((\d+),(\d+)\)/);
+                        const noPathMatches = !pathMatches && row.Value?.match(/\((\d+),(\d+)\)/);
+                        if (pathMatches && archive) {
+                            const fileName = pathMatches[1];
+                            const lineNum = pathMatches[2];
                             const archiveItem = findArchiveItemByPath(archive.attributes, row.Value);
                             const selectionId = archiveItem?.id || fileName.replace(/\.[^.]+$/, "");
-                            rowValue = `<a href="#/workunits/${wuid}/eclsummary/${selectionId}/${lineNum}" style="${linkStyle}">${row.Value}</a>`;
+                            rowValue = `<a href="#/workunits/${encodeURIComponent(wuid)}/eclsummary/${encodeURIComponent(selectionId)}/${lineNum}" style="${linkStyle}">${encodeHTML(row.Value)}</a>`;
+                        } else if (noPathMatches && archive) {
+                            const lineNum = noPathMatches[1];
+                            const selectionId = archive.queryId() || UNNAMED_QUERY;
+                            rowValue = `<a href="#/workunits/${encodeURIComponent(wuid)}/eclsummary/${encodeURIComponent(selectionId)}/${lineNum}" style="${linkStyle}">${encodeHTML(row.Value)}</a>`;
                         } else {
-                            rowValue = row.Value;
+                            rowValue = encodeHTML(row.Value);
                         } break;
                     case "id":
                         if (isDfuWu(row.Value)) {
-                            rowValue = `<a href="#/dfuworkunits/${row.Value}/summary" style="${linkStyle}">${row.Value}</a>`;
+                            rowValue = `<a href="#/dfuworkunits/${encodeURIComponent(row.Value)}/summary" style="${linkStyle}">${encodeHTML(row.Value)}</a>`;
                         } else if (isEclWu(row.Value)) {
-                            rowValue = `<a href="#/workunits/${row.Value}/summary" style="${linkStyle}">${row.Value}</a>`;
+                            rowValue = `<a href="#/workunits/${encodeURIComponent(row.Value)}/summary" style="${linkStyle}">${encodeHTML(row.Value)}</a>`;
                         } else {
-                            rowValue = row.Value;
+                            rowValue = encodeHTML(row.Value);
                         }
                         break;
                     case "name":
                         const splitMetricName = row.Value.split(":");
                         const lastMetricNode = splitMetricName.pop();
                         if (wuid) {
-                            rowValue = `<a href="#/workunits/${wuid}/metrics/${splitMetricName.join(":")}/${lastMetricNode}" style="${linkStyle}">${row.Value}</a>`;
+                            rowValue = `<a href="#/workunits/${encodeURIComponent(wuid)}/metrics/${splitMetricName.map(encodeURIComponent).join(":")}/${encodeURIComponent(lastMetricNode)}" style="${linkStyle}">${encodeHTML(row.Value)}</a>`;
                         } else if (querySet && queryId) {
-                            rowValue = `<a href="#/queries/${querySet}/${queryId}/metrics/statistics/${splitMetricName.join(":")}/${lastMetricNode}" style="${linkStyle}">${row.Value}</a>`;
+                            rowValue = `<a href="#/queries/${encodeURIComponent(querySet)}/${encodeURIComponent(queryId)}/metrics/statistics/${splitMetricName.map(encodeURIComponent).join(":")}/${encodeURIComponent(lastMetricNode)}" style="${linkStyle}">${encodeHTML(row.Value)}</a>`;
                         } else {
-                            rowValue = row.Value;
+                            rowValue = encodeHTML(row.Value);
                         }
                         break;
                     default:
-                        rowValue = row.Value;
+                        rowValue = encodeHTML(row.Value);
                 }
                 if ((rowValue === undefined || rowValue === null || rowValue === "") && (row.Min !== undefined || row.Avg !== undefined || row.Max !== undefined || row.StdDev !== undefined || row.SkewMin !== undefined || row.SkewMax !== undefined)) {
                     const parts = [];

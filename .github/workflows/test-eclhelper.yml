@@ -5,6 +5,8 @@ on:
     branches:
       - "master"
       - "candidate-*"
+    paths:
+      - "rtl/include/eclhelper.hpp"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -12,37 +14,15 @@ concurrency:
 
 permissions:
   contents: read
-  actions: read
 
 jobs:
-  precheck-branch-changes:
+  fail-on-eclhelper-change:
+    name: "eclhelper.hpp must not change"
     runs-on: ubuntu-latest
-    outputs:
-      branch_changed: ${{ steps.branch_changed.outputs.branch_changed }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - name: Check for code changes between commits
-        id: branch_changed
-        uses: ./.github/actions/branch-changes
-        with:
-          workflow_file: test-eclhelper.yml
-  
-  build:
-    name: "Check eclhelper interface"
-    runs-on: ubuntu-latest
-    needs: precheck-branch-changes
-    if: ${{ needs.precheck-branch-changes.outputs.branch_changed == 'true' }}
-    steps:
-      - name: Checkout pr
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 1
-      - name: Fetch base
+      - name: Fail workflow
         run: |
-          git -c protocol.version=2 fetch --no-tags --prune --progress --no-recurse-submodules --depth=1 origin ${{ github.base_ref }}
-      - name: Check eclhelper
-        run: |
-          git diff origin/${{ github.base_ref }} --exit-code -- rtl/include/eclhelper.hpp
+          echo "ERROR: Changes detected in rtl/include/eclhelper.hpp"
+          echo "This is a critical binary compatibility interface that must remain stable."
+          echo "If you need to modify this file, please coordinate with platform maintainers."
+          exit 1
