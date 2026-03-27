@@ -158,6 +158,7 @@ FILESERVICES_API void FILESERVICES_CALL fsSuperFileContents(ICodeContext *ctx,si
 FILESERVICES_API void FILESERVICES_CALL fsLogicalFileSuperOwners(ICodeContext *ctx,size32_t & __lenResult,void * & __result, const char *lfn);
 FILESERVICES_API char *  FILESERVICES_CALL fsExternalLogicalFileName(const char *location, const char *path,bool abspath);
 FILESERVICES_API int  FILESERVICES_CALL fsCompareFiles(ICodeContext *ctx,const char *lfn1, const char *lfn2,bool logicalonly, bool usecrcs);
+FILESERVICES_API int  FILESERVICES_CALL fsCompareFiles_v2(ICodeContext *ctx,const char *lfn1, const char *lfn2,bool logicalonly, bool usecrcs, int timeOut);
 FILESERVICES_API char *  FILESERVICES_CALL fsVerifyFile(ICodeContext *ctx,const char *lfn,bool usecrcs);
 FILESERVICES_API void FILESERVICES_CALL fsRemotePull(ICodeContext *ctx, const char * remoteEspFsURL, const char * sourceLogicalName, const char *destinationGroup, const char * destinationLogicalName, int timeOut, int maxConnections, bool overwrite, bool replicate, bool asSuperfile, bool forcePush, int transferBufferSize,bool wrap,bool compress);
 FILESERVICES_API void FILESERVICES_CALL fsRemotePull_v2(ICodeContext *ctx, const char * remoteEspFsURL, const char * sourceLogicalName, const char *destinationGroup, const char * destinationLogicalName, int timeOut, int maxConnections, bool overwrite, bool replicate, bool asSuperfile, bool forcePush, int transferBufferSize,bool wrap,bool compress, bool noSplit=false, int expireDays=-1);
