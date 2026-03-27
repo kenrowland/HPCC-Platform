@@ -176,6 +176,28 @@ const Query = declare([ESPUtil.Singleton], {  // jshint ignore:line
     }
 });
 
+function processQueryRow(qry: WsWorkunitsNS.QuerySetQuery) {
+    let errorCount = 0;
+    let statusMessage: string | undefined;
+    let mixedNodeStates: boolean | undefined;
+
+    qry.Clusters?.ClusterQueryState?.forEach(cqs => {
+        if (cqs.Errors || cqs.State !== "Available") {
+            errorCount++;
+            statusMessage = nlsHPCC.SuspendedByCluster;
+        } else if (cqs.MixedNodeStates === true) {
+            statusMessage = nlsHPCC.MixedNodeStates;
+            mixedNodeStates = true;
+        }
+    });
+
+    if (qry.Suspended === true) {
+        statusMessage = nlsHPCC.SuspendedByUser;
+    }
+
+    return { ...qry, ErrorCount: errorCount, Status: statusMessage, MixedNodeStates: mixedNodeStates };
+}
+
 export function Get(QuerySetId, Id, data?) {
     const store = new Store();
     const retVal = store.get(QuerySetId + ":" + Id);
@@ -215,7 +237,7 @@ export function CreateQueryStore(): BaseStore<WsWorkunitsNS.WUListQueries, WsWor
     }, "Id", (request) => {
         return service.WUListQueries(request).then(response => {
             return {
-                data: response?.QuerysetQueries?.QuerySetQuery?.map(qry => Get(qry.QuerySetId, qry.Id, qry)) ?? [],
+                data: response?.QuerysetQueries?.QuerySetQuery?.map(qry => Get(qry.QuerySetId, qry.Id, processQueryRow(qry))) ?? [],
                 total: response?.NumberOfQueries ?? 0
             };
         }).catch(err => {
