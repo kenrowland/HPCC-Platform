@@ -12967,155 +12967,166 @@ static void encodeCompareResult(DistributedFileCompareResult &ret,bool differs,C
     }
 }
 
-DistributedFileCompareResult CDistributedFileDirectory::fileCompare(const char *lfn1,const char *lfn2,DistributedFileCompareMode mode,StringBuffer &errstr,IUserDescriptor *user)
+DistributedFileCompareResult compareDistributedFiles(IDistributedFile *file1, IDistributedFile *file2, DistributedFileCompareMode mode, StringBuffer &errstr)
 {
+    if (!file1 || !file2)
+    {
+        errstr.append("Invalid [null] file(s) supplied for comparison");
+        return DFS_COMPARE_RESULT_FAILURE;
+    }
+
     DistributedFileCompareResult ret = DFS_COMPARE_RESULT_SAME;
-    StringBuffer msg;
     try
     {
-        Owned<IDistributedFile> file1 = lookup(lfn1, user, AccessMode::tbdRead, false, false, NULL, defaultPrivilegedUser, defaultTimeout);
-        Owned<IDistributedFile> file2 = lookup(lfn2, user, AccessMode::tbdRead, false, false, NULL, defaultPrivilegedUser, defaultTimeout);
-        if (!file1)
+        const char *lfn1 = file1->queryLogicalName();
+        const char *lfn2 = file2->queryLogicalName();
+        unsigned np = file1->numParts();
+        if (np!=file2->numParts())
         {
-            errstr.appendf("File %s not found",lfn1);
-            ret = DFS_COMPARE_RESULT_FAILURE;
+            errstr.appendf("Files %s and %s have differing number of parts",lfn1,lfn2);
+            return DFS_COMPARE_RESULT_FAILURE;
         }
-        else if (!file2)
+        CDateTime newestdt1;
+        CDateTime newestdt2;
+        bool differs = false;
+        class casyncfor: public CAsyncFor
         {
-            errstr.appendf("File %s not found",lfn2);
-            ret = DFS_COMPARE_RESULT_FAILURE;
-        }
-        else
-        {
-            unsigned np = file1->numParts();
-            if (np!=file2->numParts())
+            CriticalSection crit;
+            DistributedFileCompareResult &ret;
+            IDistributedFile *file1;
+            IDistributedFile *file2;
+            StringBuffer &errstr;
+            DistributedFileCompareMode mode;
+            bool physdatesize;
+            CDateTime &newestdt1;
+            CDateTime &newestdt2;
+            bool &differs;
+        public:
+            casyncfor(IDistributedFile *_file1,IDistributedFile *_file2,DistributedFileCompareMode _mode,DistributedFileCompareResult &_ret,StringBuffer &_errstr,
+                CDateTime &_newestdt1,CDateTime &_newestdt2,bool &_differs)
+                : ret(_ret), errstr(_errstr),newestdt1(_newestdt1),newestdt2(_newestdt2),differs(_differs)
             {
-                errstr.appendf("Files %s and %s have differing number of parts",lfn1,lfn2);
-                ret = DFS_COMPARE_RESULT_FAILURE;
+                file1 = _file1;
+                file2 = _file2;
+                mode = _mode;
+                physdatesize = (mode==DFS_COMPARE_FILES_PHYSICAL)||(mode==DFS_COMPARE_FILES_PHYSICAL_CRCS);
             }
-            else
+            void Do(unsigned p)
             {
-                CDateTime newestdt1;
-                CDateTime newestdt2;
-                bool differs = false;
-                class casyncfor: public CAsyncFor
+                CriticalBlock block (crit);
+                Owned<IDistributedFilePart> part1 = file1->getPart(p);
+                Owned<IDistributedFilePart> part2 = file2->getPart(p);
+                CDateTime dt1;
+                RemoteFilename rfn;
+                bool ok;
                 {
-                    CriticalSection crit;
-                    DistributedFileCompareResult &ret;
-                    IDistributedFile *file1;
-                    IDistributedFile *file2;
-                    const char *lfn1;
-                    const char *lfn2;
-                    StringBuffer &errstr;
-                    DistributedFileCompareMode mode;
-                    bool physdatesize;
-                    CDateTime &newestdt1;
-                    CDateTime &newestdt2;
-                    bool &differs;
-                public:
-                    casyncfor(const char *_lfn1,const char *_lfn2,IDistributedFile *_file1,IDistributedFile *_file2,DistributedFileCompareMode _mode,DistributedFileCompareResult &_ret,StringBuffer &_errstr,
-                        CDateTime &_newestdt1,CDateTime &_newestdt2,bool &_differs)
-                        : ret(_ret), errstr(_errstr),newestdt1(_newestdt1),newestdt2(_newestdt2),differs(_differs)
+                    CriticalUnblock unblock(crit);
+                    ok = part1->getModifiedTime(true,physdatesize,dt1);
+                }
+                if (!ok)
+                {
+                    if (errstr.length()==0)
                     {
-                        lfn1 = _lfn1;
-                        lfn2 = _lfn2;
-                        file1 = _file1;
-                        file2 = _file2;
-                        mode = _mode;
-                        physdatesize = (mode==DFS_COMPARE_FILES_PHYSICAL)||(mode==DFS_COMPARE_FILES_PHYSICAL_CRCS);
+                        errstr.append("Could not find ");
+                        part1->getFilename(rfn);
+                        rfn.getPath(errstr);
                     }
-                    void Do(unsigned p)
-                    {
-                        CriticalBlock block (crit);
-                        StringBuffer msg;
-                        Owned<IDistributedFilePart> part1 = file1->getPart(p);
-                        Owned<IDistributedFilePart> part2 = file2->getPart(p);
-                        CDateTime dt1;
-                        RemoteFilename rfn;
-                        bool ok;
-                        {
-                            CriticalUnblock unblock(crit);
-                            ok = part1->getModifiedTime(true,physdatesize,dt1);
-                        }
-                        if (!ok) {
-                            if (errstr.length()==0) {
-                                errstr.append("Could not find ");
-                                part1->getFilename(rfn);
-                                rfn.getPath(errstr);
-                            }
-                            ret = DFS_COMPARE_RESULT_FAILURE;
-                        }
+                    ret = DFS_COMPARE_RESULT_FAILURE;
+                }
 
-                        CDateTime dt2;
-                        {
-                            CriticalUnblock unblock(crit);
-                            ok = part2->getModifiedTime(true,physdatesize,dt2);
-                        }
-                        if (!ok) {
-                            if (errstr.length()==0) {
-                                errstr.append("Could not find ");
-                                part2->getFilename(rfn);
-                                rfn.getPath(errstr);
-                            }
-                            ret = DFS_COMPARE_RESULT_FAILURE;
-                        }
-                        if (ret!=DFS_COMPARE_RESULT_FAILURE) {
-                            int cmp = dt1.compare(dt2,false);
-                            if (cmp>0) {
-                                if (newestdt1.isNull()||(dt1.compare(newestdt1,false)>0))
-                                    newestdt1.set(dt1);
-                            }
-                            else if (cmp<0) {
-                                if (newestdt2.isNull()||(dt2.compare(newestdt2,false)>0))
-                                    newestdt2.set(dt2);
-                            }
-                        }
-                        if ((ret!=DFS_COMPARE_RESULT_FAILURE)&&!differs) {
-                            offset_t sz1;
-                            offset_t sz2;
-                            {
-                                CriticalUnblock unblock(crit);
-                                sz1 = part1->getFileSize(true,physdatesize);
-                                sz2 = part2->getFileSize(true,physdatesize);
-                            }
-                            if (sz1!=sz2)
-                                differs = true;
-                        }
-                        if ((ret!=DFS_COMPARE_RESULT_FAILURE)&&!differs) {
-                            unsigned crc1;
-                            unsigned crc2;
-                            if (mode==DFS_COMPARE_FILES_PHYSICAL_CRCS) {
-                                {
-                                    CriticalUnblock unblock(crit);
-                                    crc1 = part1->getPhysicalCrc();
-                                    crc2 = part2->getPhysicalCrc();
-                                }
-                            }
-                            else {
-                                if (!part1->getCrc(crc1))
-                                    return;
-                                if (!part2->getCrc(crc2))
-                                    return;
-                            }
-                            if (crc1!=crc2)
-                                differs = true;
-                        }
+                CDateTime dt2;
+                {
+                    CriticalUnblock unblock(crit);
+                    ok = part2->getModifiedTime(true,physdatesize,dt2);
+                }
+                if (!ok)
+                {
+                    if (errstr.length()==0)
+                    {
+                        errstr.append("Could not find ");
+                        part2->getFilename(rfn);
+                        rfn.getPath(errstr);
                     }
-                } afor(lfn1,lfn2,file1,file2,mode,ret,errstr,newestdt1,newestdt2,differs);
-                afor.For(np,20,false,false);
-                encodeCompareResult(ret,differs,newestdt1,newestdt2);
+                    ret = DFS_COMPARE_RESULT_FAILURE;
+                }
+                if (ret!=DFS_COMPARE_RESULT_FAILURE)
+                {
+                    int cmp = dt1.compare(dt2,false);
+                    if (cmp>0)
+                    {
+                        if (newestdt1.isNull()||(dt1.compare(newestdt1,false)>0))
+                            newestdt1.set(dt1);
+                    }
+                    else if (cmp<0)
+                    {
+                        if (newestdt2.isNull()||(dt2.compare(newestdt2,false)>0))
+                            newestdt2.set(dt2);
+                    }
+                }
+                if ((ret!=DFS_COMPARE_RESULT_FAILURE)&&!differs)
+                {
+                    offset_t sz1;
+                    offset_t sz2;
+                    {
+                        CriticalUnblock unblock(crit);
+                        sz1 = part1->getFileSize(true,physdatesize);
+                        sz2 = part2->getFileSize(true,physdatesize);
+                    }
+                    if (sz1!=sz2)
+                        differs = true;
+                }
+                if ((ret!=DFS_COMPARE_RESULT_FAILURE)&&!differs)
+                {
+                    unsigned crc1;
+                    unsigned crc2;
+                    if (mode==DFS_COMPARE_FILES_PHYSICAL_CRCS)
+                    {
+                        CriticalUnblock unblock(crit);
+                        crc1 = part1->getPhysicalCrc();
+                        crc2 = part2->getPhysicalCrc();
+                    }
+                    else
+                    {
+                        if (!part1->getCrc(crc1))
+                            return;
+                        if (!part2->getCrc(crc2))
+                            return;
+                    }
+                    if (crc1!=crc2)
+                        differs = true;
+                }
             }
-        }
+        } afor(file1,file2,mode,ret,errstr,newestdt1,newestdt2,differs);
+        afor.For(np,20,false,false);
+        encodeCompareResult(ret,differs,newestdt1,newestdt2);
     }
-    catch (IException *e) {
+    catch (IException *e)
+    {
         if (errstr.length()==0)
             e->errorMessage(errstr);
         else
-            EXCLOG(e,"CDistributedFileDirectory::fileCompare");
+            EXCLOG(e,"compareDistributedFiles");
         e->Release();
         ret = DFS_COMPARE_RESULT_FAILURE;
     }
     return ret;
+}
+
+DistributedFileCompareResult CDistributedFileDirectory::fileCompare(const char *lfn1,const char *lfn2,DistributedFileCompareMode mode,StringBuffer &errstr,IUserDescriptor *user)
+{
+    Owned<IDistributedFile> file1 = lookup(lfn1, user, AccessMode::tbdRead, false, false, NULL, defaultPrivilegedUser, defaultTimeout);
+    if (!file1)
+    {
+        errstr.appendf("File %s not found",lfn1);
+        return DFS_COMPARE_RESULT_FAILURE;
+    }
+    Owned<IDistributedFile> file2 = lookup(lfn2, user, AccessMode::tbdRead, false, false, NULL, defaultPrivilegedUser, defaultTimeout);
+    if (!file2)
+    {
+        errstr.appendf("File %s not found",lfn2);
+        return DFS_COMPARE_RESULT_FAILURE;
+    }
+    return compareDistributedFiles(file1, file2, mode, errstr);
 }
 
 bool CDistributedFileDirectory::filePhysicalVerify(const char *lfn, IUserDescriptor *user, bool includecrc, StringBuffer &errstr)
@@ -13153,7 +13164,6 @@ bool CDistributedFileDirectory::filePhysicalVerify(const char *lfn, IUserDescrip
             void Do(unsigned p)
             {
                 CriticalBlock block (crit);
-                StringBuffer msg;
                 Owned<IDistributedFilePart> part = file->getPart(p);
                 CDateTime dt1; // logical
                 CDateTime dt2; // physical

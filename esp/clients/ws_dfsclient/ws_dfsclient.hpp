@@ -56,6 +56,7 @@ WS_DFSCLIENT_API IDistributedFile *lookup(const char *logicalFilename, IUserDesc
 WS_DFSCLIENT_API bool exists(CDfsLogicalFileName &lfn, IUserDescriptor *user, bool notSuper, bool superonly, unsigned timeout);
 WS_DFSCLIENT_API bool exists(const char *logicalFilename, IUserDescriptor *user, bool notWuper, bool superOnly, unsigned timeout);
 
+WS_DFSCLIENT_API DistributedFileCompareResult fileCompare(const char *lfn1, const char *lfn2, DistributedFileCompareMode mode, StringBuffer &errstr, IUserDescriptor *user, unsigned timeout);
 
 } // end of namespace wsdfs
 

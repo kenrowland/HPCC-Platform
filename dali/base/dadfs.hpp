@@ -775,6 +775,9 @@ interface IDistributedFileDirectory: extends IInterface
     virtual void setFileAccessed(IUserDescriptor* udesc, const char *logicalName, const CDateTime &dt, const INode *foreigndali=nullptr, unsigned foreigndalitimeout=FOREIGN_DALI_TIMEOUT) = 0;
 };
 
+// Standalone comparison function that works on already-resolved IDistributedFile objects.
+// Can be used by both Dali-direct and wsdfs paths.
+extern da_decl DistributedFileCompareResult compareDistributedFiles(IDistributedFile *file1, IDistributedFile *file2, DistributedFileCompareMode mode, StringBuffer &errstr);
 
 
 extern da_decl IDistributedFileDirectory &queryDistributedFileDirectory();

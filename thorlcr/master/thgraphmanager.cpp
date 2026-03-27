@@ -1107,6 +1107,16 @@ bool CJobManager::executeGraph(IConstWorkUnit &workunit, const char *graphName, 
     bool allDone = false;
     Owned<IException> exception;
     Owned<IFatalHandler> fatalHdlr;
+    unsigned __int64 graphTimeNs = 0;
+    auto publishTimeElapsed = [&](IWorkUnit *wu)
+    {
+        graphTimeNs = cycle_to_nanosec(get_cycles_now() - startCycles);
+        StringBuffer graphTimeStr;
+        formatGraphTimerLabel(graphTimeStr, graphName);
+
+        updateWorkunitStat(wu, SSTgraph, graphName, StTimeElapsed, graphTimeStr, graphTimeNs, wfid);
+        addTimeStamp(wu, SSTgraph, graphName, StWhenFinished, wfid);
+    };
     try
     {
         struct CounterBlock
@@ -1142,12 +1152,7 @@ bool CJobManager::executeGraph(IConstWorkUnit &workunit, const char *graphName, 
         allDone = job->go();
 
         Owned<IWorkUnit> wu = &workunit.lock();
-        unsigned __int64 graphTimeNs = cycle_to_nanosec(get_cycles_now()-startCycles);
-        StringBuffer graphTimeStr;
-        formatGraphTimerLabel(graphTimeStr, graphName);
-
-        updateWorkunitStat(wu, SSTgraph, graphName, StTimeElapsed, graphTimeStr, graphTimeNs, wfid);
-        addTimeStamp(wu, SSTgraph, graphName, StWhenFinished, wfid);
+        publishTimeElapsed(wu);
 
         if (globals->getPropBool("@watchdogProgressEnabled"))
             queryDeMonServer()->updateAggregates(wu);
@@ -1172,6 +1177,11 @@ bool CJobManager::executeGraph(IConstWorkUnit &workunit, const char *graphName, 
         exception.setown(ThorWrapException(e, "CJobManager::executeGraph"));
         e->Release();
     }
+    if (0 == graphTimeNs) // implies threw exception before getting to publishTimeElapsed after job->go() above. Ensure TimeElapsed is published if failed.  
+    {
+        Owned<IWorkUnit> wu = &workunit.lock();
+        publishTimeElapsed(wu);
+    } 
     job->endJob();
     removeJob(*job);
     if (exception)

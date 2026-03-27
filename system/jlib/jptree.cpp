@@ -4398,7 +4398,7 @@ bool PTStackIterator::next()
                     current = element;
                     return true;
                 case '.':
-                    if (separator) throw MakeXPathException(xpath, PTreeExcpt_XPath_ParseError, 0, "Syntax error");
+                    if (!separator) throw MakeXPathException(xpath, PTreeExcpt_XPath_ParseError, 0, "Syntax error");
                     separator=false;
                     ++xxpath;
                     if (*xpath && '/' != *xpath)

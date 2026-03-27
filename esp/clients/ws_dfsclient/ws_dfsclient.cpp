@@ -933,6 +933,23 @@ bool exists(const char *logicalFilename, IUserDescriptor *user, bool notSuper, b
 }
 
 
+DistributedFileCompareResult fileCompare(const char *lfn1, const char *lfn2, DistributedFileCompareMode mode, StringBuffer &errstr, IUserDescriptor *user, unsigned timeout)
+{
+    Owned<IDistributedFile> file1 = lookup(lfn1, user, AccessMode::tbdRead, false, false, nullptr, defaultPrivilegedUser, timeout);
+    if (!file1)
+    {
+        errstr.appendf("File %s not found", lfn1);
+        return DFS_COMPARE_RESULT_FAILURE;
+    }
+    Owned<IDistributedFile> file2 = lookup(lfn2, user, AccessMode::tbdRead, false, false, nullptr, defaultPrivilegedUser, timeout);
+    if (!file2)
+    {
+        errstr.appendf("File %s not found", lfn2);
+        return DFS_COMPARE_RESULT_FAILURE;
+    }
+    return compareDistributedFiles(file1, file2, mode, errstr);
+}
+
 } // namespace wsdfs
 
 
