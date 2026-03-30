@@ -56,6 +56,7 @@
 
 //#define TRACE_SECRETS
 #include <vector>
+#include <limits>
 
 // Vault specific support
 enum class CVaultKind { 
@@ -1148,6 +1149,8 @@ private:
     StringBuffer accessKey;
     StringBuffer accessType;
     StringBuffer clientToken;
+    unsigned clientTokenIssuedTick = 0;
+    unsigned clientTokenTtlMs = 0; // 0 = no expiry known or indefinite TTL
     StringAttr accessKeySecretName;  // Name of K8s secret containing access-key (for rotation support)
 
     // Build the full secret name by prefixing with namespace if present
@@ -1373,6 +1376,20 @@ private:
             throwAuthError("akeyless", "response missing token");
 
         clientToken.set(token);  // Already in critical section, so no need for additional locking
+        unsigned ttl = respTree->getPropInt("ttl");
+        if (ttl == 0)
+        {
+            clientTokenIssuedTick = 0;
+            clientTokenTtlMs = 0; // no expiry info; keep indefinitely
+        }
+        else
+        {
+            clientTokenIssuedTick = msTick();
+            if (ttl >= (std::numeric_limits<unsigned>::max() / 1000U))
+                clientTokenTtlMs = std::numeric_limits<unsigned>::max();
+            else
+                clientTokenTtlMs = ttl * 1000U;
+        }
     }
 
     void getAccessToken(StringBuffer &token)
@@ -1380,8 +1397,15 @@ private:
         CriticalBlock block(vaultCS);
         if (clientToken.length())
         {
-            token.set(clientToken);
-            return;
+            // Use unsigned tick subtraction so timeout checks remain valid across tick wrap.
+            if ((clientTokenTtlMs == 0) || ((msTick() - clientTokenIssuedTick) < clientTokenTtlMs))
+            {
+                token.set(clientToken);
+                return;
+            }
+            clientToken.clear();
+            clientTokenIssuedTick = 0;
+            clientTokenTtlMs = 0;
         }
 
         // Re-read access key from client-secret to pick up rotated credentials
