@@ -6,7 +6,7 @@ import { useCounter } from "./util";
 export function useActivity() {
 
     const [activity, setActivity] = React.useState<Activity>();
-    const [lastUpdate, setLastUpdate] = React.useState(Date.now());
+    const [lastUpdate, setLastUpdate] = React.useState(0);
     const [count, increment] = useCounter();
 
     React.useEffect(() => {
