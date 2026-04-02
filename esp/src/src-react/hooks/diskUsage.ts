@@ -32,31 +32,43 @@ export interface useTargetClusterUsageExOptions {
 export function useTargetClusterUsageEx(targetCluster?: string, options?: useTargetClusterUsageExOptions): UseAsyncResult<WsMachineEx.TargetClusterUsage[]> {
     const machineService = useMachineService();
     const [data, setData] = useState<WsMachineEx.TargetClusterUsage[] | undefined>();
-    const [loading, setLoading] = useState<boolean>(false);
+    const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<unknown>();
 
     const fetchData = useCallback(() => {
         let cancelled = false;
-        setLoading(true);
-        setError(undefined);
         machineService
             .GetTargetClusterUsageEx(
                 targetCluster !== undefined ? [targetCluster] : undefined,
                 options?.bypassCachedResult
             )
             .then((resp) => {
-                if (!cancelled) setData(resp);
+                if (!cancelled) {
+                    setData(resp);
+                    setError(undefined);
+                }
             })
             .catch((e) => {
-                if (!cancelled) setError(e);
+                if (!cancelled) {
+                    setData(undefined);
+                    setError(e);
+                }
             })
             .finally(() => {
-                if (!cancelled) setLoading(false);
+                if (!cancelled) {
+                    setLoading(false);
+                }
             });
         return () => {
             cancelled = true;
         };
     }, [machineService, targetCluster, options?.bypassCachedResult]);
+
+    const refresh = useCallback(() => {
+        setLoading(true);
+        setError(undefined);
+        fetchData();
+    }, [fetchData]);
 
     useEffect(() => {
         const cancel = fetchData();
@@ -75,7 +87,7 @@ export function useTargetClusterUsageEx(targetCluster?: string, options?: useTar
         data,
         loading,
         error,
-        refresh: fetchData,
+        refresh,
     };
 }
 
