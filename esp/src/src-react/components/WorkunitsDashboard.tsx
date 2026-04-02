@@ -1,36 +1,38 @@
 import * as React from "react";
-import { Dropdown, IStackItemStyles, IStackStyles, IStackTokens, Overlay, Spinner, SpinnerSize, Text } from "@fluentui/react";
-import { StackShim, StackItemShim } from "@fluentui/react-migration-v8-v9";
+import { Select, Spinner, Tag, TagDismissData, TagDismissEvent, TagGroup, Toolbar, ToolbarButton, ToolbarDivider, makeStyles, tokens } from "@fluentui/react-components";
+import { ArrowClockwise20Regular } from "@fluentui/react-icons";
 import { useConst } from "@fluentui/react-hooks";
-import { Card, CardHeader, CardPreview } from "@fluentui/react-components";
 import { WorkunitsService, WsWorkunits } from "@hpcc-js/comms";
 import { Area, Column, Pie, Bar } from "@hpcc-js/chart";
-import { chain, filter, group, map, sort } from "@hpcc-js/dataflow";
+import { GroupRow, filter, group, map, pipe, sort } from "@hpcc-js/dataflow";
 import nlsHPCC from "src/nlsHPCC";
 import { wuidToDate } from "src/Utility";
-import { Chip } from "./controls/Chip";
 import { CreateWUQueryStore } from "../comms/workunit";
 import { AutosizeHpccJSComponent } from "../layouts/HpccJSAdapter";
+import { DockPanel, DockPanelItem } from "../layouts/DockPanel";
+import { HolyGrail } from "../layouts/HolyGrail";
 import { pushParamExact } from "../util/history";
 import { Workunits } from "./Workunits";
 
-const stackStyles: IStackStyles = {
-    root: {
-        height: "100%",
-    },
-};
-const stackItemStyles: IStackItemStyles = {
-    root: {
-        minHeight: 240
-    },
-};
-const outerStackTokens: IStackTokens = { childrenGap: 5 };
-const innerStackTokens: IStackTokens = {
-    childrenGap: 5,
-    padding: 10,
-};
-
 const DEFAULT_LASTNDAYS = 7;
+
+const useStyles = makeStyles({
+    loadingOverlay: {
+        position: "absolute",
+        inset: 0,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: tokens.colorNeutralBackgroundAlpha,
+        zIndex: 1,
+    },
+    lastNDaysSelect: {
+        minWidth: "120px",
+        "> select": {
+            paddingLeft: tokens.spacingHorizontalXS,
+        },
+    },
+});
 
 const service = new WorkunitsService({ baseUrl: "" });
 
@@ -59,8 +61,11 @@ export const WorkunitsDashboard: React.FunctionComponent<WorkunitsDashboardProps
         ...filterProps
     };
 
+    const styles = useStyles();
+
     const [loading, setLoading] = React.useState(false);
     const [workunits, setWorkunits] = React.useState<WorkunitEx[]>([]);
+    const [refreshToken, setRefreshToken] = React.useState(0);
 
     React.useEffect(() => {
         setLoading(true);
@@ -76,7 +81,7 @@ export const WorkunitsDashboard: React.FunctionComponent<WorkunitsDashboardProps
             setWorkunits([...map(response.Workunits.ECLWorkunit, (row: WsWorkunits.ECLWorkunit) => ({ ...row, Day: wuidToDate(row.Wuid) }))]);
             setLoading(false);
         });
-    }, [filterProps.lastNDays]);
+    }, [filterProps.lastNDays, refreshToken]);
 
     //  Cluster Chart ---
     const clusterChart = useConst(() =>
@@ -85,19 +90,18 @@ export const WorkunitsDashboard: React.FunctionComponent<WorkunitsDashboardProps
             .on("click", (row, col, sel) => pushParamExact("cluster", sel ? row.Cluster : undefined))
     );
 
-    const clusterPipeline = chain(
-        filter<WorkunitEx>(row => filterProps.state === undefined || row.State === filterProps.state),
-        filter(row => filterProps.owner === undefined || row.Owner === filterProps.owner),
-        filter(row => filterProps.day === undefined || row.Day === filterProps.day),
-        filter(row => filterProps.protected === undefined || row.Protected === filterProps.protected),
-        group(row => row.Cluster),
-        map(row => [row.key, row.value.length] as [string, number]),
-        sort((l, r) => l[0].localeCompare(r[0])),
-    );
-
-    clusterChart
-        .data([...clusterPipeline(workunits)])
-        ;
+    React.useEffect(() => {
+        const pipeline = pipe(
+            filter<WorkunitEx>(row => filterProps.state === undefined || row.State === filterProps.state),
+            filter(row => filterProps.owner === undefined || row.Owner === filterProps.owner),
+            filter(row => filterProps.day === undefined || row.Day === filterProps.day),
+            filter(row => filterProps.protected === undefined || row.Protected === filterProps.protected),
+            group<WorkunitEx>(row => row.Cluster),
+            map<GroupRow<WorkunitEx>, [string, number]>(row => [row.key, row.value.length]),
+            sort((l, r) => l[0].localeCompare(r[0])),
+        );
+        clusterChart.data([...pipeline(workunits)]).lazyRender();
+    }, [clusterChart, workunits, filterProps.state, filterProps.owner, filterProps.day, filterProps.protected]);
 
     //  Owner Chart ---
     const ownerChart = useConst(() =>
@@ -106,19 +110,18 @@ export const WorkunitsDashboard: React.FunctionComponent<WorkunitsDashboardProps
             .on("click", (row, col, sel) => pushParamExact("owner", sel ? row.Owner : undefined))
     );
 
-    const ownerPipeline = chain(
-        filter<WorkunitEx>(row => filterProps.cluster === undefined || row.Cluster === filterProps.cluster),
-        filter(row => filterProps.state === undefined || row.State === filterProps.state),
-        filter(row => filterProps.day === undefined || row.Day === filterProps.day),
-        filter(row => filterProps.protected === undefined || row.Protected === filterProps.protected),
-        group(row => row.Owner),
-        map(row => [row.key, row.value.length] as [string, number]),
-        sort((l, r) => l[0].localeCompare(r[0])),
-    );
-
-    ownerChart
-        .data([...ownerPipeline(workunits)])
-        ;
+    React.useEffect(() => {
+        const pipeline = pipe(
+            filter<WorkunitEx>(row => filterProps.cluster === undefined || row.Cluster === filterProps.cluster),
+            filter(row => filterProps.state === undefined || row.State === filterProps.state),
+            filter(row => filterProps.day === undefined || row.Day === filterProps.day),
+            filter(row => filterProps.protected === undefined || row.Protected === filterProps.protected),
+            group<WorkunitEx>(row => row.Owner),
+            map<GroupRow<WorkunitEx>, [string, number]>(row => [row.key, row.value.length]),
+            sort((l, r) => l[0].localeCompare(r[0])),
+        );
+        ownerChart.data([...pipeline(workunits)]).lazyRender();
+    }, [ownerChart, workunits, filterProps.cluster, filterProps.state, filterProps.day, filterProps.protected]);
 
     //  State Chart ---
     const stateChart = useConst(() =>
@@ -127,18 +130,17 @@ export const WorkunitsDashboard: React.FunctionComponent<WorkunitsDashboardProps
             .on("click", (row, col, sel) => pushParamExact("state", sel ? row.State : undefined))
     );
 
-    const statePipeline = chain(
-        filter<WorkunitEx>(row => filterProps.cluster === undefined || row.Cluster === filterProps.cluster),
-        filter(row => filterProps.owner === undefined || row.Owner === filterProps.owner),
-        filter(row => filterProps.day === undefined || row.Day === filterProps.day),
-        filter(row => filterProps.protected === undefined || row.Protected === filterProps.protected),
-        group(row => row.State),
-        map(row => [row.key, row.value.length])
-    );
-
-    stateChart
-        .data([...statePipeline(workunits)])
-        ;
+    React.useEffect(() => {
+        const pipeline = pipe(
+            filter<WorkunitEx>(row => filterProps.cluster === undefined || row.Cluster === filterProps.cluster),
+            filter(row => filterProps.owner === undefined || row.Owner === filterProps.owner),
+            filter(row => filterProps.day === undefined || row.Day === filterProps.day),
+            filter(row => filterProps.protected === undefined || row.Protected === filterProps.protected),
+            group<WorkunitEx>(row => row.State),
+            map<GroupRow<WorkunitEx>, [string, number]>(row => [row.key, row.value.length]),
+        );
+        stateChart.data([...pipeline(workunits)]).lazyRender();
+    }, [stateChart, workunits, filterProps.cluster, filterProps.owner, filterProps.day, filterProps.protected]);
 
     //  Protected Chart ---
     const protectedChart = useConst(() =>
@@ -147,17 +149,16 @@ export const WorkunitsDashboard: React.FunctionComponent<WorkunitsDashboardProps
             .on("click", (row, col, sel) => pushParamExact("protected", sel ? row.Protected === "true" : undefined))
     );
 
-    const protectedPipeline = chain(
-        filter<WorkunitEx>(row => filterProps.cluster === undefined || row.Cluster === filterProps.cluster),
-        filter(row => filterProps.owner === undefined || row.Owner === filterProps.owner),
-        filter(row => filterProps.day === undefined || row.Day === filterProps.day),
-        group(row => "" + row.Protected),
-        map(row => [row.key, row.value.length])
-    );
-
-    protectedChart
-        .data([...protectedPipeline(workunits)])
-        ;
+    React.useEffect(() => {
+        const pipeline = pipe(
+            filter<WorkunitEx>(row => filterProps.cluster === undefined || row.Cluster === filterProps.cluster),
+            filter(row => filterProps.owner === undefined || row.Owner === filterProps.owner),
+            filter(row => filterProps.day === undefined || row.Day === filterProps.day),
+            group<WorkunitEx>(row => "" + row.Protected),
+            map<GroupRow<WorkunitEx>, [string, number]>(row => [row.key, row.value.length]),
+        );
+        protectedChart.data([...pipeline(workunits)]).lazyRender();
+    }, [protectedChart, workunits, filterProps.cluster, filterProps.owner, filterProps.day]);
 
     //  Day Chart ---
     const dayChart = useConst(() =>
@@ -169,19 +170,18 @@ export const WorkunitsDashboard: React.FunctionComponent<WorkunitsDashboardProps
             .on("click", (row, col, sel) => pushParamExact("day", sel ? row.Day : undefined))
     );
 
-    const dayPipeline = chain(
-        filter<WorkunitEx>(row => filterProps.cluster === undefined || row.Cluster === filterProps.cluster),
-        filter(row => filterProps.owner === undefined || row.Owner === filterProps.owner),
-        filter(row => filterProps.state === undefined || row.State === filterProps.state),
-        filter(row => filterProps.protected === undefined || row.Protected === filterProps.protected),
-        group(row => row.Day),
-        map(row => [row.key, row.value.length] as [string, number]),
-        sort((l, r) => l[0].localeCompare(r[0])),
-    );
-
-    dayChart
-        .data([...dayPipeline(workunits)])
-        ;
+    React.useEffect(() => {
+        const pipeline = pipe(
+            filter<WorkunitEx>(row => filterProps.cluster === undefined || row.Cluster === filterProps.cluster),
+            filter(row => filterProps.owner === undefined || row.Owner === filterProps.owner),
+            filter(row => filterProps.state === undefined || row.State === filterProps.state),
+            filter(row => filterProps.protected === undefined || row.Protected === filterProps.protected),
+            group<WorkunitEx>(row => row.Day),
+            map<GroupRow<WorkunitEx>, [string, number]>(row => [row.key, row.value.length]),
+            sort((l, r) => l[0].localeCompare(r[0])),
+        );
+        dayChart.data([...pipeline(workunits)]).lazyRender();
+    }, [dayChart, workunits, filterProps.cluster, filterProps.owner, filterProps.state, filterProps.protected]);
 
     //  Table ---
     const workunitsStore = useConst(() => CreateWUQueryStore());
@@ -209,104 +209,78 @@ export const WorkunitsDashboard: React.FunctionComponent<WorkunitsDashboardProps
         };
     }, [filterProps.cluster, filterProps.day, filterProps.lastNDays, filterProps.owner, filterProps.protected, filterProps.state]);
 
-    return <>
-        <StackShim tokens={outerStackTokens} styles={{ root: { height: "100%" } }}>
-            <StackShim styles={stackStyles} tokens={innerStackTokens}>
-                <StackItemShim styles={stackItemStyles}>
-                    <StackShim horizontal tokens={{ childrenGap: 16 }}  >
-                        <StackItemShim align="start" styles={{ root: { width: "25%", height: "100%" } }}>
-                            <Card>
-                                <CardHeader header={
-                                    <StackShim horizontal horizontalAlign="space-between">
-                                        <Text variant="large" nowrap block styles={{ root: { fontWeight: "bold" } }}>{nlsHPCC.State}</Text>
-                                        {filterProps.state !== undefined && <Chip label={filterProps.state} onDelete={() => pushParamExact("state", undefined)} />}
-                                    </StackShim>
-                                } />
-                                <CardPreview>
-                                    <AutosizeHpccJSComponent widget={stateChart} fixedHeight="240px" />
-                                </CardPreview>
-                            </Card>
-                        </StackItemShim>
-                        <StackItemShim align="center" styles={{ root: { width: "50%" } }}>
-                            <Card  >
-                                <CardHeader header={
-                                    <StackShim horizontal horizontalAlign="space-between">
-                                        <Text variant="large" nowrap block styles={{ root: { fontWeight: "bold" } }}>{nlsHPCC.Day}</Text>
-                                        {filterProps.day !== undefined && <Chip label={filterProps.day} color="primary" onDelete={() => pushParamExact("day", undefined)} />}
-                                        <Dropdown onChange={(evt, opt, idx) => { pushParamExact("lastNDays", opt.key); }}
-                                            options={[
-                                                { key: 1, text: "1 Day", selected: filterProps.lastNDays === 1 },
-                                                { key: 2, text: "2 Days", selected: filterProps.lastNDays === 2 },
-                                                { key: 3, text: "3 Days", selected: filterProps.lastNDays === 3 },
-                                                { key: 7, text: "1 Week", selected: filterProps.lastNDays === 7 },
-                                                { key: 14, text: "2 Weeks", selected: filterProps.lastNDays === 14 },
-                                                { key: 21, text: "3 Weeks", selected: filterProps.lastNDays === 21 },
-                                                { key: 31, text: "1 Month", selected: filterProps.lastNDays === 31 }
-                                            ]}
-                                        />
-                                    </StackShim>
-                                } />
-                                <CardPreview>
-                                    <AutosizeHpccJSComponent widget={dayChart} fixedHeight="240px" />
-                                </CardPreview>
-                            </Card>
-                        </StackItemShim>
-                        <StackItemShim align="end" styles={{ root: { width: "25%" } }}>
-                            <Card >
-                                <CardHeader header={
-                                    <StackShim horizontal horizontalAlign="space-between">
-                                        <Text variant="large" nowrap block styles={{ root: { fontWeight: "bold" } }}>{nlsHPCC.Protected}</Text>
-                                        {filterProps.protected !== undefined && <Chip label={"" + filterProps.protected} color="primary" onDelete={() => pushParamExact("protected", undefined)} />}
-                                    </StackShim>
-                                } />
-                                <CardPreview>
-                                    <AutosizeHpccJSComponent widget={protectedChart} fixedHeight="240px" />
-                                </CardPreview>
-                            </Card>
-                        </StackItemShim>
-                    </StackShim>
-                </StackItemShim>
-                <StackItemShim styles={stackItemStyles}>
-                    <StackShim horizontal tokens={{ childrenGap: 16 }} >
-                        <StackItemShim align="start" styles={{ root: { width: "66%" } }}>
-                            <Card >
-                                <CardHeader header={
-                                    <StackShim horizontal horizontalAlign="space-between">
-                                        <Text variant="large" nowrap block styles={{ root: { fontWeight: "bold" } }}>{nlsHPCC.Owner}</Text>
-                                        {filterProps.owner !== undefined && <Chip label={filterProps.owner} color="primary" onDelete={() => pushParamExact("owner", undefined)} />}
-                                    </StackShim>
-                                } />
-                                <CardPreview>
-                                    <AutosizeHpccJSComponent widget={ownerChart} fixedHeight="240px" />
-                                </CardPreview>
-                            </Card>
-                        </StackItemShim>
-                        <StackItemShim align="center" styles={{ root: { width: "34%" } }}>
-                            <Card>
-                                <CardHeader header={
-                                    <StackShim horizontal horizontalAlign="space-between">
-                                        <Text variant="large" nowrap block styles={{ root: { fontWeight: "bold" } }}>{nlsHPCC.Cluster}</Text>
-                                        {filterProps.cluster !== undefined && <Chip label={filterProps.cluster} color="primary" onDelete={() => pushParamExact("cluster", undefined)} />}
-                                    </StackShim>
-                                } />
-                                <CardPreview>
-                                    <AutosizeHpccJSComponent widget={clusterChart} fixedHeight="240px" />
-                                </CardPreview>
-                            </Card>
-                        </StackItemShim>
-                    </StackShim>
-                </StackItemShim>
-                <StackItemShim grow={5} styles={stackItemStyles}>
-                    <Card style={{ height: "100%" }}>
-                        <CardPreview style={{ height: "100%" }}>
-                            <Workunits filter={workunitsFilter} store={workunitsStore} />
-                        </CardPreview>
-                    </Card>
-                </StackItemShim>
-            </StackShim>
-        </StackShim>
-        {loading && <Overlay styles={{ root: { display: "flex", justifyContent: "center" } }}>
-            <Spinner label={nlsHPCC.Loading} size={SpinnerSize.large} />
-        </Overlay>}
-    </>;
+    function removeItem(e: TagDismissEvent, data: TagDismissData<string>): void {
+        switch (data.value) {
+            case "state":
+                pushParamExact("state", undefined);
+                break;
+            case "day":
+                pushParamExact("day", undefined);
+                break;
+            case "protected":
+                pushParamExact("protected", undefined);
+                break;
+            case "owner":
+                pushParamExact("owner", undefined);
+                break;
+            case "cluster":
+                pushParamExact("cluster", undefined);
+                break;
+        }
+    }
+
+    return <HolyGrail
+        header={
+            <Toolbar>
+                <ToolbarButton appearance="subtle" icon={<ArrowClockwise20Regular />} aria-label={nlsHPCC.Refresh} onClick={() => setRefreshToken(t => t + 1)}>
+                    {nlsHPCC.Refresh}
+                </ToolbarButton>
+                <ToolbarDivider />
+                <Select className={styles.lastNDaysSelect} appearance="underline" value={filterProps.lastNDays} onChange={(evt, data) => { pushParamExact("lastNDays", Number(data.value)); }}>
+                    <option value={1}>1 Day</option>
+                    <option value={2}>2 Days</option>
+                    <option value={3}>3 Days</option>
+                    <option value={7}>1 Week</option>
+                    <option value={14}>2 Weeks</option>
+                    <option value={21}>3 Weeks</option>
+                    <option value={31}>1 Month</option>
+                </Select>
+                <ToolbarDivider />
+                <TagGroup onDismiss={removeItem}>
+                    {filterProps.state !== undefined && <Tag key="state" dismissible value="state" size="small">{filterProps.state}</Tag>}
+                    {filterProps.day !== undefined && <Tag key="day" dismissible value="day" size="small">{filterProps.day}</Tag>}
+                    {filterProps.protected !== undefined && <Tag key="protected" dismissible value="protected" size="small">{"" + filterProps.protected}</Tag>}
+                    {filterProps.owner !== undefined && <Tag key="owner" dismissible value="owner" size="small">{filterProps.owner}</Tag>}
+                    {filterProps.cluster !== undefined && <Tag key="cluster" dismissible value="cluster" size="small">{filterProps.cluster}</Tag>}
+                </TagGroup>
+            </Toolbar>
+        }
+        main={
+            <div style={{ position: "relative", width: "100%", height: "100%" }}>
+                <DockPanel hideSingleTabs={false}>
+                    <DockPanelItem key="stateChart" title={nlsHPCC.State}>
+                        <AutosizeHpccJSComponent widget={stateChart} />
+                    </DockPanelItem>
+                    <DockPanelItem key="ownerChart" title={nlsHPCC.Owner} location="split-bottom" relativeTo="stateChart">
+                        <AutosizeHpccJSComponent widget={ownerChart} />
+                    </DockPanelItem>
+                    <DockPanelItem key="workunitsTable" title={nlsHPCC.Workunits} location="split-bottom" relativeTo="ownerChart">
+                        <Workunits filter={workunitsFilter} store={workunitsStore} />
+                    </DockPanelItem>
+                    <DockPanelItem key="dayChart" title={nlsHPCC.Day} location="split-right" relativeTo="stateChart">
+                        <AutosizeHpccJSComponent widget={dayChart} />
+                    </DockPanelItem>
+                    <DockPanelItem key="protectedChart" title={nlsHPCC.Protected} location="split-right" relativeTo="dayChart">
+                        <AutosizeHpccJSComponent widget={protectedChart} />
+                    </DockPanelItem>
+                    <DockPanelItem key="clusterChart" title={nlsHPCC.Cluster} location="split-right" relativeTo="ownerChart">
+                        <AutosizeHpccJSComponent widget={clusterChart} />
+                    </DockPanelItem>
+                </DockPanel>
+                {loading && <div className={styles.loadingOverlay}>
+                    <Spinner label={nlsHPCC.Loading} size="large" />
+                </div>}
+            </div>
+        }
+    />;
 };
