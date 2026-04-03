@@ -66,9 +66,6 @@ export default defineConfig(
                 'off',
                 { allowConstantExport: true },
             ],
-
-            // TODO: Address in future PRs, tackle one at a time ---
-            "react-hooks/immutability": "off",
         },
     },
 )
