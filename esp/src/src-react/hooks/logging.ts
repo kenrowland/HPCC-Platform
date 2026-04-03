@@ -115,7 +115,7 @@ export function useECLWatchLogger(): { id: string, log: Readonly<LogEntry[]>, la
     const toasterID = useId("logger");
     const { dispatchToast, dismissAllToasts } = useToastController(toasterID);
     const eclLogger = useConst(() => ECLWatchLogger.attach());
-    const [lastUpdate, setLastUpdate] = React.useState(Date.now());
+    const [lastUpdate, setLastUpdate] = React.useState(0);
 
     React.useEffect(() => {
         const dispose = eclLogger?.listen((_type: string, messages: LoggingMessage[]) => {

@@ -20,7 +20,7 @@ export function useFile(cluster: string, name: string): useFileResponse {
     const [file, setFile] = React.useState<LogicalFile>();
     const [protectedBy, setProtectedBy] = React.useState<WsDfu.DFUFileProtect[]>([]);
     const [isProtected, setIsProtected] = React.useState(false);
-    const [lastUpdate, setLastUpdate] = React.useState(Date.now());
+    const [lastUpdate, setLastUpdate] = React.useState(0);
     const [superfiles, setSuperfiles] = React.useState<WsDfu.DFULogicalFile[]>([]);
     const [count, increment] = useCounter();
 

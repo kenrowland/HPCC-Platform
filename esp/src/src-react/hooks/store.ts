@@ -83,28 +83,36 @@ function useStore<T>(store: IKeyValStore, key: string, defaultValue: React.RefOb
 export function useGlobalStore<T>(key: string, defaultValue: T, monitor: boolean = false) {
     const store = useConst(() => globalKeyValStore());
     const defaultValueRef = React.useRef(defaultValue);
-    defaultValueRef.current = defaultValue;
+    React.useEffect(() => {
+        defaultValueRef.current = defaultValue;
+    }, [defaultValue]);
     return useStore<T>(store, key, defaultValueRef, monitor);
 }
 
 export function useUserStore<T>(key: string, defaultValue: T, monitor: boolean = false) {
     const store = useConst(() => userKeyValStore());
     const defaultValueRef = React.useRef(defaultValue);
-    defaultValueRef.current = defaultValue;
+    React.useEffect(() => {
+        defaultValueRef.current = defaultValue;
+    }, [defaultValue]);
     return useStore<T>(store, key, defaultValueRef, monitor);
 }
 
 export function useLocalStore<T>(key: string, defaultValue: T, monitor: boolean = false) {
     const store = useConst(() => localKeyValStore());
     const defaultValueRef = React.useRef(defaultValue);
-    defaultValueRef.current = defaultValue;
+    React.useEffect(() => {
+        defaultValueRef.current = defaultValue;
+    }, [defaultValue]);
     return useStore<T>(store, key, defaultValueRef, monitor);
 }
 
 export function useSessionStore<T>(key: string, defaultValue: T, monitor: boolean = false) {
     const store = useConst(() => sessionKeyValStore());
     const defaultValueRef = React.useRef(defaultValue);
-    defaultValueRef.current = defaultValue;
+    React.useEffect(() => {
+        defaultValueRef.current = defaultValue;
+    }, [defaultValue]);
     return useStore<T>(store, key, defaultValueRef, monitor);
 }
 

@@ -1,13 +1,31 @@
 import { useEffect, useState } from "react";
-import {getRecentFilters} from "../../KeyValStore";
+import { getRecentFilters } from "../../KeyValStore";
 
 export const useGet = (key: string, filter?: object) => {
-    const [responseState, setResponseState] = useState({ data: null, loading: true });
+    const [loading, setLoading] = useState(true);
+    const [data, setData] = useState(null);
+    const [error, setError] = useState<unknown>(undefined);
     useEffect(() => {
-        setResponseState({ data: null, loading: true });
+        let cancelled = false;
         getRecentFilters(key).then(response => {
-            setResponseState({ data: response, loading: false });
+            if (!cancelled) {
+                setData(response);
+                setError(undefined);
+            }
+        }).catch((e) => {
+            if (!cancelled) {
+                setData(null);
+                setError(e);
+            }
+        }).finally(() => {
+            if (!cancelled) {
+                setLoading(false);
+            }
         });
+
+        return () => {
+            cancelled = true;
+        };
     }, [key, filter]);
-    return responseState;
+    return { data, loading, error };
 };

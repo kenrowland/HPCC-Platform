@@ -41,17 +41,18 @@ export const SuperFileSummary: React.FunctionComponent<SuperFileSummaryProps> = 
         title: nlsHPCC.Delete,
         message: nlsHPCC.DeleteSuperfile,
         onSubmit: React.useCallback(() => {
-            const subfiles = (file?.subfiles?.Item || []).map(s => { return { Name: s }; });
+            if (!file) return;
+            const subfiles = (file.subfiles?.Item ?? []).map(sf => ({ Name: sf }));
             dfuService.SuperfileAction({
                 action: "remove",
-                superfile: file.Name,
+                superfile: file.Name ?? "",
                 subfiles: { Item: subfiles.map(file => file.Name) },
                 removeSuperfile: true
             })
                 .then(() => replaceUrl("/files"))
                 .catch(err => logger.error(err))
                 ;
-        }, [file?.Name, file?.subfiles])
+        }, [file])
     });
 
     const canSave = React.useMemo(() => {

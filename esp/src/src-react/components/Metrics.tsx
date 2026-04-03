@@ -39,6 +39,10 @@ const useStyles = makeStyles({
 type SelectedMetricsSource = "" | "scopesTable" | "scopesSqlTable" | "metricGraphWidget" | "hotspot" | "reset";
 const TIMELINE_FIXEDHEIGHT = 152;
 
+function scopeSelectionId(scope: IScope): string {
+    return scope.__lparam?.id ?? scope.id;
+}
+
 interface MetricsProps {
     wuid: string;
     logicalGraph?: boolean;
@@ -87,6 +91,7 @@ export const Metrics: React.FunctionComponent<MetricsProps> = ({
         const lineage = calcLineage(metricGraph, selectedMetrics, lsName);
         const lineageSelectionStr = lineage.lineageSelectionScope?.name?.length ? `/${lineage.lineageSelectionScope.name}` : "";
         const selectionStr = selectedMetrics?.length ? `/${selectedMetrics.map(item => item.id).join(",")}` : "";
+
         if (replace) {
             replaceUrl(`${parentUrl}${viewStr}${lineageSelectionStr}${selectionStr}`);
         } else {
@@ -96,17 +101,30 @@ export const Metrics: React.FunctionComponent<MetricsProps> = ({
 
     //  Sync viewId FROM URL prop  ---
     const viewSynced = React.useRef(false);
+    const lastExplicitViewSelection = React.useRef<string | undefined>(undefined);
     React.useEffect(() => {
         if (!loaded) return;
+        const hasExplicitViewSelection = viewSelection !== undefined;
+        const explicitViewSelectionChanged = lastExplicitViewSelection.current !== viewSelection;
+        lastExplicitViewSelection.current = viewSelection;
+
         if (!viewSynced.current) {
             viewSynced.current = true;
             const targetView = viewSelection || "Default";
-            setViewId(viewIds.includes(targetView) ? targetView : "Default");
+            const nextViewId = viewIds.includes(targetView) ? targetView : "Default";
+            if (viewId !== nextViewId) {
+                setViewId(nextViewId);
+            }
+            return;
         }
-    }, [loaded, viewSelection, viewIds, setViewId]);
 
-    const selectionRef = React.useRef(selection);
-    selectionRef.current = selection;
+        if (hasExplicitViewSelection && explicitViewSelectionChanged) {
+            const nextViewId = viewIds.includes(viewSelection) ? viewSelection : "Default";
+            if (viewId !== nextViewId) {
+                setViewId(nextViewId);
+            }
+        }
+    }, [loaded, viewId, viewSelection, viewIds, setViewId]);
 
     const scopesTableClickRef = React.useRef(false);
 
@@ -233,30 +251,18 @@ export const Metrics: React.FunctionComponent<MetricsProps> = ({
             ;
     }, [includePendingItems, matchCase, matchWholeWord, metricGraph, metrics, scopeFilter, scopesTable, view.properties, view.scopeTypes]);
 
-    React.useEffect(() => {
-        const currentSelection = selectionRef.current;
-        if (!currentSelection?.length || !metrics?.length) return;
-        const visibleIds = new Set<string>();
-        scopesTable.data().forEach(row => {
-            const scope: IScope = row[row.length - 1];
-            visibleIds.add(scope.id);
-        });
-        const filteredSelection = currentSelection.filter(id => visibleIds.has(id));
-        if (filteredSelection.length !== currentSelection.length) {
-            pushSelectionUrl(parentUrl, viewId, filteredSelection.length ? lineageSelectionScope?.name : undefined, filteredSelection.length ? filteredSelection : undefined, true);
-        }
-    }, [includePendingItems, lineageSelectionScope?.name, matchCase, matchWholeWord, metricGraph, metrics, parentUrl, pushSelectionUrl, scopeFilter, scopesTable, view.properties, view.scopeTypes, viewId]);
-
-    const updateScopesTable = React.useCallback((selection?: IScope[]) => {
+    const updateScopesTable = React.useCallback((selectionIds?: string[]) => {
         if (scopesTable?.renderCount() > 0) {
             if (scopesTableClickRef.current) {
                 scopesTableClickRef.current = false;
                 return;
             }
             scopesTable.selection([]);
-            if (selection?.length) {
+            if (selectionIds?.length) {
+                const selectionIdSet = new Set(selectionIds);
                 const selRows = scopesTable.data().filter(row => {
-                    return selection?.indexOf(row[row.length - 1]) >= 0;
+                    const scope = row[row.length - 1] as IScope;
+                    return selectionIdSet.has(scopeSelectionId(scope));
                 });
                 scopesTable.render(() => {
                     scopesTable.selection(selRows);
@@ -264,6 +270,10 @@ export const Metrics: React.FunctionComponent<MetricsProps> = ({
             }
         }
     }, [scopesTable]);
+
+    const selectedMetricIds = React.useMemo(() => {
+        return selectedMetrics.map(scope => scopeSelectionId(scope));
+    }, [selectedMetrics]);
 
     React.useEffect(() => {
         scopesTable.columnFormats()[0]?.paletteID(isDark ? "StdDevsDark" : "StdDevs");
@@ -304,24 +314,27 @@ export const Metrics: React.FunctionComponent<MetricsProps> = ({
 
     React.useEffect(() => {
         if (selectedMetrics) {
-            updateScopesTable(selectedMetrics);
             updateCrossTabTable(selectedMetrics);
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [selectedMetrics]);
 
     React.useEffect(() => {
+        updateScopesTable(selectedMetricIds);
+    }, [includePendingItems, matchCase, matchWholeWord, scopeFilter, selectedMetricIds, updateScopesTable, view.properties, view.scopeTypes]);
+
+    const updateViewRef = React.useRef(updateView);
+    updateViewRef.current = updateView;
+
+    React.useEffect(() => {
 
         //  Update layout prior to unmount  ---
-        if (dockpanel && updateView) {
+        if (dockpanel) {
             return () => {
-                if (dockpanel && updateView) {
-                    updateView({ layout: dockpanel.getLayout() });
-                    save();
-                }
+                updateViewRef.current?.({ layout: dockpanel.getLayout() });
             };
         }
-    }, [dockpanel, save, updateView]);
+    }, [dockpanel]);
 
     //  Command Bar  ---
     const buttons = React.useMemo((): ICommandBarItemProps[] => [

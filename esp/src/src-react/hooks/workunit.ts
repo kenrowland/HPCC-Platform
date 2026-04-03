@@ -22,7 +22,7 @@ export function useWorkunit(wuid: string, full: boolean = false): useWorkunitRes
 
     const [workunit, setWorkunit] = React.useState<Workunit>();
     const [state, setState] = React.useState<number>(WUStateID.NotFound);
-    const [lastUpdate, setLastUpdate] = React.useState<number>(Date.now());
+    const [lastUpdate, setLastUpdate] = React.useState<number>(0);
     const [isComplete, setIsComplete] = React.useState<boolean>(false);
     const [refresh, setRefresh] = React.useState<RefreshFunc>(() => (full?: boolean, request?: Partial<WsWorkunits.WUInfo>) => Promise.resolve(undefined));
 

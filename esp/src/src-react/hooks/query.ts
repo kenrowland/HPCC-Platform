@@ -10,7 +10,7 @@ export type UseQueryResponse = [Query, number, () => Promise<Query>];
 
 export function useQuery(querySet: string, queryId: string): UseQueryResponse {
 
-    const [retVal, setRetVal] = React.useState<UseQueryResponse>([undefined, Date.now(), () => Promise.resolve(undefined)]);
+    const [retVal, setRetVal] = React.useState<UseQueryResponse>([undefined, 0, () => Promise.resolve(undefined)]);
 
     React.useEffect(() => {
         if (!querySet || !queryId) {
