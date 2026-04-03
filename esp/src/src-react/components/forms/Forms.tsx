@@ -43,28 +43,30 @@ export const TableForm: React.FunctionComponent<TableFormProps> = ({
 
     React.useEffect(() => {
         if (doReset === false) return;
+        const resetFields: Fields = {};
         for (const key in localFields) {
-            const field = localFields[key];
+            const field = { ...localFields[key] };
             switch (field.type) {
                 case "links":
                     break;
                 default:
                     delete field.value;
             }
+            resetFields[key] = field;
         }
-        setLocalFields(localFields);
-        onReset(fieldsToRequest(localFields));
+        setLocalFields(resetFields);
+        onReset(fieldsToRequest(resetFields));
     }, [doReset, localFields, onReset]);
 
     const onChange = React.useCallback((id, value) => {
-        const field = localFields[id];
+        const field = { ...localFields[id] };
         switch (field.type) {
             case "links":
                 break;
             default:
                 field.value = value;
         }
-        setLocalFields({ ...localFields });
+        setLocalFields({ ...localFields, [id]: field });
     }, [localFields]);
     return <TableGroup fields={localFields} onChange={onChange} />;
 };

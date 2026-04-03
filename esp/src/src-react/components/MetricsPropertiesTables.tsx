@@ -176,10 +176,12 @@ export const MetricsPropertiesTables: React.FunctionComponent<MetricsPropertiesT
                 }
                 if ((rowValue === undefined || rowValue === null || rowValue === "") && (row.Min !== undefined || row.Avg !== undefined || row.Max !== undefined || row.StdDev !== undefined || row.SkewMin !== undefined || row.SkewMax !== undefined)) {
                     const parts = [];
-                    if (row.Min !== undefined) parts.push(`↓${row.Min}`);
                     if (row.Avg !== undefined) parts.push(`${row.Avg}`);
+                    if (row.Min !== undefined || row.Max !== undefined || row.StdDev !== undefined) parts.push("•");
+                    if (row.Min !== undefined) parts.push(`↓${row.Min}`);
                     if (row.Max !== undefined) parts.push(`↑${row.Max}`);
-                    if (row.StdDev !== undefined) parts.push(`${row.StdDev}(${formatDecimal(row.StdDevs)}σ)`);
+                    if (row.StdDev !== undefined) parts.push(`${formatDecimal(row.StdDevs)}σ`);
+                    if (row.SkewMin !== undefined || row.SkewMax !== undefined) parts.push("•");
                     if (row.SkewMin !== undefined) parts.push(`⤓${row.SkewMin}`);
                     if (row.SkewMax !== undefined) parts.push(`⤒${row.SkewMax}`);
                     rowValue = parts.join(" ");

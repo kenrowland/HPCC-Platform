@@ -27,6 +27,10 @@ export function idsToScopes(metrics: IScope[], ids?: string[]): IScope[] {
     return metrics.filter(item => selectionSet.has(item.id));
 }
 
+function filterRenderableLineage(metricGraph: MetricGraph, lineage: IScope[]): IScope[] {
+    return lineage.filter(item => item.id && item.type !== "child" && metricGraph.isSubgraph(item) && !metricGraph.isVertex(item));
+}
+
 export function calcLineage(metricGraph: MetricGraph, selection?: IScope[], lsName?: string): { lineage: IScope[], lineageSelectionScope: IScope | undefined } {
     const lineage: IScope[] = [];
 
@@ -40,6 +44,11 @@ export function calcLineage(metricGraph: MetricGraph, selection?: IScope[], lsNa
             if (item.id && item.type !== "child" && metricGraph.isSubgraph(item) && !metricGraph.isVertex(item)) {
                 lineage.push(item);
             }
+        }
+    } else if (lsName) {
+        const explicitLineageScope = metricGraph.item(lsName);
+        if (explicitLineageScope) {
+            lineage.push(...filterRenderableLineage(metricGraph, metricGraph.lineage(explicitLineageScope)));
         }
     }
 
@@ -70,20 +79,32 @@ export function useMetricsGraphData(metrics: IScope[], view: MetricsView, lineag
         return idsToScopes(metrics, selection);
     }, [metrics, selection]);
 
+    const lineageSelectionScopeName = lineageSelectionScope?.name;
+
     React.useEffect(() => {
         if (metrics.length > 0) {
             metricGraph.load(metrics);
-            setDot(metricGraph.graphTpl(lineageSelectionScope?.name ? [lineageSelectionScope.name] : [], view));
+            setDot(metricGraph.graphTpl(lineageSelectionScopeName ? [lineageSelectionScopeName] : [], view));
         } else {
             metricGraph.clear();
             setDot("");
         }
-    }, [metricGraph, metrics, lineageSelectionScope, view]);
+    }, [lineageSelectionScopeName, metricGraph, metrics, view]);
 
     React.useEffect(() => {
-        const { lineage, lineageSelectionScope } = calcLineage(metricGraph, selectedMetrics, lineageSelectionName);
-        setLineage(lineage);
-        setLineageSelectionScope(lineageSelectionScope);
+        const { lineage: nextLineage, lineageSelectionScope: nextLineageSelectionScope } = calcLineage(metricGraph, selectedMetrics, lineageSelectionName);
+        setLineage(prevLineage => {
+            if (prevLineage.length === nextLineage.length && prevLineage.every((item, idx) => item.name === nextLineage[idx]?.name)) {
+                return prevLineage;
+            }
+            return nextLineage;
+        });
+        setLineageSelectionScope(prevLineageSelectionScope => {
+            if (prevLineageSelectionScope?.name === nextLineageSelectionScope?.name) {
+                return prevLineageSelectionScope;
+            }
+            return nextLineageSelectionScope;
+        });
     }, [metricGraph, selectedMetrics, lineageSelectionName]);
 
     return { metricGraph, selectedMetrics, lineage, lineageSelectionScope, dot, svg, layoutStatus };
