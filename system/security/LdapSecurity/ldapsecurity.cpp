@@ -804,19 +804,23 @@ bool CLdapSecManager::doUserAuthenticate(ISecUser* user)
     }
     else if (m_ldap_client->authenticate(*user)) //call LDAP to authenticate
         user->setAuthenticateStatus(AS_AUTHENTICATED);
-    if (isCaching)
-        m_permissionsCache->add(*user);
-    else if (isEmptyString(user->credentials().getPassword()) && (0 == user->credentials().getSessionToken()) && isEmptyString(user->credentials().getSignature()))
+
+    if (AS_AUTHENTICATED == user->getAuthenticateStatus())
     {
-        //No need to sign if password or authenticated session based user
-        if (!pDSM)
-            pDSM = queryDigitalSignatureManagerInstanceFromEnv();
-        if (pDSM && pDSM->isDigiSignerConfigured())
+        if (isCaching)
+            m_permissionsCache->add(*user);
+        else if (isEmptyString(user->credentials().getPassword()) && (0 == user->credentials().getSessionToken()) && isEmptyString(user->credentials().getSignature()))
         {
-            //Set user digital signature
-            StringBuffer b64Signature;
-            pDSM->digiSign(b64Signature, user->getName());
-            user->credentials().setSignature(b64Signature);
+            //No need to sign if password or authenticated session based user
+            if (!pDSM)
+                pDSM = queryDigitalSignatureManagerInstanceFromEnv();
+            if (pDSM && pDSM->isDigiSignerConfigured())
+            {
+                //Set user digital signature
+                StringBuffer b64Signature;
+                pDSM->digiSign(b64Signature, user->getName());
+                user->credentials().setSignature(b64Signature);
+            }
         }
     }
 

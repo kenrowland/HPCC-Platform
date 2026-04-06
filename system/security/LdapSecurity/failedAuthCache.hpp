@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <limits>
 
+#include "jlog.hpp"
 #include "jmutex.hpp"
 #include "jutil.hpp"
 
@@ -44,14 +45,14 @@ public:
                     unsigned cacheTimeoutSeconds = defaultCacheTimeoutSeconds,
                     unsigned maxAllowedEntries = defaultMaxAllowedEntries)
         : m_maxFailedAttempts(maxFailedAttempts),
-          m_cacheTimeoutSeconds(cacheTimeoutSeconds),
+            // Clamp once at construction so ms conversion cannot overflow.
+            m_cacheTimeoutSeconds(std::min(cacheTimeoutSeconds, std::numeric_limits<unsigned>::max() / 1000U)),
           m_maxAllowedEntries(maxAllowedEntries)
     {
     }
 
-    // Check if a user should be blocked locally to prevent repeated LDAP queries on failure.
-    // This is a load-reduction mechanism, not account lockout enforcement.
-    // Returns true if the user has exceeded the failed attempt threshold within the timeout window.
+    // Check if a user should be blocked due to failed authentication.
+    // Returns true if authentication should be blocked.
     bool isUserLockedOut(const char* username)
     {
         if (!username || !*username)
@@ -69,18 +70,14 @@ public:
             // Entry has expired; remove it and allow retries. No need to trim the
             // full cache here — trimming happens on every insert/update in updateUserLockoutStatus.
             m_cache.erase(it);
+            trimFailedAuthCache();
             return false;
         }
 
         return it->second.failedAttempts >= m_maxFailedAttempts;
     }
 
-    // Record a failed authentication attempt for a username to track repeated failures.
-    // Used to compute local blocking to reduce LDAP traffic.
-    // IMPORTANT: The timeout window is measured from the FIRST failure, not updated on each new failure.
-    // This allows automatic recovery if the underlying AD condition (e.g., service outage, password reset)
-    // is fixed within the timeout period. Once the timeout expires, the entry resets and retries are allowed.
-    // Without this behavior, a service in a failed-auth loop would be permanently blocked even after AD recovers.
+    // Record a failed authentication attempt for username.
     void updateUserLockoutStatus(const char* username)
     {
         if (!username || !*username)
@@ -107,6 +104,9 @@ public:
         }
         else
             ++(it->second.failedAttempts);
+
+        if (it->second.failedAttempts == m_maxFailedAttempts)
+            OWARNLOG("User %s locked out for %u seconds after reaching maximum failed authentication attempts of %u", username, m_cacheTimeoutSeconds, m_maxFailedAttempts);
     }
 
     // Remove a user from the failed auth cache (e.g., on successful authentication).
@@ -127,7 +127,8 @@ public:
 
     // Optional setters/getters
     void setMaxFailedAttempts(unsigned v) { m_maxFailedAttempts = v; }
-    void setCacheTimeoutSeconds(unsigned v) { m_cacheTimeoutSeconds = v; }
+    // Keep timeout-ms conversion safe even if set at runtime.
+    void setCacheTimeoutSeconds(unsigned v) { m_cacheTimeoutSeconds = std::min(v, std::numeric_limits<unsigned>::max() / 1000U); }
     void setMaxAllowedEntries(unsigned v) { m_maxAllowedEntries = v; }
 
     unsigned getMaxFailedAttempts() const { return m_maxFailedAttempts; }
@@ -144,8 +145,7 @@ public:
 private:
     unsigned queryCacheTimeoutMs() const
     {
-        if (m_cacheTimeoutSeconds >= (std::numeric_limits<unsigned>::max() / 1000U))
-            return std::numeric_limits<unsigned>::max();
+        // Safe because constructor/setter clamp m_cacheTimeoutSeconds.
         return m_cacheTimeoutSeconds * 1000U;
     }
 
@@ -154,7 +154,7 @@ private:
     // This design prevents permanent blocking and allows recovery if the underlying condition is resolved.
     bool isExpired(const FailedAuthEntry &entry, unsigned currentTick) const
     {
-        const unsigned elapsedMs = currentTick - entry.firstFailureTick; // unsigned wrap is intentional
+        const unsigned elapsedMs = currentTick - entry.firstFailureTick; // Unsigned tick subtraction intentionally handles msTick wraparound.
         return elapsedMs >= queryCacheTimeoutMs();
     }
 
@@ -172,10 +172,7 @@ private:
                 ++it;
         }
 
-        // If still too large, evict the oldest entries (by firstFailureTick) until within the limit.
-        // NOTE: With many more distinct failed usernames than maxAllowedEntries (e.g. a credential spray),
-        // evicted users lose their failure count and can immediately retry LDAP. Raise maxAllowedEntries
-        // if broader coverage is needed. The O(N) max_element scan is acceptable for small cache sizes.
+        // If still too large, remove oldest entries by age.
         while (m_cache.size() > m_maxAllowedEntries)
         {
             // max_element with this comparator returns the entry with the largest age (oldest).
@@ -185,7 +182,7 @@ private:
                 [currentTick](const auto& a, const auto& b) {
                     const unsigned ageA = currentTick - a.second.firstFailureTick;
                     const unsigned ageB = currentTick - b.second.firstFailureTick;
-                    return ageA < ageB; // a < b when a is younger, so max is the oldest
+                    return ageA < ageB;
                 });
             if (oldestIt != m_cache.end())
                 m_cache.erase(oldestIt);
